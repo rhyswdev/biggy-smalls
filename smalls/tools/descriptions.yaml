@@ -103,6 +103,13 @@ tools:
       alerts: PLACEHOLDER
       open_questions: PLACEHOLDER
       stakeholder_update: PLACEHOLDER
+  submit_verdict:
+    description: PLACEHOLDER
+    params:
+      claims: PLACEHOLDER
+      alternatives: PLACEHOLDER
+      ignored: PLACEHOLDER
+      overall: PLACEHOLDER
 objects:
   Rationale:
     tests: PLACEHOLDER
@@ -159,5 +166,17 @@ objects:
     changed_since_last: PLACEHOLDER
     next_steps: PLACEHOLDER
     next_update_at: PLACEHOLDER
+  ClaimVerdict:
+    id: PLACEHOLDER
+    verdict: PLACEHOLDER
+    quote: PLACEHOLDER
+    handle: PLACEHOLDER
+  Alternative:
+    statement: PLACEHOLDER
+    fit: PLACEHOLDER
+    check: PLACEHOLDER
+  Check:
+    tool: PLACEHOLDER
+    args: PLACEHOLDER
 action_kinds:
   PLACEHOLDER_KIND: PLACEHOLDER

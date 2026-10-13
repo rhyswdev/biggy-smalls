@@ -84,7 +84,7 @@ def test_now_is_never_a_parameter(defs):
 def test_every_gated_tool_requires_a_rationale_and_internal_tools_carry_none(defs):
     for name, d in defs.items():
         props, required = d["parameters"]["properties"], d["parameters"]["required"]
-        if name in ("update_board", "submit_report"):
+        if name in ("update_board", "submit_report", "submit_verdict"):
             assert "rationale" not in props
             continue
         assert next(iter(props)) == "rationale" and required[0] == "rationale"

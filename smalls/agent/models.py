@@ -28,7 +28,7 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 from smalls.agent.config import SCRIPTED, ModelSpec, live_allowed
 
 # Profile keys that are ours, not the provider's.
-_OWN_KEYS = ("cache", "max_input_tokens", "script")
+_OWN_KEYS = ("cache", "max_input_tokens", "script", "strict_tools")
 Script = Callable[[list[BaseMessage], list[dict[str, Any]]], tuple[str, list[dict[str, Any]]]]
 
 
@@ -64,10 +64,48 @@ def input_limit(spec: ModelSpec, model: BaseChatModel) -> int | None:
     return profile.get("max_input_tokens")
 
 
-def provider_tools(definitions: list[dict[str, Any]], provider: str) -> list[dict[str, Any]]:
-    """Our provider-neutral tool definitions in the shape a provider's `bind_tools` takes."""
+def provider_tools(definitions: list[dict[str, Any]], provider: str, *, strict: bool = True) -> list[dict[str, Any]]:
+    """Our provider-neutral tool definitions in the shape a provider's `bind_tools` takes, with strict
+    schemas where the provider has them, so a call's arguments always fit the schema.
+
+    Each provider's strict mode has its own rules, which is why this is an adapter and not one shape:
+    - one takes its native tool shape, and its strict mode rejects numeric, string and array bounds. Its own
+      transform strips them and writes them into the description, and our validation still enforces them;
+    - another wants every property required, with an optional one made nullable. A null is read as "left
+      out" before validation.
+    A generic `bind_tools` call drops the strict flag from a plain function schema, so the flag is set here."""
+    if provider == "anthropic":
+        import anthropic
+
+        return [{"name": d["name"], "description": d["description"],
+                 "input_schema": anthropic.transform_schema(d["parameters"]) if strict else d["parameters"],
+                 **({"strict": True} if strict else {})} for d in definitions]
+    if provider == "openai" and strict:
+        return [{"type": "function", "function": {"name": d["name"], "description": d["description"], "strict": True,
+                                                  "parameters": _all_required(d["parameters"])}} for d in definitions]
     return [{"type": "function", "function": {"name": d["name"], "description": d["description"], "parameters": d["parameters"]}}
             for d in definitions]
+
+
+_BOUNDS = ("minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf", "minLength", "maxLength", "minItems", "maxItems",
+           "default", "pattern")
+
+
+def _all_required(node: Any) -> Any:
+    """A schema with every property required and each optional one nullable, and with no bounds."""
+    if isinstance(node, list):
+        return [_all_required(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    out = {k: _all_required(v) for k, v in node.items() if k not in _BOUNDS}
+    for key in ("properties", "$defs"):
+        if key in node:
+            out[key] = {name: _all_required(sub) for name, sub in node[key].items()}
+    if "properties" in out:
+        required = set(node.get("required", []))
+        out["properties"] = {name: (sub if name in required else {"anyOf": [sub, {"type": "null"}]}) for name, sub in out["properties"].items()}
+        out["required"] = list(out["properties"])
+    return out
 
 
 def retryable(error: Exception) -> bool:

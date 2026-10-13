@@ -1,8 +1,11 @@
 """The investigator as an explicit StateGraph (docs/research/agent-design.md axis 1 and section 3):
 
-    orient -> agent -> gate -> [ask] -> tools -> agent ... -> finalize
+    orient -> sweep -> gate -> [ask] -> tools -> agent -> gate -> [ask] -> tools -> agent ... -> finalize
 
 - orient (code): the first user turn, from `now`, the source inventory, the trigger and the budget.
+- sweep (code): the opening sweep. What is alerting, what changed and what people are saying is not a
+  judgement call, so code asks. The calls are written to state as proposed calls from the harness and go
+  through the same gate and the same tools node as the model's; their results enter as one user message.
 - agent (model): one model call with every tool bound. The system prompt and the tool list never change,
   so they are a stable cached prefix, and the message history only grows.
 - gate (code): applies the approval policy to each proposed call and writes the calls that need a person to
@@ -17,6 +20,7 @@ The registry and the inventory are injected, which is how offline tests run the 
 
 from __future__ import annotations
 
+import json
 import time
 from datetime import datetime, timezone
 from typing import Any, Callable
@@ -46,6 +50,10 @@ NOT_ACCEPTED = "Report not accepted. {findings} Fix these and submit again."
 NOT_RECORDED = "Not recorded. {findings}"
 RECORDED = "Recorded: {what}."
 NOTE_ROW = "{handle}  incident commander, {at}: {text}"
+SWEEP_HEAD = "Opening sweep, run by the harness before your first turn. Each block is one tool call and its result."
+SWEEP_BLOCK = "== {tool} {args}\n{text}"
+SWEEP_RATIONALE = {"tests": "the opening sweep", "expect": "what is alerting, what changed and what people are saying"}
+NO_VERDICT = "These alert streams from the opening sweep have no verdict: {handles}. Give each one this_incident, other_incident or noise."
 
 
 def iso(t: datetime) -> str:
@@ -84,10 +92,10 @@ def partial_report(state: dict[str, Any], why: str) -> dict[str, Any]:
 
 
 def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory: Inventory, *, provider: str = "scripted",
-                bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None):
+                bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None, strict: bool = True):
     tools = toolset(read_tools)
     definitions = [registry.definition(spec, texts) for spec in tools.values()]
-    bound = model.bind_tools(provider_tools(definitions, provider), **(bind_kwargs or {}))
+    bound = model.bind_tools(provider_tools(definitions, provider, strict=strict), **(bind_kwargs or {}))
     system = prompts.load("investigator")
 
     def orient(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
@@ -105,6 +113,19 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                 "report_attempts": 0, "revisions": 0, "status": "investigating", "proposed": [], "stop_reason": None,
                 "ledger": [entry]}
 
+    def sweep(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        """The fixed, generic opening: alerts and changes over their windows, then the chat. No tag filter,
+        ever. A tool the registry lacks is skipped."""
+        ctx = runtime.context
+        wanted = [("list_alerts", {"since": ctx.sweep.get("alerts", "-2h")}), ("list_changes", {"since": ctx.sweep.get("changes", "-24h")}),
+                  ("read_chat", {"since": ctx.sweep.get("chat", "-2h"), **({"channel": ctx.channel} if ctx.channel else {})})]
+        calls: list[Call] = [{"call_id": f"sweep_{n:02d}_{tool}", "tool": tool, "args": args, "rationale": dict(SWEEP_RATIONALE),
+                              "by": "harness", "invalid": None} for n, (tool, args) in enumerate(wanted, 1) if tool in tools]
+        return {"proposed": calls}
+
+    def route_sweep(state: InvestigationState) -> str:
+        return "gate" if state.get("proposed") else "agent"
+
     def agent(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
         ctx = runtime.context
         writer = get_stream_writer()
@@ -115,8 +136,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                "latency_ms": round((time.perf_counter() - started) * 1000, 1), "usage": usage,
                "stop_reason": ai.response_metadata.get("stop_reason"), "model": ai.response_metadata.get("model_name")}
         writer({"type": "model_call", **row})
+        # An input sent as null means "left out": a provider whose strict mode wants every property present sends it so.
         proposed: list[Call] = [{"call_id": c["id"], "tool": c["name"], "by": "agent", "invalid": None,
-                                 "args": {k: v for k, v in c["args"].items() if k != "rationale"},
+                                 "args": {k: v for k, v in c["args"].items() if k != "rationale" and v is not None},
                                  "rationale": c["args"].get("rationale")} for c in ai.tool_calls]
         proposed += [{"call_id": c["id"], "tool": c.get("name") or "unknown", "by": "agent", "args": {}, "rationale": None,
                       "invalid": str(c.get("error") or "invalid JSON")} for c in ai.invalid_tool_calls]
@@ -194,6 +216,8 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         attempts = state.get("report_attempts", 0)
         current = dict(state.get("hypotheses") or {})
         out: list[ToolMessage] = []
+        blocks: list[str] = []          # the harness's own calls: one user message, never a fabricated tool turn
+        swept: list[str] = []
         ledger: list[LedgerEntry] = []
         update: dict[str, Any] = {}
         accepted = None
@@ -243,7 +267,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                             current = merge_hypotheses(current, result["merged"])
                 else:
                     env = _run(spec, call, ctx)
-                    if env.meta.get("error") != "arguments":       # a call counts when it runs (J5)
+                    if entry["by"] == "agent" and env.meta.get("error") != "arguments":     # a call counts when it runs; the sweep is free (J5)
                         used += 1
                     if env.status == "ok" and ctx.evidence:
                         ctx.evidence(call["call_id"], env.rows)
@@ -258,18 +282,27 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             writer({"type": "tool_result", **{k: entry[k] for k in ("call_id", "tool", "kind", "by", "status", "shown", "referenced",
                                                                     "native_query", "window", "chars", "latency_ms")},
                     "first_line": env.text.split("\n", 1)[0][:200]})
-            out.append(ToolMessage(env.text, tool_call_id=call["call_id"], name=call["tool"],
-                                   status="error" if env.status == "error" or entry["status"] == "rejected" else "success"))
+            if entry["by"] == "harness":
+                blocks.append(SWEEP_BLOCK.format(tool=call["tool"], args=json.dumps(call["args"], ensure_ascii=False), text=env.text))
+                if call["tool"] == "list_alerts" and env.status == "ok":
+                    swept += list(env.shown)
+            else:
+                out.append(ToolMessage(env.text, tool_call_id=call["call_id"], name=call["tool"],
+                                       status="error" if env.status == "error" or entry["status"] == "rejected" else "success"))
 
         limit = ctx.budget(state.get("revisions", 0))
         turns_left = ctx.turn_cap(state.get("revisions", 0)) - round_now
-        if accepted is None and out:        # appended once, when the message is created: the history is append-only
+        messages: list[Any] = list(out)
+        if blocks:
+            messages.append(HumanMessage("\n\n".join([SWEEP_HEAD, *blocks])))
+            update["swept"] = swept
+        if accepted is None and messages:   # appended once, when the message is created: the history is append-only
             line = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left)
-            out[-1].content = f"{out[-1].content}\n{line}"
+            messages[-1].content = f"{messages[-1].content}\n{line}"
             writer({"type": "board_status", "line": line, "ready": not board.missing_for_ready(current),
                     "stale": board.stale_ids(current, round_now)})
         writer({"type": "budget", "used": used, "limit": limit, "turns_left": turns_left})
-        update.update(messages=out, ledger=ledger, calls_used=used, report_attempts=attempts, proposed=[])
+        update.update(messages=messages, ledger=ledger, calls_used=used, report_attempts=attempts, proposed=[])
         if accepted is not None:
             update["report"] = accepted
         return update
@@ -317,6 +350,10 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         findings = [p + "." for p in problems]
         if unknown or only_listed:
             findings.append(validator.explain(unknown, only_listed))
+        unjudged = [h for h in state.get("swept") or [] if h not in {a["handle"] for a in draft["alerts"]}]
+        if unjudged:        # one verdict for every alert stream the sweep showed (J7)
+            findings.append(NO_VERDICT.format(handles=", ".join(unjudged)))
+        findings += [f"{claim}: {what}." for claim, what in validator.structure(draft)]
         if findings and attempts == 0:
             result.update(attempts=1, validation={"ok": False, "attempts": 1, "findings": findings})
             return errors.error(NOT_ACCEPTED.format(findings=" ".join(findings))), result
@@ -325,8 +362,11 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             draft["hypotheses"] = board.for_report(after, state["as_of"])
         bad = [*unknown, *only_listed]
         report, flagged = validator.drop(draft, bad) if bad else (draft, [])
+        flagged = sorted({*flagged, *(claim for claim, _ in validator.structure(report))})
+        report["alerts"] = [*report["alerts"], *({"handle": h, "verdict": "unassessed"} for h in unjudged)]    # code adds these, never the model
         merged = {hid: {k: ([h for h in v if h not in bad] if isinstance(v, list) else v) for k, v in upd.items()} for hid, upd in merged.items()}
-        validation = {"ok": not (bad or problems), "attempts": attempts + 1, "dropped": bad, "flagged": flagged, "continuity": None}
+        validation = {"ok": not (bad or problems or flagged or unjudged), "attempts": attempts + 1, "dropped": bad, "flagged": flagged,
+                      "continuity": None}
         report["validation"] = validation
         result.update(attempts=attempts, validation=validation, merged=merged, report=report)
         return Envelope(" ".join([ACCEPTED, *(n + "." for n in notes)])), result
@@ -352,13 +392,15 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
     retry = RetryPolicy(max_attempts=2, retry_on=retryable)
     g = StateGraph(InvestigationState, context_schema=RunContext)
     g.add_node("orient", orient)
+    g.add_node("sweep", sweep)
     g.add_node("agent", agent, retry_policy=retry)
     g.add_node("gate", gate_node)
     g.add_node("ask", ask)
     g.add_node("tools", tools_node)
     g.add_node("finalize", finalize)
     g.add_edge(START, "orient")
-    g.add_edge("orient", "agent")
+    g.add_edge("orient", "sweep")
+    g.add_conditional_edges("sweep", route_sweep, ["gate", "agent"])
     g.add_conditional_edges("agent", route_agent, ["gate", "finalize"])
     g.add_conditional_edges("gate", route_gate, ["ask", "tools"])
     g.add_edge("ask", "tools")

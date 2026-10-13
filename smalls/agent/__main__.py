@@ -30,15 +30,17 @@ from typing import Any
 
 import yaml
 
-from smalls.agent import internal_tools, prompts
+from smalls.agent import internal_tools, prompts, verifier
 from smalls.contracts import report
 from smalls.contracts.report import Rationale
 from smalls.tools import descriptions, registry, store
 
 
 def surface(*, tags: bool) -> dict[str, registry.ToolSpec]:
-    """Every tool the investigator can be shown, built or not, in the fixed order."""
-    return internal_tools.toolset(registry.surface(tags=tags))
+    """Every tool a model can be shown, built or not, in the fixed order: the investigator's, then the one
+    tool a verifier pass answers through."""
+    verdict = verifier.spec()
+    return {**internal_tools.toolset(registry.surface(tags=tags)), verdict.name: verdict}
 
 
 def skeleton() -> dict[str, Any]:

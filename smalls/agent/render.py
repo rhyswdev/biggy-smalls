@@ -120,6 +120,12 @@ def interactive_decider(console: Console | None = None):
 
     def decide(cards: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
         out = {}
+        if cards and all(card.get("by") == "harness" for card in cards):     # the opening sweep is one card
+            listed = "\n".join(f"{esc(card['tool'])} {esc(json.dumps(card['args'], ensure_ascii=False))}" for card in cards)
+            c.print(Panel(listed, title=f"run the opening sweep? ({len(cards)} reads)"))
+            answer = Prompt.ask(esc("[a]pprove or [r]eject"), choices=["a", "r"], default="a", console=c)
+            reason = None if answer == "a" else Prompt.ask("reason (goes back to the agent)", console=c)
+            return {card["call_id"]: ({"approve": True} if answer == "a" else {"approve": False, "reason": reason}) for card in cards}
         for card in cards:
             rationale = card.get("rationale") or {}
             c.print(Panel(f"[bold]{esc(card['tool'])}[/] ({esc(card['kind'])})\n{esc(json.dumps(card['args'], indent=1, ensure_ascii=False))}\n\n"

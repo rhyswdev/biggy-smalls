@@ -28,6 +28,19 @@ def find(messages: list[BaseMessage], needle: str) -> list[str]:
     return found
 
 
+def swept_alerts(messages: list[BaseMessage]) -> list[str]:
+    """The alert streams the opening sweep showed: the row handles of its `list_alerts` block."""
+    found: list[str] = []
+    for m in messages:
+        if isinstance(m, HumanMessage) and "== list_alerts " in str(m.content):
+            block = str(m.content).split("== list_alerts ", 1)[1].split("\n== ", 1)[0]
+            for line in block.splitlines()[1:]:
+                first = line.split("  ", 1)[0].strip()
+                if is_handle(first) and first not in found:
+                    found.append(first)
+    return found
+
+
 def action_kind(tools: list[dict[str, Any]]) -> str:
     """Whatever the descriptions file lists first: the script does not depend on the wording of the kinds."""
     for tool in tools:
@@ -106,7 +119,7 @@ def turn(messages: list[BaseMessage], tools: list[dict[str, Any]], bad_handle: b
         actions=actions,
         do_not=[{"action": "Do not purge the temp folder while a job is running.", "why": "The runbook forbids it.",
                  "evidence": ["conf:RB-DISK-SPACE"]}],
-        alerts=[],
+        alerts=[{"handle": h, "verdict": "this_incident" if n == 0 else "noise"} for n, h in enumerate(swept_alerts(messages))],
         open_questions=["Did other jobs on worker-01 fail after 02:09?"],
         stakeholder_update={"status": "Cause identified; fix pending.", "customer_impact": "Last night's reports were not delivered.",
                             "scope": "The nightly export only.", "changed_since_last": "First update.",

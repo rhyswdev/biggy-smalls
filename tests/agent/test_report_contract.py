@@ -91,7 +91,7 @@ def test_the_schema_command_prints_every_tool_and_the_report_schema(capsys, tags
     assert cli.main(["schema", "--tags", tags]) == 0
     doc = json.loads(capsys.readouterr().out)
     assert doc["tags"] == tags and doc["report"] == report.report_schema()
-    assert [t["name"] for t in doc["tools"]] == ELEVEN + ["propose_action", "update_board", "submit_report"]
+    assert [t["name"] for t in doc["tools"]] == ELEVEN + ["propose_action", "update_board", "submit_report", "submit_verdict"]
     tag_inputs = {t["name"]: sorted(set(t["parameters"]["properties"]) & {"signal", "act", "change_kind"}) for t in doc["tools"]}
     wanted = {"list_alerts": ["signal"], "search_logs": ["signal"], "list_changes": ["change_kind"], "itsm_query": ["signal"], "read_chat": ["act"]}
     assert {k: v for k, v in tag_inputs.items() if v} == (wanted if tags == "on" else {})

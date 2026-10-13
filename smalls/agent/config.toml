@@ -40,6 +40,7 @@ max_input_tokens = 1000000
 effort = "medium"           # fixed for the run: changing it invalidates the prompt cache
 thinking = { type = "adaptive", display = "summarized" }
 cache = true
+strict_tools = true         # every tool schema is strict, so a call's arguments always fit it
 
 [profiles.anthropic-small]
 provider = "anthropic"

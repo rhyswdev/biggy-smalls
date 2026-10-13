@@ -111,7 +111,7 @@ class Runner:
         self.model, bind = make_model(spec, timeout_s=cfg.timeout_s, cache_ttl="1h" if attended else None)
         self.conn = sqlite3.connect(self.record.checkpoints(), check_same_thread=False)
         self.graph = build_graph(self.model, toolbox.read_tools, toolbox.inventory, provider=spec.provider, bind_kwargs=bind,
-                                 checkpointer=SqliteSaver(self.conn))
+                                 checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)))
         self.config = {"configurable": {"thread_id": self.run_id}, "recursion_limit": 6 * (cfg.call_budget + cfg.extra_turns) + 40}
         self._ctx: RunContext | None = None
         self._investigating = False
@@ -219,6 +219,11 @@ class Runner:
             if node == "__interrupt__":
                 for pending in update:
                     self.bus.emit("gate_pending", interrupt_id=pending.id, **pending.value)
+            elif node == "sweep":
+                self.bus.emit("phase", name="sweep")
+                for call in update.get("proposed") or []:
+                    self.bus.emit("tool_call_proposed", call_id=call["call_id"], tool=call["tool"], by="harness", kind="read",
+                                  rationale=call.get("rationale"), args=call["args"])
             elif node == "agent":
                 if not self._investigating:
                     self._investigating = True

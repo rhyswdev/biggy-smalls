@@ -16,7 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Iterable
 
-from smalls.contracts.handles import is_handle
+from smalls.contracts.handles import handle_class, is_handle
 
 _WRAP = "`'\"()[]<>*.,;!?"
 DROPPED = "[citation dropped]"
@@ -111,6 +111,28 @@ def report_claims(report: dict[str, Any]) -> dict[str, list[str]]:
     for n, row in enumerate(report.get("do_not", []), 1):
         claims[f"d:{n}"] = list(row.get("evidence") or [])
     return claims
+
+
+def structure(report: dict[str, Any]) -> list[tuple[str, str]]:
+    """What is wrong with a report's shape, as (claim id, the finding in fixed words). These are the code
+    checks that need no model: every claim cites a handle, the leading hypothesis has support that is not
+    chat, a rejected hypothesis says what contradicts it, and a report that names no leading hypothesis
+    is inconclusive and says what is still unknown (J6)."""
+    out: list[tuple[str, str]] = []
+    for h in report.get("hypotheses", []):
+        claim = f"h:{h['id']}"
+        if h["status"] == "leading" and not [x for x in h.get("support") or [] if handle_class(x) != "chat"]:
+            out.append((claim, "the leading hypothesis needs support that is not chat"))
+        elif h["status"] == "rejected" and not h.get("against"):
+            out.append((claim, "a rejected hypothesis needs the handle that contradicts it in against"))
+        elif h["status"] != "rejected" and not (h.get("support") or h.get("against")):
+            out.append((claim, "cites no handle"))
+    out += [(f"t:{n}", "cites no handle") for n, row in enumerate(report.get("timeline", []), 1) if not row.get("evidence")]
+    out += [(f"a:{a['rank']}", "cites no handle") for a in report.get("actions", []) if not a.get("evidence")]
+    out += [(f"d:{n}", "cites no handle") for n, row in enumerate(report.get("do_not", []), 1) if not row.get("evidence")]
+    if not any(h["status"] == "leading" for h in report.get("hypotheses", [])) and not report.get("open_questions"):
+        out.append(("report", "with no leading hypothesis the report is inconclusive and needs at least one open question"))
+    return out
 
 
 def report_handles(report: dict[str, Any]) -> set[str]:
