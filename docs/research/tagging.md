@@ -205,3 +205,9 @@ What we read from it:
 ### 7.3 What it cost, and what is not measured
 
 Two experiment passes of 289 requests each over the same units (762,816 input tokens together, about 3 cents), on top of the 494 requests of the shipped run. The second pass repeated every unchanged question, which is where the "not reproduced" column comes from; no pick-one candidate changed value between passes. Not measured: stability under shuffled option order for the candidates; precision on more than 14 to 17 units per candidate; anything on a bundle other than the development one.
+
+### 7.4 What we adopted, and what stays open
+
+Ruled on 2026-10-13 (`docs/decisions/ingestion-decisions.md` section 4.7): `act` is asked as yes/no per option and `signal` covers metric series; both were re-run under their shipped profiles and scored on labels committed first. `signal` as yes/no, `resource`, `fault` and `layer` stay open as point O6 with the numbers above. The floor rule gained a tolerance of 0.02 for the wobble section 4 describes, and the measured floor is 0.90 (`docs/DATA.md` 119 to 122).
+
+One figure above needs its context now: the table in 7.2 compares each candidate with pick-one at the floor of the time, 0.93. At the final floor of 0.90, pick-one `act` would tag 43 of 110 units and the adopted yes/no form tags 86.

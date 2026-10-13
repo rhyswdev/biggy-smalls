@@ -2,7 +2,9 @@
 
 Ruling record for step 6a, written on 2026-10-13 on branch `step6a-ingestion`. Step 6a is now **ingestion**: every source in the bundle is parsed from its messy vendor-native shape into the normalised in-memory store, with the replay clock, and with a tagging pass that gives the tools facets to filter and group on. The eleven tools follow as the next step (the former 6a tool items in `docs/PLAN.md` section 6), reading only this store.
 
-A fresh session should be able to build the step from this file plus PLAN. Where this record differs from `docs/research/ingestion-and-retrieval.md` or `docs/research/tagging.md`, or from `docs/decisions/step6-decisions.md` on ingestion, this record wins. Everything here is decided except open point O1 in section 7. No held-out path was read to write it, and it contains no held-out content.
+A fresh session should be able to build the step from this file plus PLAN. Where this record differs from `docs/research/ingestion-and-retrieval.md` or `docs/research/tagging.md`, or from `docs/decisions/step6-decisions.md` on ingestion, this record wins. Everything here is decided except open points O1 and O6 in section 7. No held-out path was read to write it, and it contains no held-out content.
+
+The step is built (`docs/HANDOFF.md`; judgment calls and measured numbers in `docs/DATA.md` 98 to 125). Section 4 was amended on 2026-10-13, after the first `make tag` run and a round of candidate experiments: `act` is asked as one yes/no question per option, `signal` also covers metric series, and the floor rule has a tolerance (section 4.7).
 
 ## 1. Decisions
 
@@ -138,15 +140,15 @@ What a tag adds that the data lacks: log lines have a level and a logger but no 
 
 ### 4.4 Taxonomy v1
 
-Three facets (ruling O5). Each facet is one `Choice`; options are listed in a fixed order with `other` last. Facets come from vocabularies that predate this incident: the four golden signals of monitoring plus availability and change; ordinary speech acts in an incident channel; standard change types.
+Three facets (ruling O5, amended in section 4.7). `signal` and `change_kind` are each one `Choice`, with options in a fixed order and `other` last; `act` is one yes/no question per option, so a text can carry more than one value. Facets come from vocabularies that predate this incident: the four golden signals of monitoring plus availability and change; ordinary speech acts in an incident channel; standard change types.
 
 | Facet | Options | Applies to | Units here |
 |---|---|---|---|
-| `signal` | latency, errors, saturation, availability, traffic, change, security, routine, other | log templates; alert definitions and titles; incidents | 111 templates; about 31 alert texts; 23 incidents |
-| `act` | observation, hypothesis, action_taken, action_proposed, question, status, social, other | human chat messages; ServiceNow journal entries; PagerDuty notes | 81 + 28 + 1 |
+| `signal` | latency, errors, saturation, availability, traffic, change, security, routine, other | log templates; alert definitions and titles; incidents; metric series (the first five options only) | 100 templates; 42 alert texts; 23 incidents; 14 series |
+| `act` | observation, hypothesis, action_taken, action_proposed, question, status, social (a yes or no each, so no `other`) | human chat messages; ServiceNow journal entries; PagerDuty notes | 81 + 28 + 1 |
 | `change_kind` | release, rollback, config, infra, network, data, job, other | change requests; Jenkins builds; commits | 15 + 15 + 9 |
 
-A request sends one record's own text and one question per facet that applies to it. Each question carries the facet's whole option list with one line of meaning per option, and nothing else. The working meanings, from which the profile text is written:
+A request sends one record's own text and the questions of the one profile asked about that kind of record. A pick-one question carries the whole option list with one line of meaning per option, and nothing else; a yes/no question carries one option's line. The working meanings, from which the profile text is written:
 
 | Facet | Option | Meaning |
 |---|---|---|
@@ -185,23 +187,35 @@ Left out of v1:
 - `layer` (application, database, network and so on). Source, sourcetype and host are already columns, so filtering by where a record comes from is code's job. The other reading, the layer a text is about, is ambiguous to label by hand, and `signal` covers its main use. It is the first facet to add back if the ablation shows the agent failing to cross layers.
 - `resolution` on closed incidents. There are 11; the agent reads 11 close notes in one call, so a filter over them adds nothing.
 
-Bot posts get `act=automated` from the `bot_message` subtype in code, with no request. Log lines are never tagged one by one: the template is the unit, which also survives the scale render (about 75,000 lines, a few hundred templates). Identical texts share one cache entry, so the 15 versions of the live incident cost one request per distinct text. Not tagged in v1: knowledge pages (8 pages; the source inventory already lists every title), CIs, users, groups, metric points.
+Bot posts get `act=automated` from the `bot_message` subtype in code, with no request. Log lines are never tagged one by one: the template is the unit, which also survives the scale render (about 75,000 lines, a few hundred templates). Identical texts share one cache entry, so the 15 versions of the live incident cost one request per distinct text. Not tagged in v1: knowledge pages (8 pages; the source inventory already lists every title), CIs, users and groups. A metric series is tagged once, from its query, and the tag sits on each of its points.
 
-Where the tools use them when tags are on (the contract for the tool step): `search_logs` gains `signal?` and `group_by=signal`; `list_alerts` gains `signal?`; `read_chat` gains `act?`; `list_changes` gains `change_kind?`; `itsm_query` gains `signal?` on incidents; the source inventory gains counts per facet over visible rows.
+Where the tools use them when tags are on (the contract for the tool step): `search_logs` gains `signal?` and `group_by=signal`; `list_alerts` gains `signal?`; `read_chat` gains `act?`, which matches a message that carries that value among its values; `list_changes` gains `change_kind?`; `itsm_query` gains `signal?` on incidents; the source inventory gains counts per facet over visible rows and lists each metric series with its `signal`.
 
 ### 4.5 Thresholds, cache and commands
 
-- **The floor.** A `Choice` value is applied only when the chosen option's probability is at least the floor (T2). The floor starts at 0.8 and is set for precision, not coverage: the final number is the lowest value at or above 0.8 at which, on the hand-labelled sample, at least 9 in 10 applied tags match the label and no applied tag flips between repeats. It is recorded in `docs/DATA.md`. The cache keeps the raw probabilities, so moving the floor needs no new calls.
+- **The floor.** A value is applied only when its probability is at least the floor (T2): the chosen option's for a `Choice`, the yes for a yes/no question. The floor starts at 0.8 and is set for precision, not coverage: the final number is the lowest value at or above 0.8 at which, on the hand-labelled sample, at least 9 in 10 stored values match the label and no stored value flips between repeats. A value flips when a repeat brings it back more than the tolerance under the floor (section 4.7). The measured floor is 0.90 (`docs/DATA.md` 121). The cache keeps the raw probabilities, so moving the floor needs no new calls.
 - `tags/cache.jsonl`, committed, outside `bundles/`: one line per `tag_key = sha256(classifier version, profile id and version, canonical JSON of the state)`, holding the raw answers, the answering version and token usage, and no record text. Sorted by key for stable diffs.
 - `make tag`: builds the store, collects cache misses, calls the classifier eight at a time with the SDK's retries, appends the answers, prints requests, tokens and cost. `make ingest` and every test run with no key.
 - The SDK (`typesafe-sdk`, pinned below the next minor) sits in an optional `tagging` dependency group that only `smalls tag` imports.
 
 ### 4.6 How tag quality is measured
 
-- **Labels first.** `eval/tags/labels.yaml`: about 60 units stratified across the three profiles (about 20 per facet), labelled by hand from the record text and the option definitions, and committed before the first `make tag` run so git proves the order.
+- **Labels first.** `eval/tags/labels.yaml`: units stratified across the facets (89 as built: 35, 34 and 20), labelled by hand from the record text and the option definitions, and committed before the classifier answers the question they are scored against, so git proves the order.
 - **Precision and coverage.** Per facet, two numbers: of the tags applied, how many match the hand label (the bar is 9 in 10), and how many labelled units got a tag at all (reported, no bar). The confused pairs are listed. A facet that cannot reach the bar at any floor is stored but not offered as a tool filter, and the write-up says so.
 - **Stability.** Three cold repeats over the labelled sample, one of them with option order shuffled: count the applied tags that flip, and raise the floor until none does.
 - **Ablation.** Once the agent runs (step 6c): the regression set (arm C, 14:52, 3 runs) with `SMALLS_TAGS=on` and `off`. Report outcome score, fabricated and unseen citations, tool calls and tokens to the first correct leading hypothesis.
+
+### 4.7 Amended after the first run
+
+The first `make tag` run used the taxonomy exactly as ruled, and its numbers are kept (`docs/DATA.md` 121). We then tried six candidates on a second, blind-labelled sample (`docs/research/tagging.md` section 7) and ruled on what they showed.
+
+| Point | Ruling | Why |
+|---|---|---|
+| `act` form | **One yes/no question per option**, where the first run asked pick-one. A message's `act` tag is a list. | A message often does two things (reports and proposes), and pick-one split its probability and stored nothing: at the final floor pick-one tags 43 of 110 units and yes/no tags 86. This is rule T2's "yes/no question", stored only on a confident yes. |
+| `signal` on metric series | **Adopted.** A series is tagged once from its query, with the five golden-signal options, and the tag sits on each of its points. | A query names what it measures; 13 of 14 series tagged, all matching their label, none moving between repeats. It lets the source inventory group series by signal. |
+| The floor rule | **One floor for every facet, with a tolerance**: a repeat that brings a value back no more than 0.02 under the floor reproduces it. | The classifier rounds to 0.01 and moves by about that between identical requests, so some value always sits beside any threshold. Without the tolerance the rule gave 0.96, though at 0.90 the only misses were by 0.01 and 0.02; with it, 0.90, and any tolerance from 0.02 to 0.09 gives the same number, because the one real flip under 0.90 misses by 0.10 or more. We also considered a floor per facet and kept one number. |
+
+Not changed: the option meanings, `signal` and `change_kind` as pick-one, tags off by default, and every rule T1 to T10.
 
 ## 5. Considered and not adopted: a compose database
 
@@ -236,7 +250,7 @@ Existing checks stay green throughout: `make data`, `make lint`, `make test` (21
 
 ## 7. Rulings on the open points
 
-Five points were open when this record was first written. Four are now ruled or deferred; O1 is still ours to rule on together, and the build uses its default meanwhile.
+Five points were open when this record was first written. Four are now ruled or deferred; O1 is still ours to rule on together, and the build uses its default meanwhile. O6 was opened by the candidate experiments.
 
 | # | Point | State | Ruling or default |
 |---|---|---|---|
@@ -244,7 +258,8 @@ Five points were open when this record was first written. Four are now ruled or 
 | O2 | Do tags ship on? | **Ruled** | Off by default. `SMALLS_TAGS` defaults to `off` and `on` is opt in. The ablation still runs both arms and the write-up reports the numbers; making `on` the default would be a new ruling made on those numbers. |
 | O3 | Does a pinned classifier version in a config file break the rule we had written as "no model identifiers"? | **Ruled** | No. The rule means model-agnostic design: the agent model and the classifier version are config values, and code, prompts and docs refer to them by role and assume no particular model. CLAUDE.md now says so, and T10 is that rule applied. |
 | O4 | How held-out bundles get tags. A session bound by the held-out rule cannot read `eval/heldout/`. | **Deferred** | We settle it separately, outside this step. With tags off by default, held-out runs need no tags, so nothing waits on it. |
-| O5 | The taxonomy itself: facets, option names, floor. | **Ruled** | Three facets, `signal`, `act` and `change_kind`, with the options and meanings in section 4.4; `layer` and `resolution` are left out of v1. A tag is applied only at high confidence (T2), with a floor that starts at 0.8 and is set for precision (section 4.5). The profile text is still shown for review before the first `make tag`; a change bumps the profile version and costs about a cent to redo. |
+| O5 | The taxonomy itself: facets, option names, floor. | **Ruled, amended** | Three facets, `signal`, `act` and `change_kind`, with the options and meanings in section 4.4; `layer` and `resolution` are left out of v1. A tag is applied only at high confidence (T2), with a floor that starts at 0.8 and is set for precision (section 4.5). The profiles were read before the first `make tag` and run as shown. Amended after that run (section 4.7): `act` is asked as yes/no per option, `signal` also covers metric series, and the measured floor is 0.90 with a tolerance of 0.02. |
+| O6 | Candidates tried and not adopted: `signal` asked as yes/no beside pick-one; a `resource` facet (cpu, memory, disk, network, pool) and a `fault` facet (timeout, unavailable, exhausted and so on); `layer`. | **Open** | Default: leave out. `signal` as yes/no would tag the lines that are two things at once, which pick-one leaves untagged, but its `security` option said yes to lines about authorising a payment until reworded, and the 17-unit sample did not catch it: it needs a larger blind sample first. `resource` and `fault` are precise and sparse, and their busiest values are this incident's own mechanism, which is the concern of O1. `layer` mostly restates the source. The numbers are in `docs/research/tagging.md` section 7. |
 
 ## 8. Carried to the tool step
 

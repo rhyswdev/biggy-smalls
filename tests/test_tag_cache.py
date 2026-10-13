@@ -109,7 +109,7 @@ def test_the_configured_floor_is_the_measured_one(outcomes):
         assert any(r["flips"] or (r["stored"] and r["correct"] / r["stored"] < measure.BAR) for r in lower.values())
     # No pick-one tag changes value at any floor from the starting one up: the instability is doubt, not disagreement.
     assert all(r["value_flips"] == 0 for step in range(21) for r in measure.table(outcomes, round(measure.START + step / 100, 2)).values())
-    # Without the tolerance the same rule lands on 0.96: the difference is values that come back 0.01 or 0.02 lower.
+    # Without the tolerance the same rule lands on 0.96: at 0.90 the only misses are values that come back 0.01 or 0.02 lower.
     strict = [round(measure.START + i / 100, 2) for i in range(21)
               if all(measure._passes(r) for r in measure.table(outcomes, round(measure.START + i / 100, 2), tol=0.0).values())]
     assert strict[0] == 0.96
