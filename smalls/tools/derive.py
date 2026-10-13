@@ -24,6 +24,7 @@ import json
 from typing import Any
 
 from smalls.tools.registry import ToolContext
+from smalls.tools.windows import iso
 
 
 def query(ctx: ToolContext, sql: str, params: tuple | list = ()) -> list[dict[str, Any]]:
@@ -55,6 +56,72 @@ def tag_label(tags: dict[str, list[str]], facets: tuple[str, ...]) -> str:
     """The one fixed form a row shows its tags in: ` [tag <facet>=<value>,<value>]` per facet, and nothing
     when it carries none. Only called with tags on."""
     return "".join(f" [tag {facet}={','.join(tags[facet])}]" for facet in facets if tags.get(facet))
+
+
+def stamp(ms: int, native: str | None = None) -> str:
+    """A time as UTC, with the native value beside it where it differs (rule 3 of section 6.2)."""
+    utc = iso(ms)
+    if not native:
+        return utc
+    same = native.replace(" ", "T").rstrip("Z").split("+")[0].rstrip("0").rstrip(".")
+    if utc.rstrip("Z").rstrip("0").rstrip(".").startswith(same) and same:
+        return utc
+    return f"{utc} (native {native})"
+
+
+# -- alert streams (K2 and K4) -----------------------------------------------------------------------------
+
+FIRED = "fired"
+ACTIVE, RESET = "active", "reset"
+RECOVERY_SEV = 6        # a transition at informational severity is a recovery
+
+
+def stream_state(stream: Any, now: int) -> None:
+    """Fill in a stream's first seen, last change, state at `now`, transition count and active spans, from
+    its visible records alone. Which rule applies is read from the shape of the records:
+
+    - versions of one record (a problem, a page): the version valid at now gives the state, and it stays
+      active until that version carries an end;
+    - records that each carry a transition (a monitor's events): the last one gives the state, and a
+      transition at informational severity is a recovery;
+    - a record whose served state ingestion withheld (a network-monitor alert): active from its trigger
+      until its reset, and a reset that has not happened by now is never mentioned;
+    - anything else (a delivery of a search alert): no state at all; it fired.
+    """
+    records = stream.records
+    head, last = records[0], records[-1]
+    stream.is_page = head["kind"] == "incident"
+    if head["valid_from"] is not None:
+        ended = last["t_end"] if last["t_end"] is not None and last["t_end"] < now else None
+        stream.first, stream.last = head["t_event"], last["t_known"]
+        stream.state, stream.active = last["status"] or "unknown", ended is None
+        stream.transitions = last["version"]
+        stream.spans = [(head["t_event"], ended)]
+    elif any(r["status"] for r in records):
+        stream.first, stream.last = head["t_known"], last["t_known"]
+        stream.state = last["status"] or "unknown"
+        stream.transitions = len(records)
+        start = None
+        for r in records:
+            recovering = r["sev"] is not None and r["sev"] >= RECOVERY_SEV
+            if not recovering and start is None:
+                start = r["t_known"]
+            elif recovering and start is not None:
+                stream.spans.append((start, r["t_known"]))
+                start = None
+        if start is not None:
+            stream.spans.append((start, None))
+        stream.active = start is not None
+    elif any(r["withheld"] for r in records):
+        reset = head["t_end"] if head["t_end"] is not None and head["t_end"] < now else None
+        stream.first, stream.last = head["t_event"], reset or head["t_known"]
+        stream.state, stream.active = (RESET if reset else ACTIVE), reset is None
+        stream.transitions = 2 if reset else 1
+        stream.spans = [(head["t_event"], reset)]
+    else:
+        stream.first, stream.last = head["t_known"], last["t_known"]
+        stream.state, stream.active, stream.transitions = FIRED, True, 1
+        stream.spans = [(r["t_known"], r["t_known"] + 1) for r in records]
 
 
 def channels(ctx: ToolContext) -> list[str]:
