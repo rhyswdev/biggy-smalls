@@ -1,0 +1,18 @@
+# The build context is an allowlist: only what the Dockerfile copies. The repo itself arrives as a bind
+# mount at run time, so bundles, docs and eval data never enter an image layer.
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!smalls/
+!smalls_data/
+**/__pycache__
+**/*.pyc
+.git
+.venv
+.pytest_cache
+# Secrets never enter the build context. Keep these last so no allow rule above can re-admit them.
+.env
+.env.*
+**/.env
+**/.env.*
