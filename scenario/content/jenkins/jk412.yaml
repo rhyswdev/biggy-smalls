@@ -1,0 +1,13 @@
+# payments-gateway-deploy #412 changeSet: the six commits since 3.7.9 (main session, PLAN 2.6). Times UTC.
+# The commit messages never say what PAY-2231 changes; the affected paths and the startup config line do.
+items:
+  - {author: dana.whitfield, at: "2026-10-01T14:02:11Z", msg: "PAY-2231 PSP client resilience", sig_id: sig.jk412_yml_path,
+     paths: [src/main/java/com/larkspur/payments/psp/PayCoreClient.java, src/main/java/com/larkspur/payments/psp/RetryPolicy.java,
+             src/main/resources/application-prod.yml, src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java]}
+  - {author: tom.beckett, at: "2026-10-02T09:44:37Z", msg: "PAY-2198 bump jackson-databind to 2.17.2", paths: [pom.xml]}
+  - {author: dana.whitfield, at: "2026-10-05T16:20:03Z", msg: "PAY-2231 address review comments",
+     paths: [src/main/java/com/larkspur/payments/psp/RetryPolicy.java, src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java]}
+  - {author: tom.beckett, at: "2026-10-06T13:15:48Z", msg: "PAY-2240 refunds: emit settlement metrics",
+     paths: [src/main/java/com/larkspur/payments/refund/RefundService.java, src/main/java/com/larkspur/payments/settlement/SettlementMetrics.java]}
+  - {author: priya.raman, at: "2026-10-08T15:02:29Z", msg: "Merge branch 'release/3.8.0'", paths: []}
+  - {author: priya.raman, at: "2026-10-08T15:05:51Z", msg: "chore: update CHANGELOG for 3.8.0", paths: [CHANGELOG.md]}

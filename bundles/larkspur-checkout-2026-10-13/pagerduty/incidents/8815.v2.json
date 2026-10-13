@@ -1,0 +1,73 @@
+{
+  "incident": {
+    "id": "QSO1W7PHJDJ1EO",
+    "type": "incident",
+    "summary": "[#8815] [Synthetics] checkout flow",
+    "self": "https://api.pagerduty.com/incidents/QSO1W7PHJDJ1EO",
+    "html_url": "https://larkspur.pagerduty.com/incidents/QSO1W7PHJDJ1EO",
+    "incident_number": 8815,
+    "title": "[Synthetics] checkout flow",
+    "created_at": "2026-10-13T14:35:40Z",
+    "updated_at": "2026-10-13T14:37:00Z",
+    "status": "resolved",
+    "incident_key": "monitor-7390118",
+    "service": {
+      "id": "PSV9C1L",
+      "type": "service_reference",
+      "summary": "Checkout - Prod",
+      "self": "https://api.pagerduty.com/services/PSV9C1L",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+    },
+    "assignments": [],
+    "assigned_via": "escalation_policy",
+    "acknowledgements": [],
+    "last_status_change_at": "2026-10-13T14:37:00Z",
+    "last_status_change_by": {
+      "id": "PBO9GPI",
+      "type": "user_reference",
+      "summary": "Alice Nguyen",
+      "self": "https://api.pagerduty.com/users/PBO9GPI",
+      "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+    },
+    "first_trigger_log_entry": {
+      "id": "QE9H3FQ41NDQK7",
+      "type": "trigger_log_entry_reference",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/QE9H3FQ41NDQK7",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QSO1W7PHJDJ1EO/log_entries/QE9H3FQ41NDQK7"
+    },
+    "alert_counts": {
+      "all": 1,
+      "triggered": 0,
+      "resolved": 1
+    },
+    "is_mergeable": false,
+    "escalation_policy": {
+      "id": "PEP2N6B",
+      "type": "escalation_policy_reference",
+      "summary": "Commerce Platform",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP2N6B",
+      "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP2N6B"
+    },
+    "teams": [],
+    "pending_actions": [],
+    "urgency": "high",
+    "priority": {
+      "id": "H3P3CA0WXO23L2",
+      "type": "priority",
+      "summary": "P2",
+      "name": "P2"
+    },
+    "resolved_at": "2026-10-13T14:37:00Z",
+    "resolve_reason": {
+      "type": "merge_resolve_reason",
+      "incident": {
+        "id": "Q8Q920Q2BA9LW9",
+        "type": "incident_reference",
+        "summary": "[#8814] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/Q8Q920Q2BA9LW9",
+        "html_url": "https://larkspur.pagerduty.com/incidents/Q8Q920Q2BA9LW9"
+      }
+    }
+  }
+}

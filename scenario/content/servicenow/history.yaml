@@ -1,0 +1,81 @@
+# Closed history incidents (main session, PLAN 2.6). Never served. Times in work notes are UTC; the
+# generator renders them in the integration user's zone (America/New_York) as ServiceNow display values.
+# Numbers, open/resolve/close times, CI, group and priority come from the scenario YAML.
+
+inc0042041:
+  short_description: "Checkout slow and timing out during spring campaign"
+  description: |-
+    Customers report checkout spinning and failing at payment during the spring campaign launch. Datadog shows checkout-api p90 over 6s and 5xx around 8%. Browse is fine.
+  category: Software
+  contact_type: Monitoring
+  caller: svc-datadog
+  opened_by: svc-datadog
+  assigned_to: alice.nguyen
+  business_service: Online Checkout
+  impact: "1 - High"
+  urgency: "2 - Medium"
+  severity: "2 - Medium"
+  close_code: "Solved (Permanently)"
+  resolved_by: alice.nguyen
+  closed_by: alice.nguyen
+  reassignment_count: "1"
+  close_notes: |-
+    Root cause: checkout-api ran out of database connections to checkout-db under the campaign traffic spike (3x normal submits). Pool was 20 per pod; all pods showed active=20 with threads waiting, requests queued behind the pool and timed out.
+    Fix: scaled checkout-api to 12 replicas as immediate mitigation, then raised the checkout-api Hikari pool from 20 to 40 (CHG0029514) and added an HPA on checkout-api. Latency normal from 21:35 UTC.
+    Follow-ups: KB0009871 (checkout latency triage) written; turn on Hikari DEBUG logging so pool stats are visible next time (done for checkout-api and payments-gateway).
+  work_notes:
+    - {at: "2026-03-04T19:20:00Z", by: alice.nguyen, text: "Taking this. Campaign email went out at 19:00 UTC, traffic on submit ~3x. Checking checkout-api first."}
+    - {at: "2026-03-04T19:41:00Z", by: sam.ortega, text: "redis-sessions looks fine, fragmentation 1.3, no evictions. Not redis."}
+    - {at: "2026-03-04T20:05:00Z", by: alice.nguyen, text: "checkout-api pods all at active=20 idle=0 on the checkout-db pool, 30-40 threads waiting. DB itself is quiet, queries fast. It's our pool size."}
+    - {at: "2026-03-04T20:22:00Z", by: alice.nguyen, text: "Scaled checkout-api to 12 replicas. p90 dropping."}
+    - {at: "2026-03-04T21:30:00Z", by: alice.nguyen, text: "Pool raised to 40 under CHG0029514, HPA added. Scaling back to 6 tomorrow once HPA is proven."}
+
+inc0045210:
+  short_description: "Card payments failing - PayCore outage"
+  description: |-
+    Payment authorizations failing for all card payments. payments-gateway logs show PSP timeouts on every call to api.paycore.example. PayCore status page shows major outage.
+  category: Software
+  contact_type: Monitoring
+  caller: svc-datadog
+  opened_by: svc-datadog
+  assigned_to: priya.raman
+  business_service: Online Checkout
+  impact: "1 - High"
+  urgency: "1 - High"
+  severity: "2 - Medium"
+  close_code: "Solved (Work Around)"
+  resolved_by: priya.raman
+  closed_by: priya.raman
+  reassignment_count: "0"
+  close_notes: |-
+    PayCore had a full outage from 16:02 to 16:44 UTC (their incident, confirmed on their status page). payments-gateway failed fast as designed: every authorize call hit the 3000ms PSP timeout and returned a decline to checkout, so customers saw "card declined" and could retry later. No knock-on to pay-db-01 or the gateway pools; connections stayed at baseline throughout.
+    No action on our side beyond customer comms. Recovered when PayCore recovered.
+    Follow-up: PAY-2231 (PSP client resilience) to look at retrying transient PSP failures so short PayCore blips don't decline good cards.
+  work_notes:
+    - {at: "2026-07-19T16:09:00Z", by: priya.raman, text: "Every authorize to PayCore timing out at 3000ms, gateway returning declines quickly. Pools fine, pay-db-01 at 46 connections."}
+    - {at: "2026-07-19T16:14:00Z", by: priya.raman, text: "PayCore status page: major outage, all regions. Nothing to do on our side but wait. Support briefed on 'card declined'."}
+    - {at: "2026-07-19T16:46:00Z", by: priya.raman, text: "PayCore recovered 16:44. Authorize success back to 98%."}
+
+inc0047003:
+  short_description: "redis-sessions memory fragmentation high"
+  description: |-
+    Datadog monitor 'redis-sessions memory fragmentation high' alerting, ratio 1.6. Paged Platform.
+  category: Software
+  contact_type: Monitoring
+  caller: svc-datadog
+  opened_by: svc-datadog
+  assigned_to: sam.ortega
+  business_service: Online Checkout
+  impact: "3 - Low"
+  urgency: "3 - Low"
+  severity: "3 - Low"
+  close_code: "Closed/Resolved by Caller"
+  resolved_by: sam.ortega
+  closed_by: sam.ortega
+  reassignment_count: "0"
+  close_notes: |-
+    Benign. Fragmentation ratio swings between 1.3 and 1.6 on a ~2 hour cycle with the session expiry pattern; activedefrag handles it. No evictions, no latency impact on login or checkout. Sessions moved to the redis cluster last year so this instance only holds legacy keys.
+    Follow-up: raise the monitor threshold or retire the monitor (not done yet).
+  work_notes:
+    - {at: "2026-09-22T09:55:00Z", by: sam.ortega, text: "Ratio 1.61, no evictions, used_memory flat. Same flap as last week."}
+    - {at: "2026-09-22T10:58:00Z", by: sam.ortega, text: "Back to 1.34. Closing as benign; will look at the threshold."}

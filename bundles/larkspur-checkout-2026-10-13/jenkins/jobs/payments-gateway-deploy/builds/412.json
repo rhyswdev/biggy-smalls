@@ -1,0 +1,214 @@
+{
+  "_class": "hudson.model.FreeStyleBuild",
+  "actions": [
+    {
+      "_class": "hudson.model.ParametersAction",
+      "parameters": [
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "VERSION",
+          "value": "3.8.0"
+        },
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "TARGET_ENV",
+          "value": "prod"
+        },
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "CHANGE_TICKET",
+          "value": "CHG0031877"
+        }
+      ]
+    },
+    {
+      "_class": "hudson.model.CauseAction",
+      "causes": [
+        {
+          "_class": "hudson.model.Cause$UserIdCause",
+          "shortDescription": "Started by user Jordan Pike",
+          "userId": "jordan.pike",
+          "userName": "Jordan Pike"
+        }
+      ]
+    }
+  ],
+  "artifacts": [],
+  "building": false,
+  "description": null,
+  "displayName": "#412",
+  "duration": 312062,
+  "estimatedDuration": 301000,
+  "executor": null,
+  "fullDisplayName": "payments-gateway-deploy #412",
+  "id": "412",
+  "keepLog": false,
+  "number": 412,
+  "queueId": 90412,
+  "result": "SUCCESS",
+  "timestamp": 1791886788000,
+  "url": "https://jenkins.larkspur.internal/job/payments-gateway-deploy/412/",
+  "builtOn": "jenkins-agent-01",
+  "changeSet": {
+    "_class": "hudson.plugins.git.GitChangeSetList",
+    "items": [
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "src/main/java/com/larkspur/payments/psp/PayCoreClient.java",
+          "src/main/java/com/larkspur/payments/psp/RetryPolicy.java",
+          "src/main/resources/application-prod.yml",
+          "src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java"
+        ],
+        "commitId": "0735879b5adb106873dead45e7941a4c9c5b081e",
+        "timestamp": 1790863331000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/dana.whitfield",
+          "fullName": "Dana Whitfield"
+        },
+        "authorEmail": "dana.whitfield@larkspur.com",
+        "comment": "PAY-2231 PSP client resilience\n",
+        "date": "2026-10-01 10:02:11 -0400",
+        "id": "0735879b5adb106873dead45e7941a4c9c5b081e",
+        "msg": "PAY-2231 PSP client resilience",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "src/main/java/com/larkspur/payments/psp/PayCoreClient.java"
+          },
+          {
+            "editType": "edit",
+            "file": "src/main/java/com/larkspur/payments/psp/RetryPolicy.java"
+          },
+          {
+            "editType": "edit",
+            "file": "src/main/resources/application-prod.yml"
+          },
+          {
+            "editType": "edit",
+            "file": "src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java"
+          }
+        ]
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "pom.xml"
+        ],
+        "commitId": "b5b5af8d2dcc560490cadff652c39ee89e62a1e8",
+        "timestamp": 1790934277000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/tom.beckett",
+          "fullName": "Tom Beckett"
+        },
+        "authorEmail": "tom.beckett@larkspur.com",
+        "comment": "PAY-2198 bump jackson-databind to 2.17.2\n",
+        "date": "2026-10-02 05:44:37 -0400",
+        "id": "b5b5af8d2dcc560490cadff652c39ee89e62a1e8",
+        "msg": "PAY-2198 bump jackson-databind to 2.17.2",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "pom.xml"
+          }
+        ]
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "src/main/java/com/larkspur/payments/psp/RetryPolicy.java",
+          "src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java"
+        ],
+        "commitId": "3a25df06acc5d2a78b49770f8da82ebd5b90d4a7",
+        "timestamp": 1791217203000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/dana.whitfield",
+          "fullName": "Dana Whitfield"
+        },
+        "authorEmail": "dana.whitfield@larkspur.com",
+        "comment": "PAY-2231 address review comments\n",
+        "date": "2026-10-05 12:20:03 -0400",
+        "id": "3a25df06acc5d2a78b49770f8da82ebd5b90d4a7",
+        "msg": "PAY-2231 address review comments",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "src/main/java/com/larkspur/payments/psp/RetryPolicy.java"
+          },
+          {
+            "editType": "edit",
+            "file": "src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java"
+          }
+        ]
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "src/main/java/com/larkspur/payments/refund/RefundService.java",
+          "src/main/java/com/larkspur/payments/settlement/SettlementMetrics.java"
+        ],
+        "commitId": "5aa65a7dc3cb802a6bb0ad8d21c468db6527d0d1",
+        "timestamp": 1791292548000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/tom.beckett",
+          "fullName": "Tom Beckett"
+        },
+        "authorEmail": "tom.beckett@larkspur.com",
+        "comment": "PAY-2240 refunds: emit settlement metrics\n",
+        "date": "2026-10-06 09:15:48 -0400",
+        "id": "5aa65a7dc3cb802a6bb0ad8d21c468db6527d0d1",
+        "msg": "PAY-2240 refunds: emit settlement metrics",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "src/main/java/com/larkspur/payments/refund/RefundService.java"
+          },
+          {
+            "editType": "edit",
+            "file": "src/main/java/com/larkspur/payments/settlement/SettlementMetrics.java"
+          }
+        ]
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [],
+        "commitId": "5659c4047c26502c37e4688ea34f75513dd90fa6",
+        "timestamp": 1791471749000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/priya.raman",
+          "fullName": "Priya Raman"
+        },
+        "authorEmail": "priya.raman@larkspur.com",
+        "comment": "Merge branch 'release/3.8.0'\n",
+        "date": "2026-10-08 11:02:29 -0400",
+        "id": "5659c4047c26502c37e4688ea34f75513dd90fa6",
+        "msg": "Merge branch 'release/3.8.0'",
+        "paths": []
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "CHANGELOG.md"
+        ],
+        "commitId": "d386052f813c94ce57b82579c5d4e10b281ecafd",
+        "timestamp": 1791471951000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/priya.raman",
+          "fullName": "Priya Raman"
+        },
+        "authorEmail": "priya.raman@larkspur.com",
+        "comment": "chore: update CHANGELOG for 3.8.0\n",
+        "date": "2026-10-08 11:05:51 -0400",
+        "id": "d386052f813c94ce57b82579c5d4e10b281ecafd",
+        "msg": "chore: update CHANGELOG for 3.8.0",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "CHANGELOG.md"
+          }
+        ]
+      }
+    ],
+    "kind": "git"
+  }
+}

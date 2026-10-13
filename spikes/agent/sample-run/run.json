@@ -1,0 +1,33 @@
+{
+ "run_id": "sample",
+ "created": "2026-10-13T10:48:42.667632+00:00",
+ "question": "The nightly report-export job failed at 02:10 UTC. What happened, and what should we do before tonight's run?",
+ "context": {
+  "run_id": "sample",
+  "now": "2026-03-02T02:20:00+00:00",
+  "auto_approve": true,
+  "gate_actions_always": true,
+  "tool_call_budget": 12,
+  "max_rounds": 18
+ },
+ "config": {
+  "investigator": {
+   "profile": "scripted",
+   "provider": "scripted",
+   "model": "scripted",
+   "params": {}
+  },
+  "auto_approve": true,
+  "gate_actions_always": true,
+  "tool_call_budget": 12
+ },
+ "agent_commit": "ad13516",
+ "system_prompt_sha": "07e858a0f634",
+ "tools_sha": "ea964f3fbe33",
+ "versions": {
+  "langgraph": "1.2.15",
+  "langgraph-checkpoint-sqlite": "3.1.2",
+  "langchain-core": "1.6.10",
+  "langchain-anthropic": "1.7.6"
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "x-source": "transcribed Logback PatternLayout; custom logback.xml declared for the gateway",
+ "pattern": "%d{yyyy-MM-dd HH:mm:ss,SSS} %-5level [%thread] %logger{25} - %msg%n%ex{12}",
+ "levels": [
+  "TRACE",
+  "DEBUG",
+  "INFO",
+  "WARN",
+  "ERROR"
+ ]
+}

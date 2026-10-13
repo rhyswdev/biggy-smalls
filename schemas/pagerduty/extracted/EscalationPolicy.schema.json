@@ -1,0 +1,304 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$ref": "#/components/schemas/EscalationPolicy",
+ "components": {
+  "schemas": {
+   "EscalationPolicy": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Tag/allOf/0"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "type": {
+        "type": "string",
+        "description": "The type of object being created.",
+        "default": "escalation_policy",
+        "enum": [
+         "escalation_policy"
+        ]
+       },
+       "name": {
+        "type": "string",
+        "description": "The name of the escalation policy."
+       },
+       "description": {
+        "type": "string",
+        "description": "Escalation policy description."
+       },
+       "num_loops": {
+        "type": "integer",
+        "description": "The number of times the escalation policy will repeat after reaching the end of its escalation.",
+        "default": 0,
+        "minimum": 0
+       },
+       "on_call_handoff_notifications": {
+        "type": "string",
+        "description": "Determines how on call handoff notifications will be sent for users on the escalation policy. Defaults to \"if_has_services\".",
+        "enum": [
+         "if_has_services",
+         "always"
+        ]
+       },
+       "escalation_rules": {
+        "type": "array",
+        "items": {
+         "$ref": "#/components/schemas/EscalationRule"
+        }
+       },
+       "services": {
+        "type": "array",
+        "items": {
+         "$ref": "#/components/schemas/ServiceReference"
+        },
+        "minLength": 0,
+        "readOnly": true
+       },
+       "teams": {
+        "type": "array",
+        "description": "Team associated with the policy. Account must have the `teams` ability to use this parameter. Only one team may be associated with the policy.",
+        "items": {
+         "$ref": "#/components/schemas/TeamReference"
+        },
+        "minLength": 0
+       }
+      },
+      "required": [
+       "type",
+       "name",
+       "escalation_rules"
+      ],
+      "example": {
+       "id": "PQIL2IX",
+       "type": "escalation_policy",
+       "name": "Engineering Escalation Policy",
+       "escalation_rules": [
+        {
+         "escalation_delay_in_minutes": 30,
+         "targets": [
+          {
+           "id": "PEYSGVF",
+           "type": "user_reference"
+          }
+         ],
+         "escalation_rule_assignment_strategy": [
+          {
+           "type": "round_robin"
+          }
+         ]
+        }
+       ],
+       "services": [
+        {
+         "id": "PIJ90N7",
+         "type": "service_reference"
+        }
+       ],
+       "num_loops": 2,
+       "on_call_handoff_notifications": "if_has_services",
+       "teams": [
+        {
+         "id": "PQ9K7I8",
+         "type": "team_reference"
+        }
+       ],
+       "description": "Here is the ep for the engineering team."
+      }
+     }
+    ]
+   },
+   "EscalationRule": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string",
+      "readOnly": true
+     },
+     "escalation_delay_in_minutes": {
+      "type": "integer",
+      "description": "The number of minutes before an unacknowledged incident escalates away from this rule."
+     },
+     "targets": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "description": "The targets an incident should be assigned to upon reaching this rule.",
+      "items": {
+       "$ref": "#/components/schemas/EscalationTargetReference"
+      }
+     },
+     "escalation_rule_assignment_strategy": {
+      "type": "string",
+      "description": "The strategy used to assign the escalation rule to an incident.",
+      "enum": [
+       "round_robin",
+       "assign_to_everyone"
+      ]
+     }
+    },
+    "required": [
+     "escalation_delay_in_minutes",
+     "targets"
+    ],
+    "example": {
+     "escalation_delay_in_minutes": 30,
+     "targets": [
+      {
+       "id": "PAM4FGS",
+       "type": "user_reference"
+      },
+      {
+       "id": "PI7DH85",
+       "type": "schedule_reference"
+      }
+     ]
+    }
+   },
+   "EscalationTargetReference": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Reference"
+     },
+     {
+      "type": "object",
+      "description": "The escalation target is the entity that will be assigned an incident upon escalation.",
+      "properties": {
+       "type": {
+        "enum": [
+         "user",
+         "schedule",
+         "user_reference",
+         "schedule_reference",
+         "schedule_v3_reference"
+        ],
+        "type": "string"
+       }
+      }
+     }
+    ]
+   },
+   "Reference": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Tag/allOf/0"
+     },
+     {
+      "type": "object",
+      "required": [
+       "type",
+       "id"
+      ]
+     }
+    ]
+   },
+   "ServiceReference": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Reference"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "type": {
+        "type": "string",
+        "enum": [
+         "service_reference"
+        ]
+       }
+      }
+     }
+    ]
+   },
+   "Tag": {
+    "allOf": [
+     {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "string",
+        "readOnly": true
+       },
+       "summary": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "readOnly": true,
+        "description": "A short-form, server-generated string that provides succinct, important information about an object suitable for primary labeling of an entity in a client. In many cases, this will be identical to `name`, though it is not intended to be an identifier."
+       },
+       "type": {
+        "type": "string",
+        "readOnly": true,
+        "description": "A string that determines the schema of the object. This must be the standard name for the entity, suffixed by `_reference` if the object is a reference."
+       },
+       "self": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "readOnly": true,
+        "format": "url",
+        "description": "the API show URL at which the object is accessible"
+       },
+       "html_url": {
+        "type": [
+         "string",
+         "null"
+        ],
+        "readOnly": true,
+        "format": "url",
+        "description": "a URL at which the entity is uniquely displayed in the Web app"
+       }
+      }
+     },
+     {
+      "type": "object",
+      "properties": {
+       "type": {
+        "type": "string",
+        "description": "The type of object being created.",
+        "default": "tag",
+        "enum": [
+         "tag"
+        ]
+       },
+       "label": {
+        "type": "string",
+        "description": "The label of the tag.",
+        "maxLength": 191
+       }
+      },
+      "required": [
+       "label",
+       "type"
+      ],
+      "example": {
+       "type": "tag",
+       "label": "Batman"
+      }
+     }
+    ]
+   },
+   "TeamReference": {
+    "allOf": [
+     {
+      "$ref": "#/components/schemas/Reference"
+     },
+     {
+      "type": "object",
+      "properties": {
+       "type": {
+        "type": "string",
+        "enum": [
+         "team_reference"
+        ]
+       }
+      }
+     }
+    ]
+   }
+  }
+ },
+ "x-source": "PagerDuty/api-schema reference/REST/openapiv3.json"
+}

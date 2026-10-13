@@ -1,0 +1,49 @@
+{
+ "x-source": "jenkinsci/jenkins core/.../hudson/model/Run.java and jenkinsci/git-plugin GitChangeSet.java (@Exported getters)",
+ "Run": [
+  "artifacts",
+  "building",
+  "description",
+  "displayName",
+  "displayPath",
+  "duration",
+  "estimatedDuration",
+  "executor",
+  "fileName",
+  "fingerprint",
+  "fullDisplayName",
+  "id",
+  "inProgress",
+  "keepLog",
+  "number",
+  "queueId",
+  "result",
+  "timestamp",
+  "url"
+ ],
+ "GitChangeSet": [
+  "Path",
+  "author",
+  "authorEmail",
+  "comment",
+  "date",
+  "editType",
+  "file",
+  "id",
+  "msg",
+  "paths"
+ ],
+ "added_by_api": [
+  "_class",
+  "actions",
+  "builtOn",
+  "changeSet.items",
+  "changeSet.kind",
+  "actions[].parameters",
+  "actions[].causes",
+  "inProgress",
+  "keepLog",
+  "queueId",
+  "previousBuild"
+ ]
+}

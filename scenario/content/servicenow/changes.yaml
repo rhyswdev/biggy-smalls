@@ -1,0 +1,91 @@
+# The six change requests of the day (main session, PLAN 2.6). Never served. Numbers, types, states,
+# CIs, groups and planned/actual times come from the scenario YAML; `created` is when the change was
+# raised (UTC), which the generator renders as sys_created_on and the manifest uses as t_known.
+
+chg0031850:
+  created: "2026-10-07T13:12:00Z"
+  requested_by: sam.ortega
+  assigned_to: sam.ortega
+  short_description: "Firewall rule for vendor SFTP (payroll provider) on fw-dc-edge-02"
+  description: "Allow outbound SFTP from 10.20.8.0/24 to the payroll provider's new endpoint. One rule, no change to existing rules."
+  implementation_plan: "Add rule via the change window template, commit, verify with test transfer."
+  backout_plan: "Remove the rule and commit."
+  test_plan: "Test file transfer from batch-01."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Rule added and verified with a test transfer."
+chg0031877:
+  created: "2026-10-08T15:30:00Z"
+  requested_by: dana.whitfield
+  assigned_to: priya.raman
+  short_description: "payments-gateway 3.8.0 release (PAY-2198, PAY-2231, PAY-2240)"
+  description: |-
+    Release payments-gateway 3.8.0 to production.
+    PAY-2198 bump jackson-databind to 2.17.2
+    PAY-2231 PSP client resilience
+    PAY-2240 refunds: emit settlement metrics
+    Deployed to staging 12 Oct (payments-gateway-deploy #411), no issues.
+  implementation_plan: "Jenkins payments-gateway-deploy, VERSION=3.8.0, TARGET_ENV=prod. Rolling restart pay-01 to pay-04, one node at a time, F5 drains each member."
+  backout_plan: "Redeploy 3.7.9 with payments-gateway-deploy (VERSION=3.7.9). About 6 minutes."
+  test_plan: "Staging regression suite green. Smoke test: one authorization per node after restart."
+  justification: "Security fix in jackson-databind; settlement metrics needed by Finance for Q4 close."
+  risk: Moderate
+  risk_impact_analysis: "Rolling restart, no downtime expected. Library bump is the main risk; covered by regression suite."
+  impact: "2 - Medium"
+  cab_recommendation: "Approved. Deploy in the morning window."
+  close_code: Successful
+  close_notes: "Deployed 06:19 to 06:25 ET, all four nodes healthy, smoke tests passed."
+chg0031880:
+  created: "2026-10-12T14:05:00Z"
+  requested_by: kofi.mensah
+  assigned_to: kofi.mensah
+  short_description: "Lower DNS TTL for cdn.larkspur.com ahead of CDN provider switch"
+  description: "Reduce TTL on cdn.larkspur.com CNAME from 3600 to 60 so the CDN provider cutover next week can be rolled back quickly."
+  implementation_plan: "Update TTL in the DNS provider console; purge marketing site CDN cache."
+  backout_plan: "Restore TTL 3600."
+  test_plan: "dig cdn.larkspur.com from three regions; marketing synthetic stays green."
+  risk: Low
+  impact: "3 - Low"
+  close_code: ""
+  close_notes: ""
+chg0031899:
+  created: "2026-10-12T20:40:00Z"
+  requested_by: sam.ortega
+  assigned_to: sam.ortega
+  short_description: "Monthly Windows patching: reporting servers win-rpt-05 to win-rpt-08"
+  description: "Standard change: apply October cumulative updates to the reporting servers and reboot in sequence."
+  implementation_plan: "Standard change template SC-WIN-PATCH."
+  backout_plan: "Uninstall the cumulative update."
+  test_plan: "Reports render after reboot."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "All four patched and rebooted, reports OK."
+chg0031902:
+  created: "2026-10-13T13:58:00Z"
+  requested_by: ben.kowalski
+  assigned_to: ben.kowalski
+  short_description: "checkout-api 2.14.3: address form flag, logging library bump"
+  description: "Standard change: deploy checkout-api 2.14.3. Adds the address-form-v2 flag (off by default, 50% rollout in prod) and bumps the logging library."
+  implementation_plan: "Standard change template SC-K8S-DEPLOY: Jenkins checkout-api-deploy, rolling update."
+  backout_plan: "Redeploy 2.14.2 with checkout-api-deploy."
+  test_plan: "Synthetic checkout flow green after rollout."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Deployed 14:27 to 14:29 UTC, all six pods ready, synthetic checkout green at 14:29."
+chg0031910:
+  created: "2026-10-13T15:09:00Z"
+  requested_by: priya.raman
+  assigned_to: priya.raman
+  short_description: "EMERGENCY: roll back payments-gateway to 3.7.9 (INC0048811)"
+  description: "Retroactive emergency change for the rollback performed during INC0048811 with payments-gateway-deploy #413 (VERSION=3.7.9)."
+  implementation_plan: "Already executed: payments-gateway-deploy #413, rolling restart 15:01 to 15:06 UTC."
+  backout_plan: "Redeploy 3.8.0."
+  test_plan: "Gateway 5xx back to baseline."
+  justification: "Customer-impacting incident, P1."
+  risk: High
+  impact: "1 - High"
+  close_code: ""
+  close_notes: ""

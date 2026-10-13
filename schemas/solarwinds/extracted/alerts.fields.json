@@ -1,0 +1,23 @@
+{
+ "x-source": "transcribed SWIS Orion.AlertActive / AlertObjects / AlertConfigurations (docs not reachable here)",
+ "envelope": [
+  "results"
+ ],
+ "fields": [
+  "AlertActiveID",
+  "AlertObjectID",
+  "AlertName",
+  "EntityCaption",
+  "EntityType",
+  "EntityDetailsUrl",
+  "RelatedNodeCaption",
+  "Severity",
+  "TriggeredDateTime",
+  "TriggeredMessage",
+  "ResetDateTime",
+  "Acknowledged",
+  "AcknowledgedBy",
+  "AcknowledgedDateTime",
+  "Notes"
+ ]
+}

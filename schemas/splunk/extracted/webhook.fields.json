@@ -1,0 +1,54 @@
+{
+  "x-source": "splunk-sdk-python splunklib/results.py (results envelope); Splunk webhook alert action docs (body, transcribed)",
+  "results_envelope": [
+    "preview",
+    "messages",
+    "results"
+  ],
+  "webhook_body": [
+    "result",
+    "sid",
+    "results_link",
+    "search_name",
+    "owner",
+    "app"
+  ],
+  "event_row_fields": [
+    "_raw",
+    "_time",
+    "host",
+    "source",
+    "sourcetype",
+    "index",
+    "linecount",
+    "splunk_server",
+    "_bkt",
+    "_cd",
+    "_indextime",
+    "_serial",
+    "_si",
+    "_sourcetype",
+    "punct"
+  ],
+  "saved_search_fields": [
+    "name",
+    "search",
+    "description",
+    "cron_schedule",
+    "dispatch.earliest_time",
+    "dispatch.latest_time",
+    "alert_type",
+    "alert_comparator",
+    "alert_threshold",
+    "alert.suppress",
+    "alert.suppress.period",
+    "actions",
+    "action.webhook.param.url",
+    "is_scheduled",
+    "disabled",
+    "owner",
+    "app",
+    "alert_condition",
+    "updated"
+  ]
+}

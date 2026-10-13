@@ -1,0 +1,17 @@
+{
+  "result": {
+    "_raw": "2026-10-13 14:31:07,221 ERROR [http-nio-8443-exec-44] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=35, active=35, idle=0, waiting=12)",
+    "_time": "1791901867.221",
+    "host": "pay-02",
+    "source": "/var/log/payments-gateway/app.log",
+    "sourcetype": "payments:app",
+    "index": "payments",
+    "linecount": "1",
+    "splunk_server": "idx-02.larkspur.internal"
+  },
+  "sid": "scheduler__sam_ortega__sre_alerts__RMD507932b65ac07ed7c_at_1791901920_732",
+  "results_link": "https://splunk.larkspur.internal:8000/app/sre_alerts/search?q=%7Cloadjob%20scheduler__sam_ortega__sre_alerts__RMD507932b65ac07ed7c_at_1791901920_732%20%7C%20head%201&earliest=0&latest=now",
+  "search_name": "Payments pool exhaustion",
+  "owner": "sam.ortega",
+  "app": "sre_alerts"
+}

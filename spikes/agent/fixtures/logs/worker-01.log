@@ -1,0 +1,15 @@
+2026-03-02T01:00:04.101Z INFO  [deploy] report-exporter version=2.4.1 installed (was 2.4.0)
+2026-03-02T01:30:00.002Z INFO  [health] GET /healthz 200 3ms
+2026-03-02T01:45:00.003Z INFO  [health] GET /healthz 200 2ms
+2026-03-02T02:00:01.120Z INFO  [scheduler] job=report-export run=57 started
+2026-03-02T02:00:01.455Z INFO  [exporter] writing temp files to /var/spool/report-exporter/tmp
+2026-03-02T02:00:00.004Z INFO  [health] GET /healthz 200 2ms
+2026-03-02T02:03:12.870Z WARN  [disk] /var/spool usage=88% free=5.9GiB
+2026-03-02T02:06:40.311Z WARN  [disk] /var/spool usage=95% free=2.5GiB
+2026-03-02T02:08:55.902Z WARN  [disk] /var/spool usage=99% free=0.4GiB
+2026-03-02T02:09:31.004Z ERROR [exporter] write failed: [Errno 28] No space left on device: '/var/spool/report-exporter/tmp/part-0412.csv'
+2026-03-02T02:09:31.010Z ERROR [exporter] write failed: [Errno 28] No space left on device: '/var/spool/report-exporter/tmp/part-0413.csv'
+2026-03-02T02:10:02.551Z ERROR [scheduler] job=report-export run=57 exited code=1 after 601s
+2026-03-02T02:10:02.560Z WARN  [exporter] temp cleanup skipped: cleanup_on_exit=false
+2026-03-02T02:15:00.002Z INFO  [health] GET /healthz 200 2ms
+2026-03-02T02:31:10.000Z INFO  [ops] /var/spool/report-exporter/tmp purged by on-call, usage=41%

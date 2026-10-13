@@ -1,0 +1,63 @@
+{
+  "incident": {
+    "id": "QPZMPSIAOYTRMH",
+    "type": "incident",
+    "summary": "[#8812] p90 latency high on payments-gw",
+    "self": "https://api.pagerduty.com/incidents/QPZMPSIAOYTRMH",
+    "html_url": "https://larkspur.pagerduty.com/incidents/QPZMPSIAOYTRMH",
+    "incident_number": 8812,
+    "title": "p90 latency high on payments-gw",
+    "created_at": "2026-10-13T14:32:25Z",
+    "updated_at": "2026-10-13T15:10:30Z",
+    "status": "resolved",
+    "incident_key": "monitor-7391240",
+    "service": {
+      "id": "PSV7Q2M",
+      "type": "service_reference",
+      "summary": "Payments - Prod",
+      "self": "https://api.pagerduty.com/services/PSV7Q2M",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV7Q2M"
+    },
+    "assignments": [],
+    "assigned_via": "escalation_policy",
+    "acknowledgements": [],
+    "last_status_change_at": "2026-10-13T15:10:30Z",
+    "last_status_change_by": {
+      "id": "PR2F8XY",
+      "type": "user_reference",
+      "summary": "Priya Raman",
+      "self": "https://api.pagerduty.com/users/PR2F8XY",
+      "html_url": "https://larkspur.pagerduty.com/users/PR2F8XY"
+    },
+    "first_trigger_log_entry": {
+      "id": "K7WA771XVC70BW",
+      "type": "trigger_log_entry_reference",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/K7WA771XVC70BW",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QPZMPSIAOYTRMH/log_entries/K7WA771XVC70BW"
+    },
+    "alert_counts": {
+      "all": 1,
+      "triggered": 0,
+      "resolved": 1
+    },
+    "is_mergeable": false,
+    "escalation_policy": {
+      "id": "PEP4K9R",
+      "type": "escalation_policy_reference",
+      "summary": "Payments Engineering",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP4K9R",
+      "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP4K9R"
+    },
+    "teams": [],
+    "pending_actions": [],
+    "urgency": "high",
+    "priority": {
+      "id": "H3P3CA0WXO23L2",
+      "type": "priority",
+      "summary": "P2",
+      "name": "P2"
+    },
+    "resolved_at": "2026-10-13T15:10:30Z"
+  }
+}

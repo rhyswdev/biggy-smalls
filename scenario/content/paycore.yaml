@@ -1,0 +1,5 @@
+# PayCore's public status page text (main session). Never served. Times come from the scenario YAML.
+incident_name: "Degraded performance, Authorizations (EU)"
+updates:
+  investigating: "We are investigating elevated latency and failures for card authorizations routed through our EU region. Other regions are not affected."
+  monitoring: "A fix has been implemented and EU authorization latency has returned to normal since 08:24 PT. We are monitoring the results."

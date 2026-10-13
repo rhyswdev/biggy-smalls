@@ -1,0 +1,15 @@
+{
+ "x-source": "postgres/postgres REL_15_STABLE src/backend/utils/init/postinit.c",
+ "strings": {
+  "fatal_53300": "remaining connection slots are reserved for non-replication superuser connections"
+ },
+ "transcribed": {
+  "connection_received": "connection received: host={host} port={port}",
+  "connection_authorized": "connection authorized: user={user} database={db} application_name={app}",
+  "terminating_admin": "terminating connection due to administrator command",
+  "eof_open_txn": "unexpected EOF on client connection with an open transaction",
+  "checkpoint_starting": "checkpoint starting: time",
+  "checkpoint_complete": "checkpoint complete: wrote {n} buffers ({pct}%); 0 WAL file(s) added, 0 removed, {r} recycled; write={w} s, sync={s} s, total={t} s; sync files={f}, longest={l} s, average={a} s; distance={d} kB, estimate={e} kB",
+  "autovacuum_analyze": "automatic analyze of table \"{table}\""
+ }
+}

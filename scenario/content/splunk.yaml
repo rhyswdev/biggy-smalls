@@ -1,0 +1,61 @@
+# Splunk saved searches (main session). Never served. Names, thresholds and which fire come from the
+# scenario YAML. The pool-exhaustion search is the one place the accurate runbook is linked.
+# Each definition matches the alerts it produced (data fix 5): an event search counts events
+# (alert_type "number of events"); a search ending in `stats` alerts on a custom condition over its rows.
+# Splunk evaluates the full index; the served raw logs are a sample of it (integration.yaml sampling:).
+
+owner: sam.ortega
+app: sre_alerts
+updated: "2026-03-10T12:00:00+00:00"     # REST entry `updated` of every search (last edited after the March incident)
+webhook_url: https://bigpanda-ingest.larkspur.internal/splunk/webhook
+searches:
+  Payments pool exhaustion:
+    search: 'index=payments sourcetype=payments:app "Connection is not available, request timed out"'
+    description: "Gateway requests timing out waiting for a pooled DB connection. Runbook: https://confluence.larkspur.internal/display/PAY/PGW-DB-CONN-TIMEOUT"
+    cron: "*/1 * * * *"
+    earliest: "-5m"
+    comparator: greater than
+    threshold: "20"
+  PSP slow calls:
+    search: 'index=payments sourcetype=payments:app "slow PSP response" | stats count'
+    description: "PayCore responses over the 5s warn threshold. Tuned high after the July outage to stop it paging."
+    cron: "*/5 * * * *"
+    earliest: "-5m"
+    condition: "search count > 1000"
+  Postgres connection refusals:
+    search: 'index=db sourcetype=postgresql host=pay-db-01 "remaining connection slots are reserved"'
+    description: "pay-db-01 refusing new connections (SQLSTATE 53300)."
+    cron: "*/1 * * * *"
+    earliest: "-1m"
+    comparator: greater than
+    threshold: "0"
+  F5 pool member down:
+    search: 'index=network sourcetype=f5:bigip:ltm "monitor status down" pool_pay_gw'
+    description: "A member of the payments gateway pool failed its health monitor."
+    cron: "*/1 * * * *"
+    earliest: "-1m"
+    comparator: greater than
+    threshold: "0"
+  checkout-api 5xx rate:
+    search: 'index=commerce sourcetype=checkout:api level=WARN message="POST /api/checkout/submit 50*" | stats count'
+    description: "checkout submit 5xx volume. Disabled 5 Mar 2026: it paged on every deploy; Datadog monitor 7391255 replaced it."
+    cron: "*/5 * * * *"
+    earliest: "-5m"
+    condition: "search count > 1000"
+    disabled: true
+  Edge scanner hits:
+    search: 'index=edge sourcetype=nginx:plus:access status=404 (uri="*wp-login*" OR uri="*.env" OR uri="*/.git/*") | stats count by clientip | where count > 200'
+    description: "Vulnerability scanner noise at the edge."
+    cron: "*/15 * * * *"
+    earliest: "-15m"
+    comparator: greater than
+    threshold: "0"
+# How each raw folder is indexed (inputs.conf and props.conf), served in integration.yaml (data fix 6).
+# `host` is a rule: `file_stem` takes the host from the file name; anything else is the literal host.
+sourcetypes:
+  splunk/raw/payments_app: {index: payments, sourcetype: "payments:app", source: /var/log/payments-gateway/app.log, host: file_stem}
+  splunk/raw/checkout_api: {index: commerce, sourcetype: "checkout:api", source: "/var/log/containers/{host}_commerce_checkout-api.log", host: file_stem}
+  splunk/raw/postgres: {index: db, sourcetype: postgresql, source: /var/log/postgresql/postgresql-15-main.log, host: file_stem}
+  splunk/raw/k8s_events: {index: k8s, sourcetype: "kube:object:events", source: "kube:object:events", host: k8s-prod-east}
+  splunk/raw/f5: {index: network, sourcetype: "f5:bigip:ltm", source: "udp:514", host: lb-int-01.larkspur.internal}
+  splunk/raw/nginx: {index: edge, sourcetype: "nginx:plus:access", source: /var/log/nginx/access.log, host: file_stem}

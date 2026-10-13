@@ -1,0 +1,9 @@
+{
+ "x-source": "transcribed BIG-IP ltm log message reference",
+ "strings": {
+  "member_down": "01070638:5: Pool {pool} member {member} monitor status down. [ {monitor}: down; last error: {err} ]  [ was up for {up} ]",
+  "member_up": "01070727:5: Pool {pool} member {member} monitor status up. [ {monitor}: up ]  [ was down for {down} ]",
+  "no_members": "01010028:3: No members available for pool {pool}",
+  "members_available": "01010221:3: Pool {pool} now has available members"
+ }
+}

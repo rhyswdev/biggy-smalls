@@ -1,0 +1,1806 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$ref": "#/components/schemas/Monitor",
+ "components": {
+  "schemas": {
+   "Creator": {
+    "description": "Object describing the creator of the shared element.",
+    "properties": {
+     "email": {
+      "description": "Email of the creator.",
+      "type": "string"
+     },
+     "handle": {
+      "description": "Handle of the creator.",
+      "type": "string"
+     },
+     "name": {
+      "description": "Name of the creator.",
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "readOnly": true,
+    "type": "object"
+   },
+   "MatchingDowntime": {
+    "description": "Object describing a downtime that matches this monitor.",
+    "properties": {
+     "end": {
+      "description": "POSIX timestamp to end the downtime.",
+      "example": 1412792983,
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "id": {
+      "description": "The downtime ID.",
+      "example": 1625,
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "scope": {
+      "description": "The scope(s) to which the downtime applies. Must be in `key:value` format. For example, `host:app2`.\nProvide multiple scopes as a comma-separated list like `env:dev,env:prod`.\nThe resulting downtime applies to sources that matches ALL provided scopes (`env:dev` **AND** `env:prod`).",
+      "example": [
+       "env:staging"
+      ],
+      "items": {
+       "description": "A scope. For example, `\"env:staging\"`.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "start": {
+      "description": "POSIX timestamp to start the downtime.",
+      "example": 1412792983,
+      "format": "int64",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id"
+    ],
+    "type": "object"
+   },
+   "Monitor": {
+    "description": "Object describing a monitor.",
+    "properties": {
+     "assets": {
+      "description": "The list of monitor assets tied to a monitor, which represents key links for users to take action on monitor alerts (for example, runbooks).",
+      "items": {
+       "$ref": "#/components/schemas/MonitorAsset"
+      },
+      "type": "array"
+     },
+     "created": {
+      "description": "Timestamp of the monitor creation.",
+      "format": "date-time",
+      "readOnly": true,
+      "type": "string"
+     },
+     "creator": {
+      "$ref": "#/components/schemas/Creator"
+     },
+     "deleted": {
+      "description": "Whether or not the monitor is deleted. (Always `null`)",
+      "format": "date-time",
+      "readOnly": true,
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "draft_status": {
+      "$ref": "#/components/schemas/MonitorDraftStatus"
+     },
+     "id": {
+      "description": "ID of this monitor.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "matching_downtimes": {
+      "description": "A list of active v1 downtimes that match this monitor.",
+      "items": {
+       "$ref": "#/components/schemas/MatchingDowntime"
+      },
+      "type": "array"
+     },
+     "message": {
+      "description": "A message to include with notifications for this monitor.",
+      "type": "string"
+     },
+     "modified": {
+      "description": "Last timestamp when the monitor was edited.",
+      "format": "date-time",
+      "readOnly": true,
+      "type": "string"
+     },
+     "multi": {
+      "description": "Whether or not the monitor is broken down on different groups.",
+      "readOnly": true,
+      "type": "boolean"
+     },
+     "name": {
+      "description": "The monitor name.",
+      "example": "My monitor",
+      "type": "string"
+     },
+     "options": {
+      "$ref": "#/components/schemas/MonitorOptions"
+     },
+     "overall_state": {
+      "$ref": "#/components/schemas/MonitorOverallStates"
+     },
+     "priority": {
+      "description": "Integer from 1 (high) to 5 (low) indicating alert severity.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "query": {
+      "description": "The monitor query.",
+      "example": "avg(last_5m):sum:system.net.bytes_rcvd{host:host0} > 100",
+      "type": "string"
+     },
+     "restricted_roles": {
+      "description": "A list of unique role identifiers to define which roles are allowed to edit the monitor. The unique identifiers for all roles can be pulled from the [Roles API](https://docs.datadoghq.com/api/latest/roles/#list-roles) and are located in the `data.id` field. Editing a monitor includes any updates to the monitor configuration, monitor deletion, and muting of the monitor for any amount of time. You can use the [Restriction Policies API](https://docs.datadoghq.com/api/latest/restriction-policies/) to manage write authorization for individual monitors by teams and users, in addition to roles.",
+      "items": {
+       "description": "A role UUID.",
+       "type": "string"
+      },
+      "type": [
+       "array",
+       "null"
+      ]
+     },
+     "state": {
+      "$ref": "#/components/schemas/MonitorState"
+     },
+     "tags": {
+      "description": "Tags associated to your monitor.",
+      "items": {
+       "description": "A Datadog tag.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "type": {
+      "$ref": "#/components/schemas/MonitorType"
+     }
+    },
+    "required": [
+     "type",
+     "query"
+    ],
+    "type": "object"
+   },
+   "MonitorAsset": {
+    "description": "Represents key links tied to a monitor to help users take action on alerts.\nThis feature is in Preview and only available to users with the feature enabled.",
+    "properties": {
+     "category": {
+      "$ref": "#/components/schemas/MonitorAssetCategory"
+     },
+     "name": {
+      "description": "Name for the monitor asset",
+      "example": "Monitor Runbook",
+      "type": "string"
+     },
+     "resource_key": {
+      "description": "Represents the identifier of the internal Datadog resource that this asset represents. IDs in this field should be passed in as strings.",
+      "example": "12345",
+      "type": "string"
+     },
+     "resource_type": {
+      "$ref": "#/components/schemas/MonitorAssetResourceType"
+     },
+     "url": {
+      "description": "URL link for the asset. For links with an internal resource type set, this should be the relative path to where the Datadog domain is appended internally. For external links, this should be the full URL path.",
+      "example": "/notebooks/12345",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "url",
+     "category"
+    ],
+    "type": "object"
+   },
+   "MonitorAssetCategory": {
+    "description": "Indicates the type of asset this entity represents on a monitor.",
+    "enum": [
+     "runbook"
+    ],
+    "example": "runbook",
+    "type": "string",
+    "x-enum-varnames": [
+     "RUNBOOK"
+    ]
+   },
+   "MonitorAssetResourceType": {
+    "description": "Type of internal Datadog resource associated with a monitor asset.",
+    "enum": [
+     "notebook"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "NOTEBOOK"
+    ]
+   },
+   "MonitorDeviceID": {
+    "description": "ID of the device the Synthetics monitor is running on. Same as `SyntheticsDeviceID`.",
+    "enum": [
+     "laptop_large",
+     "tablet",
+     "mobile_small",
+     "chrome.laptop_large",
+     "chrome.tablet",
+     "chrome.mobile_small",
+     "firefox.laptop_large",
+     "firefox.tablet",
+     "firefox.mobile_small"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "LAPTOP_LARGE",
+     "TABLET",
+     "MOBILE_SMALL",
+     "CHROME_LAPTOP_LARGE",
+     "CHROME_TABLET",
+     "CHROME_MOBILE_SMALL",
+     "FIREFOX_LAPTOP_LARGE",
+     "FIREFOX_TABLET",
+     "FIREFOX_MOBILE_SMALL"
+    ]
+   },
+   "MonitorDraftStatus": {
+    "default": "published",
+    "description": "Indicates whether the monitor is in a draft or published state.\n\n`draft`: The monitor appears as Draft and does not send notifications.\n`published`: The monitor is active and evaluates conditions and notify as configured.\n\nThis field is in preview. The draft value is only available to customers with the feature enabled.",
+    "enum": [
+     "draft",
+     "published"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "DRAFT",
+     "PUBLISHED"
+    ]
+   },
+   "MonitorFormulaAndFunctionAggregateAugmentQuery": {
+    "description": "Augment query for aggregate augmented queries. Can be an events query or a reference table query.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionReferenceTableQueryDefinition"
+     }
+    ]
+   },
+   "MonitorFormulaAndFunctionAggregateAugmentedDataSource": {
+    "description": "Data source for aggregate augmented queries.",
+    "enum": [
+     "aggregate_augmented_query"
+    ],
+    "example": "aggregate_augmented_query",
+    "type": "string",
+    "x-enum-varnames": [
+     "AGGREGATE_AUGMENTED_QUERY"
+    ]
+   },
+   "MonitorFormulaAndFunctionAggregateAugmentedQueryDefinition": {
+    "additionalProperties": false,
+    "description": "A formula and functions aggregate augmented query. Used to enrich base query results with data from a reference table.",
+    "properties": {
+     "augment_query": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateAugmentQuery"
+     },
+     "base_query": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateBaseQuery"
+     },
+     "compute": {
+      "description": "Compute options for the query.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinitionCompute"
+      },
+      "minItems": 1,
+      "type": "array"
+     },
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateAugmentedDataSource"
+     },
+     "group_by": {
+      "description": "Group by options for the query.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryGroupBy"
+      },
+      "type": "array"
+     },
+     "join_condition": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateQueryJoinCondition"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas.",
+      "example": "query1",
+      "type": "string"
+     }
+    },
+    "required": [
+     "data_source",
+     "base_query",
+     "augment_query",
+     "join_condition",
+     "compute",
+     "group_by"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionAggregateBaseQuery": {
+    "description": "Base query for aggregate queries. Can be an events query or a metrics query.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionMetricsQueryDefinition"
+     }
+    ]
+   },
+   "MonitorFormulaAndFunctionAggregateFilterQuery": {
+    "description": "Filter query for aggregate filtered queries. Can be an events query or a reference table query.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionReferenceTableQueryDefinition"
+     }
+    ]
+   },
+   "MonitorFormulaAndFunctionAggregateFilteredDataSource": {
+    "description": "Data source for aggregate filtered queries.",
+    "enum": [
+     "aggregate_filtered_query"
+    ],
+    "example": "aggregate_filtered_query",
+    "type": "string",
+    "x-enum-varnames": [
+     "AGGREGATE_FILTERED_QUERY"
+    ]
+   },
+   "MonitorFormulaAndFunctionAggregateFilteredQueryDefinition": {
+    "additionalProperties": false,
+    "description": "A formula and functions aggregate filtered query. Used to filter base query results using data from another source.",
+    "properties": {
+     "base_query": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateBaseQuery"
+     },
+     "compute": {
+      "description": "Compute options for the query.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinitionCompute"
+      },
+      "type": "array"
+     },
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateFilteredDataSource"
+     },
+     "filter_query": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateFilterQuery"
+     },
+     "filters": {
+      "description": "Filter conditions for the query.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateQueryFilter"
+      },
+      "type": "array"
+     },
+     "group_by": {
+      "description": "Group by options for the query.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryGroupBy"
+      },
+      "type": "array"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas.",
+      "example": "query1",
+      "type": "string"
+     }
+    },
+    "required": [
+     "data_source",
+     "base_query",
+     "filter_query",
+     "filters"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionAggregateQueryFilter": {
+    "additionalProperties": false,
+    "description": "Filter definition for aggregate filtered queries.",
+    "properties": {
+     "base_attribute": {
+      "description": "Attribute from the base query to filter on.",
+      "example": "org_id",
+      "type": "string"
+     },
+     "exclude": {
+      "default": false,
+      "description": "Whether to exclude matching records instead of including them.",
+      "type": "boolean"
+     },
+     "filter_attribute": {
+      "description": "Attribute from the filter query to match against.",
+      "example": "org_id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "base_attribute",
+     "filter_attribute"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionAggregateQueryJoinCondition": {
+    "additionalProperties": false,
+    "description": "Join condition for aggregate augmented queries.",
+    "properties": {
+     "augment_attribute": {
+      "description": "Attribute from the augment query to join on.",
+      "example": "org_id",
+      "type": "string"
+     },
+     "base_attribute": {
+      "description": "Attribute from the base query to join on.",
+      "example": "org_id",
+      "type": "string"
+     },
+     "join_type": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateQueryJoinType"
+     }
+    },
+    "required": [
+     "base_attribute",
+     "augment_attribute",
+     "join_type"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionAggregateQueryJoinType": {
+    "description": "Join type for aggregate query join conditions.",
+    "enum": [
+     "inner",
+     "left"
+    ],
+    "example": "inner",
+    "type": "string",
+    "x-enum-varnames": [
+     "INNER",
+     "LEFT"
+    ]
+   },
+   "MonitorFormulaAndFunctionCostAggregator": {
+    "description": "Aggregation methods for metric queries.",
+    "enum": [
+     "avg",
+     "sum",
+     "max",
+     "min",
+     "last",
+     "area",
+     "l2norm",
+     "percentile",
+     "stddev"
+    ],
+    "example": "avg",
+    "type": "string",
+    "x-enum-varnames": [
+     "AVG",
+     "SUM",
+     "MAX",
+     "MIN",
+     "LAST",
+     "AREA",
+     "L2NORM",
+     "PERCENTILE",
+     "STDDEV"
+    ]
+   },
+   "MonitorFormulaAndFunctionCostDataSource": {
+    "description": "Data source for cost queries.",
+    "enum": [
+     "metrics",
+     "cloud_cost",
+     "datadog_usage"
+    ],
+    "example": "cloud_cost",
+    "type": "string",
+    "x-enum-varnames": [
+     "METRICS",
+     "CLOUD_COST",
+     "DATADOG_USAGE"
+    ]
+   },
+   "MonitorFormulaAndFunctionCostQueryDefinition": {
+    "description": "A formula and functions cost query.",
+    "properties": {
+     "aggregator": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionCostAggregator"
+     },
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionCostDataSource"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas.",
+      "example": "query1",
+      "type": "string"
+     },
+     "query": {
+      "description": "The monitor query.",
+      "example": "sum:all.cost{*}.rollup(sum, 86400)",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "data_source",
+     "query"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionDataJobsQueryDefinition": {
+    "description": "A formula and functions data jobs query.",
+    "properties": {
+     "job_type": {
+      "description": "The type of job being monitored. Valid values include:\n`databricks.job`, `spark.application`, `airflow.dag`,\n`dbt.job`, `dbt.model`, `dbt.test`, `glue.job`.\nCustom job types are supported with the `custom.ol.` prefix.",
+      "example": "databricks.job",
+      "type": "string"
+     },
+     "jobs_query": {
+      "description": "Filter expression used to select the jobs to monitor.",
+      "example": "job_name:smoke*",
+      "type": "string"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas. Must be `run_query`.",
+      "example": "run_query",
+      "type": "string"
+     },
+     "query_dialect": {
+      "description": "Query dialect for data jobs queries. Currently only `metric` is supported.",
+      "example": "metric",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "jobs_query",
+     "job_type",
+     "query_dialect"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionDataQualityDataSource": {
+    "description": "Data source for data quality queries.",
+    "enum": [
+     "data_quality_metrics"
+    ],
+    "example": "data_quality_metrics",
+    "type": "string",
+    "x-enum-varnames": [
+     "DATA_QUALITY_METRICS"
+    ]
+   },
+   "MonitorFormulaAndFunctionDataQualityDiffFunction": {
+    "description": "Function applied to the measure before it is compared against the predicted bounds.",
+    "enum": [
+     "DIFF",
+     "DIFF_PERCENT"
+    ],
+    "example": "DIFF",
+    "type": "string",
+    "x-enum-varnames": [
+     "DIFF",
+     "DIFF_PERCENT"
+    ]
+   },
+   "MonitorFormulaAndFunctionDataQualityDiffType": {
+    "description": "How the difference between the source and target measures is computed.\n`absolute` subtracts the two values, `diff_percent` expresses the difference\nas a percentage of the source value.",
+    "enum": [
+     "absolute",
+     "diff_percent"
+    ],
+    "example": "absolute",
+    "type": "string",
+    "x-enum-varnames": [
+     "ABSOLUTE",
+     "DIFF_PERCENT"
+    ]
+   },
+   "MonitorFormulaAndFunctionDataQualityEntityMetricConfig": {
+    "description": "Measure configuration for one side of a source to target comparison.",
+    "properties": {
+     "custom_sql": {
+      "description": "Custom SQL query used to compute the measure for this entity.",
+      "example": "SELECT COUNT(*) FROM users AS dd_value",
+      "type": "string"
+     },
+     "custom_where": {
+      "description": "Custom WHERE clause applied when computing the measure for this entity.",
+      "example": "USER_ID = 123",
+      "type": "string"
+     },
+     "entity_id": {
+      "description": "Identifier of the data entity to measure.",
+      "example": "01234567-89ab-cdef-0123-456789abcdef",
+      "type": "string"
+     },
+     "entity_type": {
+      "description": "Type of the data entity to measure.",
+      "example": "table",
+      "type": "string"
+     },
+     "group_by_columns": {
+      "description": "Columns to group results by when computing the measure for this entity.",
+      "example": [
+       "col1",
+       "col2"
+      ],
+      "items": {
+       "description": "A column name to group results by.",
+       "type": "string"
+      },
+      "type": "array"
+     }
+    },
+    "required": [
+     "entity_id",
+     "entity_type"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionDataQualityMeasure": {
+    "description": "The data quality measure to query. Common values include:\n`bytes`, `cardinality`, `custom`, `freshness`, `max`, `mean`, `min`,\n`nullness`, `percent_negative`, `percent_zero`, `row_count`, `stddev`,\n`sum`, `uniqueness`. Additional values may be supported.",
+    "example": "row_count",
+    "type": "string"
+   },
+   "MonitorFormulaAndFunctionDataQualityModelBoundsOverride": {
+    "description": "Restricts which predicted bound the monitor alerts on. `UPPER_ONLY` alerts only when\nthe measure rises above the upper bound, `LOWER_ONLY` only when it falls below the\nlower bound. When unset, the monitor alerts on both.",
+    "enum": [
+     "UPPER_ONLY",
+     "LOWER_ONLY"
+    ],
+    "example": "UPPER_ONLY",
+    "type": "string",
+    "x-enum-varnames": [
+     "UPPER_ONLY",
+     "LOWER_ONLY"
+    ]
+   },
+   "MonitorFormulaAndFunctionDataQualityModelConfiguration": {
+    "description": "Tuning options for the anomaly detection model used by the monitor.",
+    "properties": {
+     "auto_resolve_days": {
+      "description": "Number of days after which an open alert is automatically resolved.\nWhen unset, alerts stay open until the measure returns within bounds.",
+      "example": 7,
+      "format": "int32",
+      "maximum": 365,
+      "minimum": 1,
+      "type": "integer"
+     },
+     "enable_flatline_detection": {
+      "description": "Whether to alert when the measure stops changing entirely.\nDefaults to `true`.",
+      "example": true,
+      "type": "boolean"
+     },
+     "function": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityDiffFunction"
+     },
+     "min_lower_bound_size": {
+      "description": "Minimum distance between the predicted value and the lower bound. Widening the\nlower bound to at least this size suppresses alerts on small downward deviations.\nWhen unset, no minimum is enforced.",
+      "example": 10.0,
+      "format": "double",
+      "type": "number"
+     },
+     "min_upper_bound_size": {
+      "description": "Minimum distance between the predicted value and the upper bound. Widening the\nupper bound to at least this size suppresses alerts on small upward deviations.\nWhen unset, no minimum is enforced.",
+      "example": 10.0,
+      "format": "double",
+      "type": "number"
+     },
+     "model_bounds_override": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityModelBoundsOverride"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionDataQualityModelTypeOverride": {
+    "description": "Override for the model type used in anomaly detection.",
+    "enum": [
+     "freshness",
+     "percentage",
+     "any"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "FRESHNESS",
+     "PERCENTAGE",
+     "ANY"
+    ]
+   },
+   "MonitorFormulaAndFunctionDataQualityMonitorOptions": {
+    "description": "Monitor configuration options for data quality queries.",
+    "properties": {
+     "crontab_override": {
+      "description": "Crontab expression to override the default schedule.",
+      "example": "* * * 10",
+      "type": "string"
+     },
+     "custom_sql": {
+      "description": "Custom SQL query for the monitor.",
+      "example": "SELECT COUNT(*) FROM users AS dd_value",
+      "type": "string"
+     },
+     "custom_where": {
+      "description": "Custom WHERE clause for the query.",
+      "example": "USER_ID = 123",
+      "type": "string"
+     },
+     "group_by_columns": {
+      "description": "Columns to group results by.",
+      "example": [
+       "col1",
+       "col2"
+      ],
+      "items": {
+       "description": "A column name to group results by.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "model_configuration": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityModelConfiguration"
+     },
+     "model_type_override": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityModelTypeOverride"
+     },
+     "sensitivity": {
+      "description": "Sensitivity of the anomaly detection model, expressed as a multiplier on the width\nof the predicted bounds. Higher values widen the bounds and produce fewer alerts;\nlower values tighten them and produce more alerts. Defaults to `3.0`.",
+      "example": 3.0,
+      "format": "double",
+      "type": "number"
+     },
+     "source_to_target_config": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualitySourceToTargetConfig"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionDataQualityQueryDefinition": {
+    "description": "A formula and functions data quality query.",
+    "properties": {
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityDataSource"
+     },
+     "filter": {
+      "description": "Filter expression used to match on data entities. Uses Aastra query syntax.",
+      "example": "search for column where `database:production AND table:users`",
+      "type": "string"
+     },
+     "group_by": {
+      "description": "Optional grouping fields for aggregation.",
+      "example": [
+       "entity_id"
+      ],
+      "items": {
+       "description": "A field name to group results by.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "measure": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityMeasure"
+     },
+     "monitor_options": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityMonitorOptions"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas.",
+      "example": "query1",
+      "type": "string"
+     },
+     "schema_version": {
+      "description": "Schema version for the data quality query.",
+      "example": "0.0.1",
+      "type": "string"
+     },
+     "scope": {
+      "description": "Optional scoping expression to further filter metrics. Uses metrics filter syntax.\nThis is useful when an entity has been configured to emit metrics with additional tags.",
+      "example": "env:production",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "data_source",
+     "measure",
+     "filter"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionDataQualitySourceToTargetConfig": {
+    "description": "Configuration for a source to target monitor, which compares the same measure\nacross two data entities and alerts on the difference between them.",
+    "properties": {
+     "diff_type": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityDiffType"
+     },
+     "entity_type": {
+      "description": "Type of the data entities being compared.",
+      "example": "table",
+      "type": "string"
+     },
+     "source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityEntityMetricConfig"
+     },
+     "target": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityEntityMetricConfig"
+     }
+    },
+    "required": [
+     "source",
+     "target",
+     "diff_type",
+     "entity_type"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionEventAggregation": {
+    "description": "Aggregation methods for event platform queries.",
+    "enum": [
+     "count",
+     "cardinality",
+     "median",
+     "pc75",
+     "pc90",
+     "pc95",
+     "pc98",
+     "pc99",
+     "sum",
+     "min",
+     "max",
+     "avg"
+    ],
+    "example": "avg",
+    "type": "string",
+    "x-enum-varnames": [
+     "COUNT",
+     "CARDINALITY",
+     "MEDIAN",
+     "PC75",
+     "PC90",
+     "PC95",
+     "PC98",
+     "PC99",
+     "SUM",
+     "MIN",
+     "MAX",
+     "AVG"
+    ]
+   },
+   "MonitorFormulaAndFunctionEventQueryDefinition": {
+    "description": "A formula and functions events query.",
+    "properties": {
+     "compute": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinitionCompute"
+     },
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventsDataSource"
+     },
+     "group_by": {
+      "description": "Group by options.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryGroupBy"
+      },
+      "type": "array"
+     },
+     "indexes": {
+      "description": "An array of index names to query in the stream. Omit or use `[]` to query all indexes at once.",
+      "example": [
+       "days-3",
+       "days-7"
+      ],
+      "items": {
+       "description": "A log index set up for your organization. For additional indexes, see the [multiple indexes](https://docs.datadoghq.com/logs/indexes/#multiple-indexes) documentation.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas.",
+      "example": "query_errors",
+      "type": "string"
+     },
+     "search": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinitionSearch"
+     }
+    },
+    "required": [
+     "data_source",
+     "compute",
+     "name"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionEventQueryDefinitionCompute": {
+    "description": "Compute options.",
+    "properties": {
+     "aggregation": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventAggregation"
+     },
+     "interval": {
+      "description": "A time interval in milliseconds.",
+      "example": 60000,
+      "format": "int64",
+      "type": "integer"
+     },
+     "metric": {
+      "description": "Measurable attribute to compute.",
+      "example": "@duration",
+      "type": "string"
+     },
+     "name": {
+      "description": "The name assigned to this aggregation, when multiple aggregations are defined for a query.",
+      "example": "compute_result",
+      "type": "string"
+     },
+     "source": {
+      "description": "Source reference for composite query payloads.",
+      "example": "filter_query",
+      "type": "string"
+     }
+    },
+    "required": [
+     "aggregation"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionEventQueryDefinitionSearch": {
+    "description": "Search options.",
+    "properties": {
+     "query": {
+      "description": "Events search string.",
+      "example": "service:query",
+      "type": "string"
+     }
+    },
+    "required": [
+     "query"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionEventQueryGroupBy": {
+    "description": "List of objects used to group by.",
+    "properties": {
+     "facet": {
+      "description": "Event facet.",
+      "example": "status",
+      "type": "string"
+     },
+     "limit": {
+      "description": "Number of groups to return.",
+      "example": 10,
+      "format": "int64",
+      "type": "integer"
+     },
+     "sort": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryGroupBySort"
+     },
+     "source": {
+      "description": "Source reference for composite query payloads.",
+      "example": "filter_query",
+      "type": "string"
+     }
+    },
+    "required": [
+     "facet"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionEventQueryGroupBySort": {
+    "description": "Options for sorting group by results.",
+    "properties": {
+     "aggregation": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventAggregation"
+     },
+     "metric": {
+      "description": "Metric used for sorting group by results.",
+      "type": "string"
+     },
+     "order": {
+      "$ref": "#/components/schemas/QuerySortOrder"
+     }
+    },
+    "required": [
+     "aggregation"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionEventsDataSource": {
+    "description": "Data source for event platform-based queries.",
+    "enum": [
+     "rum",
+     "ci_pipelines",
+     "ci_tests",
+     "audit",
+     "events",
+     "logs",
+     "spans",
+     "database_queries",
+     "network",
+     "network_path"
+    ],
+    "example": "rum",
+    "type": "string",
+    "x-enum-varnames": [
+     "RUM",
+     "CI_PIPELINES",
+     "CI_TESTS",
+     "AUDIT",
+     "EVENTS",
+     "LOGS",
+     "SPANS",
+     "DATABASE_QUERIES",
+     "NETWORK",
+     "NETWORK_PATH"
+    ]
+   },
+   "MonitorFormulaAndFunctionMetricsAggregator": {
+    "description": "Aggregator for metrics queries.",
+    "enum": [
+     "avg",
+     "min",
+     "max",
+     "sum",
+     "last",
+     "mean",
+     "area",
+     "l2norm",
+     "percentile",
+     "stddev",
+     "count_unique"
+    ],
+    "example": "avg",
+    "type": "string",
+    "x-enum-varnames": [
+     "AVG",
+     "MIN",
+     "MAX",
+     "SUM",
+     "LAST",
+     "MEAN",
+     "AREA",
+     "L2NORM",
+     "PERCENTILE",
+     "STDDEV",
+     "COUNT_UNIQUE"
+    ]
+   },
+   "MonitorFormulaAndFunctionMetricsDataSource": {
+    "description": "Data source for metrics queries.",
+    "enum": [
+     "metrics",
+     "cloud_cost",
+     "datadog_usage"
+    ],
+    "example": "metrics",
+    "type": "string",
+    "x-enum-varnames": [
+     "METRICS",
+     "CLOUD_COST",
+     "DATADOG_USAGE"
+    ]
+   },
+   "MonitorFormulaAndFunctionMetricsQueryDefinition": {
+    "additionalProperties": false,
+    "description": "A formula and functions metrics query for use in aggregate queries.",
+    "properties": {
+     "aggregator": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionMetricsAggregator"
+     },
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionMetricsDataSource"
+     },
+     "name": {
+      "description": "Name of the query for use in formulas.",
+      "example": "query1",
+      "type": "string"
+     },
+     "query": {
+      "description": "The metrics query definition.",
+      "example": "avg:system.cpu.user{*}",
+      "type": "string"
+     }
+    },
+    "required": [
+     "data_source",
+     "query"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionQueryDefinition": {
+    "description": "A formula and function query.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionEventQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionCostQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataQualityQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionDataJobsQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateAugmentedQueryDefinition"
+     },
+     {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionAggregateFilteredQueryDefinition"
+     }
+    ]
+   },
+   "MonitorFormulaAndFunctionReferenceTableColumn": {
+    "additionalProperties": false,
+    "description": "A column definition for reference table queries.",
+    "properties": {
+     "alias": {
+      "description": "Optional alias for the column.",
+      "type": "string"
+     },
+     "name": {
+      "description": "Name of the column.",
+      "example": "org_id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "type": "object"
+   },
+   "MonitorFormulaAndFunctionReferenceTableDataSource": {
+    "description": "Data source for reference table queries.",
+    "enum": [
+     "reference_table"
+    ],
+    "example": "reference_table",
+    "type": "string",
+    "x-enum-varnames": [
+     "REFERENCE_TABLE"
+    ]
+   },
+   "MonitorFormulaAndFunctionReferenceTableQueryDefinition": {
+    "additionalProperties": false,
+    "description": "A reference table query for use in aggregate queries.",
+    "properties": {
+     "columns": {
+      "description": "List of columns to retrieve from the reference table.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionReferenceTableColumn"
+      },
+      "type": "array"
+     },
+     "data_source": {
+      "$ref": "#/components/schemas/MonitorFormulaAndFunctionReferenceTableDataSource"
+     },
+     "name": {
+      "description": "Name of the query.",
+      "example": "filter_query",
+      "type": "string"
+     },
+     "query_filter": {
+      "description": "Optional filter expression for the reference table query.",
+      "type": "string"
+     },
+     "table_name": {
+      "description": "Name of the reference table.",
+      "example": "test_table",
+      "type": "string"
+     }
+    },
+    "required": [
+     "data_source",
+     "table_name"
+    ],
+    "type": "object"
+   },
+   "MonitorOptions": {
+    "description": "List of options associated with your monitor.",
+    "properties": {
+     "aggregation": {
+      "$ref": "#/components/schemas/MonitorOptionsAggregation"
+     },
+     "device_ids": {
+      "deprecated": true,
+      "description": "IDs of the device the Synthetics monitor is running on.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorDeviceID"
+      },
+      "readOnly": true,
+      "type": "array"
+     },
+     "enable_logs_sample": {
+      "description": "Whether or not to send a log sample when the log monitor triggers.",
+      "type": "boolean"
+     },
+     "enable_samples": {
+      "description": "Whether or not to send a list of samples when the monitor triggers. This is only used by CI Test and Pipeline monitors.",
+      "type": "boolean"
+     },
+     "escalation_message": {
+      "description": "We recommend using the [is_renotify](https://docs.datadoghq.com/monitors/notify/?tab=is_alert#renotify),\nblock in the original message instead.\nA message to include with a re-notification. Supports the `@username` notification we allow elsewhere.\nNot applicable if `renotify_interval` is `None`.",
+      "type": "string"
+     },
+     "evaluation_delay": {
+      "description": "Time (in seconds) to delay evaluation, as a non-negative integer. For example, if the value is set to `300` (5min),\nthe timeframe is set to `last_5m` and the time is 7:00, the monitor evaluates data from 6:50 to 6:55.\nThis is useful for AWS CloudWatch and other backfilled metrics to ensure the monitor always has data during evaluation.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "group_retention_duration": {
+      "description": "The time span after which groups with missing data are dropped from the monitor state.\nThe minimum value is one hour, and the maximum value is 72 hours.\nExample values are: \"60m\", \"1h\", and \"2d\".\nThis option is only available for APM Trace Analytics, Audit Trail, CI, Error Tracking, Event, Logs, and RUM monitors.",
+      "type": "string"
+     },
+     "groupby_simple_monitor": {
+      "deprecated": true,
+      "description": "Whether the log alert monitor triggers a single alert or multiple alerts when any group breaches a threshold. Use `notify_by` instead.",
+      "type": "boolean"
+     },
+     "include_tags": {
+      "default": true,
+      "description": "A Boolean indicating whether notifications from this monitor automatically inserts its triggering tags into the title.\n\n**Examples**\n- If `True`, `[Triggered on {host:h1}] Monitor Title`\n- If `False`, `[Triggered] Monitor Title`",
+      "type": "boolean"
+     },
+     "locked": {
+      "deprecated": true,
+      "description": "Whether or not the monitor is locked (only editable by creator and admins). Use `restricted_roles` instead.",
+      "type": "boolean"
+     },
+     "min_failure_duration": {
+      "default": 0,
+      "description": "How long the test should be in failure before alerting (integer, number of seconds, max 7200).",
+      "format": "int64",
+      "maximum": 7200,
+      "minimum": 0,
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "min_location_failed": {
+      "default": 1,
+      "description": "The minimum number of locations in failure at the same time during\nat least one moment in the `min_failure_duration` period (`min_location_failed` and `min_failure_duration`\nare part of the advanced alerting rules - integer, >= 1).",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "new_group_delay": {
+      "description": "Time (in seconds) to skip evaluations for new groups.\n\nFor example, this option can be used to skip evaluations for new hosts while they initialize.\n\nMust be a non negative integer.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "new_host_delay": {
+      "default": 300,
+      "deprecated": true,
+      "description": "Time (in seconds) to allow a host to boot and applications\nto fully start before starting the evaluation of monitor results.\nShould be a non negative integer.\n\nUse new_group_delay instead.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "no_data_timeframe": {
+      "description": "The number of minutes before a monitor notifies after data stops reporting.\nDatadog recommends at least 2x the monitor timeframe for query alerts or 2 minutes for service checks.\nIf omitted, 2x the evaluation timeframe is used for query alerts, and 24 hours is used for service checks.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "notification_preset_name": {
+      "$ref": "#/components/schemas/MonitorOptionsNotificationPresets"
+     },
+     "notify_audit": {
+      "default": false,
+      "description": "A Boolean indicating whether tagged users is notified on changes to this monitor.",
+      "type": "boolean"
+     },
+     "notify_by": {
+      "description": "Controls what granularity a monitor alerts on. Only available for monitors with groupings.\nFor instance, a monitor grouped by `cluster`, `namespace`, and `pod` can be configured to only notify on each\nnew `cluster` violating the alert conditions by setting `notify_by` to `[\"cluster\"]`. Tags mentioned\nin `notify_by` must be a subset of the grouping tags in the query.\nFor example, a query grouped by `cluster` and `namespace` cannot notify on `region`.\nSetting `notify_by` to `[\"*\"]` configures the monitor to notify as a simple-alert.",
+      "items": {
+       "description": "A grouping tag.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "notify_no_data": {
+      "description": "A Boolean indicating whether this monitor notifies when data stops reporting. Defaults to `false`.",
+      "type": "boolean"
+     },
+     "on_missing_data": {
+      "$ref": "#/components/schemas/OnMissingDataOption"
+     },
+     "renotify_interval": {
+      "default": null,
+      "description": "The number of minutes after the last notification before a monitor re-notifies on the current status.\nIt only re-notifies if it\u2019s not resolved.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "renotify_occurrences": {
+      "description": "The number of times re-notification messages should be sent on the current status at the provided re-notification interval.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "renotify_statuses": {
+      "description": "The types of monitor statuses for which re-notification messages are sent.\nDefault: **null** if `renotify_interval` is **null**.\nIf `renotify_interval` is set, defaults to renotify on `Alert` and `No Data`.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorRenotifyStatusType"
+      },
+      "type": [
+       "array",
+       "null"
+      ]
+     },
+     "require_full_window": {
+      "description": "A Boolean indicating whether this monitor needs a full window of data before it\u2019s evaluated.\nWe highly recommend you set this to `false` for sparse metrics,\notherwise some evaluations are skipped. Default is false. This setting only applies to\nmetric monitors.",
+      "type": "boolean"
+     },
+     "scheduling_options": {
+      "$ref": "#/components/schemas/MonitorOptionsSchedulingOptions"
+     },
+     "silenced": {
+      "additionalProperties": {
+       "description": "UTC epoch timestamp in seconds when the downtime for the group expires.",
+       "format": "int64",
+       "type": [
+        "integer",
+        "null"
+       ]
+      },
+      "deprecated": true,
+      "description": "Information about the downtime applied to the monitor. Only shows v1 downtimes.",
+      "type": "object"
+     },
+     "synthetics_check_id": {
+      "deprecated": true,
+      "description": "ID of the corresponding Synthetic check.",
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "threshold_windows": {
+      "$ref": "#/components/schemas/MonitorThresholdWindowOptions"
+     },
+     "thresholds": {
+      "$ref": "#/components/schemas/MonitorThresholds"
+     },
+     "timeout_h": {
+      "default": null,
+      "description": "The number of hours of the monitor not reporting data before it automatically resolves from a triggered state. The minimum allowed value is 0 hours. The maximum allowed value is 24 hours.",
+      "format": "int64",
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "variables": {
+      "description": "List of requests that can be used in the monitor query. **This feature is currently in beta.**",
+      "items": {
+       "$ref": "#/components/schemas/MonitorFormulaAndFunctionQueryDefinition"
+      },
+      "type": "array"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorOptionsAggregation": {
+    "description": "Type of aggregation performed in the monitor query.",
+    "properties": {
+     "group_by": {
+      "description": "Group to break down the monitor on.",
+      "example": "host",
+      "type": "string"
+     },
+     "metric": {
+      "description": "Metric name used in the monitor.",
+      "example": "metrics.name",
+      "type": "string"
+     },
+     "type": {
+      "description": "Metric type used in the monitor.",
+      "example": "count",
+      "type": "string"
+     }
+    },
+    "readOnly": true,
+    "type": "object"
+   },
+   "MonitorOptionsCustomSchedule": {
+    "description": "Configuration options for the custom schedule. **This feature is in private beta.**",
+    "properties": {
+     "recurrences": {
+      "description": "Array of custom schedule recurrences.",
+      "items": {
+       "$ref": "#/components/schemas/MonitorOptionsCustomScheduleRecurrence"
+      },
+      "type": "array"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorOptionsCustomScheduleRecurrence": {
+    "description": "Configuration for a recurrence set on the monitor options for custom schedule.",
+    "properties": {
+     "rrule": {
+      "description": "Defines the recurrence rule (RRULE) for a given schedule.",
+      "example": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "type": "string"
+     },
+     "start": {
+      "description": "Defines the start date and time of the recurring schedule.",
+      "example": "2023-08-31T16:30:00",
+      "type": "string"
+     },
+     "timezone": {
+      "description": "Defines the timezone the schedule runs on.",
+      "example": "Europe/Paris",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorOptionsNotificationPresets": {
+    "default": "show_all",
+    "description": "Toggles the display of additional content sent in the monitor notification.",
+    "enum": [
+     "show_all",
+     "hide_query",
+     "hide_handles",
+     "hide_all",
+     "hide_query_and_handles",
+     "show_only_snapshot",
+     "hide_handles_and_footer"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "SHOW_ALL",
+     "HIDE_QUERY",
+     "HIDE_HANDLES",
+     "HIDE_ALL",
+     "HIDE_QUERY_AND_HANDLES",
+     "SHOW_ONLY_SNAPSHOT",
+     "HIDE_HANDLES_AND_FOOTER"
+    ]
+   },
+   "MonitorOptionsSchedulingOptions": {
+    "description": "Configuration options for scheduling.",
+    "properties": {
+     "custom_schedule": {
+      "$ref": "#/components/schemas/MonitorOptionsCustomSchedule"
+     },
+     "evaluation_window": {
+      "$ref": "#/components/schemas/MonitorOptionsSchedulingOptionsEvaluationWindow"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorOptionsSchedulingOptionsEvaluationWindow": {
+    "description": "Configuration options for the evaluation window. If `hour_starts` is set, no other fields may be set. Otherwise, `day_starts` and `month_starts` must be set together.",
+    "properties": {
+     "day_starts": {
+      "description": "The time of the day at which a one day cumulative evaluation window starts.",
+      "example": "04:00",
+      "type": "string"
+     },
+     "hour_starts": {
+      "description": "The minute of the hour at which a one hour cumulative evaluation window starts.",
+      "example": 0,
+      "format": "int32",
+      "maximum": 59,
+      "minimum": 0,
+      "type": "integer"
+     },
+     "month_starts": {
+      "description": "The day of the month at which a one month cumulative evaluation window starts.",
+      "example": 1,
+      "format": "int32",
+      "maximum": 1,
+      "minimum": 1,
+      "type": "integer"
+     },
+     "timezone": {
+      "description": "The timezone of the time of the day of the cumulative evaluation window start.",
+      "example": "Europe/Paris",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorOverallStates": {
+    "description": "The different states your monitor can be in.",
+    "enum": [
+     "Alert",
+     "Ignored",
+     "No Data",
+     "OK",
+     "Skipped",
+     "Unknown",
+     "Warn"
+    ],
+    "readOnly": true,
+    "type": "string",
+    "x-enum-varnames": [
+     "ALERT",
+     "IGNORED",
+     "NO_DATA",
+     "OK",
+     "SKIPPED",
+     "UNKNOWN",
+     "WARN"
+    ]
+   },
+   "MonitorRenotifyStatusType": {
+    "description": "The different statuses for which renotification is supported.",
+    "enum": [
+     "alert",
+     "warn",
+     "no data"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "ALERT",
+     "WARN",
+     "NO_DATA"
+    ]
+   },
+   "MonitorState": {
+    "description": "Wrapper object with the different monitor states.",
+    "properties": {
+     "groups": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/MonitorStateGroup"
+      },
+      "description": "Dictionary where the keys are groups (comma separated lists of tags) and the values are\nthe list of groups your monitor is broken down on.",
+      "type": "object"
+     }
+    },
+    "readOnly": true,
+    "type": "object"
+   },
+   "MonitorStateGroup": {
+    "description": "Monitor state for a single group.",
+    "properties": {
+     "last_nodata_ts": {
+      "description": "Latest timestamp the monitor was in NO_DATA state.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "last_notified_ts": {
+      "description": "Latest timestamp of the notification sent for this monitor group.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "last_resolved_ts": {
+      "description": "Latest timestamp the monitor group was resolved.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "last_triggered_ts": {
+      "description": "Latest timestamp the monitor group triggered.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "name": {
+      "description": "The name of the monitor.",
+      "type": "string"
+     },
+     "status": {
+      "$ref": "#/components/schemas/MonitorOverallStates"
+     }
+    },
+    "type": "object"
+   },
+   "MonitorThresholdWindowOptions": {
+    "description": "Alerting time window options.",
+    "properties": {
+     "recovery_window": {
+      "description": "Describes how long an anomalous metric must be normal before the alert recovers.",
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "trigger_window": {
+      "description": "Describes how long a metric must be anomalous before an alert triggers.",
+      "type": [
+       "string",
+       "null"
+      ]
+     }
+    },
+    "type": "object"
+   },
+   "MonitorThresholds": {
+    "description": "List of the different monitor threshold available.",
+    "properties": {
+     "critical": {
+      "description": "The monitor `CRITICAL` threshold.",
+      "format": "double",
+      "type": "number"
+     },
+     "critical_query": {
+      "description": "Query evaluated as a dynamic `CRITICAL` threshold. Only supported on metric monitors with a formula query and options['variables']. Cannot be combined with static thresholds. This field is in preview.",
+      "example": "formula(\"2 * query1\").rollup(\"avg\").last(\"6mo\")",
+      "type": "string"
+     },
+     "critical_recovery": {
+      "description": "The monitor `CRITICAL` recovery threshold.",
+      "format": "double",
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "critical_recovery_query": {
+      "description": "Query evaluated as a dynamic `CRITICAL` recovery threshold. Only supported on metric monitors with a formula query and options['variables']. Cannot be combined with static thresholds. This field is in preview.",
+      "example": "formula(\"1.5 * query1\").rollup(\"avg\").last(\"3mo\")",
+      "type": "string"
+     },
+     "ok": {
+      "description": "The monitor `OK` threshold.",
+      "format": "double",
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "unknown": {
+      "description": "The monitor UNKNOWN threshold.",
+      "format": "double",
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "warning": {
+      "description": "The monitor `WARNING` threshold.",
+      "format": "double",
+      "type": [
+       "number",
+       "null"
+      ]
+     },
+     "warning_recovery": {
+      "description": "The monitor `WARNING` recovery threshold.",
+      "format": "double",
+      "type": [
+       "number",
+       "null"
+      ]
+     }
+    },
+    "type": "object"
+   },
+   "MonitorType": {
+    "description": "The type of the monitor. For more information about `type`, see the [monitor options](https://docs.datadoghq.com/monitors/guide/monitor_api_options/) docs.",
+    "enum": [
+     "composite",
+     "event alert",
+     "log alert",
+     "metric alert",
+     "process alert",
+     "query alert",
+     "rum alert",
+     "service check",
+     "synthetics alert",
+     "trace-analytics alert",
+     "slo alert",
+     "event-v2 alert",
+     "audit alert",
+     "ci-pipelines alert",
+     "ci-tests alert",
+     "error-tracking alert",
+     "database-monitoring alert",
+     "network-performance alert",
+     "cost alert",
+     "data-quality alert",
+     "network-path alert",
+     "data-jobs alert",
+     "llm-observability alert"
+    ],
+    "example": "query alert",
+    "type": "string",
+    "x-enum-varnames": [
+     "COMPOSITE",
+     "EVENT_ALERT",
+     "LOG_ALERT",
+     "METRIC_ALERT",
+     "PROCESS_ALERT",
+     "QUERY_ALERT",
+     "RUM_ALERT",
+     "SERVICE_CHECK",
+     "SYNTHETICS_ALERT",
+     "TRACE_ANALYTICS_ALERT",
+     "SLO_ALERT",
+     "EVENT_V2_ALERT",
+     "AUDIT_ALERT",
+     "CI_PIPELINES_ALERT",
+     "CI_TESTS_ALERT",
+     "ERROR_TRACKING_ALERT",
+     "DATABASE_MONITORING_ALERT",
+     "NETWORK_PERFORMANCE_ALERT",
+     "COST_ALERT",
+     "DATA_QUALITY_ALERT",
+     "NETWORK_PATH_ALERT",
+     "DATA_JOBS_ALERT",
+     "LLM_OBSERVABILITY_ALERT"
+    ]
+   },
+   "OnMissingDataOption": {
+    "description": "Controls how groups or monitors are treated if an evaluation does not return any data points.\nThe default option results in different behavior depending on the monitor query type.\nFor monitors using Count queries, an empty monitor evaluation is treated as 0 and is compared to the threshold conditions.\nFor monitors using any query type other than Count, for example Gauge, Measure, or Rate, the monitor shows the last known status.\nThis option is available for APM Trace Analytics, Audit Trail, CI, Error Tracking, Event, Logs, and RUM monitors.\nIt is also required for metric monitors that use `scheduling_options.custom_schedule`.",
+    "enum": [
+     "default",
+     "show_no_data",
+     "show_and_notify_no_data",
+     "resolve"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "DEFAULT",
+     "SHOW_NO_DATA",
+     "SHOW_AND_NOTIFY_NO_DATA",
+     "RESOLVE"
+    ]
+   },
+   "QuerySortOrder": {
+    "default": "desc",
+    "description": "Direction of sort.",
+    "enum": [
+     "asc",
+     "desc"
+    ],
+    "example": "asc",
+    "type": "string",
+    "x-enum-varnames": [
+     "ASC",
+     "DESC"
+    ]
+   }
+  }
+ },
+ "x-source": "datadog-api-client-python .generator/schemas/v1/openapi.yaml"
+}

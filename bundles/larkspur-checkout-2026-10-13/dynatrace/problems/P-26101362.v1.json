@@ -1,0 +1,150 @@
+{
+  "problemId": "3599406094476716860_1791901980000V2",
+  "displayId": "P-26101362",
+  "title": "Response time degradation",
+  "impactLevel": "SERVICES",
+  "severityLevel": "PERFORMANCE",
+  "status": "OPEN",
+  "affectedEntities": [
+    {
+      "entityId": {
+        "id": "SERVICE-6D8B4F2E1A9C3B70",
+        "type": "SERVICE"
+      },
+      "name": "PaymentsGateway"
+    }
+  ],
+  "impactedEntities": [
+    {
+      "entityId": {
+        "id": "SERVICE-6D8B4F2E1A9C3B70",
+        "type": "SERVICE"
+      },
+      "name": "PaymentsGateway"
+    }
+  ],
+  "rootCauseEntity": {
+    "entityId": {
+      "id": "HOST-21A4C6E8F0B2D910",
+      "type": "HOST"
+    },
+    "name": "pay-db-01.larkspur.internal"
+  },
+  "managementZones": [
+    {
+      "id": "4402813374201867355",
+      "name": "Payments"
+    }
+  ],
+  "entityTags": [
+    {
+      "context": "CONTEXTLESS",
+      "key": "app",
+      "value": "payments-gateway",
+      "stringRepresentation": "app:payments-gateway"
+    },
+    {
+      "context": "CONTEXTLESS",
+      "key": "env",
+      "value": "prod",
+      "stringRepresentation": "env:prod"
+    }
+  ],
+  "problemFilters": [
+    {
+      "id": "c4d1a5e8-0f2b-4f6e-9d3a-7b8c2e1f6a40",
+      "name": "Default"
+    }
+  ],
+  "startTime": 1791901980000,
+  "endTime": -1,
+  "evidenceDetails": {
+    "totalCount": 4,
+    "details": [
+      {
+        "evidenceType": "EVENT",
+        "displayName": "Failure rate increase",
+        "rootCauseRelevant": true,
+        "eventType": "SERVICE_ERROR_RATE_INCREASED",
+        "entity": {
+          "entityId": {
+            "id": "SERVICE-3B5D7F9A1C2E4068",
+            "type": "SERVICE"
+          },
+          "name": "payments"
+        },
+        "startTime": 1791901841000,
+        "eventId": "819286416278313449_1791901841000"
+      },
+      {
+        "evidenceType": "TRANSACTIONAL",
+        "displayName": "Failure rate increase (connection refusals)",
+        "rootCauseRelevant": true,
+        "unit": "Percent",
+        "valueBeforeChangePoint": 0.0,
+        "valueAfterChangePoint": 41.7,
+        "entity": {
+          "entityId": {
+            "id": "SERVICE-3B5D7F9A1C2E4068",
+            "type": "SERVICE"
+          },
+          "name": "payments"
+        },
+        "startTime": 1791901820000
+      },
+      {
+        "evidenceType": "METRIC",
+        "displayName": "Connections to database",
+        "rootCauseRelevant": true,
+        "metricId": "builtin:tech.postgresql.connections",
+        "unit": "Count",
+        "valueBeforeChangePoint": 45.0,
+        "valueAfterChangePoint": 197.0,
+        "entity": {
+          "entityId": {
+            "id": "HOST-21A4C6E8F0B2D910",
+            "type": "HOST"
+          },
+          "name": "pay-db-01.larkspur.internal"
+        },
+        "startTime": 1791901877000
+      },
+      {
+        "evidenceType": "TRANSACTIONAL",
+        "displayName": "Response time degradation",
+        "rootCauseRelevant": false,
+        "unit": "MicroSecond",
+        "valueBeforeChangePoint": 1310000.0,
+        "valueAfterChangePoint": 9940000.0,
+        "entity": {
+          "entityId": {
+            "id": "SERVICE-6D8B4F2E1A9C3B70",
+            "type": "SERVICE"
+          },
+          "name": "PaymentsGateway"
+        },
+        "startTime": 1791901800000
+      }
+    ]
+  },
+  "impactAnalysis": {
+    "impacts": [
+      {
+        "impactType": "SERVICE",
+        "impactedEntity": {
+          "entityId": {
+            "id": "SERVICE-6D8B4F2E1A9C3B70",
+            "type": "SERVICE"
+          },
+          "name": "PaymentsGateway"
+        },
+        "estimatedAffectedUsers": 72
+      }
+    ]
+  },
+  "linkedProblemInfo": null,
+  "recentComments": {
+    "comments": [],
+    "totalCount": 0
+  }
+}

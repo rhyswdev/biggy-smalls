@@ -1,0 +1,46 @@
+# Never served: rendered into _internal/ with a header.
+# Facts reference sig_ids and generated classes, never handles. Entities use facts.yaml entity keys.
+# Lint invariant 6 checks every sig_id and class a checkpoint uses resolves to a manifest row visible there.
+
+facts:
+  F.retry_change:    {any_of: [sig.jk412_changeset, sig.jk412_yml_path, sig.startup_timeout_8000, sig.kb_psp_retry_design]}
+  F.psp_slow:        {any_of: [sig.dt_p26101350, "class:log.psp_retry", "class:log.psp_ok_slow"]}
+  F.pool_exhausted:  {any_of: [sig.splunk_alert_pool, "class:log.hikari_timeout", "class:log.hikari_leak", "class:log.hikari_stats_full"]}
+  F.idle_in_txn:     {any_of: [sig.slack_elena_1447, sig.inc_wn_idle_txn, "class:pgsa.idle_in_txn"]}
+  F.rollback_no_fix: {any_of: [sig.jk898_rollback, sig.slack_alice_1443, sig.inc_wn_rollback]}
+  F.reconciler:      {any_of: [sig.jk2311_start, sig.pg_recon_authorized]}
+  F.prior_timeout:   {any_of: [sig.inc0045210]}
+  F.owner_oncall:    {any_of: [sig.pd8812_escalated, sig.pd8812_ack_priya, sig.pd_oncall_priya, sig.pd_policy_payments]}
+  F.owner_inactive:  {any_of: [sig.cmdb_owner_marcus]}
+
+checkpoints:
+  "14:52":
+    leading: {entity: payments-gateway, change_any: [CHG0031877, "payments-gateway-deploy#412", "3.8.0"]}
+    trigger: {entity: paycore}
+    required_facts: [F.retry_change, F.psp_slow, F.pool_exhausted, F.idle_in_txn, F.rollback_no_fix]
+    supporting_facts: [F.reconciler, F.prior_timeout, F.owner_oncall, F.owner_inactive]
+    non_chat_required: true
+    traps:
+      checkout-deploy: {match: {entity: checkout-api}, allowed: {status: [rejected]}}
+      db-capacity:     {match: {entity: pay-db-01}, allowed: {role: [symptom, contributing]}}
+      redis:           {match: {entity: redis-sessions}, allowed: {status: [rejected]}, absent_ok: true}
+      pay03-hardware:  {match: {entity: pay-03}, allowed: {role: [symptom, contributing]}, absent_ok: true}
+      marketing:       {match: {entity: marketing-site}, allowed: {role: [unrelated]}, absent_ok: true}
+    contributing_any: [payments-reconciler]
+    owner: {any: ["Priya Raman", "Payments Engineering"], never: ["Marcus Okafor"]}
+    confidence: {wrong_leading_max: 0.6, right_leading_min: 0.6}
+    judge:
+      mechanism: [retry_or_timeout_increase, txn_held_across_psp_call, pool_exhaustion, caller_timeouts]
+      actions:   [gateway_rollback_or_disable_retry_in_top2, reconciler_pause_as_headroom, duplicate_auth_audit, customer_update]
+      harmful_top3: [rollback_checkout_again, raise_pool_or_scale_pods, restart_redis, kill_idle_sessions, page_infra_for_pay03, traffic_named_as_cause]
+  "14:40":
+    leading_any: [payments-gateway]
+    trigger_optional: true
+    required_facts: [F.psp_slow, F.pool_exhausted]
+    supporting_facts: [F.retry_change, F.reconciler, F.prior_timeout]
+    traps:
+      checkout-deploy: {match: {entity: checkout-api}, allowed: {status: [rejected, open]}}
+      db-capacity:     {match: {entity: pay-db-01}, allowed: {role: [symptom, contributing]}}
+      redis:           {match: {entity: redis-sessions}, allowed: {status: [rejected]}, absent_ok: true}
+      pay03-hardware:  {match: {entity: pay-03}, allowed: {role: [symptom, contributing]}, absent_ok: true}
+    confidence: {wrong_leading_max: 0.6}

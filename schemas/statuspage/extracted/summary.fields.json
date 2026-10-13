@@ -1,0 +1,64 @@
+{
+ "x-source": "statuspage/sample-summary.json (real public summary.json captured 2026-10-12)",
+ "top": [
+  "components",
+  "incidents",
+  "page",
+  "scheduled_maintenances",
+  "status"
+ ],
+ "page": [
+  "id",
+  "name",
+  "time_zone",
+  "updated_at",
+  "url"
+ ],
+ "status": [
+  "description",
+  "indicator"
+ ],
+ "component": [
+  "created_at",
+  "description",
+  "group",
+  "group_id",
+  "id",
+  "name",
+  "only_show_if_degraded",
+  "page_id",
+  "position",
+  "showcase",
+  "start_date",
+  "status",
+  "updated_at"
+ ],
+ "incident": [
+  "id",
+  "name",
+  "status",
+  "created_at",
+  "updated_at",
+  "monitoring_at",
+  "resolved_at",
+  "impact",
+  "shortlink",
+  "started_at",
+  "page_id",
+  "incident_updates",
+  "components"
+ ],
+ "incident_update": [
+  "id",
+  "status",
+  "body",
+  "incident_id",
+  "created_at",
+  "updated_at",
+  "display_at",
+  "affected_components",
+  "deliver_notifications",
+  "custom_tweet",
+  "tweet_id"
+ ]
+}

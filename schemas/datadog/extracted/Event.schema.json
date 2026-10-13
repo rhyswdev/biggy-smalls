@@ -1,0 +1,122 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$ref": "#/components/schemas/Event",
+ "components": {
+  "schemas": {
+   "Event": {
+    "description": "Object representing an event.",
+    "properties": {
+     "alert_type": {
+      "$ref": "#/components/schemas/EventAlertType"
+     },
+     "date_happened": {
+      "description": "POSIX timestamp of the event. Must be sent as an integer (that is no quotes).\nLimited to events up to 18 hours in the past and two hours in the future.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "device_name": {
+      "description": "A device name.",
+      "type": "string"
+     },
+     "host": {
+      "description": "Host name to associate with the event.\nAny tags associated with the host are also applied to this event.",
+      "type": "string"
+     },
+     "id": {
+      "description": "Integer ID of the event.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "id_str": {
+      "description": "Handling IDs as large 64-bit numbers can cause loss of accuracy issues with some programming languages.\nInstead, use the string representation of the Event ID to avoid losing accuracy.",
+      "readOnly": true,
+      "type": "string"
+     },
+     "payload": {
+      "description": "Payload of the event.",
+      "example": "{}",
+      "readOnly": true,
+      "type": "string"
+     },
+     "priority": {
+      "$ref": "#/components/schemas/EventPriority"
+     },
+     "source_type_name": {
+      "description": "The type of event being posted. Option examples include nagios, hudson, jenkins, my_apps, chef, puppet, git, bitbucket, etc.\nThe list of standard source attribute values [available here](https://docs.datadoghq.com/integrations/faq/list-of-api-source-attribute-value).",
+      "type": "string"
+     },
+     "tags": {
+      "description": "A list of tags to apply to the event.",
+      "example": [
+       "environment:test"
+      ],
+      "items": {
+       "description": "A tag.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "text": {
+      "description": "The body of the event. Limited to 4000 characters. The text supports markdown.\nTo use markdown in the event text, start the text block with `%%% \\n` and end the text block with `\\n %%%`.\nUse `msg_text` with the Datadog Ruby library.",
+      "example": "Oh boy!",
+      "maxLength": 4000,
+      "type": "string"
+     },
+     "title": {
+      "description": "The event title.",
+      "example": "Did you hear the news today?",
+      "type": "string"
+     },
+     "url": {
+      "description": "URL of the event.",
+      "readOnly": true,
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "EventAlertType": {
+    "description": "If an alert event is enabled, set its type.\nFor example, `error`, `warning`, `info`, `success`, `user_update`,\n`recommendation`, and `snapshot`.",
+    "enum": [
+     "error",
+     "warning",
+     "info",
+     "success",
+     "user_update",
+     "recommendation",
+     "snapshot"
+    ],
+    "example": "info",
+    "type": "string",
+    "x-enum-varnames": [
+     "ERROR",
+     "WARNING",
+     "INFO",
+     "SUCCESS",
+     "USER_UPDATE",
+     "RECOMMENDATION",
+     "SNAPSHOT"
+    ]
+   },
+   "EventPriority": {
+    "description": "The priority of the event. For example, `normal` or `low`.",
+    "enum": [
+     "normal",
+     "low",
+     null
+    ],
+    "example": "normal",
+    "type": [
+     "string",
+     "null"
+    ],
+    "x-enum-varnames": [
+     "NORMAL",
+     "LOW"
+    ]
+   }
+  }
+ },
+ "x-source": "datadog-api-client-python .generator/schemas/v1/openapi.yaml"
+}

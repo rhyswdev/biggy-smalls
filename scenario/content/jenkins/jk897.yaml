@@ -1,0 +1,7 @@
+# checkout-api-deploy #897 changeSet (main session). Times UTC.
+items:
+  - {author: ben.kowalski, at: "2026-10-09T15:40:12Z", msg: "CO-1187 address form v2 behind flag checkout.address-form-v2",
+     paths: [src/main/java/com/larkspur/checkout/address/AddressFormVariantResolver.java, src/main/resources/application.yml]}
+  - {author: ben.kowalski, at: "2026-10-10T10:12:55Z", msg: "CO-1192 bump logback 1.5.6 -> 1.5.8, logstash-logback-encoder 7.4 -> 8.0",
+     paths: [pom.xml, src/main/resources/logback-spring.xml]}
+  - {author: ben.kowalski, at: "2026-10-12T16:05:30Z", msg: "release 2.14.3", paths: [pom.xml, CHANGELOG.md]}

@@ -1,0 +1,74 @@
+{
+  "problemId": "1278918064029723571_1791902400000V2",
+  "displayId": "P-26101377",
+  "title": "Availability: synthetic monitor failing",
+  "impactLevel": "APPLICATION",
+  "severityLevel": "AVAILABILITY",
+  "status": "OPEN",
+  "affectedEntities": [
+    {
+      "entityId": {
+        "id": "APPLICATION-0C2E4A6B8D1F3579",
+        "type": "APPLICATION"
+      },
+      "name": "cdn.larkspur.com"
+    }
+  ],
+  "impactedEntities": [
+    {
+      "entityId": {
+        "id": "APPLICATION-0C2E4A6B8D1F3579",
+        "type": "APPLICATION"
+      },
+      "name": "cdn.larkspur.com"
+    }
+  ],
+  "rootCauseEntity": {
+    "entityId": {
+      "id": "APPLICATION-0C2E4A6B8D1F3579",
+      "type": "APPLICATION"
+    },
+    "name": "cdn.larkspur.com"
+  },
+  "managementZones": [
+    {
+      "id": "2210948813025592871",
+      "name": "Marketing"
+    }
+  ],
+  "entityTags": [],
+  "problemFilters": [
+    {
+      "id": "c4d1a5e8-0f2b-4f6e-9d3a-7b8c2e1f6a40",
+      "name": "Default"
+    }
+  ],
+  "startTime": 1791902400000,
+  "endTime": -1,
+  "evidenceDetails": {
+    "totalCount": 1,
+    "details": [
+      {
+        "evidenceType": "AVAILABILITY_EVIDENCE",
+        "displayName": "Synthetic monitor failing",
+        "rootCauseRelevant": true,
+        "entity": {
+          "entityId": {
+            "id": "APPLICATION-0C2E4A6B8D1F3579",
+            "type": "APPLICATION"
+          },
+          "name": "cdn.larkspur.com"
+        },
+        "startTime": 1791902283000
+      }
+    ]
+  },
+  "impactAnalysis": {
+    "impacts": []
+  },
+  "linkedProblemInfo": null,
+  "recentComments": {
+    "comments": [],
+    "totalCount": 0
+  }
+}

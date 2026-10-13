@@ -1,0 +1,5 @@
+{
+  "jk:report-export#57": {"t_known": "2026-03-02T02:10:03Z", "native": {"_class": "hudson.model.FreeStyleBuild", "number": 57, "result": "FAILURE", "timestamp": 1772416801120, "duration": 601431, "builtOn": "worker-01", "parameters": {"VERSION": "2.4.1"}, "console_tail": "No space left on device"}},
+  "jk:report-export#56": {"t_known": "2026-03-01T02:06:10Z", "native": {"_class": "hudson.model.FreeStyleBuild", "number": 56, "result": "SUCCESS", "timestamp": 1772330401300, "duration": 368900, "builtOn": "worker-01", "parameters": {"VERSION": "2.4.0"}}},
+  "conf:RB-DISK-SPACE": {"t_known": "2025-11-20T09:00:00Z", "native": {"title": "Runbook: disk space on batch workers", "last_updated": "2025-11-20", "owner": "Platform Ops", "body": "1. Check /var/spool usage. 2. If report-exporter temp files are present and no job is running, purge /var/spool/report-exporter/tmp. 3. If a release changed temp handling, roll back the release and open a ticket with the owning team (Reporting). Never purge while a job is running."}}
+}

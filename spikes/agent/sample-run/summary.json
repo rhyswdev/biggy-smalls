@@ -1,0 +1,44 @@
+{
+ "status": "completed",
+ "wall_s_total": 3.02,
+ "wall_s_last_segment": 0.034,
+ "gate_wait_ms": 2904.3,
+ "model_calls": 5,
+ "tool_calls": 8,
+ "gate": {
+  "auto:approved": 8,
+  "policy:approved": 3,
+  "human:rejected": 1
+ },
+ "validation": {
+  "ok": true,
+  "dropped": [],
+  "attempt": 1
+ },
+ "tokens": {
+  "input_tokens": 12605,
+  "output_tokens": 736,
+  "cache_read": 0,
+  "cache_write": 0,
+  "reasoning": 0,
+  "cost_usd": 0.0,
+  "model_latency_ms": 8.6
+ },
+ "events": {
+  "run_started": 1,
+  "phase": 6,
+  "thinking_delta": 131,
+  "model_call": 5,
+  "tool_call_proposed": 12,
+  "gate_decision": 12,
+  "tool_started": 11,
+  "tool_result": 12,
+  "budget": 4,
+  "hypothesis_update": 2,
+  "gate_pending": 1,
+  "run_paused": 1,
+  "validation": 1,
+  "report": 1
+ },
+ "event_bytes": 41305
+}

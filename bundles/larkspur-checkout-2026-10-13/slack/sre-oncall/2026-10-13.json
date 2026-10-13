@@ -1,0 +1,324 @@
+[
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791853924.000003",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791855604.000003",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791861724.000003",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791863404.000001",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791869524.000005",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791871204.000003",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791877324.000004",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791879004.000002",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791885124.000002",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791886804.000004",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791892924.000006",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791894604.000006",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "afternoon all. quiet so far, which i don't trust :coffee:",
+    "ts": "1791900195.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "5de8dba6-db15-3047-8dce-c0c050f8fb93"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "anyone else seeing slow builds on the marketing site or is it just me",
+    "ts": "1791900530.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "7b1dc1b1-70e0-8289-f3ab-bea59d392f6d",
+    "thread_ts": "1791900530.000004",
+    "reply_count": 1,
+    "reply_users_count": 1,
+    "latest_reply": "1791900700.000005",
+    "reply_users": [
+      "U01GG60ZVQK"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "not me",
+    "ts": "1791900700.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "b953fc49-e3c6-2bc4-ca56-10d5d031047f",
+    "thread_ts": "1791900530.000004",
+    "parent_user_id": "U0W2EYK5S75"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] redis-sessions memory fragmentation high*\n<https://app.datadoghq.com/monitors/7288104|Monitor 7288104> · `avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5`",
+    "ts": "1791900724.000001",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "muted the redis-sessions frag monitor for an hour. it's the usual flap, INC0047003 says it's benign",
+    "ts": "1791900840.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "0e14e39f-2343-524d-852c-373460f5e0fc"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered on host:node-east-14] CPU saturation on node-east-14*\n<https://app.datadoghq.com/monitors/7312877|Monitor 7312877> · `avg(last_10m):avg:system.cpu.user{kube_cluster_name:k8s-prod-east} by {host} > 90`",
+    "ts": "1791900904.000004",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "node-east-14 cpu is a batch pod in the analytics namespace, nothing customer facing. should settle off by itself",
+    "ts": "1791900990.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "a0cc95a3-e200-6e00-de5b-fb53a0d15dca"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "search-indexer cron failed again, same way as last week. checking the cronjob before i rerun it",
+    "ts": "1791901270.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "ad1d2d0e-d61f-be20-4c21-f1203ed45127",
+    "thread_ts": "1791901270.000003",
+    "reply_count": 1,
+    "reply_users_count": 1,
+    "latest_reply": "1791904340.000003",
+    "reply_users": [
+      "U0OUMNOBHU9"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "2.14.3 going out to prod in a bit, standard change",
+    "ts": "1791901360.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "7e8d039b-f7b1-1fc5-1553-ccb55944d08c"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Warn] p99 latency on payments-gw*\n<https://app.datadoghq.com/monitors/7391241|Monitor 7391241> · `max(last_5m):p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 15`",
+    "ts": "1791901634.000002",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "p99 on payments-gw is only a warning for now. watching",
+    "ts": "1791901660.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "cdbd477f-5a66-99b0-25a1-eaf3993c07f9"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "heads up, CDN DNS TTL change on the marketing site this afternoon. low risk, will post when done",
+    "ts": "1791901810.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "3e9a9ec3-8f3d-5794-6317-7a6ade5cf9a1"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] checkout-api log volume anomaly*\n<https://app.datadoghq.com/monitors/7391301|Monitor 7391301> · `logs(\"service:checkout-api env:prod\").index(\"main\").rollup(\"count\").last(\"10m\") > 18000`",
+    "ts": "1791901844.000003",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Triggered] p90 latency high on payments-gw*\n<https://app.datadoghq.com/monitors/7391240|Monitor 7391240> · `max(last_5m):p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 6`",
+    "ts": "1791901934.000006",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "pay-db-01 is at max_connections, mostly pgw_app. looking",
+    "ts": "1791902070.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "639769dd-503d-7a7c-2566-36da0e6a462f"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "moving this to #inc-checkout-latency, pls follow there <@U0OUMNOBHU9>",
+    "ts": "1791902175.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "884b477a-d992-d558-d738-3f1389216668"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "everything checkout-y is in #inc-checkout-latency now, see you there",
+    "ts": "1791902250.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "fdb0dd33-0b6f-19e7-7548-662de2af8941"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered on host:node-east-14] CPU saturation on node-east-14*\n<https://app.datadoghq.com/monitors/7312877|Monitor 7312877> · `avg(last_10m):avg:system.cpu.user{kube_cluster_name:k8s-prod-east} by {host} > 90`",
+    "ts": "1791902284.000002",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] checkout-api log volume anomaly*\n<https://app.datadoghq.com/monitors/7391301|Monitor 7391301> · `logs(\"service:checkout-api env:prod\").index(\"main\").rollup(\"count\").last(\"10m\") > 18000`",
+    "ts": "1791902694.000005",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "lunch cancelled apparently. sandwich at desk it is :sandwich:",
+    "ts": "1791903130.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "19db32b4-b0a0-4a81-aaff-e051a9ef1487"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "pagerduty has been busier than my social life today, so low bar",
+    "ts": "1791903500.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "161f22c4-83c2-1bd0-a7cd-6951770ad5d3"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] p90 latency high on payments-gw*\n<https://app.datadoghq.com/monitors/7391240|Monitor 7391240> · `max(last_5m):p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 6`",
+    "ts": "1791904164.000004",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "*[Recovered] p99 latency on payments-gw*\n<https://app.datadoghq.com/monitors/7391241|Monitor 7391241> · `max(last_5m):p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 15`",
+    "ts": "1791904184.000003",
+    "username": "Datadog",
+    "bot_id": "B0GKXDGNF6K"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "rerun went through, search-indexer is green",
+    "ts": "1791904340.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e5544523-eb85-1e3a-9e00-1839bd9f2ae3",
+    "thread_ts": "1791901270.000003",
+    "parent_user_id": "U0OUMNOBHU9"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "handover: search-indexer rerun ok, node-east-14 back to normal. <@U0W2EYK5S75> your DNS change is still open, can you post when done. checkout stuff is in #inc-checkout-latency",
+    "ts": "1791904830.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "0c710243-ed2a-52ef-15a8-7f2a7e900fa2"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "signing off for the day. night all",
+    "ts": "1791905210.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e319a9b1-4b7a-ddad-692d-440ac06b1b51"
+  }
+]

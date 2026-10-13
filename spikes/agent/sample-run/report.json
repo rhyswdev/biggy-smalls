@@ -1,0 +1,39 @@
+{
+ "summary": "Run 57 failed with ENOSPC on /var/spool (log:worker-01/810f681e) after release 2.4.1 (log:worker-01/98e857e0) skipped temp cleanup (log:worker-01/0948a873); run 56 on 2.4.0 succeeded (jk:report-export#56).",
+ "hypotheses": [
+  {
+   "statement": "2.4.1 temp-file handling filled /var/spool.",
+   "confidence": 0.65,
+   "support": [
+    "log:worker-01/810f681e",
+    "log:worker-01/98e857e0",
+    "log:worker-01/0948a873",
+    "jk:report-export#57",
+    "jk:report-export#56"
+   ],
+   "against": []
+  }
+ ],
+ "actions": [
+  "Purge /var/spool/report-exporter/tmp per conf:RB-DISK-SPACE while no job runs.",
+  "Ask Reporting to fix temp cleanup in 2.4.1 before tonight's run."
+ ],
+ "open_questions": [
+  "Did other jobs on worker-01 also fail after 02:09?"
+ ],
+ "as_of": "2026-03-02T02:20:00Z",
+ "proposed_actions": [
+  {
+   "call_id": "call_11_propose_rollback",
+   "tool": "propose_rollback",
+   "args": {
+    "service": "report-exporter",
+    "to_version": "2.4.0",
+    "reason": "2.4.1 skips temp cleanup; see the deploy and cleanup log lines."
+   },
+   "state": "rejected",
+   "by": "human",
+   "reason": "a rollback was tried at 02:15 and failed; do not roll back"
+  }
+ ]
+}

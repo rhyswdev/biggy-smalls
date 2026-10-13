@@ -1,0 +1,17 @@
+{
+  "result": {
+    "_raw": "2026-10-13 14:33:02.118 UTC [35228] pgw_app@payments FATAL:  remaining connection slots are reserved for non-replication superuser connections",
+    "_time": "1791901982.118",
+    "host": "pay-db-01",
+    "source": "/var/log/postgresql/postgresql-15-main.log",
+    "sourcetype": "postgresql",
+    "index": "db",
+    "linecount": "1",
+    "splunk_server": "idx-02.larkspur.internal"
+  },
+  "sid": "scheduler__sam_ortega__sre_alerts__RMD56690dc71c714c18e_at_1791902040_411",
+  "results_link": "https://splunk.larkspur.internal:8000/app/sre_alerts/search?q=%7Cloadjob%20scheduler__sam_ortega__sre_alerts__RMD56690dc71c714c18e_at_1791902040_411%20%7C%20head%201&earliest=0&latest=now",
+  "search_name": "Postgres connection refusals",
+  "owner": "sam.ortega",
+  "app": "sre_alerts"
+}

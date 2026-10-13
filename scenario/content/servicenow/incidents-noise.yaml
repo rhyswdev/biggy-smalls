@@ -1,0 +1,186 @@
+# Closed noise incidents (worker content, PLAN 7). Never served.
+# The generator assigns numbers, sys_ids and timestamps.
+noise_01:
+  opened_at: "2026-04-14 09:12"
+  resolved_after_min: 47
+  short_description: "Storefront 502s for about 25 min after CDN origin TLS certificate expired"
+  description: |-
+    Synthetic checks against the storefront have returned HTTP 502 from the edge in every region since about 09:05 ET. The CDN origin certificate appears to have expired.
+  cmdb_ci: "Storefront Web"
+  business_service: "Online Checkout"
+  priority: 3
+  impact: "2 - Medium"
+  urgency: "2 - Medium"
+  category: Network
+  contact_type: Monitoring
+  assignment_group: "Web Platform"
+  assigned_to: kofi.mensah
+  caller: svc-datadog
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    The origin certificate expired at 09:04 ET. The renewal job still pointed at a retired origin hostname, so it never fired. Certificate reissued and deployed to the origin at 09:31 ET, and the 502s cleared within two minutes. Added an expiry monitor on all CDN origin certificates alerting at 30 and 7 days, and corrected the hostname list in the renewal job.
+  work_notes:
+    - {after_min: 6, by: kofi.mensah, text: "Origin cert on the CDN shows expired at 09:04 ET. Renewal job did not fire, checking why."}
+    - {after_min: 12, by: kofi.mensah, text: "Renewal job config still lists the old origin hostname. Reissuing against the current one."}
+    - {after_min: 19, by: kofi.mensah, text: "New cert live on origin. Edge 502 rate back to zero. Expiry monitor added, closing once the job config change is merged."}
+noise_02:
+  opened_at: "2026-05-06 13:40"
+  resolved_after_min: 118
+  short_description: "Order confirmation emails delayed up to 2 hours, SMTP relay queue backlog"
+  description: |-
+    Customer service reports order confirmation emails arriving up to two hours after purchase. The SMTP relay queue is backing up and nothing is failing outright.
+  cmdb_ci: "Order Service"
+  business_service: "Online Checkout"
+  priority: 3
+  impact: "2 - Medium"
+  urgency: "2 - Medium"
+  category: Software
+  contact_type: Email
+  assignment_group: "Commerce Platform"
+  assigned_to: alice.nguyen
+  caller: ben.kowalski
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    The relay host root volume reached 100 percent at 12:58 ET, so the queue stopped spooling and then drained slowly once space was freed. Old bounce logs and the spool archive were removed, the volume was extended by 40 GB, and the queue was empty by 15:38 ET. Follow-up: move the relay spool onto its own volume and add a disk alert at 80 percent.
+  work_notes:
+    - {after_min: 14, by: alice.nguyen, text: "Order Service emails are queued on the relay, not failing. Checking queue depth."}
+    - {after_min: 41, by: alice.nguyen, text: "Relay root volume is full. Freeing space from bounce logs and the old spool archive, then extending the volume."}
+    - {after_min: 70, by: alice.nguyen, text: "Volume extended by 40 GB. Queue draining, around 3200 messages left."}
+noise_03:
+  opened_at: "2026-05-27 07:55"
+  resolved_after_min: 75
+  short_description: "Search indexer cron OOMKilled, product search results a day old"
+  description: |-
+    The product search indexer cron job on k8s-prod-east has been OOMKilled on every run since 02:00 ET. Storefront search is returning catalog data from about a day ago.
+  cmdb_ci: "k8s-prod-east"
+  business_service: ""
+  priority: 4
+  impact: "2 - Medium"
+  urgency: "3 - Low"
+  category: Software
+  contact_type: Monitoring
+  assignment_group: "Platform Reliability"
+  assigned_to: sam.ortega
+  caller: svc-datadog
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    The indexer memory limit was 1.5 GiB, and the catalog snapshot it loads had grown past that after the spring range expansion. The limit was raised to 3 GiB with a 2 GiB request, and the job was re-run by hand so the index is current. Follow-up: add a memory alert on the job and review snapshot size each quarter.
+  work_notes:
+    - {after_min: 8, by: sam.ortega, text: "Indexer pods hitting OOMKilled on every run since 02:00 ET. Pulling the last three pod events."}
+    - {after_min: 31, by: sam.ortega, text: "Snapshot load plus index build peaks above the 1.5 GiB limit. Raising the limit."}
+    - {after_min: 58, by: sam.ortega, text: "Manual re-run finished. Product search reflects the current catalog. Monitor to follow."}
+noise_04:
+  opened_at: "2026-06-18 22:10"
+  resolved_after_min: 96
+  short_description: "Node disk pressure evicted storefront pods on two k8s-prod-east nodes"
+  description: |-
+    Two k8s-prod-east nodes reported DiskPressure at about 22:05 ET and storefront pods were evicted from both. Remaining replicas are serving traffic but the deployment is below its desired count.
+  cmdb_ci: "k8s-prod-east"
+  business_service: "Online Checkout"
+  priority: 3
+  impact: "2 - Medium"
+  urgency: "2 - Medium"
+  category: Software
+  contact_type: Monitoring
+  assignment_group: "Platform Reliability"
+  assigned_to: sam.ortega
+  caller: svc-datadog
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    Image garbage collection only started at 90 percent root disk usage, so unused storefront image layers built up until kubelet eviction started first. Image GC thresholds were lowered to start at 70 percent and stop at 60 percent, and the evicted pods rescheduled cleanly. Follow-up: move image storage to the larger data disk when the nodes are rebuilt.
+  work_notes:
+    - {after_min: 7, by: sam.ortega, text: "Two nodes in DiskPressure. Eviction list is storefront pods only. Cordoning both nodes for now."}
+    - {after_min: 35, by: sam.ortega, text: "Root disk usage was at 91 percent on both. Mostly unused image layers from the last release cycle."}
+    - {after_min: 80, by: sam.ortega, text: "Image GC thresholds lowered and applied. Nodes back under 60 percent. Uncordoned, pods rescheduled."}
+noise_05:
+  opened_at: "2026-07-30 15:05"
+  resolved_after_min: 186
+  short_description: "Address validation fell back to local rules after provider HTTP 429"
+  description: |-
+    Checkout address validation calls to the external provider have returned HTTP 429 since 14:50 ET, and the Checkout API has switched to local rules. Orders are completing, but address suggestions and standardization are not being applied.
+  cmdb_ci: "Checkout API"
+  business_service: "Online Checkout"
+  priority: 3
+  impact: "2 - Medium"
+  urgency: "2 - Medium"
+  category: Software
+  contact_type: Monitoring
+  assignment_group: "Commerce Platform"
+  assigned_to: ben.kowalski
+  caller: svc-datadog
+  close_code: "Solved Remotely (Permanently)"
+  close_notes: |-
+    The provider's monthly request quota on our plan ran out at about 14:50 ET after a campaign pushed checkout traffic past the plan allowance. Checkout fell back to local validation rules as designed, so no orders were blocked. The plan quota was raised with the provider and the client now backs off on 429 responses before it falls back. Follow-up: alert on quota usage at 80 percent of the monthly allowance.
+  work_notes:
+    - {after_min: 12, by: ben.kowalski, text: "Address validation getting 429s from the provider since 14:50 ET. Checkout is on the local rules fallback. Orders are going through."}
+    - {after_min: 70, by: ben.kowalski, text: "Provider confirms the monthly quota on our plan is used up. Raising a request for a higher tier."}
+    - {after_min: 160, by: ben.kowalski, text: "Quota raised on the provider side. 429s stopped and validation is back on the provider. Left the fallback in place."}
+noise_06:
+  opened_at: "2026-08-21 06:30"
+  resolved_after_min: 58
+  short_description: "Nightly finance report failed on win-rpt-06, C: drive full"
+  description: |-
+    The nightly finance report on win-rpt-06 failed at 02:10 ET with a disk write error. The C: drive has no free space left.
+  cmdb_ci: "win-rpt-06"
+  business_service: ""
+  priority: 4
+  impact: "2 - Medium"
+  urgency: "3 - Low"
+  category: Hardware
+  contact_type: Monitoring
+  assignment_group: "Platform Reliability"
+  assigned_to: sam.ortega
+  caller: svc-datadog
+  close_code: "Solved (Work Around)"
+  close_notes: |-
+    Old finance export files from the previous year, about 180 GB in total, filled C: and the report writes its staging file there. The files were moved to the archive share and the report was re-run by hand, finishing at 07:15 ET. Follow-up: a scheduled cleanup job will remove exports older than 30 days from C: and is in review.
+  work_notes:
+    - {after_min: 9, by: sam.ortega, text: "C: is full on win-rpt-06. Staging file for the finance report cannot be written. Looking at the largest folders."}
+    - {after_min: 27, by: sam.ortega, text: "The exports folder on C: holds the old files. Moving them to the archive share and checking the copy completes."}
+    - {after_min: 41, by: sam.ortega, text: "Free space recovered. Re-running the finance job by hand now."}
+noise_07:
+  opened_at: "2026-09-08 11:20"
+  resolved_after_min: 172
+  short_description: "Refund settlement reconciliation 3 hours late, acquirer file malformed"
+  description: |-
+    The refund settlement reconciliation has not started because the parser rejected the acquirer's settlement file for the previous business day. The run is expected to finish late this afternoon.
+  cmdb_ci: "Payments Gateway"
+  business_service: ""
+  priority: 3
+  impact: "2 - Medium"
+  urgency: "2 - Medium"
+  category: Software
+  contact_type: Email
+  assignment_group: "Payments Engineering"
+  assigned_to: dana.whitfield
+  caller: priya.raman
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    The acquirer's settlement file for the previous business day arrived with 14 columns where the agreed layout has 15, and the parser stopped on the first malformed row and held the whole run. The acquirer re-sent the file, and the reconciliation completed at 14:10 ET and matched all records. The parser now rejects any file with the wrong column count or header at intake and raises an alert to the payments on-call channel.
+  work_notes:
+    - {after_min: 15, by: dana.whitfield, text: "Refund settlement recon has not started. Parser rejected the acquirer file for the previous business day."}
+    - {after_min: 48, by: priya.raman, text: "File has 14 columns, the agreed layout has 15. Confirmed with the acquirer's file team that the fault is on their side."}
+    - {after_min: 110, by: tom.beckett, text: "Acquirer re-sent the file. Checked the column count by hand, starting the reconciliation run now."}
+noise_08:
+  opened_at: "2026-10-02 16:45"
+  resolved_after_min: 133
+  short_description: "Product pages slow (p90 3 s), image resizer pods CPU throttled"
+  description: |-
+    Product page p90 response time on the storefront has risen to about 3 s since 16:20 ET. The image resizer pods show sustained CPU throttling and product images are slow to load.
+  cmdb_ci: "Storefront Web"
+  business_service: "Online Checkout"
+  priority: 4
+  impact: "2 - Medium"
+  urgency: "3 - Low"
+  category: Software
+  contact_type: Monitoring
+  assignment_group: "Web Platform"
+  assigned_to: kofi.mensah
+  caller: svc-datadog
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    Image resizer pods were limited to 500m CPU, which was too low for the resize volume after the new hero image sizes went live, so CPU throttling capped them under load. The CPU limit was raised to 2 CPU with the request unchanged, and p90 product page time returned to under 1 s by 18:55 ET. Follow-up: add a CPU throttling panel for the resizer and revisit the limit after the next catalog image change.
+  work_notes:
+    - {after_min: 11, by: kofi.mensah, text: "Resizer pods are pinned at their CPU limit and throttled. Checking whether the new hero image sizes changed the load."}
+    - {after_min: 52, by: kofi.mensah, text: "Confirmed the resize volume went up after the hero sizes release. The 500m limit is too low."}
+    - {after_min: 95, by: kofi.mensah, text: "CPU limit raised to 2 CPU and rolled out. p90 back under 1 s on the product page dashboard."}

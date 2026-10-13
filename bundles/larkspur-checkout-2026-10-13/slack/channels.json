@@ -1,0 +1,60 @@
+[
+  {
+    "id": "C0F8313A4C7",
+    "name": "inc-checkout-latency",
+    "created": 1791902100,
+    "creator": "U03MU4G0DPE",
+    "is_archived": false,
+    "is_general": false,
+    "members": [
+      "U03MU4G0DPE",
+      "U01B0NXMOC4",
+      "U0OUMNOBHU9",
+      "U01GG60ZVQK",
+      "U0W2EYK5S75",
+      "U0UAC4HTR91",
+      "U0XEFKXZ4W1",
+      "U0AVT5NH38I",
+      "U008V77DLJF"
+    ],
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "purpose": {
+      "value": "Checkout latency / payment failures 13 Oct",
+      "creator": "U03MU4G0DPE",
+      "last_set": 1791902100
+    }
+  },
+  {
+    "id": "C08AAF38F9A",
+    "name": "sre-oncall",
+    "created": 1676368800,
+    "creator": "U0OUMNOBHU9",
+    "is_archived": false,
+    "is_general": false,
+    "members": [
+      "U03MU4G0DPE",
+      "U01B0NXMOC4",
+      "U0OUMNOBHU9",
+      "U01GG60ZVQK",
+      "U0W2EYK5S75",
+      "U0UAC4HTR91",
+      "U0XEFKXZ4W1",
+      "U0AVT5NH38I",
+      "U008V77DLJF"
+    ],
+    "topic": {
+      "value": "",
+      "creator": "",
+      "last_set": 0
+    },
+    "purpose": {
+      "value": "SRE on-call chatter and alert routing",
+      "creator": "U0OUMNOBHU9",
+      "last_set": 1676368800
+    }
+  }
+]

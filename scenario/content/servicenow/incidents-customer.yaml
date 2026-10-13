@@ -1,0 +1,66 @@
+# Customer-raised incidents from 15:05 (worker content, PLAN 7). Never served.
+late:
+  - at: "15:05:40"
+    report: charged_twice
+    short_description: "Customer charged twice at checkout"
+    description: |-
+      Customer called to say they were charged twice: their first attempt, {order}, showed an error, they paid again and can see both charges on their bank app. They want one of them refunded today. Agent logged the case and told the customer a payments team will look at it.
+    contact_type: Phone
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:09:15"
+    report: declined
+    short_description: "Customer card declined at checkout"
+    description: |-
+      Customer wrote in the chat window saying their card declined when they tried to pay for {order}. They had used the same card at another store earlier today without any problem. Agent asked them to try again and to confirm the billing address.
+    contact_type: Chat
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:11:50"
+    report: spinner
+    short_description: "Checkout spinner, payment never completes"
+    description: |-
+      Customer emailed to say the payment spinner kept going for several minutes after they pressed pay on {order}. They were not sure whether the payment went through and did not get a confirmation. Agent asked for a screenshot and replied that the case is open.
+    contact_type: Email
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:13:05"
+    report: charged_twice
+    short_description: "Customer charged twice at checkout"
+    description: |-
+      Customer on the phone says they were charged twice: the page showed a spinner for a long time on {order}, so they pressed pay again and that one went through. Agent added a note to the case.
+    contact_type: Phone
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:17:05"
+    report: declined
+    short_description: "Customer card declined, wants to pay now"
+    description: |-
+      Customer rang to say their card declined on the last two attempts to buy {order}. They are sure the card is fine because it works with their other shops. Agent offered to take payment over the phone and said a supervisor would call back if needed.
+    contact_type: Phone
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:20:30"
+    report: charged_twice
+    short_description: "Customer charged twice, asks for refund"
+    description: |-
+      Customer emailed the support inbox to report being charged twice and asked for the extra amount back: {order} failed with an error, the retry worked. They attached a bank statement showing two lines with the same amount a few minutes apart. Agent acknowledged the email and logged it under this incident.
+    contact_type: Email
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:23:10"
+    report: spinner
+    short_description: "Checkout spinner, no confirmation shown"
+    description: |-
+      Customer typed in chat that the spinner kept going after they tapped pay on {order} and no confirmation appeared. They refreshed the page and were not sure whether the purchase had gone through. Agent said the team is looking into checkout and asked them to wait for a follow-up.
+    contact_type: Chat
+    impact: "3 - Low"
+    urgency: "2 - Medium"
+  - at: "15:26:45"
+    report: declined
+    short_description: "Customer card declined on the website"
+    description: |-
+      Customer emailed that their card declined on the website for {order} and they then paid with a different card that worked. They want to know whether the first card was charged anyway. Agent said they would check the account and reply by email.
+    contact_type: Email
+    impact: "3 - Low"
+    urgency: "2 - Medium"

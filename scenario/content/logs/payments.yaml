@@ -1,0 +1,160 @@
+# Hand-written payments-gateway log content (main session, PLAN 2.6). Never served.
+# The generator fills {placeholders}; every number comes from scenario/larkspur-checkout.yaml or facts.yaml.
+# Logger names are full class names; the generator abbreviates them as Logback's %logger{25} does.
+# Pinned vendor strings (HikariCP 5.1.0, PostgreSQL 15) must render verbatim (lint invariant 12).
+
+loggers:
+  app: com.larkspur.payments.PaymentsGatewayApplication
+  tomcat: org.springframework.boot.web.embedded.tomcat.TomcatWebServer
+  hikari_ds: com.zaxxer.hikari.HikariDataSource
+  hikari_pool: com.zaxxer.hikari.pool.HikariPool
+  hikari_leak: com.zaxxer.hikari.pool.ProxyLeakTask
+  psp_client: com.larkspur.payments.psp.PayCoreClient
+  retry: com.larkspur.payments.psp.RetryPolicy
+  service: com.larkspur.payments.service.PaymentService
+  sql_helper: org.hibernate.engine.jdbc.spi.SqlExceptionHelper
+  api_errors: com.larkspur.payments.web.ApiExceptionHandler
+  health: com.larkspur.payments.web.DbHealthIndicator
+  settlement: com.larkspur.payments.settlement.SettlementSyncJob
+  token: com.larkspur.payments.psp.PspTokenRefresher
+  shutdown: org.springframework.boot.web.embedded.tomcat.GracefulShutdown
+
+threads:
+  main: main
+  request: "http-nio-8443-exec-{n}"
+  housekeeper: HikariPool-1 housekeeper
+  adder: HikariPool-1 connection adder
+  scheduler: "scheduling-{n}"
+  shutdown: tomcat-shutdown
+
+# Startup and shutdown, per VM, at each rolling restart. {version}, {pid}, {timeout_ms}, {retries}, {backoff}.
+shutdown:
+  - [INFO, shutdown, shutdown, "Commencing graceful shutdown. Waiting for active requests to complete"]
+  - [INFO, shutdown, shutdown, "Graceful shutdown complete"]
+  - [INFO, main, hikari_ds, "HikariPool-1 - Shutdown initiated..."]
+  - [INFO, main, hikari_ds, "HikariPool-1 - Shutdown completed."]
+startup:
+  - [INFO, main, app, "Starting PaymentsGatewayApplication v{version} using Java 17.0.12 with PID {pid} (/opt/payments-gateway/payments-gateway-{version}.jar started by payments in /opt/payments-gateway)"]
+  - [INFO, main, app, "The following 1 profile is active: \"prod\""]
+  - [INFO, main, tomcat, "Tomcat initialized with port 8443 (https)"]
+  - [INFO, main, hikari_ds, "HikariPool-1 - Starting..."]
+  - [INFO, main, hikari_pool, "HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@{conn}"]
+  - [INFO, main, hikari_ds, "HikariPool-1 - Start completed."]
+  - [INFO, main, psp_client, "PSP client configured: endpoint=https://api.paycore.example/v2/authorizations payments.psp.timeout-ms={timeout_ms} payments.psp.retries={retries} payments.psp.backoff-ms={backoff}"]
+  - [INFO, main, tomcat, "Tomcat started on port 8443 (https) with context path ''"]
+  - [INFO, main, app, "Started PaymentsGatewayApplication in {started_in} seconds (process running for {running_for})"]
+
+# Request-path lines.
+request_ok: [INFO, request, service, "authorize ok txn={order} amount={amount} {currency} psp_ms={psp_ms} attempts={attempts}"]
+psp_ok_slow: [WARN, request, psp_client, "slow PSP response: {psp_ms}ms for txn={order} (warn threshold 5000ms)"]
+psp_retry: [WARN, request, retry, "authorize attempt {attempt}/{max_attempts} timed out after {timeout_ms}ms (txn={order}) retrying in {backoff_ms}ms"]
+psp_gave_up: [ERROR, request, service, "authorize failed txn={order} after {max_attempts} attempts in {elapsed_ms}ms: PSP timeout"]
+psp_fail_fast: [ERROR, request, service, "authorize failed txn={order} after 1 attempt in {elapsed_ms}ms: PSP timeout {timeout_ms}ms"]
+health_fail: [WARN, request, health, "DB health check failed: {reason}"]
+health_reasons:
+  - "HikariPool-1 - Connection is not available, request timed out after 2000ms"
+bg_settlement: [INFO, scheduler, settlement, "settlement sync: {n} records reconciled, 0 pending"]
+bg_token: [INFO, scheduler, token, "PSP access token refreshed, expires in 3600s"]
+
+# HikariCP DEBUG lines (com.zaxxer.hikari at DEBUG since March). Pinned strings.
+hikari_stats: [DEBUG, housekeeper, hikari_pool, "HikariPool-1 - After cleanup  stats (total={t}, active={a}, idle={i}, waiting={w})"]
+hikari_fill: [DEBUG, housekeeper, hikari_pool, "HikariPool-1 - Fill pool skipped, pool has sufficient level or currently being filled."]
+hikari_added: [DEBUG, adder, hikari_pool, "HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@{conn}"]
+hikari_cannot_acquire:
+  head: [DEBUG, adder, hikari_pool, "HikariPool-1 - Cannot acquire connection from data source"]
+  trace:
+    - "org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections"
+    - "\tat org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)"
+    - "\tat org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)"
+    - "\tat org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)"
+    - "\tat org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)"
+    - "\tat org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)"
+    - "\tat org.postgresql.Driver.makeConnection(Driver.java:446)"
+    - "\tat org.postgresql.Driver.connect(Driver.java:298)"
+    - "\tat com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)"
+    - "\tat com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)"
+    - "\tat com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)"
+    - "\tat com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)"
+    - "\tat com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)"
+
+# Pool timeout: Hibernate's SqlExceptionHelper logs the pair, then the API handler logs the wrapped
+# exception with its cause chain (%ex{20} per throwable, Logback prints "... N common frames omitted").
+hikari_timeout:
+  warn: [WARN, request, sql_helper, "SQL Error: 0, SQLState: null"]
+  error: [ERROR, request, sql_helper, "HikariPool-1 - Connection is not available, request timed out after 5000ms (total={t}, active={a}, idle={i}, waiting={w})"]
+  handler: [ERROR, request, api_errors, "authorize failed txn={order}: Could not open JPA EntityManager for transaction"]
+  trace:
+    - "org.springframework.transaction.CannotCreateTransactionException: Could not open JPA EntityManager for transaction"
+    - "\tat org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:466)"
+    - "\tat org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)"
+    - "\tat org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)"
+    - "\tat org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)"
+    - "\tat org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)"
+    - "\tat org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)"
+    - "\tat org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)"
+    - "\tat org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)"
+    - "\tat org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)"
+    - "\tat com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)"
+    - "\tat com.larkspur.payments.web.AuthorizeController.authorize(AuthorizeController.java:58)"
+    - "\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)"
+    - "\tat java.base/java.lang.reflect.Method.invoke(Method.java:580)"
+    - "\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)"
+    - "\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)"
+    - "\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)"
+    - "\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:926)"
+    - "\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:831)"
+    - "\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)"
+    - "\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)"
+    - "Caused by: org.hibernate.exception.JDBCConnectionException: Unable to acquire JDBC Connection [HikariPool-1 - Connection is not available, request timed out after 5000ms (total={t}, active={a}, idle={i}, waiting={w})] [n/a]"
+    - "\tat org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:100)"
+    - "\tat org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)"
+    - "\tat org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)"
+    - "\tat org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:116)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)"
+    - "\tat org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)"
+    - "\tat org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)"
+    - "\tat org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)"
+    - "\tat org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)"
+    - "\tat org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)"
+    - "\t... 55 common frames omitted"
+    - "Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 5000ms (total={t}, active={a}, idle={i}, waiting={w})"
+    - "\tat com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:686)"
+    - "\tat com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:179)"
+    - "\tat com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:144)"
+    - "\tat com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:99)"
+    - "\tat org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)"
+    - "\tat org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)"
+    - "\t... 63 common frames omitted"
+  # One-line form after the first traced timeout per host in a window (handler line without trace).
+  oneline_handler: [ERROR, request, api_errors, "authorize failed txn={order}: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)"]
+
+# Leak detection (ProxyLeakTask, WARN with the exception captured at borrow time; Hikari trims its own
+# first frames). The trace reaches the transactional proxy of PaymentService.authorize.
+hikari_leak:
+  head: [WARN, housekeeper, hikari_leak, "Connection leak detection triggered for org.postgresql.jdbc.PgConnection@{conn} on thread {thread}, stack trace follows"]
+  trace:
+    - "java.lang.Exception: Apparent connection leak detected"
+    - "\tat com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)"
+    - "\tat org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)"
+    - "\tat org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)"
+    - "\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)"
+    - "\tat org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)"
+    - "\tat org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)"
+    - "\tat org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)"
+    - "\tat org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)"
+    - "\tat org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)"
+    - "\tat org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)"
+    - "\tat org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)"
+    - "\tat org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)"
+    - "\tat org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)"
+    - "\tat org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)"
+    - "\tat org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)"
+    - "\tat org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)"
+    - "\tat org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)"
+    - "\tat com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)"
+  unleaked: [INFO, request, hikari_leak, "Previously reported leaked connection org.postgresql.jdbc.PgConnection@{conn} on thread {thread} was returned to the pool (unleaked)"]

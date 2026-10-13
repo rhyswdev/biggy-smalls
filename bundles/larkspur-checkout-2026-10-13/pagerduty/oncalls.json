@@ -1,0 +1,138 @@
+{
+  "oncalls": [
+    {
+      "escalation_policy": {
+        "id": "PEP4K9R",
+        "type": "escalation_policy_reference",
+        "summary": "Payments Engineering",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP4K9R",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP4K9R"
+      },
+      "escalation_level": 1,
+      "schedule": {
+        "id": "PSC1PAY",
+        "type": "schedule_reference",
+        "summary": "Payments Engineering level 1",
+        "self": "https://api.pagerduty.com/schedules/PSC1PAY",
+        "html_url": "https://larkspur.pagerduty.com/schedules/PSC1PAY"
+      },
+      "user": {
+        "id": "P1QXA4K",
+        "type": "user_reference",
+        "summary": "Tom Beckett",
+        "self": "https://api.pagerduty.com/users/P1QXA4K",
+        "html_url": "https://larkspur.pagerduty.com/users/P1QXA4K"
+      },
+      "start": "2026-10-13T08:00:00Z",
+      "end": "2026-10-14T08:00:00Z"
+    },
+    {
+      "escalation_policy": {
+        "id": "PEP4K9R",
+        "type": "escalation_policy_reference",
+        "summary": "Payments Engineering",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP4K9R",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP4K9R"
+      },
+      "escalation_level": 2,
+      "schedule": {
+        "id": "PSC2PAY",
+        "type": "schedule_reference",
+        "summary": "Payments Engineering level 2",
+        "self": "https://api.pagerduty.com/schedules/PSC2PAY",
+        "html_url": "https://larkspur.pagerduty.com/schedules/PSC2PAY"
+      },
+      "user": {
+        "id": "PR2F8XY",
+        "type": "user_reference",
+        "summary": "Priya Raman",
+        "self": "https://api.pagerduty.com/users/PR2F8XY",
+        "html_url": "https://larkspur.pagerduty.com/users/PR2F8XY"
+      },
+      "start": "2026-10-13T08:00:00Z",
+      "end": "2026-10-14T08:00:00Z"
+    },
+    {
+      "escalation_policy": {
+        "id": "PEP7W2T",
+        "type": "escalation_policy_reference",
+        "summary": "Database Engineering",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP7W2T",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP7W2T"
+      },
+      "escalation_level": 1,
+      "schedule": {
+        "id": "PSC1DBA",
+        "type": "schedule_reference",
+        "summary": "Database Engineering level 1",
+        "self": "https://api.pagerduty.com/schedules/PSC1DBA",
+        "html_url": "https://larkspur.pagerduty.com/schedules/PSC1DBA"
+      },
+      "user": {
+        "id": "PXPL6G3",
+        "type": "user_reference",
+        "summary": "Elena Rossi",
+        "self": "https://api.pagerduty.com/users/PXPL6G3",
+        "html_url": "https://larkspur.pagerduty.com/users/PXPL6G3"
+      },
+      "start": "2026-10-13T08:00:00Z",
+      "end": "2026-10-14T08:00:00Z"
+    },
+    {
+      "escalation_policy": {
+        "id": "PEP2N6B",
+        "type": "escalation_policy_reference",
+        "summary": "Commerce Platform",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP2N6B",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP2N6B"
+      },
+      "escalation_level": 1,
+      "schedule": {
+        "id": "PSC1COM",
+        "type": "schedule_reference",
+        "summary": "Commerce Platform level 1",
+        "self": "https://api.pagerduty.com/schedules/PSC1COM",
+        "html_url": "https://larkspur.pagerduty.com/schedules/PSC1COM"
+      },
+      "user": {
+        "id": "PBO9GPI",
+        "type": "user_reference",
+        "summary": "Alice Nguyen",
+        "self": "https://api.pagerduty.com/users/PBO9GPI",
+        "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+      },
+      "start": "2026-10-13T08:00:00Z",
+      "end": "2026-10-14T08:00:00Z"
+    },
+    {
+      "escalation_policy": {
+        "id": "PEP8H3J",
+        "type": "escalation_policy_reference",
+        "summary": "Platform Reliability",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP8H3J",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP8H3J"
+      },
+      "escalation_level": 1,
+      "schedule": {
+        "id": "PSC1PLT",
+        "type": "schedule_reference",
+        "summary": "Platform Reliability level 1",
+        "self": "https://api.pagerduty.com/schedules/PSC1PLT",
+        "html_url": "https://larkspur.pagerduty.com/schedules/PSC1PLT"
+      },
+      "user": {
+        "id": "PFR2YX8",
+        "type": "user_reference",
+        "summary": "Sam Ortega",
+        "self": "https://api.pagerduty.com/users/PFR2YX8",
+        "html_url": "https://larkspur.pagerduty.com/users/PFR2YX8"
+      },
+      "start": "2026-10-13T08:00:00Z",
+      "end": "2026-10-14T08:00:00Z"
+    }
+  ],
+  "limit": 25,
+  "offset": 0,
+  "more": false,
+  "total": null
+}

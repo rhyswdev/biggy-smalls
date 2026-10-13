@@ -1,0 +1,62 @@
+# Dynatrace problem bodies and entities (main session, PLAN 2.6). Never served. Only VM-side entities:
+# OneAgent runs on the payments and orders VMs and the k8s nodes, not inside checkout-api's pods.
+
+management_zones:
+  - {id: "4402813374201867355", name: "Payments"}
+  - {id: "7712039948816310021", name: "Kubernetes prod-east"}
+  - {id: "2210948813025592871", name: "Marketing"}
+
+entities:
+  - {key: payments-gw-svc, id: SERVICE-6D8B4F2E1A9C3B70, type: SERVICE, name: PaymentsGateway, zone: Payments,
+     tags: ["app:payments-gateway", "env:prod"], runs_on: [pay-01, pay-02, pay-03, pay-04], calls: [paycore-ext, pay-db-svc]}
+  - {key: order-svc, id: SERVICE-1F3C9A7E5B2D8460, type: SERVICE, name: OrderService, zone: Payments, runs_on: [ord-01, ord-02], calls: [orders-db-svc]}
+  - {key: paycore-ext, id: SERVICE-9A0E7C3B5D1F2468, type: SERVICE, name: api.paycore.example, zone: Payments, tags: ["external"], calls: []}
+  - {key: pay-db-svc, id: SERVICE-3B5D7F9A1C2E4068, type: SERVICE, name: payments, zone: Payments, tags: ["db:postgresql"], runs_on: [pay-db-01], calls: []}
+  - {key: orders-db-svc, id: SERVICE-5C7E9A1B3D2F4086, type: SERVICE, name: orders, zone: Payments, tags: ["db:postgresql"], runs_on: [pay-db-01], calls: []}
+  - {key: pay-01, id: HOST-21A4C6E8F0B2D413, type: HOST, name: pay-01.larkspur.internal, zone: Payments}
+  - {key: pay-02, id: HOST-21A4C6E8F0B2D424, type: HOST, name: pay-02.larkspur.internal, zone: Payments}
+  - {key: pay-03, id: HOST-21A4C6E8F0B2D435, type: HOST, name: pay-03.larkspur.internal, zone: Payments}
+  - {key: pay-04, id: HOST-21A4C6E8F0B2D446, type: HOST, name: pay-04.larkspur.internal, zone: Payments}
+  - {key: ord-01, id: HOST-21A4C6E8F0B2D517, type: HOST, name: ord-01.larkspur.internal, zone: Payments}
+  - {key: ord-02, id: HOST-21A4C6E8F0B2D528, type: HOST, name: ord-02.larkspur.internal, zone: Payments}
+  - {key: pay-db-01, id: HOST-21A4C6E8F0B2D910, type: HOST, name: pay-db-01.larkspur.internal, zone: Payments}
+  - {key: node-east-14, id: HOST-7E3A1C5B9D2F0614, type: HOST, name: node-east-14.larkspur.internal, zone: "Kubernetes prod-east"}
+  - {key: cdn-app, id: APPLICATION-0C2E4A6B8D1F3579, type: APPLICATION, name: cdn.larkspur.com, zone: Marketing}
+
+problems:
+  P-26101288:
+    affected: [node-east-14]
+    root_cause: node-east-14
+    evidence:
+      - {evidenceType: METRIC, displayName: "CPU saturation", entity: node-east-14, rootCauseRelevant: true, metricId: "builtin:host.cpu.usage",
+         unit: Percent, valueBeforeChangePoint: 41.2, valueAfterChangePoint: 96.4}
+  P-26101350:
+    affected: [payments-gw-svc]
+    impacted: [payments-gw-svc]
+    root_cause: paycore-ext
+    evidence:
+      - {evidenceType: TRANSACTIONAL, displayName: "Response time degradation", entity: paycore-ext, rootCauseRelevant: true,
+         unit: MicroSecond, valueBeforeChangePoint: 1042000.0, valueAfterChangePoint: 8016000.0}
+      - {evidenceType: TRANSACTIONAL, displayName: "Response time degradation", entity: payments-gw-svc, rootCauseRelevant: false,
+         unit: MicroSecond, valueBeforeChangePoint: 1310000.0, valueAfterChangePoint: 9870000.0}
+      - {evidenceType: EVENT, displayName: "Response time degradation on web request /v1/authorize", entity: payments-gw-svc, rootCauseRelevant: false,
+         eventType: SERVICE_RESPONSE_TIME_DEGRADED}
+    impact: {estimatedAffectedUsers: 1260, impactType: SERVICE, entity: payments-gw-svc}
+  P-26101362:
+    affected: [payments-gw-svc]
+    impacted: [payments-gw-svc]
+    root_cause: pay-db-01
+    evidence:
+      - {evidenceType: EVENT, displayName: "Failure rate increase", entity: pay-db-svc, rootCauseRelevant: true, eventType: SERVICE_ERROR_RATE_INCREASED}
+      - {evidenceType: TRANSACTIONAL, displayName: "Failure rate increase (connection refusals)", entity: pay-db-svc, rootCauseRelevant: true,
+         unit: Percent, valueBeforeChangePoint: 0.0, valueAfterChangePoint: 41.7}
+      - {evidenceType: METRIC, displayName: "Connections to database", entity: pay-db-01, rootCauseRelevant: true, metricId: "builtin:tech.postgresql.connections",
+         unit: Count, valueBeforeChangePoint: 45.0, valueAfterChangePoint: 197.0}
+      - {evidenceType: TRANSACTIONAL, displayName: "Response time degradation", entity: payments-gw-svc, rootCauseRelevant: false,
+         unit: MicroSecond, valueBeforeChangePoint: 1310000.0, valueAfterChangePoint: 9940000.0}
+    impact: {estimatedAffectedUsers: 1410, impactType: SERVICE, entity: payments-gw-svc}
+  P-26101377:
+    affected: [cdn-app]
+    root_cause: cdn-app
+    evidence:
+      - {evidenceType: AVAILABILITY_EVIDENCE, displayName: "Synthetic monitor failing", entity: cdn-app, rootCauseRelevant: true}

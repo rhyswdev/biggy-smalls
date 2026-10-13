@@ -1,0 +1,26 @@
+{
+ "x-source": "transcribed from the ServiceNow data dictionary for the table (no PDI export; see docs/schemas.md)",
+ "mode": "field-list",
+ "fields": [
+  "active",
+  "cost_center",
+  "default_assignee",
+  "description",
+  "email",
+  "exclude_manager",
+  "include_members",
+  "manager",
+  "name",
+  "parent",
+  "sys_created_by",
+  "sys_created_on",
+  "sys_domain",
+  "sys_domain_path",
+  "sys_id",
+  "sys_mod_count",
+  "sys_tags",
+  "sys_updated_by",
+  "sys_updated_on",
+  "type"
+ ]
+}

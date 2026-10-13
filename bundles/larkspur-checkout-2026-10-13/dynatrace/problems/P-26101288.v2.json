@@ -1,0 +1,79 @@
+{
+  "problemId": "1474393623089639725_1791900900000V2",
+  "displayId": "P-26101288",
+  "title": "CPU saturation",
+  "impactLevel": "INFRASTRUCTURE",
+  "severityLevel": "RESOURCE_CONTENTION",
+  "status": "CLOSED",
+  "affectedEntities": [
+    {
+      "entityId": {
+        "id": "HOST-7E3A1C5B9D2F0614",
+        "type": "HOST"
+      },
+      "name": "node-east-14.larkspur.internal"
+    }
+  ],
+  "impactedEntities": [
+    {
+      "entityId": {
+        "id": "HOST-7E3A1C5B9D2F0614",
+        "type": "HOST"
+      },
+      "name": "node-east-14.larkspur.internal"
+    }
+  ],
+  "rootCauseEntity": {
+    "entityId": {
+      "id": "HOST-7E3A1C5B9D2F0614",
+      "type": "HOST"
+    },
+    "name": "node-east-14.larkspur.internal"
+  },
+  "managementZones": [
+    {
+      "id": "7712039948816310021",
+      "name": "Kubernetes prod-east"
+    }
+  ],
+  "entityTags": [],
+  "problemFilters": [
+    {
+      "id": "c4d1a5e8-0f2b-4f6e-9d3a-7b8c2e1f6a40",
+      "name": "Default"
+    }
+  ],
+  "startTime": 1791900900000,
+  "endTime": 1791902340000,
+  "evidenceDetails": {
+    "totalCount": 1,
+    "details": [
+      {
+        "evidenceType": "METRIC",
+        "displayName": "CPU saturation",
+        "rootCauseRelevant": true,
+        "metricId": "builtin:host.cpu.usage",
+        "unit": "Percent",
+        "valueBeforeChangePoint": 41.2,
+        "valueAfterChangePoint": 96.4,
+        "entity": {
+          "entityId": {
+            "id": "HOST-7E3A1C5B9D2F0614",
+            "type": "HOST"
+          },
+          "name": "node-east-14.larkspur.internal"
+        },
+        "startTime": 1791900859000,
+        "endTime": 1791902340000
+      }
+    ]
+  },
+  "impactAnalysis": {
+    "impacts": []
+  },
+  "linkedProblemInfo": null,
+  "recentComments": {
+    "comments": [],
+    "totalCount": 0
+  }
+}

@@ -1,0 +1,2184 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$ref": "#/components/schemas/SyntheticsAPITest",
+ "components": {
+  "schemas": {
+   "SyntheticsAPIStep": {
+    "description": "The steps used in a Synthetic multi-step API test.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/SyntheticsAPITestStep"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAPIWaitStep"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAPISubtestStep"
+     }
+    ]
+   },
+   "SyntheticsAPISubtestStep": {
+    "description": "The subtest step used in a Synthetics multi-step API test.",
+    "properties": {
+     "allowFailure": {
+      "description": "Determines whether or not to continue with test if this step fails.",
+      "type": "boolean"
+     },
+     "alwaysExecute": {
+      "description": "A boolean set to always execute this step even if the previous step failed or was skipped.",
+      "type": "boolean"
+     },
+     "exitIfSucceed": {
+      "description": "Determines whether or not to exit the test if the step succeeds.",
+      "type": "boolean"
+     },
+     "extractedValuesFromScript": {
+      "description": "Generate variables using JavaScript.",
+      "type": "string"
+     },
+     "id": {
+      "description": "ID of the step.",
+      "example": "abc-def-123",
+      "readOnly": true,
+      "type": "string"
+     },
+     "isCritical": {
+      "description": "Determines whether or not to consider the entire test as failed if this step fails.\nCan be used only if `allowFailure` is `true`.",
+      "type": "boolean"
+     },
+     "name": {
+      "description": "The name of the step.",
+      "example": "Example step name",
+      "type": "string"
+     },
+     "retry": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsRetry"
+     },
+     "subtestPublicId": {
+      "description": "Public ID of the test to be played as part of a `playSubTest` step type.",
+      "example": "",
+      "type": "string"
+     },
+     "subtype": {
+      "$ref": "#/components/schemas/SyntheticsAPISubtestStepSubtype"
+     }
+    },
+    "required": [
+     "name",
+     "subtype",
+     "subtestPublicId"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAPISubtestStepSubtype": {
+    "description": "The subtype of the Synthetic multi-step API subtest step.",
+    "enum": [
+     "playSubTest"
+    ],
+    "example": "playSubTest",
+    "type": "string",
+    "x-enum-varnames": [
+     "PLAY_SUB_TEST"
+    ]
+   },
+   "SyntheticsAPITest": {
+    "description": "Object containing details about a Synthetic API test.",
+    "properties": {
+     "config": {
+      "$ref": "#/components/schemas/SyntheticsAPITestConfig"
+     },
+     "locations": {
+      "description": "Array of locations used to run the test.",
+      "example": [
+       "aws:eu-west-3"
+      ],
+      "items": {
+       "description": "A location from which the test was run.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "message": {
+      "description": "Notification message associated with the test.",
+      "example": "Notification message",
+      "type": "string"
+     },
+     "monitor_id": {
+      "description": "The associated monitor ID.",
+      "example": 12345678,
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "name": {
+      "description": "Name of the test.",
+      "example": "Example test name",
+      "type": "string"
+     },
+     "options": {
+      "$ref": "#/components/schemas/SyntheticsTestOptions"
+     },
+     "public_id": {
+      "description": "The public ID for the test.",
+      "example": "123-abc-456",
+      "readOnly": true,
+      "type": "string"
+     },
+     "status": {
+      "$ref": "#/components/schemas/SyntheticsTestPauseStatus"
+     },
+     "subtype": {
+      "$ref": "#/components/schemas/SyntheticsTestDetailsSubType"
+     },
+     "tags": {
+      "description": "Array of tags attached to the test.",
+      "example": [
+       "env:production"
+      ],
+      "items": {
+       "description": "A tag attached to the test.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAPITestType"
+     }
+    },
+    "required": [
+     "name",
+     "config",
+     "locations",
+     "options",
+     "type",
+     "message"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAPITestConfig": {
+    "description": "Configuration object for a Synthetic API test.",
+    "example": {
+     "assertions": [
+      {
+       "operator": "lessThan",
+       "target": 1000,
+       "type": "responseTime"
+      }
+     ],
+     "request": {
+      "method": "GET",
+      "url": "https://example.com"
+     }
+    },
+    "properties": {
+     "assertions": {
+      "default": [],
+      "description": "Array of assertions used for the test. Required for single API tests.",
+      "example": [
+       {
+        "operator": "lessThan",
+        "target": 1000,
+        "type": "responseTime"
+       }
+      ],
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsAssertion"
+      },
+      "type": "array"
+     },
+     "configVariables": {
+      "description": "Array of variables used for the test.",
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsConfigVariable"
+      },
+      "type": "array"
+     },
+     "request": {
+      "$ref": "#/components/schemas/SyntheticsTestRequest"
+     },
+     "steps": {
+      "description": "When the test subtype is `multi`, the steps of the test.",
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsAPIStep"
+      },
+      "type": "array"
+     },
+     "variablesFromScript": {
+      "description": "Variables defined from JavaScript code.",
+      "example": "dd.variable.set(\"FOO\", \"foo\")",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsAPITestStep": {
+    "description": "The Test step used in a Synthetic multi-step API test.",
+    "properties": {
+     "allowFailure": {
+      "description": "Determines whether or not to continue with test if this step fails.",
+      "type": "boolean"
+     },
+     "assertions": {
+      "default": [],
+      "description": "Array of assertions used for the test.",
+      "example": [
+       {
+        "operator": "lessThan",
+        "target": 1000,
+        "type": "responseTime"
+       }
+      ],
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsAssertion"
+      },
+      "type": "array"
+     },
+     "exitIfSucceed": {
+      "description": "Determines whether or not to exit the test if the step succeeds.",
+      "type": "boolean"
+     },
+     "extractedValues": {
+      "description": "Array of values to parse and save as variables from the response.",
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsParsingOptions"
+      },
+      "type": "array"
+     },
+     "extractedValuesFromScript": {
+      "description": "Generate variables using JavaScript.",
+      "type": "string"
+     },
+     "id": {
+      "description": "ID of the step.",
+      "example": "abc-def-123",
+      "readOnly": true,
+      "type": "string"
+     },
+     "isCritical": {
+      "description": "Determines whether or not to consider the entire test as failed if this step fails.\nCan be used only if `allowFailure` is `true`.",
+      "type": "boolean"
+     },
+     "name": {
+      "description": "The name of the step.",
+      "example": "Example step name",
+      "type": "string"
+     },
+     "request": {
+      "$ref": "#/components/schemas/SyntheticsTestRequest"
+     },
+     "retry": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsRetry"
+     },
+     "subtype": {
+      "$ref": "#/components/schemas/SyntheticsAPITestStepSubtype"
+     }
+    },
+    "required": [
+     "assertions",
+     "request",
+     "name",
+     "subtype"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAPITestStepSubtype": {
+    "description": "The subtype of the Synthetic multi-step API test step.",
+    "enum": [
+     "http",
+     "grpc",
+     "ssl",
+     "dns",
+     "tcp",
+     "udp",
+     "icmp",
+     "websocket",
+     "mcp"
+    ],
+    "example": "http",
+    "type": "string",
+    "x-enum-varnames": [
+     "HTTP",
+     "GRPC",
+     "SSL",
+     "DNS",
+     "TCP",
+     "UDP",
+     "ICMP",
+     "WEBSOCKET",
+     "MCP"
+    ]
+   },
+   "SyntheticsAPITestType": {
+    "default": "api",
+    "description": "Type of the Synthetic test, `api`.",
+    "enum": [
+     "api"
+    ],
+    "example": "api",
+    "type": "string",
+    "x-enum-varnames": [
+     "API"
+    ]
+   },
+   "SyntheticsAPIWaitStep": {
+    "description": "The Wait step used in a Synthetic multi-step API test.",
+    "properties": {
+     "id": {
+      "description": "ID of the step.",
+      "example": "abc-def-123",
+      "readOnly": true,
+      "type": "string"
+     },
+     "name": {
+      "description": "The name of the step.",
+      "example": "Example step name",
+      "type": "string"
+     },
+     "subtype": {
+      "$ref": "#/components/schemas/SyntheticsAPIWaitStepSubtype"
+     },
+     "value": {
+      "description": "The time to wait in seconds. Minimum value: 0. Maximum value: 180.",
+      "example": 5,
+      "format": "int32",
+      "maximum": 180,
+      "minimum": 0,
+      "type": "integer"
+     }
+    },
+    "required": [
+     "name",
+     "subtype",
+     "value"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAPIWaitStepSubtype": {
+    "description": "The subtype of the Synthetic multi-step API wait step.",
+    "enum": [
+     "wait"
+    ],
+    "example": "wait",
+    "type": "string",
+    "x-enum-varnames": [
+     "WAIT"
+    ]
+   },
+   "SyntheticsAssertion": {
+    "description": "Object describing the assertions type, their associated operator,\nwhich property they apply, and upon which target.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionTarget"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionBodyHashTarget"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONPathTarget"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONSchemaTarget"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionXPathTarget"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionJavascript"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionMCPServerCapabilitiesTarget"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionMCPRespectsSpecification"
+     }
+    ]
+   },
+   "SyntheticsAssertionBodyHashOperator": {
+    "description": "Assertion operator to apply.",
+    "enum": [
+     "md5",
+     "sha1",
+     "sha256"
+    ],
+    "example": "md5",
+    "type": "string",
+    "x-enum-varnames": [
+     "MD5",
+     "SHA1",
+     "SHA256"
+    ]
+   },
+   "SyntheticsAssertionBodyHashTarget": {
+    "description": "An assertion which targets body hash.",
+    "properties": {
+     "operator": {
+      "$ref": "#/components/schemas/SyntheticsAssertionBodyHashOperator"
+     },
+     "target": {
+      "$ref": "#/components/schemas/SyntheticsAssertionTargetValue",
+      "description": "Value used by the operator."
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionBodyHashType"
+     }
+    },
+    "required": [
+     "type",
+     "operator",
+     "target"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionBodyHashType": {
+    "description": "Type of the assertion.",
+    "enum": [
+     "bodyHash"
+    ],
+    "example": "bodyHash",
+    "type": "string",
+    "x-enum-varnames": [
+     "BODY_HASH"
+    ]
+   },
+   "SyntheticsAssertionJSONPathOperator": {
+    "description": "Assertion operator to apply.",
+    "enum": [
+     "validatesJSONPath"
+    ],
+    "example": "validatesJSONPath",
+    "type": "string",
+    "x-enum-varnames": [
+     "VALIDATES_JSON_PATH"
+    ]
+   },
+   "SyntheticsAssertionJSONPathTarget": {
+    "description": "An assertion for the `validatesJSONPath` operator.",
+    "properties": {
+     "operator": {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONPathOperator"
+     },
+     "property": {
+      "description": "The associated assertion property.",
+      "type": "string"
+     },
+     "target": {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONPathTargetTarget"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionType"
+     }
+    },
+    "required": [
+     "type",
+     "operator"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionJSONPathTargetTarget": {
+    "description": "Composed target for `validatesJSONPath` operator.",
+    "properties": {
+     "elementsOperator": {
+      "description": "The element from the list of results to assert on.  To choose from the first element in the list `firstElementMatches`, every element in the list `everyElementMatches`, at least one element in the list `atLeastOneElementMatches` or the serialized value of the list `serializationMatches`.",
+      "type": "string"
+     },
+     "jsonPath": {
+      "description": "The JSON path to assert.",
+      "type": "string"
+     },
+     "operator": {
+      "description": "The specific operator to use on the path.",
+      "type": "string"
+     },
+     "targetValue": {
+      "$ref": "#/components/schemas/SyntheticsAssertionTargetValue",
+      "description": "The path target value to compare to."
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsAssertionJSONSchemaMetaSchema": {
+    "description": "The JSON Schema meta-schema version used in the assertion.",
+    "enum": [
+     "draft-07",
+     "draft-06"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "DRAFT_07",
+     "DRAFT_06"
+    ]
+   },
+   "SyntheticsAssertionJSONSchemaOperator": {
+    "description": "Assertion operator to apply.",
+    "enum": [
+     "validatesJSONSchema"
+    ],
+    "example": "validatesJSONSchema",
+    "type": "string",
+    "x-enum-varnames": [
+     "VALIDATES_JSON_SCHEMA"
+    ]
+   },
+   "SyntheticsAssertionJSONSchemaTarget": {
+    "description": "An assertion for the `validatesJSONSchema` operator.",
+    "properties": {
+     "operator": {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONSchemaOperator"
+     },
+     "target": {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONSchemaTargetTarget"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionType"
+     }
+    },
+    "required": [
+     "type",
+     "operator"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionJSONSchemaTargetTarget": {
+    "description": "Composed target for `validatesJSONSchema` operator.",
+    "properties": {
+     "jsonSchema": {
+      "description": "The JSON Schema to assert.",
+      "type": "string"
+     },
+     "metaSchema": {
+      "$ref": "#/components/schemas/SyntheticsAssertionJSONSchemaMetaSchema"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsAssertionJavascript": {
+    "description": "A JavaScript assertion.",
+    "properties": {
+     "code": {
+      "description": "The JavaScript code that performs the assertions.",
+      "example": "dd.expect(dd.response.statusCode).to.equal(200);",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionJavascriptType"
+     }
+    },
+    "required": [
+     "type",
+     "code"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionJavascriptType": {
+    "description": "Type of the assertion.",
+    "enum": [
+     "javascript"
+    ],
+    "example": "javascript",
+    "type": "string",
+    "x-enum-varnames": [
+     "JAVASCRIPT"
+    ]
+   },
+   "SyntheticsAssertionMCPRespectsSpecification": {
+    "description": "An assertion that verifies the MCP server response respects the MCP specification.",
+    "properties": {
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionMCPRespectsSpecificationType"
+     }
+    },
+    "required": [
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionMCPRespectsSpecificationType": {
+    "description": "Type of the assertion.",
+    "enum": [
+     "mcpRespectsSpecification"
+    ],
+    "example": "mcpRespectsSpecification",
+    "type": "string",
+    "x-enum-varnames": [
+     "MCP_RESPECTS_SPECIFICATION"
+    ]
+   },
+   "SyntheticsAssertionMCPServerCapabilitiesTarget": {
+    "description": "An assertion that checks that an MCP server advertises the expected capabilities.",
+    "properties": {
+     "operator": {
+      "$ref": "#/components/schemas/SyntheticsAssertionOperator"
+     },
+     "target": {
+      "description": "List of MCP server capabilities to assert against.",
+      "example": [
+       "completions"
+      ],
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsMCPServerCapability"
+      },
+      "type": "array"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionMCPServerCapabilitiesType"
+     }
+    },
+    "required": [
+     "type",
+     "operator",
+     "target"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionMCPServerCapabilitiesType": {
+    "description": "Type of the assertion.",
+    "enum": [
+     "mcpServerCapabilities"
+    ],
+    "example": "mcpServerCapabilities",
+    "type": "string",
+    "x-enum-varnames": [
+     "MCP_SERVER_CAPABILITIES"
+    ]
+   },
+   "SyntheticsAssertionOperator": {
+    "description": "Assertion operator to apply.",
+    "enum": [
+     "contains",
+     "doesNotContain",
+     "is",
+     "isNot",
+     "lessThan",
+     "lessThanOrEqual",
+     "moreThan",
+     "moreThanOrEqual",
+     "matches",
+     "doesNotMatch",
+     "validates",
+     "isInMoreThan",
+     "isInLessThan",
+     "doesNotExist",
+     "isUndefined"
+    ],
+    "example": "contains",
+    "type": "string",
+    "x-enum-varnames": [
+     "CONTAINS",
+     "DOES_NOT_CONTAIN",
+     "IS",
+     "IS_NOT",
+     "LESS_THAN",
+     "LESS_THAN_OR_EQUAL",
+     "MORE_THAN",
+     "MORE_THAN_OR_EQUAL",
+     "MATCHES",
+     "DOES_NOT_MATCH",
+     "VALIDATES",
+     "IS_IN_MORE_DAYS_THAN",
+     "IS_IN_LESS_DAYS_THAN",
+     "DOES_NOT_EXIST",
+     "IS_UNDEFINED"
+    ]
+   },
+   "SyntheticsAssertionTarget": {
+    "description": "An assertion which uses a simple target.",
+    "properties": {
+     "operator": {
+      "$ref": "#/components/schemas/SyntheticsAssertionOperator"
+     },
+     "property": {
+      "description": "The associated assertion property.",
+      "type": "string"
+     },
+     "target": {
+      "$ref": "#/components/schemas/SyntheticsAssertionTargetValue",
+      "description": "Value used by the operator."
+     },
+     "timingsScope": {
+      "$ref": "#/components/schemas/SyntheticsAssertionTimingsScope"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionType"
+     }
+    },
+    "required": [
+     "type",
+     "operator",
+     "target"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionTargetValue": {
+    "description": "Value used by the operator in assertions. Can be either a number or string.",
+    "example": 0.0,
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionTargetValueNumber"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsAssertionTargetValueString"
+     }
+    ]
+   },
+   "SyntheticsAssertionTargetValueNumber": {
+    "description": "Numeric value used by the operator in assertions.",
+    "format": "double",
+    "type": "number"
+   },
+   "SyntheticsAssertionTargetValueString": {
+    "description": "String value used by the operator in assertions. Supports templated variables.",
+    "type": "string"
+   },
+   "SyntheticsAssertionTimingsScope": {
+    "description": "Timings scope for response time assertions.",
+    "enum": [
+     "all",
+     "withoutDNS"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "ALL",
+     "WITHOUT_DNS"
+    ]
+   },
+   "SyntheticsAssertionType": {
+    "description": "Type of the assertion.",
+    "enum": [
+     "body",
+     "header",
+     "statusCode",
+     "certificate",
+     "responseTime",
+     "property",
+     "recordEvery",
+     "recordSome",
+     "tlsVersion",
+     "minTlsVersion",
+     "latency",
+     "packetLossPercentage",
+     "packetsReceived",
+     "networkHop",
+     "receivedMessage",
+     "grpcHealthcheckStatus",
+     "grpcMetadata",
+     "grpcProto",
+     "connection",
+     "multiNetworkHop",
+     "jitter",
+     "mcpToolNameLength",
+     "mcpToolCount"
+    ],
+    "example": "statusCode",
+    "type": "string",
+    "x-enum-varnames": [
+     "BODY",
+     "HEADER",
+     "STATUS_CODE",
+     "CERTIFICATE",
+     "RESPONSE_TIME",
+     "PROPERTY",
+     "RECORD_EVERY",
+     "RECORD_SOME",
+     "TLS_VERSION",
+     "MIN_TLS_VERSION",
+     "LATENCY",
+     "PACKET_LOSS_PERCENTAGE",
+     "PACKETS_RECEIVED",
+     "NETWORK_HOP",
+     "RECEIVED_MESSAGE",
+     "GRPC_HEALTHCHECK_STATUS",
+     "GRPC_METADATA",
+     "GRPC_PROTO",
+     "CONNECTION",
+     "MULTI_NETWORK_HOP",
+     "JITTER",
+     "MCP_TOOL_NAME_LENGTH",
+     "MCP_TOOL_COUNT"
+    ]
+   },
+   "SyntheticsAssertionXPathOperator": {
+    "description": "Assertion operator to apply.",
+    "enum": [
+     "validatesXPath"
+    ],
+    "example": "validatesXPath",
+    "type": "string",
+    "x-enum-varnames": [
+     "VALIDATES_X_PATH"
+    ]
+   },
+   "SyntheticsAssertionXPathTarget": {
+    "description": "An assertion for the `validatesXPath` operator.",
+    "properties": {
+     "operator": {
+      "$ref": "#/components/schemas/SyntheticsAssertionXPathOperator"
+     },
+     "property": {
+      "description": "The associated assertion property.",
+      "type": "string"
+     },
+     "target": {
+      "$ref": "#/components/schemas/SyntheticsAssertionXPathTargetTarget"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsAssertionType"
+     }
+    },
+    "required": [
+     "type",
+     "operator"
+    ],
+    "type": "object"
+   },
+   "SyntheticsAssertionXPathTargetTarget": {
+    "description": "Composed target for `validatesXPath` operator.",
+    "properties": {
+     "operator": {
+      "description": "The specific operator to use on the path.",
+      "type": "string"
+     },
+     "targetValue": {
+      "$ref": "#/components/schemas/SyntheticsAssertionTargetValue",
+      "description": "The path target value to compare to."
+     },
+     "xPath": {
+      "description": "The X path to assert.",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsBasicAuth": {
+    "description": "Object to handle basic authentication when performing the test.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthWeb"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthSigv4"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthNTLM"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthDigest"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthOauthClient"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthOauthROP"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthJWT"
+     }
+    ]
+   },
+   "SyntheticsBasicAuthDigest": {
+    "description": "Object to handle digest authentication when performing the test.",
+    "properties": {
+     "password": {
+      "description": "Password to use for the digest authentication.",
+      "example": "PaSSw0RD!",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthDigestType"
+     },
+     "username": {
+      "description": "Username to use for the digest authentication.",
+      "example": "my_username",
+      "type": "string"
+     }
+    },
+    "required": [
+     "password",
+     "username",
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsBasicAuthDigestType": {
+    "default": "digest",
+    "description": "The type of basic authentication to use when performing the test.",
+    "enum": [
+     "digest"
+    ],
+    "example": "digest",
+    "type": "string",
+    "x-enum-varnames": [
+     "DIGEST"
+    ]
+   },
+   "SyntheticsBasicAuthJWT": {
+    "description": "Object to handle JWT authentication when performing the test.",
+    "properties": {
+     "addClaims": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthJWTAddClaims"
+     },
+     "algorithm": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthJWTAlgorithm"
+     },
+     "expiresIn": {
+      "description": "Token time-to-live in seconds.",
+      "example": 3600,
+      "format": "int64",
+      "minimum": 1,
+      "type": "integer"
+     },
+     "header": {
+      "description": "Custom JWT header as a JSON string.",
+      "example": "{\"kid\": \"my-key-id\"}",
+      "type": "string"
+     },
+     "payload": {
+      "description": "JWT claims as a JSON string.",
+      "example": "{\"sub\": \"1234567890\", \"name\": \"John Doe\"}",
+      "type": "string"
+     },
+     "secret": {
+      "description": "Signing key for the JWT authentication. Use the shared secret for `HS256`\nor the private key (PEM format) for `RS256` and `ES256`.",
+      "example": "mysecretkey",
+      "type": "string"
+     },
+     "tokenPrefix": {
+      "description": "Prefix added before the token in the `Authorization` header. Defaults to `Bearer`.",
+      "example": "Bearer",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthJWTType"
+     }
+    },
+    "required": [
+     "algorithm",
+     "payload",
+     "secret",
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsBasicAuthJWTAddClaims": {
+    "description": "Standard JWT claims to automatically inject.",
+    "properties": {
+     "exp": {
+      "description": "Whether to inject the `exp` (expiration) claim.",
+      "example": true,
+      "type": "boolean"
+     },
+     "iat": {
+      "description": "Whether to inject the `iat` (issued at) claim.",
+      "example": true,
+      "type": "boolean"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsBasicAuthJWTAlgorithm": {
+    "description": "Algorithm to use for the JWT authentication.",
+    "enum": [
+     "HS256",
+     "RS256",
+     "ES256"
+    ],
+    "example": "HS256",
+    "type": "string",
+    "x-enum-varnames": [
+     "HS256",
+     "RS256",
+     "ES256"
+    ]
+   },
+   "SyntheticsBasicAuthJWTType": {
+    "default": "jwt",
+    "description": "The type of authentication to use when performing the test.",
+    "enum": [
+     "jwt"
+    ],
+    "example": "jwt",
+    "type": "string",
+    "x-enum-varnames": [
+     "JWT"
+    ]
+   },
+   "SyntheticsBasicAuthNTLM": {
+    "description": "Object to handle `NTLM` authentication when performing the test.",
+    "properties": {
+     "domain": {
+      "description": "Domain for the authentication to use when performing the test.",
+      "example": "DOMAINNAME",
+      "type": "string"
+     },
+     "password": {
+      "description": "Password for the authentication to use when performing the test.",
+      "example": "examplepassword",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthNTLMType"
+     },
+     "username": {
+      "description": "Username for the authentication to use when performing the test.",
+      "example": "joedoe",
+      "type": "string"
+     },
+     "workstation": {
+      "description": "Workstation for the authentication to use when performing the test.",
+      "example": "",
+      "type": "string"
+     }
+    },
+    "required": [
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsBasicAuthNTLMType": {
+    "default": "ntlm",
+    "description": "The type of authentication to use when performing the test.",
+    "enum": [
+     "ntlm"
+    ],
+    "example": "ntlm",
+    "type": "string",
+    "x-enum-varnames": [
+     "NTLM"
+    ]
+   },
+   "SyntheticsBasicAuthOauthClient": {
+    "description": "Object to handle `oauth client` authentication when performing the test.",
+    "properties": {
+     "accessTokenUrl": {
+      "description": "Access token URL to use when performing the authentication.",
+      "example": "https://example.com",
+      "type": "string"
+     },
+     "audience": {
+      "description": "Audience to use when performing the authentication.",
+      "example": "audience",
+      "type": "string"
+     },
+     "clientId": {
+      "description": "Client ID to use when performing the authentication.",
+      "example": "oauth-username",
+      "type": "string"
+     },
+     "clientSecret": {
+      "description": "Client secret to use when performing the authentication.",
+      "example": "oauth-password",
+      "type": "string"
+     },
+     "resource": {
+      "description": "Resource to use when performing the authentication.",
+      "example": "resource",
+      "type": "string"
+     },
+     "scope": {
+      "description": "Scope to use when performing the authentication.",
+      "example": "scope",
+      "type": "string"
+     },
+     "tokenApiAuthentication": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthOauthTokenApiAuthentication"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthOauthClientType"
+     }
+    },
+    "required": [
+     "accessTokenUrl",
+     "tokenApiAuthentication",
+     "clientId",
+     "clientSecret",
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsBasicAuthOauthClientType": {
+    "default": "oauth-client",
+    "description": "The type of basic authentication to use when performing the test.",
+    "enum": [
+     "oauth-client"
+    ],
+    "example": "oauth-client",
+    "type": "string",
+    "x-enum-varnames": [
+     "OAUTH_CLIENT"
+    ]
+   },
+   "SyntheticsBasicAuthOauthROP": {
+    "description": "Object to handle `oauth rop` authentication when performing the test.",
+    "properties": {
+     "accessTokenUrl": {
+      "description": "Access token URL to use when performing the authentication.",
+      "example": "https://example.com",
+      "type": "string"
+     },
+     "audience": {
+      "description": "Audience to use when performing the authentication.",
+      "example": "audience",
+      "type": "string"
+     },
+     "clientId": {
+      "description": "Client ID to use when performing the authentication.",
+      "example": "client-id",
+      "type": "string"
+     },
+     "clientSecret": {
+      "description": "Client secret to use when performing the authentication.",
+      "example": "client-secret",
+      "type": "string"
+     },
+     "password": {
+      "description": "Password to use when performing the authentication.",
+      "example": "password",
+      "type": "string"
+     },
+     "resource": {
+      "description": "Resource to use when performing the authentication.",
+      "example": "resource",
+      "type": "string"
+     },
+     "scope": {
+      "description": "Scope to use when performing the authentication.",
+      "example": "scope",
+      "type": "string"
+     },
+     "tokenApiAuthentication": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthOauthTokenApiAuthentication"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthOauthROPType"
+     },
+     "username": {
+      "description": "Username to use when performing the authentication.",
+      "example": "username",
+      "type": "string"
+     }
+    },
+    "required": [
+     "accessTokenUrl",
+     "password",
+     "tokenApiAuthentication",
+     "username",
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsBasicAuthOauthROPType": {
+    "default": "oauth-rop",
+    "description": "The type of basic authentication to use when performing the test.",
+    "enum": [
+     "oauth-rop"
+    ],
+    "example": "oauth-rop",
+    "type": "string",
+    "x-enum-varnames": [
+     "OAUTH_ROP"
+    ]
+   },
+   "SyntheticsBasicAuthOauthTokenApiAuthentication": {
+    "description": "Type of token to use when performing the authentication.",
+    "enum": [
+     "header",
+     "body"
+    ],
+    "example": "header",
+    "type": "string",
+    "x-enum-varnames": [
+     "HEADER",
+     "BODY"
+    ]
+   },
+   "SyntheticsBasicAuthSigv4": {
+    "description": "Object to handle `SIGV4` authentication when performing the test.",
+    "properties": {
+     "accessKey": {
+      "description": "Access key for the `SIGV4` authentication.",
+      "example": "AKIAIOSFODNN7EXAMPLE",
+      "type": "string"
+     },
+     "region": {
+      "description": "Region for the `SIGV4` authentication.",
+      "example": "us-east-1",
+      "type": "string"
+     },
+     "secretKey": {
+      "description": "Secret key for the `SIGV4` authentication.",
+      "example": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY",
+      "type": "string"
+     },
+     "serviceName": {
+      "description": "Service name for the `SIGV4` authentication.",
+      "example": "execute-api",
+      "type": "string"
+     },
+     "sessionToken": {
+      "description": "Session token for the `SIGV4` authentication.",
+      "example": "AQoEXAMPLEH4aoAH0gNCAPyJxz4BlCFFxWNE1OPTgk5TthT+FvwqnKwRcOIfrRh3c/L\nTo6UDdyJwOOvEVPvLXCrrrUtdnniCEXAMPLE/IvU1dYUg2RVAJBanLiHb4IgRmpRV3z\nrkuWJOgQs8IZZaIv2BXIa2R4OlgkBN9bkUDNCJiBeb/AXlzBBko7b15fjrBs2+cTQtp\nZ3CYWFXG8C5zqx37wnOE49mRl/+OtkIKGO7fAE",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthSigv4Type"
+     }
+    },
+    "required": [
+     "accessKey",
+     "secretKey",
+     "type"
+    ],
+    "type": "object"
+   },
+   "SyntheticsBasicAuthSigv4Type": {
+    "default": "sigv4",
+    "description": "The type of authentication to use when performing the test.",
+    "enum": [
+     "sigv4"
+    ],
+    "example": "sigv4",
+    "type": "string",
+    "x-enum-varnames": [
+     "SIGV4"
+    ]
+   },
+   "SyntheticsBasicAuthWeb": {
+    "description": "Object to handle basic authentication when performing the test.",
+    "properties": {
+     "password": {
+      "description": "Password to use for the basic authentication.",
+      "example": "PaSSw0RD!",
+      "type": "string"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuthWebType"
+     },
+     "username": {
+      "description": "Username to use for the basic authentication.",
+      "example": "my_username",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsBasicAuthWebType": {
+    "default": "web",
+    "description": "The type of basic authentication to use when performing the test.",
+    "enum": [
+     "web"
+    ],
+    "example": "web",
+    "type": "string",
+    "x-enum-varnames": [
+     "WEB"
+    ]
+   },
+   "SyntheticsBrowserTestRumSettings": {
+    "description": "The RUM data collection settings for the Synthetic browser test.\n**Note:** There are 3 ways to format RUM settings:\n\n`{ isEnabled: false }`\nRUM data is not collected.\n\n`{ isEnabled: true }`\nRUM data is collected from the Synthetic test's default application.\n\n`{ isEnabled: true, applicationId: \"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\", clientTokenId: 12345 }`\nRUM data is collected using the specified application.",
+    "example": {
+     "applicationId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+     "clientTokenId": 12345,
+     "isEnabled": true
+    },
+    "properties": {
+     "applicationId": {
+      "description": "RUM application ID used to collect RUM data for the browser test.",
+      "example": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+      "type": "string"
+     },
+     "clientTokenId": {
+      "description": "RUM application API key ID used to collect RUM data for the browser test.",
+      "example": 12345,
+      "format": "int64",
+      "type": "integer"
+     },
+     "isEnabled": {
+      "description": "Determines whether RUM data is collected during test runs.",
+      "example": true,
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "isEnabled"
+    ],
+    "type": "object"
+   },
+   "SyntheticsConfigVariable": {
+    "description": "Object defining a variable that can be used in your test configuration.",
+    "properties": {
+     "example": {
+      "description": "Example for the variable.",
+      "type": "string"
+     },
+     "id": {
+      "description": "ID of the variable for global variables.",
+      "type": "string"
+     },
+     "name": {
+      "description": "Name of the variable.",
+      "example": "VARIABLE_NAME",
+      "type": "string"
+     },
+     "pattern": {
+      "description": "Pattern of the variable.",
+      "type": "string"
+     },
+     "secure": {
+      "description": "Whether the value of this variable will be obfuscated in test results. Only for config variables of type `text`.",
+      "example": false,
+      "type": "boolean"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsConfigVariableType"
+     }
+    },
+    "required": [
+     "type",
+     "name"
+    ],
+    "type": "object"
+   },
+   "SyntheticsConfigVariableType": {
+    "description": "Type of the configuration variable.",
+    "enum": [
+     "global",
+     "text",
+     "email"
+    ],
+    "example": "text",
+    "type": "string",
+    "x-enum-varnames": [
+     "GLOBAL",
+     "TEXT",
+     "EMAIL"
+    ]
+   },
+   "SyntheticsDeviceID": {
+    "description": "The device ID.",
+    "example": "chrome.laptop_large",
+    "type": "string"
+   },
+   "SyntheticsGlobalVariableParserType": {
+    "description": "Type of parser for a Synthetic global variable from a synthetics test.",
+    "enum": [
+     "raw",
+     "json_path",
+     "regex",
+     "x_path"
+    ],
+    "example": "raw",
+    "type": "string",
+    "x-enum-varnames": [
+     "RAW",
+     "JSON_PATH",
+     "REGEX",
+     "X_PATH"
+    ]
+   },
+   "SyntheticsLocalVariableParsingOptionsType": {
+    "description": "Property of the Synthetic Test Response to extract into a local variable.",
+    "enum": [
+     "grpc_message",
+     "grpc_metadata",
+     "http_body",
+     "http_header",
+     "http_status_code"
+    ],
+    "example": "http_body",
+    "type": "string",
+    "x-enum-varnames": [
+     "GRPC_MESSAGE",
+     "GRPC_METADATA",
+     "HTTP_BODY",
+     "HTTP_HEADER",
+     "HTTP_STATUS_CODE"
+    ]
+   },
+   "SyntheticsMCPProtocolVersion": {
+    "description": "The MCP protocol version used by the step. See https://modelcontextprotocol.io/specification.",
+    "enum": [
+     "2025-06-18"
+    ],
+    "example": "2025-06-18",
+    "type": "string",
+    "x-enum-varnames": [
+     "VERSION_2025_06_18"
+    ]
+   },
+   "SyntheticsMCPServerCapability": {
+    "description": "A capability advertised by an MCP server.",
+    "enum": [
+     "completions",
+     "experimental",
+     "logging",
+     "prompts",
+     "resources",
+     "tools"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "COMPLETIONS",
+     "EXPERIMENTAL",
+     "LOGGING",
+     "PROMPTS",
+     "RESOURCES",
+     "TOOLS"
+    ]
+   },
+   "SyntheticsParsingOptions": {
+    "description": "Parsing options for variables to extract.",
+    "example": {},
+    "properties": {
+     "field": {
+      "description": "When type is `http_header` or `grpc_metadata`, name of the header or metadatum to extract.",
+      "example": "content-type",
+      "type": "string"
+     },
+     "name": {
+      "description": "Name of the variable to extract.",
+      "type": "string"
+     },
+     "parser": {
+      "$ref": "#/components/schemas/SyntheticsVariableParser"
+     },
+     "secure": {
+      "description": "Determines whether or not the extracted value will be obfuscated.",
+      "type": "boolean"
+     },
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsLocalVariableParsingOptionsType"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsRestrictedRoles": {
+    "deprecated": true,
+    "description": "A list of role identifiers that can be pulled from the Roles API, for restricting read and write access. This field is deprecated. Use the restriction policies API to manage permissions.",
+    "example": [
+     "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    ],
+    "items": {
+     "description": "UUID for a role.",
+     "example": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+     "type": "string"
+    },
+    "type": "array"
+   },
+   "SyntheticsTestCallType": {
+    "description": "The type of call to perform. Used by gRPC steps (`healthcheck`, `unary`)\nand MCP steps (`init`, `tool_list`, `tool_call`). Valid values depend on\nthe parent step's `subtype`.",
+    "enum": [
+     "healthcheck",
+     "unary",
+     "init",
+     "tool_list",
+     "tool_call"
+    ],
+    "example": "unary",
+    "type": "string",
+    "x-enum-varnames": [
+     "HEALTHCHECK",
+     "UNARY",
+     "INIT",
+     "TOOL_LIST",
+     "TOOL_CALL"
+    ]
+   },
+   "SyntheticsTestCiOptions": {
+    "description": "CI/CD options for a Synthetic test.",
+    "properties": {
+     "executionRule": {
+      "$ref": "#/components/schemas/SyntheticsTestExecutionRule"
+     }
+    },
+    "required": [
+     "executionRule"
+    ],
+    "type": "object"
+   },
+   "SyntheticsTestDetailsSubType": {
+    "description": "The subtype of the Synthetic API test, `http`, `ssl`, `tcp`,\n`dns`, `icmp`, `udp`, `websocket`, `grpc` or `multi`.",
+    "enum": [
+     "http",
+     "ssl",
+     "tcp",
+     "dns",
+     "multi",
+     "icmp",
+     "udp",
+     "websocket",
+     "grpc"
+    ],
+    "example": "http",
+    "type": "string",
+    "x-enum-varnames": [
+     "HTTP",
+     "SSL",
+     "TCP",
+     "DNS",
+     "MULTI",
+     "ICMP",
+     "UDP",
+     "WEBSOCKET",
+     "GRPC"
+    ]
+   },
+   "SyntheticsTestExecutionRule": {
+    "description": "Execution rule for a Synthetic test.",
+    "enum": [
+     "blocking",
+     "non_blocking",
+     "skipped"
+    ],
+    "example": "blocking",
+    "type": "string",
+    "x-enum-varnames": [
+     "BLOCKING",
+     "NON_BLOCKING",
+     "SKIPPED"
+    ]
+   },
+   "SyntheticsTestHeaders": {
+    "additionalProperties": {
+     "description": "A single Header.",
+     "type": "string"
+    },
+    "description": "Headers to include when performing the test.",
+    "type": "object"
+   },
+   "SyntheticsTestMetadata": {
+    "additionalProperties": {
+     "description": "A single metadatum.",
+     "type": "string"
+    },
+    "description": "Metadata to include when performing the gRPC test.",
+    "type": "object"
+   },
+   "SyntheticsTestOptions": {
+    "description": "Object describing the extra options for a Synthetic test.",
+    "properties": {
+     "accept_self_signed": {
+      "description": "For SSL tests, whether or not the test should allow self signed\ncertificates.",
+      "type": "boolean"
+     },
+     "allow_insecure": {
+      "description": "Allows loading insecure content for an HTTP request in an API test.",
+      "type": "boolean"
+     },
+     "bits_ai_auto_investigate": {
+      "description": "Whether Bits AI automatically investigates alerts from the test monitor.",
+      "type": "boolean"
+     },
+     "blockedRequestPatterns": {
+      "description": "Array of URL patterns to block.",
+      "items": {
+       "description": "A URL pattern to block during the Synthetic test.",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "captureNetworkPayloads": {
+      "description": "Capture HTTP request/response headers and bodies for Fetch/XHR calls made during browser tests.",
+      "type": "boolean"
+     },
+     "checkCertificateRevocation": {
+      "description": "For SSL tests, whether or not the test should fail on revoked certificate in stapled OCSP.",
+      "type": "boolean"
+     },
+     "ci": {
+      "$ref": "#/components/schemas/SyntheticsTestCiOptions"
+     },
+     "device_ids": {
+      "description": "For browser test, array with the different device IDs used to run the test.",
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsDeviceID"
+      },
+      "type": "array"
+     },
+     "disableAiaIntermediateFetching": {
+      "description": "For SSL tests, whether or not the test should disable fetching intermediate certificates from AIA.",
+      "type": "boolean"
+     },
+     "disableCors": {
+      "description": "Whether or not to disable CORS mechanism.",
+      "type": "boolean"
+     },
+     "disableCsp": {
+      "description": "Disable Content Security Policy for browser tests.",
+      "type": "boolean"
+     },
+     "enableProfiling": {
+      "description": "Enable profiling for browser tests.",
+      "type": "boolean"
+     },
+     "enableSecurityTesting": {
+      "deprecated": true,
+      "description": "Enable security testing for browser tests. Security testing is not available anymore. This field is deprecated and won't be used.",
+      "type": "boolean"
+     },
+     "follow_redirects": {
+      "description": "For API HTTP test, whether or not the test should follow redirects.",
+      "type": "boolean"
+     },
+     "httpVersion": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsHTTPVersion"
+     },
+     "ignoreServerCertificateError": {
+      "description": "Ignore server certificate error for browser tests.",
+      "type": "boolean"
+     },
+     "ignore_certificate_validation": {
+      "description": "For SSL tests, whether the test should ignore certificate validation.",
+      "type": "boolean"
+     },
+     "initialNavigationTimeout": {
+      "description": "Timeout before declaring the initial step as failed (in seconds) for browser tests.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "min_failure_duration": {
+      "description": "Minimum amount of time in failure required to trigger an alert.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "min_location_failed": {
+      "description": "Minimum number of locations in failure required to trigger\nan alert.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "monitor_name": {
+      "description": "The monitor name is used for the alert title as well as for all monitor dashboard widgets and SLOs.",
+      "type": "string"
+     },
+     "monitor_options": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsMonitorOptions"
+     },
+     "monitor_priority": {
+      "description": "Integer from 1 (high) to 5 (low) indicating alert severity.",
+      "format": "int32",
+      "maximum": 5,
+      "minimum": 1,
+      "type": "integer"
+     },
+     "noScreenshot": {
+      "description": "Prevents saving screenshots of the steps.",
+      "type": "boolean"
+     },
+     "restricted_roles": {
+      "$ref": "#/components/schemas/SyntheticsRestrictedRoles"
+     },
+     "retry": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsRetry"
+     },
+     "rumSettings": {
+      "$ref": "#/components/schemas/SyntheticsBrowserTestRumSettings"
+     },
+     "scheduling": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsScheduling"
+     },
+     "tick_every": {
+      "description": "The frequency at which to run the Synthetic test (in seconds).",
+      "format": "int64",
+      "maximum": 604800,
+      "minimum": 30,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestOptionsHTTPVersion": {
+    "description": "HTTP version to use for a Synthetic test.",
+    "enum": [
+     "http1",
+     "http2",
+     "any"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "HTTP1",
+     "HTTP2",
+     "ANY"
+    ]
+   },
+   "SyntheticsTestOptionsMonitorOptions": {
+    "description": "Object containing the options for a Synthetic test as a monitor\n(for example, renotification).",
+    "properties": {
+     "escalation_message": {
+      "description": "Message to include in the escalation notification.",
+      "type": "string"
+     },
+     "notification_preset_name": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsMonitorOptionsNotificationPresetName"
+     },
+     "renotify_interval": {
+      "description": "Time interval before renotifying if the test is still failing\n(in minutes).",
+      "format": "int64",
+      "minimum": 0,
+      "type": "integer"
+     },
+     "renotify_occurrences": {
+      "description": "The number of times to renotify if the test is still failing.",
+      "format": "int64",
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestOptionsMonitorOptionsNotificationPresetName": {
+    "description": "The name of the preset for the notification for the monitor.",
+    "enum": [
+     "show_all",
+     "hide_all",
+     "hide_query",
+     "hide_handles",
+     "hide_query_and_handles",
+     "show_only_snapshot",
+     "hide_handles_and_footer"
+    ],
+    "type": "string",
+    "x-enum-varnames": [
+     "SHOW_ALL",
+     "HIDE_ALL",
+     "HIDE_QUERY",
+     "HIDE_HANDLES",
+     "HIDE_QUERY_AND_HANDLES",
+     "SHOW_ONLY_SNAPSHOT",
+     "HIDE_HANDLES_AND_FOOTER"
+    ]
+   },
+   "SyntheticsTestOptionsRetry": {
+    "description": "Object describing the retry strategy to apply to a Synthetic test.",
+    "properties": {
+     "count": {
+      "description": "Number of times a test needs to be retried before marking a\nlocation as failed. Defaults to 0.",
+      "format": "int64",
+      "type": "integer"
+     },
+     "interval": {
+      "description": "Time interval between retries (in milliseconds). Defaults to\n300ms.",
+      "format": "double",
+      "type": "number"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestOptionsScheduling": {
+    "description": "Object containing timeframes and timezone used for advanced scheduling.",
+    "properties": {
+     "timeframes": {
+      "description": "Array containing objects describing the scheduling pattern to apply to each day.",
+      "example": [
+       {
+        "day": 1,
+        "from": "07:00",
+        "to": "16:00"
+       },
+       {
+        "day": 3,
+        "from": "07:00",
+        "to": "16:00"
+       }
+      ],
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsTestOptionsSchedulingTimeframe"
+      },
+      "type": "array"
+     },
+     "timezone": {
+      "description": "Timezone in which the timeframe is based.",
+      "example": "America/New_York",
+      "type": "string"
+     }
+    },
+    "required": [
+     "timeframes",
+     "timezone"
+    ],
+    "type": "object"
+   },
+   "SyntheticsTestOptionsSchedulingTimeframe": {
+    "description": "Object describing a timeframe.",
+    "properties": {
+     "day": {
+      "description": "Number representing the day of the week.",
+      "example": 1,
+      "format": "int32",
+      "maximum": 7,
+      "minimum": 1,
+      "type": "integer"
+     },
+     "from": {
+      "description": "The hour of the day on which scheduling starts.",
+      "example": "07:00",
+      "type": "string"
+     },
+     "to": {
+      "description": "The hour of the day on which scheduling ends.",
+      "example": "16:00",
+      "type": "string"
+     }
+    },
+    "required": [
+     "day",
+     "from",
+     "to"
+    ],
+    "type": "object"
+   },
+   "SyntheticsTestPauseStatus": {
+    "description": "Define whether you want to start (`live`) or pause (`paused`) a\nSynthetic test.",
+    "enum": [
+     "live",
+     "paused"
+    ],
+    "example": "live",
+    "type": "string",
+    "x-enum-varnames": [
+     "LIVE",
+     "PAUSED"
+    ]
+   },
+   "SyntheticsTestRequest": {
+    "description": "Object describing the Synthetic test request.",
+    "properties": {
+     "allow_insecure": {
+      "description": "Allows loading insecure content for an HTTP request in a multistep test step.",
+      "type": "boolean"
+     },
+     "basicAuth": {
+      "$ref": "#/components/schemas/SyntheticsBasicAuth"
+     },
+     "body": {
+      "description": "Body to include in the test.",
+      "type": "string"
+     },
+     "bodyType": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestBodyType"
+     },
+     "callType": {
+      "$ref": "#/components/schemas/SyntheticsTestCallType"
+     },
+     "certificate": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestCertificate"
+     },
+     "certificateDomains": {
+      "default": [],
+      "description": "By default, the client certificate is applied on the domain of the starting URL for browser tests. If you want your client certificate to be applied on other domains instead, add them in `certificateDomains`.",
+      "items": {
+       "description": "Domain to apply the client certificate.",
+       "example": "",
+       "type": "string"
+      },
+      "type": "array"
+     },
+     "checkCertificateRevocation": {
+      "description": "Check for certificate revocation.",
+      "type": "boolean"
+     },
+     "compressedJsonDescriptor": {
+      "description": "A protobuf JSON descriptor that needs to be gzipped first then base64 encoded.",
+      "type": "string"
+     },
+     "compressedProtoFile": {
+      "description": "A protobuf file that needs to be gzipped first then base64 encoded.",
+      "type": "string"
+     },
+     "disableAiaIntermediateFetching": {
+      "description": "Disable fetching intermediate certificates from AIA.",
+      "type": "boolean"
+     },
+     "dnsServer": {
+      "description": "DNS server to use for DNS tests.",
+      "type": "string"
+     },
+     "dnsServerPort": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestDNSServerPort",
+      "description": "DNS server port to use for DNS tests."
+     },
+     "files": {
+      "description": "Files to be used as part of the request in the test. Only valid if `bodyType` is `multipart/form-data`.",
+      "items": {
+       "$ref": "#/components/schemas/SyntheticsTestRequestBodyFile"
+      },
+      "type": "array"
+     },
+     "follow_redirects": {
+      "description": "Specifies whether or not the request follows redirects.",
+      "type": "boolean"
+     },
+     "form": {
+      "additionalProperties": {
+       "description": "A single form entry.",
+       "type": "string"
+      },
+      "description": "Form to be used as part of the request in the test. Only valid if `bodyType` is `multipart/form-data`.",
+      "type": "object"
+     },
+     "headers": {
+      "$ref": "#/components/schemas/SyntheticsTestHeaders"
+     },
+     "host": {
+      "description": "Host name to perform the test with.",
+      "type": "string"
+     },
+     "httpVersion": {
+      "$ref": "#/components/schemas/SyntheticsTestOptionsHTTPVersion"
+     },
+     "ignore_certificate_validation": {
+      "description": "For SSL tests, whether the test should ignore certificate validation.",
+      "type": "boolean"
+     },
+     "isMessageBase64Encoded": {
+      "description": "Whether the message is base64 encoded.",
+      "type": "boolean"
+     },
+     "mcpProtocolVersion": {
+      "$ref": "#/components/schemas/SyntheticsMCPProtocolVersion"
+     },
+     "message": {
+      "description": "Message to send for UDP or WebSocket tests.",
+      "type": "string"
+     },
+     "metadata": {
+      "$ref": "#/components/schemas/SyntheticsTestMetadata"
+     },
+     "method": {
+      "description": "Either the HTTP method/verb to use or a gRPC method available on the service set in the `service` field. Required if `subtype` is `HTTP` or if `subtype` is `grpc` and `callType` is `unary`.",
+      "type": "string"
+     },
+     "noSavingResponseBody": {
+      "description": "Determines whether or not to save the response body.",
+      "type": "boolean"
+     },
+     "numberOfPackets": {
+      "description": "Number of pings to use per test.",
+      "format": "int32",
+      "maximum": 10,
+      "minimum": 0,
+      "type": "integer"
+     },
+     "persistCookies": {
+      "description": "Persist cookies across redirects.",
+      "type": "boolean"
+     },
+     "port": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestPort"
+     },
+     "proxy": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestProxy"
+     },
+     "query": {
+      "description": "Query to use for the test.",
+      "type": "object"
+     },
+     "servername": {
+      "description": "For SSL tests, it specifies on which server you want to initiate the TLS handshake,\nallowing the server to present one of multiple possible certificates on\nthe same IP address and TCP port number.",
+      "type": "string"
+     },
+     "service": {
+      "description": "The gRPC service on which you want to perform the gRPC call.",
+      "example": "Greeter",
+      "type": "string"
+     },
+     "shouldTrackHops": {
+      "description": "Turns on a traceroute probe to discover all gateways along the path to the host destination.",
+      "type": "boolean"
+     },
+     "timeout": {
+      "description": "Timeout in seconds for the test.",
+      "format": "double",
+      "type": "number"
+     },
+     "toolArgs": {
+      "additionalProperties": {},
+      "description": "Arguments to pass to the MCP tool. Free-form object whose shape depends on the tool. Used when `callType` is `tool_call`.",
+      "type": "object"
+     },
+     "toolName": {
+      "description": "The name of the MCP tool to call. Required when `callType` is `tool_call`.",
+      "example": "search",
+      "type": "string"
+     },
+     "url": {
+      "description": "URL to perform the test with.",
+      "example": "https://example.com",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestRequestBodyFile": {
+    "description": "Object describing a file to be used as part of the request in the test.",
+    "properties": {
+     "bucketKey": {
+      "description": "Bucket key of the file.",
+      "type": "string"
+     },
+     "content": {
+      "description": "Content of the file.",
+      "maxLength": 3145728,
+      "type": "string"
+     },
+     "encoding": {
+      "description": "Encoding of the file content. The only supported value is `base64`, indicating the `content` field contains base64-encoded data.",
+      "type": "string"
+     },
+     "name": {
+      "description": "Name of the file.",
+      "maxLength": 1500,
+      "type": "string"
+     },
+     "originalFileName": {
+      "description": "Original name of the file.",
+      "maxLength": 1500,
+      "type": "string"
+     },
+     "size": {
+      "description": "Size of the file.",
+      "format": "int64",
+      "maximum": 3145728,
+      "minimum": 1,
+      "type": "integer"
+     },
+     "type": {
+      "description": "Type of the file.",
+      "maxLength": 1500,
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestRequestBodyType": {
+    "description": "Type of the request body.",
+    "enum": [
+     "text/plain",
+     "application/json",
+     "text/xml",
+     "text/html",
+     "application/x-www-form-urlencoded",
+     "graphql",
+     "application/octet-stream",
+     "multipart/form-data"
+    ],
+    "example": "text/plain",
+    "type": "string",
+    "x-enum-varnames": [
+     "TEXT_PLAIN",
+     "APPLICATION_JSON",
+     "TEXT_XML",
+     "TEXT_HTML",
+     "APPLICATION_X_WWW_FORM_URLENCODED",
+     "GRAPHQL",
+     "APPLICATION_OCTET_STREAM",
+     "MULTIPART_FORM_DATA"
+    ]
+   },
+   "SyntheticsTestRequestCertificate": {
+    "description": "Client certificate to use when performing the test request.",
+    "properties": {
+     "cert": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestCertificateItem"
+     },
+     "key": {
+      "$ref": "#/components/schemas/SyntheticsTestRequestCertificateItem"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestRequestCertificateItem": {
+    "description": "Define a request certificate.",
+    "properties": {
+     "content": {
+      "description": "Content of the certificate or key.",
+      "type": "string"
+     },
+     "filename": {
+      "description": "File name for the certificate or key.",
+      "type": "string"
+     },
+     "updatedAt": {
+      "description": "Date of update of the certificate or key, ISO format.",
+      "type": "string"
+     }
+    },
+    "type": "object"
+   },
+   "SyntheticsTestRequestDNSServerPort": {
+    "description": "DNS server port to use for DNS tests.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/SyntheticsTestRequestNumericalDNSServerPort"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsTestRequestVariableDNSServerPort"
+     }
+    ]
+   },
+   "SyntheticsTestRequestNumericalDNSServerPort": {
+    "description": "Integer DNS server port number to use when performing the test.",
+    "format": "int64",
+    "type": "integer"
+   },
+   "SyntheticsTestRequestNumericalPort": {
+    "description": "Integer Port number to use when performing the test.",
+    "format": "int64",
+    "type": "integer"
+   },
+   "SyntheticsTestRequestPort": {
+    "description": "Port to use when performing the test.",
+    "anyOf": [
+     {
+      "$ref": "#/components/schemas/SyntheticsTestRequestNumericalPort"
+     },
+     {
+      "$ref": "#/components/schemas/SyntheticsTestRequestVariablePort"
+     }
+    ]
+   },
+   "SyntheticsTestRequestProxy": {
+    "description": "The proxy to perform the test.",
+    "properties": {
+     "headers": {
+      "$ref": "#/components/schemas/SyntheticsTestHeaders"
+     },
+     "url": {
+      "description": "URL of the proxy to perform the test.",
+      "example": "https://example.com",
+      "type": "string"
+     }
+    },
+    "required": [
+     "url"
+    ],
+    "type": "object"
+   },
+   "SyntheticsTestRequestVariableDNSServerPort": {
+    "description": "String DNS server port number to use when performing the test. Supports templated variables.",
+    "type": "string"
+   },
+   "SyntheticsTestRequestVariablePort": {
+    "description": "String Port number to use when performing the test. Supports templated variables.",
+    "type": "string"
+   },
+   "SyntheticsVariableParser": {
+    "description": "Details of the parser to use for the global variable.",
+    "example": {
+     "type": "regex",
+     "value": ".*"
+    },
+    "properties": {
+     "type": {
+      "$ref": "#/components/schemas/SyntheticsGlobalVariableParserType"
+     },
+     "value": {
+      "description": "Regex or JSON path used for the parser. Not used with type `raw`.",
+      "type": "string"
+     }
+    },
+    "required": [
+     "type"
+    ],
+    "type": "object"
+   }
+  }
+ },
+ "x-source": "datadog-api-client-python .generator/schemas/v1/openapi.yaml"
+}

@@ -1,0 +1,90 @@
+{
+ "x-source": "dynatrace-oss/api-client-python dynatrace/environment_v2/problems.py",
+ "classes": {
+  "Problem": [
+   "affectedEntities",
+   "displayId",
+   "endTime",
+   "entityTags",
+   "evidenceDetails",
+   "impactAnalysis",
+   "impactLevel",
+   "impactedEntities",
+   "linkedProblemInfo",
+   "managementZones",
+   "problemFilters",
+   "problemId",
+   "recentComments",
+   "rootCauseEntity",
+   "severityLevel",
+   "startTime",
+   "status",
+   "title"
+  ],
+  "ProblemCloseResult": [
+   "closeTimestamp",
+   "closing",
+   "comment",
+   "problemId"
+  ],
+  "LinkedProblem": [
+   "displayId",
+   "problemId"
+  ],
+  "CommentList": [
+   "comments",
+   "totalCount"
+  ],
+  "Comment": [
+   "authorName",
+   "content",
+   "context",
+   "createdAtTimestamp",
+   "id"
+  ],
+  "EvidenceDetails": [
+   "details",
+   "totalCount"
+  ],
+  "Evidence": [
+   "displayName",
+   "entity",
+   "evidenceType",
+   "groupingEntity",
+   "rootCauseRelevant",
+   "startTime"
+  ],
+  "EventEvidence": [
+   "eventId",
+   "eventType"
+  ],
+  "TransactionalEvidence": [
+   "endTime",
+   "unit",
+   "valueAfterChangePoint",
+   "valueBeforeChangePoint"
+  ],
+  "MetricEvidence": [
+   "endTime",
+   "metricId",
+   "unit",
+   "valueAfterChangePoint",
+   "valueBeforeChangePoint"
+  ],
+  "AvailabilityEvidence": [
+   "endTime"
+  ],
+  "MaintenanceWindowEvidence": [
+   "endTime",
+   "maintenanceWindowConfigId"
+  ],
+  "ImpactAnalysis": [
+   "impacts"
+  ],
+  "Impact": [
+   "estimatedAffectedUsers",
+   "impactType",
+   "impactedEntity"
+  ]
+ }
+}

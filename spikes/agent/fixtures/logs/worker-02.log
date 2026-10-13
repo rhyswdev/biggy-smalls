@@ -1,0 +1,5 @@
+2026-03-02T01:30:00.010Z INFO  [health] GET /healthz 200 4ms
+2026-03-02T02:00:00.011Z INFO  [scheduler] job=invoice-digest run=903 started
+2026-03-02T02:04:12.400Z INFO  [scheduler] job=invoice-digest run=903 finished code=0 after 252s
+2026-03-02T02:05:41.220Z WARN  [gc] pause 412ms (young)
+2026-03-02T02:15:00.009Z INFO  [health] GET /healthz 200 3ms

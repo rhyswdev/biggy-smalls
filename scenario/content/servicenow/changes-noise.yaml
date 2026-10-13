@@ -1,0 +1,127 @@
+# Noise change requests of the week and the day (worker content, PLAN 7). Never served.
+
+chg0031702:
+  created: "2026-09-29T14:20:00Z"
+  requested_by: priya.raman
+  assigned_to: priya.raman
+  short_description: "payments-gateway 3.7.9 release (PAY-2172 refund webhook signature fix, PAY-2180 dependency bumps)"
+  description: "Release payments-gateway 3.7.9. PAY-2172 fixes signature verification on the refund webhook. PAY-2180 bumps the minor dependency versions flagged by the monthly scan."
+  implementation_plan: "Jenkins payments-gateway-deploy with VERSION=3.7.9. Rolling restart of pay-01 to pay-04, one node at a time, F5 drains each member before restart."
+  backout_plan: "Redeploy the previous release with payments-gateway-deploy using its VERSION parameter."
+  test_plan: "Regression suite on staging. Smoke test of the refund webhook with a signed test event after each node restarts."
+  risk: Moderate
+  impact: "2 - Medium"
+  close_code: Successful
+  close_notes: "Deployed 2026-10-01 06:31 ET, all four nodes healthy, smoke tests passed."
+
+chg0031744:
+  created: "2026-10-02T10:05:00Z"
+  requested_by: ben.kowalski
+  assigned_to: ben.kowalski
+  short_description: "checkout-api 2.14.1 release (CO-1162 promo code validation messages)"
+  description: "Release checkout-api 2.14.1. CO-1162 changes the message shown when a promo code fails validation. No change to the validation logic."
+  implementation_plan: "Standard change template SC-K8S-DEPLOY. Jenkins checkout-api-deploy with VERSION=2.14.1, rolling update."
+  backout_plan: "Redeploy the previous release with checkout-api-deploy using its VERSION parameter."
+  test_plan: "Promo code cases in the checkout regression pack, plus synthetic checkout flow after rollout."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Deployed 2026-10-07. Synthetic checkout green after rollout."
+
+chg0031760:
+  created: "2026-10-03T13:40:00Z"
+  requested_by: kofi.mensah
+  assigned_to: kofi.mensah
+  short_description: "storefront-web 5.31.0 release (product page image lazy loading)"
+  description: "Release storefront-web 5.31.0. Product page images below the fold load lazily to reduce initial page weight."
+  implementation_plan: "Standard change template SC-K8S-DEPLOY. Jenkins storefront-web-deploy with VERSION=5.31.0, rolling update."
+  backout_plan: "Redeploy the previous release with storefront-web-deploy using its VERSION parameter."
+  test_plan: "Product page render check on desktop and mobile. Lighthouse run against three sample product pages."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Deployed 2026-10-08. Product pages render correctly, no console errors on sampled pages."
+
+chg0031791:
+  created: "2026-10-05T09:15:00Z"
+  requested_by: ben.kowalski
+  assigned_to: ben.kowalski
+  short_description: "checkout-api 2.14.2 release (CO-1171 order summary rounding fix)"
+  description: "Release checkout-api 2.14.2. CO-1171 fixes rounding of tax and discount lines on the order summary so the displayed total agrees with the line items."
+  implementation_plan: "Standard change template SC-K8S-DEPLOY. Jenkins checkout-api-deploy with VERSION=2.14.2, rolling update."
+  backout_plan: "Redeploy 2.14.1 with checkout-api-deploy (VERSION=2.14.1)."
+  test_plan: "Order summary unit tests with rounding edge cases, plus synthetic checkout flow after rollout."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Deployed 2026-10-09. Order summary totals checked against sample carts, synthetic checkout green."
+
+chg0031835:
+  created: "2026-10-07T08:30:00Z"
+  requested_by: kofi.mensah
+  assigned_to: kofi.mensah
+  short_description: "storefront-web 5.32.0 release (search suggestions v2)"
+  description: "Release storefront-web 5.32.0 with the second version of search suggestions. Suggestions now come from the new index and show a product type label."
+  implementation_plan: "Standard change template SC-K8S-DEPLOY. Jenkins storefront-web-deploy with VERSION=5.32.0, rolling update."
+  backout_plan: "Redeploy 5.31.0 with storefront-web-deploy (VERSION=5.31.0)."
+  test_plan: "Search regression pack on staging. Suggestion response time checked against the staging index."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Deployed 2026-10-12. First Jenkins run failed on a flaky smoke test; the second run succeeded 28 minutes later and smoke tests passed on that run."
+
+chg0031884:
+  created: "2026-10-12T16:10:00Z"
+  requested_by: sam.ortega
+  assigned_to: sam.ortega
+  short_description: "Upgrade Splunk universal forwarder on win-rpt-05 to win-rpt-08"
+  description: "Upgrade the Splunk universal forwarder on the four reporting servers so their agent version matches the rest of the Windows fleet. Existing inputs and deployment server settings are kept."
+  implementation_plan: "Standard change template SC-WIN-PATCH. Install the forwarder package on each server in sequence and restart the UniversalForwarder service after each install."
+  backout_plan: "Uninstall the new forwarder package and reinstall the previous MSI from the software share."
+  test_plan: "Confirm each host reports to the indexer after the upgrade. Check forwarder versions in the Splunk monitoring console."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Planned 2026-10-13 05:00 to 06:00 ET, done. All four forwarders reporting, versions confirmed in the monitoring console."
+
+chg0031891:
+  created: "2026-10-12T18:30:00Z"
+  requested_by: kofi.mensah
+  assigned_to: kofi.mensah
+  short_description: "Renew TLS certificate for status.larkspur.internal (internal status page)"
+  description: "Renew the TLS certificate on the internal status page host before the current one expires. Same subject names and key type as the current certificate."
+  implementation_plan: "Standard change template SC-CERT-RENEW. Install the renewed certificate and chain on the status page host and reload the web server."
+  backout_plan: "Restore the previous certificate and chain from the host backup and reload the web server."
+  test_plan: "Check certificate subject, expiry and chain from a browser and with openssl from two hosts."
+  risk: Low
+  impact: "3 - Low"
+  close_code: Successful
+  close_notes: "Planned 2026-10-13 08:00 to 08:30 ET, done. New certificate served and chain verified."
+
+chg0031904:
+  created: "2026-10-13T14:20:00Z"
+  requested_by: sam.ortega
+  assigned_to: sam.ortega
+  short_description: "Increase Splunk retention for index=k8s from 14 to 30 days"
+  description: "Raise retention on the k8s index from 14 to 30 days so the October incident review has two full weeks of pod logs. Storage growth is within the current license."
+  implementation_plan: "Update retention for index k8s on the cluster manager, push the configuration bundle to the indexers and confirm after the rolling restart."
+  backout_plan: "Set retention back to 14 days and push the bundle again."
+  test_plan: "Confirm the index settings on one indexer after the push. Check the disk usage trend the next day."
+  risk: Low
+  impact: "3 - Low"
+  close_code: ""
+  close_notes: ""
+
+chg0031906:
+  created: "2026-10-13T14:31:00Z"
+  requested_by: kofi.mensah
+  assigned_to: kofi.mensah
+  short_description: "Update storefront promo banner content for the autumn sale"
+  description: "Replace the homepage promo banner copy and image with the autumn sale creative. Content only, no template or code changes."
+  implementation_plan: "Standard change template SC-CONTENT-UPDATE. Publish the new banner in the CMS at the start of the planned window."
+  backout_plan: "Republish the previous banner content from the CMS revision history."
+  test_plan: "Preview the homepage on desktop and mobile after publishing. Check the banner link goes to the autumn sale category."
+  risk: Low
+  impact: "3 - Low"
+  close_code: ""
+  close_notes: ""

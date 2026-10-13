@@ -1,0 +1,53 @@
+# INC0048811, the live incident, and the early customer incidents (main session, step 7). Never served.
+# Times are UTC clock times on the day; the generator renders them in the integration user's zone.
+# The incident is served as version snapshots, one per update (field change or journal entry), and its
+# field history as sys_audit rows. Field changes come from servicenow.live.audit in the scenario YAML.
+
+inc0048811:
+  short_description: "[Datadog] p90 latency high on payments-gw"
+  description: |-
+    Datadog monitor 7391240 "p90 latency high on payments-gw" is Triggered.
+    p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} above 6 over the last 5 minutes.
+    Monitor: https://app.datadoghq.com/monitors/7391240
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+    Created by the Datadog ServiceNow integration.
+  category: Software
+  subcategory: ""
+  contact_type: Monitoring
+  impact: {initial: "2 - Medium", at_p1: "1 - High"}
+  urgency: "1 - High"
+  severity: "2 - Medium"
+  correlation_id: "datadog:7391240:payments-gw"
+  correlation_display: Datadog
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    payments-gateway rolled back to 3.7.9 (Jenkins payments-gateway-deploy #413, emergency CHG0031910). Errors back to baseline from 15:08 UTC. EU card authorizations failed fast until the payment provider recovered at 15:24 UTC. Problem record to follow for the duplicate charges.
+
+# Signal work notes (main session). {pgsa} is Elena's psql output, the same text as her Slack paste.
+journal:
+  wn_reassign: "Reassigning to Payments Engineering. Failures are on submit and the payments-gw p90 monitor fired first (PD 8812, no ack yet). Commerce keeps the bridge."
+  wn_rollback: "checkout-api rolled back to 2.14.2 (Jenkins #898, done 14:42 UTC). Still seeing 504s on submit."
+  wn_idle_txn: "pg_stat_activity on pay-db-01, grouped:\n{pgsa_summary}\noldest ones:\n{pgsa_rows}\nno slow queries. the app is holding connections open, not the db."
+  wn_rollback_gw: "Rolled payments-gateway back to 3.7.9 (Jenkins #413, 11:01-11:06 ET). Emergency change CHG0031910 raised. 5xx back to baseline; EU card auths now failing fast, watching the provider."
+
+# Early customer incidents, 14:41 to 14:50 (signal, main session). {order} is a real order from the
+# request stream, chosen by the generator by `report`.
+early:
+  - at: "14:41:20"
+    report: spinner
+    short_description: "Payment spinner never finishes at checkout"
+    description: |-
+      Customer called: pressed pay on {order}, the spinner ran for a long time and then the page said something went wrong. No confirmation email. Wants to know if the order went through.
+    contact_type: Phone
+  - at: "14:45:05"
+    report: charged_unconfirmed
+    short_description: "Order not confirmed but card charged?"
+    description: |-
+      Customer emailed: checkout for {order} errored after a long wait, but their banking app shows a pending charge for the full amount. No order confirmation received.
+    contact_type: Email
+  - at: "14:48:40"
+    report: spinner_repeat
+    short_description: "Customer can't pay, checkout keeps failing"
+    description: |-
+      Customer on chat says they tried to pay three times, the last one {order}, each time the spinner goes and then an error. Cart and address pages are fine. Asked them to wait while we check.
+    contact_type: Chat

@@ -1,0 +1,82 @@
+# The ServiceNow service model (main session, step 7). Never served; rendered into cmdb_ci.json and
+# cmdb_rel_ci.json. Names are facts.yaml aliases for servicenow. Times are UTC.
+#
+# What the model is, as a real CMDB would hold it:
+# - Two business services customers see: Online Checkout and Marketing Website; Card Payments is the
+#   internal business service the Payments team owns.
+# - Application services under them, each with an owner, a support group and the servers it runs on.
+# - Designed defects, each realistic and each a discriminator (PLAN 1.5):
+#   * Payments Gateway is still `owned_by` Marcus Okafor, who left in August (sys_user active=false).
+#   * Checkout API still depends on redis-sessions-01, which was retired when sessions moved to the
+#     redis cluster (the stale edge the old runbook follows).
+#   * There is no edge from Checkout API (or Online Checkout) to Payments Gateway: checkout calls the
+#     gateway over HTTP and nobody mapped it. Datadog's peer.service and the gateway URL show it.
+#   * PayCore has no CI: it is an external provider.
+#   * Online Checkout maps to Commerce Platform, which is why the Datadog integration's auto-rule sends
+#     INC0048811 there first.
+
+classes:     # sys_class_name display values
+  business_service: Business Service
+  app_service: Application Service
+  application: Application
+  postgres: PostgreSQL Instance
+  linux: Linux Server
+  k8s: Kubernetes Cluster
+  website: Web Site
+
+cis:
+  - {name: Online Checkout, class: business_service, owned_by: alice.nguyen, group: Commerce Platform, criticality: "1 - most critical",
+     description: "Customer checkout on www.larkspur.com: cart, address, payment and order confirmation.", created: "2023-05-10T14:02:00Z", updated: "2026-03-09T16:20:00Z"}
+  - {name: Card Payments, class: business_service, owned_by: marcus.okafor, group: Payments Engineering, criticality: "1 - most critical",
+     description: "Card authorization, refunds and settlement for all channels.", created: "2023-05-10T14:05:00Z", updated: "2025-11-04T10:12:00Z"}
+  - {name: Marketing Website, class: business_service, owned_by: kofi.mensah, group: Web Platform, criticality: "3 - less critical",
+     description: "Marketing pages on cdn.larkspur.com.", created: "2024-02-01T09:30:00Z", updated: "2026-06-11T13:45:00Z"}
+  - {name: Checkout API, class: app_service, owned_by: alice.nguyen, group: Commerce Platform, criticality: "1 - most critical",
+     description: "checkout-api on Kubernetes (namespace commerce): cart, address and submit endpoints.", external: "datadog:checkout-api",
+     created: "2023-05-10T14:10:00Z", updated: "2026-03-09T16:22:00Z"}
+  - {name: Payments Gateway, class: app_service, owned_by: marcus.okafor, group: Payments Engineering, criticality: "1 - most critical",
+     description: "payments-gateway on pay-01 to pay-04 behind the internal F5 VIP payments-gw.prod.larkspur.internal. Authorizes card payments with the PSP.",
+     external: "dynatrace:PaymentsGateway", created: "2023-05-10T14:12:00Z", updated: "2025-11-04T10:15:00Z"}
+  - {name: Order Service, class: app_service, owned_by: alice.nguyen, group: Commerce Platform, criticality: "2 - somewhat critical",
+     description: "order-service on ord-01 and ord-02: order records and confirmation emails.", created: "2023-05-10T14:14:00Z", updated: "2026-05-06T19:50:00Z"}
+  - {name: Storefront Web, class: app_service, owned_by: kofi.mensah, group: Web Platform, criticality: "2 - somewhat critical",
+     description: "storefront-web on Kubernetes: browse, search and product pages.", created: "2023-05-10T14:16:00Z", updated: "2026-10-02T21:10:00Z"}
+  - {name: Payments DB, class: postgres, owned_by: elena.rossi, group: Database Engineering, criticality: "1 - most critical", version: "15.8",
+     description: "PostgreSQL 15 on pay-db-01: databases payments and orders.", created: "2023-05-11T09:00:00Z", updated: "2026-08-02T12:40:00Z"}
+  - {name: checkout-db, class: postgres, owned_by: elena.rossi, group: Database Engineering, criticality: "2 - somewhat critical", version: "15.8",
+     description: "PostgreSQL 15 for checkout-api (carts, addresses).", created: "2023-05-11T09:05:00Z", updated: "2026-03-05T11:00:00Z"}
+  - {name: redis-sessions-01, class: application, owned_by: sam.ortega, group: Platform Reliability, criticality: "3 - less critical", version: "6.2.14",
+     description: "Redis for web sessions (legacy). Sessions moved to the redis cluster in 2025.", status: retired,
+     created: "2022-11-03T10:00:00Z", updated: "2025-09-18T15:30:00Z"}
+  - {name: k8s-prod-east, class: k8s, owned_by: sam.ortega, group: Platform Reliability, criticality: "1 - most critical", version: "1.29",
+     description: "Production Kubernetes cluster, east.", created: "2024-01-15T08:00:00Z", updated: "2026-09-30T08:10:00Z"}
+  - {name: pay-01, class: linux, owned_by: marcus.okafor, group: Payments Engineering, ip: pay-01, created: "2023-05-09T12:00:00Z", updated: "2026-10-01T10:40:00Z"}
+  - {name: pay-02, class: linux, owned_by: marcus.okafor, group: Payments Engineering, ip: pay-02, created: "2023-05-09T12:00:00Z", updated: "2026-10-01T10:40:00Z"}
+  - {name: pay-03, class: linux, owned_by: marcus.okafor, group: Payments Engineering, ip: pay-03, created: "2023-05-09T12:00:00Z", updated: "2026-10-01T10:40:00Z"}
+  - {name: pay-04, class: linux, owned_by: marcus.okafor, group: Payments Engineering, ip: pay-04, created: "2023-05-09T12:00:00Z", updated: "2026-10-01T10:40:00Z"}
+  - {name: pay-db-01, class: linux, owned_by: elena.rossi, group: Database Engineering, ip: pay-db-01, created: "2023-05-09T12:00:00Z", updated: "2026-08-02T12:35:00Z"}
+  - {name: ord-01, class: linux, owned_by: alice.nguyen, group: Commerce Platform, ip: ord-01, created: "2023-05-09T12:00:00Z", updated: "2026-09-15T09:00:00Z"}
+  - {name: ord-02, class: linux, owned_by: alice.nguyen, group: Commerce Platform, ip: ord-02, created: "2023-05-09T12:00:00Z", updated: "2026-09-15T09:00:00Z"}
+  - {name: cdn.larkspur.com, class: website, owned_by: kofi.mensah, group: Web Platform, criticality: "3 - less critical",
+     description: "Marketing site served from the CDN.", created: "2024-02-01T09:35:00Z", updated: "2026-06-11T13:45:00Z"}
+
+# cmdb_rel_ci: parent, type (parent descriptor::child descriptor), child.
+rels:
+  - [Online Checkout, "Depends on::Used by", Checkout API]
+  - [Online Checkout, "Depends on::Used by", Storefront Web]
+  - [Online Checkout, "Depends on::Used by", Order Service]
+  - [Card Payments, "Depends on::Used by", Payments Gateway]
+  - [Marketing Website, "Depends on::Used by", cdn.larkspur.com]
+  - [Checkout API, "Depends on::Used by", checkout-db]
+  - [Checkout API, "Depends on::Used by", redis-sessions-01]
+  - [Checkout API, "Runs on::Runs", k8s-prod-east]
+  - [Storefront Web, "Runs on::Runs", k8s-prod-east]
+  - [Order Service, "Depends on::Used by", Payments DB]
+  - [Order Service, "Runs on::Runs", ord-01]
+  - [Order Service, "Runs on::Runs", ord-02]
+  - [Payments Gateway, "Depends on::Used by", Payments DB]
+  - [Payments Gateway, "Runs on::Runs", pay-01]
+  - [Payments Gateway, "Runs on::Runs", pay-02]
+  - [Payments Gateway, "Runs on::Runs", pay-03]
+  - [Payments Gateway, "Runs on::Runs", pay-04]
+  - [Payments DB, "Runs on::Runs", pay-db-01]

@@ -1,0 +1,63 @@
+{
+  "incident": {
+    "id": "QFN7LYAPC7UY3H",
+    "type": "incident",
+    "summary": "[#8813] postgres.can_connect CRITICAL on pay-db-01",
+    "self": "https://api.pagerduty.com/incidents/QFN7LYAPC7UY3H",
+    "html_url": "https://larkspur.pagerduty.com/incidents/QFN7LYAPC7UY3H",
+    "incident_number": 8813,
+    "title": "postgres.can_connect CRITICAL on pay-db-01",
+    "created_at": "2026-10-13T14:33:50Z",
+    "updated_at": "2026-10-13T15:08:50Z",
+    "status": "resolved",
+    "incident_key": "monitor-7301990-host:pay-db-01,db:postgres",
+    "service": {
+      "id": "PSV3D8X",
+      "type": "service_reference",
+      "summary": "Database - Prod",
+      "self": "https://api.pagerduty.com/services/PSV3D8X",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV3D8X"
+    },
+    "assignments": [],
+    "assigned_via": "escalation_policy",
+    "acknowledgements": [],
+    "last_status_change_at": "2026-10-13T15:08:50Z",
+    "last_status_change_by": {
+      "id": "PSV3D8X",
+      "type": "service_reference",
+      "summary": "Database - Prod",
+      "self": "https://api.pagerduty.com/services/PSV3D8X",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV3D8X"
+    },
+    "first_trigger_log_entry": {
+      "id": "3YC6QO0MOOXRCI",
+      "type": "trigger_log_entry_reference",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/3YC6QO0MOOXRCI",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QFN7LYAPC7UY3H/log_entries/3YC6QO0MOOXRCI"
+    },
+    "alert_counts": {
+      "all": 1,
+      "triggered": 0,
+      "resolved": 1
+    },
+    "is_mergeable": false,
+    "escalation_policy": {
+      "id": "PEP7W2T",
+      "type": "escalation_policy_reference",
+      "summary": "Database Engineering",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP7W2T",
+      "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP7W2T"
+    },
+    "teams": [],
+    "pending_actions": [],
+    "urgency": "high",
+    "priority": {
+      "id": "H3P3CA0WXO23L2",
+      "type": "priority",
+      "summary": "P2",
+      "name": "P2"
+    },
+    "resolved_at": "2026-10-13T15:08:50Z"
+  }
+}

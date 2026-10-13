@@ -1,0 +1,77 @@
+# Hand-written Slack messages (main session, PLAN 2.6). Never served: the generator renders the export.
+# `at` is a UTC clock time on the bundle day; `author` is a facts.yaml handle; "@handle" in text becomes
+# a <@U...> mention. `thread_of` names the root as "<at>/<author>". `id`, `kind`, `sig_id` and `class`
+# go to the manifest only. `{pgsa_summary}` and `{pgsa_rows}` are rendered from model.connections.pgsa_snapshot.
+# Bot posts (Datadog monitor notifications, PagerDuty) are rendered by the generator from the
+# monitors and incidents, not written here.
+
+channels:
+  sre-oncall:
+    - {id: slack.sre_sam_1414, at: "14:14:00", author: sam.ortega, kind: trap, sig_id: sig.slack_sam_snooze,
+       text: "muted the redis-sessions frag monitor for an hour. it's the usual flap, INC0047003 says it's benign"}
+    - {id: slack.sre_elena_1434, at: "14:34:30", author: elena.rossi, kind: signal, sig_id: sig.slack_elena_1434,
+       text: "pay-db-01 is at max_connections, mostly pgw_app. looking"}
+
+  inc-checkout-latency:
+    - {id: slack.inc_channel_created, at: "14:35:00", author: alice.nguyen, subtype: channel_join, kind: signal,
+       text: "<@{self}> has joined the channel"}
+    - {id: slack.inc_alice_1435, at: "14:35:20", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_opens,
+       text: "IC here. checkout payments failing / slow since ~14:30, 504s on submit. INC0048811. @sam.ortega @ben.kowalski @elena.rossi pls join"}
+    - {id: slack.inc_ben_1436, at: "14:36:00", author: ben.kowalski, kind: trap, sig_id: sig.slack_ben_deploy,
+       text: "we deployed checkout-api 2.14.3 at 14:28, that's gotta be it. @alice.nguyen can we roll back?"}
+    - {id: slack.inc_alice_1436, at: "14:36:30", author: alice.nguyen, kind: trap,
+       text: "yes, roll it back. @ben.kowalski go"}
+    - {id: slack.inc_sam_1437, at: "14:37:30", author: sam.ortega, kind: trap, sig_id: sig.slack_sam_redis,
+       text: "is it redis again? the runbook says check redis"}
+    - {id: slack.inc_alice_1437, at: "14:37:50", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_runbook_ancient,
+       text: "that runbook is ancient, sessions moved to the cluster last year"}
+    - {id: slack.inc_elena_1438, at: "14:38:00", author: elena.rossi, kind: signal, sig_id: sig.slack_elena_1438,
+       text: "db is at 197 of 200 usable, mostly pgw_app, plus 40 from recon_app"}
+    - {id: slack.inc_kofi_1441, at: "14:41:00", author: kofi.mensah, kind: trap, sig_id: sig.slack_kofi_network,
+       text: "is this a network thing? marketing site is down too"}
+    - {id: slack.inc_alice_1443, at: "14:43:10", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_1443,
+       text: "rollback done, still seeing 504s"}
+    - {id: slack.inc_priya_1444, at: "14:44:10", author: priya.raman, kind: signal, sig_id: sig.slack_priya_1444,
+       text: "here, catching up. tom's not answering"}
+    - {id: slack.inc_sam_1445, at: "14:45:00", author: sam.ortega, kind: trap, sig_id: sig.slack_sam_pay03,
+       text: "pay-03 dropped out of the F5 pool. hardware?"}
+    - {id: slack.inc_kofi_1446, at: "14:46:00", author: kofi.mensah, kind: trap, sig_id: sig.slack_kofi_green,
+       text: "PayCore status page is all green btw"}
+    - {id: slack.inc_elena_1447, at: "14:47:12", author: elena.rossi, thread_of: "14:38:00/elena.rossi", kind: signal,
+       sig_id: sig.slack_elena_1447, class: pgsa.idle_in_txn,
+       text: "pg_stat_activity on pay-db-01, grouped:\n```\n{pgsa_summary}\n```\noldest ones:\n```\n{pgsa_rows}\n```\nno slow queries. the app is holding connections open, not the db."}
+    - {id: slack.inc_elena_1448, at: "14:48:30", author: elena.rossi, kind: trap, sig_id: sig.slack_elena_kill_offer,
+       text: "I can kill the idle-in-txn sessions if you want, that'd free the pool for a bit"}
+    - {id: slack.inc_ben_1449, at: "14:49:00", author: ben.kowalski, kind: signal,
+       text: "so the DB is the problem?"}
+    - {id: slack.inc_elena_1449, at: "14:49:20", author: elena.rossi, kind: signal, sig_id: sig.slack_elena_not_db,
+       text: "no. read the above"}
+    - {id: slack.inc_alice_1450, at: "14:50:00", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_tickets,
+       text: "support says 40+ tickets, payment spinner"}
+    - {id: slack.inc_jordan_1451, at: "14:51:00", author: jordan.pike, kind: signal, sig_id: sig.slack_jordan_release,
+       text: "only change on the payments side today was the 6am release, CAB approved, went fine"}
+    # After the 14:52 cut.
+    - {id: slack.inc_priya_1453, at: "14:53:40", author: priya.raman, kind: trap, sig_id: sig.slack_priya_620,
+       text: "we had a release at 6:20 this morning but it ran clean for hours, doubt it's that"}
+    - {id: slack.inc_alice_1455, at: "14:55:10", author: alice.nguyen, kind: trap,
+       text: "@elena.rossi go ahead and kill them, we need headroom"}
+    - {id: slack.inc_elena_1456, at: "14:56:00", author: elena.rossi, kind: signal, sig_id: sig.slack_elena_killed,
+       text: "killed 30 idle-in-txn sessions from pgw_app"}
+    - {id: slack.inc_elena_1457, at: "14:57:05", author: elena.rossi, kind: signal,
+       text: "they're back. refilled in seconds, still 197"}
+    - {id: slack.inc_priya_1458, at: "14:58:00", author: priya.raman, kind: signal, sig_id: sig.slack_priya_leak,
+       text: "leak detector on pay-01 is screaming, every trace goes through PaymentService.authorize. the new retry holds the txn open across the PSP call."}
+    - {id: slack.inc_priya_1459, at: "14:59:30", author: priya.raman, kind: signal,
+       text: "rolling payments-gateway back to 3.7.9 now. I'll raise the emergency change after"}
+    - {id: slack.inc_alice_1500, at: "15:00:05", author: alice.nguyen, kind: signal,
+       text: "do it"}
+    - {id: slack.inc_priya_1506, at: "15:06:20", author: priya.raman, kind: signal,
+       text: "3.7.9 on all four nodes"}
+    - {id: slack.inc_alice_1508, at: "15:08:30", author: alice.nguyen, kind: signal,
+       text: "5xx back to baseline. thanks all"}
+    - {id: slack.inc_kofi_1511, at: "15:11:00", author: kofi.mensah, kind: signal,
+       text: "PayCore status page just changed: Degraded performance, Authorizations (EU)"}
+    - {id: slack.inc_priya_1512, at: "15:12:40", author: priya.raman, kind: signal,
+       text: "success rate is stuck around 73%. EU auths failing fast at 3s on 3.7.9"}
+    - {id: slack.inc_alice_1513, at: "15:13:30", author: alice.nguyen, kind: signal,
+       text: "support now seeing charged twice and card declined tickets"}

@@ -1,0 +1,177 @@
+channel: inc-checkout-latency
+messages:
+  - at: "14:35:41"
+    author: sam.ortega
+    text: "joining. pulling up the checkout dashboards"
+    thread_of: null
+    reactions: []
+  - at: "14:36:48"
+    author: ben.kowalski
+    text: "on it, rollback job queued. pods look healthy fwiw, nothing crashlooping"
+    thread_of: null
+    reactions: []
+  - at: "14:37:08"
+    author: kofi.mensah
+    text: "what do we put on the status page? do we say anything yet"
+    thread_of: null
+    reactions: []
+  - at: "14:38:30"
+    author: alice.nguyen
+    text: "hold the status page for ten mins. one line 'investigating checkout errors' when we post"
+    thread_of: null
+    reactions: [{name: "+1", count: 2}]
+  - at: "14:39:10"
+    author: ben.kowalski
+    text: "who's IC here? sorry, lost track"
+    thread_of: null
+    reactions: []
+  - at: "14:39:40"
+    author: sam.ortega
+    text: "@ben.kowalski alice, she's IC. top of the channel"
+    thread_of: null
+    reactions: []
+  - at: "14:40:20"
+    author: kofi.mensah
+    text: "marketing site synthetic just went red. checking my side, prob separate"
+    thread_of: null
+    reactions: []
+  - at: "14:42:20"
+    author: elena.rossi
+    text: "still looking"
+    thread_of: "14:38:00/elena.rossi"
+    reactions: []
+  - at: "14:42:40"
+    author: sam.ortega
+    text: "first on-call didn't pick up so it went to @priya.raman. good, she's solid"
+    thread_of: null
+    reactions: []
+  - at: "14:42:55"
+    author: ben.kowalski
+    text: "checkout-api is back on the old version, watching the error graph"
+    thread_of: null
+    reactions: []
+  - at: "14:43:50"
+    author: sam.ortega
+    text: "this one has the checkout breakdown https://app.datadoghq.com/dashboard/abc-123-xyz"
+    thread_of: null
+    reactions: []
+  - at: "14:44:40"
+    author: priya.raman
+    text: "paged at 10:42 my time, on my laptop now. reading logs"
+    thread_of: null
+    reactions: []
+  - at: "14:45:25"
+    author: ben.kowalski
+    text: "404 for me. @sam.ortega is that dashboard private or dead?"
+    thread_of: "14:43:50/sam.ortega"
+    reactions: []
+  - at: "14:45:40"
+    author: sam.ortega
+    text: "solarwinds is also firing on pay-03, so it's not only the f5 view"
+    thread_of: null
+    reactions: [{name: "eyes", count: 2}]
+  - at: "14:46:20"
+    author: ben.kowalski
+    text: "can we just drain it and see if things change?"
+    thread_of: "14:45:00/sam.ortega"
+    reactions: []
+  - at: "14:47:40"
+    author: alice.nguyen
+    text: "next update at 14:55 UTC. one line updates pls, theories go in the thread"
+    thread_of: null
+    reactions: []
+  - at: "14:48:10"
+    author: kofi.mensah
+    text: "could be traffic, people hammering the pay button. rps is up a bit"
+    thread_of: null
+    reactions: []
+  - at: "14:48:50"
+    author: priya.raman
+    text: "pay-03 might be one of several things, not sure yet"
+    thread_of: null
+    reactions: []
+  - at: "14:49:40"
+    author: sam.ortega
+    text: "is anyone checking the network side properly? kofi might be right"
+    thread_of: null
+    reactions: []
+  - at: "14:50:30"
+    author: ben.kowalski
+    text: "should we page more people or wait it out? asking for real"
+    thread_of: null
+    reactions: []
+  - at: "14:51:20"
+    author: alice.nguyen
+    text: "wait for @priya.raman and @elena.rossi, they're both on it"
+    thread_of: null
+    reactions: []
+  - at: "14:51:40"
+    author: jordan.pike
+    text: "it's 10:51 here. i can pull the CAB notes for the payments side if that's useful"
+    thread_of: null
+    reactions: []
+  - at: "14:52:30"
+    author: kofi.mensah
+    text: "are we saying anything to customers yet? support is asking in their channel"
+    thread_of: null
+    reactions: []
+  - at: "14:52:50"
+    author: alice.nguyen
+    text: "I'll draft the customer line now, @sam.ortega can post it once I've ok'd it"
+    thread_of: null
+    reactions: []
+  - at: "14:53:10"
+    author: sam.ortega
+    text: "grabbing a coffee, back at 14:56 UTC. dont fix anything without me :coffee:"
+    thread_of: null
+    reactions: []
+  - at: "14:54:20"
+    author: ben.kowalski
+    text: "still broken from where i'm sitting, just waiting on priya and elena now"
+    thread_of: null
+    reactions: []
+  - at: "14:55:50"
+    author: priya.raman
+    text: "10:55 my time, still reading logs. @alice.nguyen give me 5 min more pls"
+    thread_of: null
+    reactions: []
+  - at: "14:58:45"
+    author: ben.kowalski
+    text: "@priya.raman can you share the finding when you can? is it the payments service side"
+    thread_of: "14:58:00/priya.raman"
+    reactions: []
+  - at: "15:10:20"
+    author: alice.nguyen
+    text: "next update at 15:20 UTC. I'll write the timeline, @sam.ortega can you own the customer post"
+    thread_of: null
+    reactions: []
+  - at: "15:14:10"
+    author: ben.kowalski
+    text: "i'll raise a ticket for the broken dashboard link, it's been bugging me"
+    thread_of: null
+    reactions: []
+  - at: "15:16:20"
+    author: jordan.pike
+    text: "postmortem: @alice.nguyen i can book a slot tomorrow, 10am my time work?"
+    thread_of: null
+    reactions: []
+  - at: "15:18:40"
+    author: sam.ortega
+    text: "14:00 UTC works for @jordan.pike, i'll put it in the calendar"
+    thread_of: null
+    reactions: []
+  - at: "15:20:30"
+    author: alice.nguyen
+    text: "thanks all. postmortem invite going out, timeline doc to follow"
+    thread_of: null
+    reactions: [{name: "pray", count: 3}]
+  - at: "15:22:10"
+    author: priya.raman
+    text: "thanks. signing off, it's 11:22 my time and i'm done. ping me if anything"
+    thread_of: null
+    reactions: []
+  - at: "15:28:20"
+    author: sam.ortega
+    text: "signing off. thanks all :sweat_smile:"
+    thread_of: null
+    reactions: []

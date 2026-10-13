@@ -1,0 +1,14 @@
+# fetched by schemas/fetch.sh; only extracted subsets, the README, the script and the Statuspage sample are committed
+schemas/*/openapi-*.yaml
+schemas/*/*openapi*.json
+schemas/*/*.py
+schemas/*/*.java
+schemas/*/*.c
+schemas/kubernetes/swagger.json
+.venv/
+__pycache__/
+
+# local secrets: never commit; copy .env.example to .env
+.env
+.env.*
+!.env.example

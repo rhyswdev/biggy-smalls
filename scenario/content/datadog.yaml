@@ -1,0 +1,149 @@
+# Datadog monitor definitions (main session, PLAN 2.6). Never served. Ids, names, queries, thresholds and
+# transitions are in the scenario YAML; this file holds the human-written parts. Every monitor's message
+# links the runbook teams were told to use, the stale CHECKOUT-LATENCY page.
+
+runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+monitors:
+  p90_gw:
+    created: "2025-11-04T15:22:10Z"
+    modified: "2026-03-12T10:41:52Z"
+    creator: sam.ortega
+    priority: 2
+    tags: ["team:commerce", "service:checkout-api", "peer.service:payments-gw", "env:prod"]
+    message: |-
+      {{#is_alert}}p90 latency from checkout-api to payments-gw is {{value}}s (threshold {{threshold}}s). Checkout payments are slow for customers.{{/is_alert}}
+      {{#is_warning}}p90 latency to payments-gw is {{value}}s and rising.{{/is_warning}}
+      {{#is_recovery}}p90 latency to payments-gw back under threshold.{{/is_recovery}}
+      Runbook: {runbook}
+      {{#is_alert}}@pagerduty-Payments-Prod{{/is_alert}} @slack-sre-oncall
+  p99_gw:
+    created: "2025-11-04T15:24:41Z"
+    modified: "2025-11-04T15:24:41Z"
+    creator: sam.ortega
+    priority: 4
+    tags: ["team:commerce", "service:checkout-api", "peer.service:payments-gw", "env:prod"]
+    message: |-
+      {{#is_warning}}p99 latency from checkout-api to payments-gw is {{value}}s. Non-paging; tail latency only.{{/is_warning}}
+      {{#is_alert}}p99 latency to payments-gw is {{value}}s.{{/is_alert}}
+      Runbook: {runbook}
+      @slack-sre-oncall
+  co_errors:
+    created: "2024-02-20T09:13:30Z"
+    modified: "2026-03-12T10:44:07Z"
+    creator: alice.nguyen
+    priority: 2
+    tags: ["team:commerce", "service:checkout-api", "env:prod"]
+    message: |-
+      {{#is_alert}}checkout-api 5xx rate is {{value}}% over the last 5 minutes. Customers cannot complete checkout.{{/is_alert}}
+      {{#is_warning}}checkout-api 5xx rate is {{value}}%.{{/is_warning}}
+      Check recent checkout-api deploys first.
+      Runbook: {runbook}
+      {{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}
+  pg_can_connect:
+    created: "2023-06-08T12:00:31Z"
+    modified: "2025-08-19T08:30:14Z"
+    creator: elena.rossi
+    priority: 1
+    tags: ["team:database", "db:postgres", "env:prod"]
+    message: |-
+      {{#is_alert}}The Datadog agent cannot connect to Postgres on {{host.name}}: {{check_message}}{{/is_alert}}
+      {{#is_recovery}}Postgres on {{host.name}} accepting connections again.{{/is_recovery}}
+      Runbook: {runbook}
+      {{#is_alert}}@pagerduty-Database-Prod{{/is_alert}}
+  co_log_volume:
+    created: "2025-01-15T11:02:44Z"
+    modified: "2025-01-15T11:02:44Z"
+    creator: sam.ortega
+    priority: 4
+    tags: ["team:commerce", "service:checkout-api", "env:prod", "logs"]
+    message: |-
+      {{#is_alert}}checkout-api is logging {{value}} lines in 10 minutes, well above normal. Check for a DEBUG logger left on.{{/is_alert}}
+      Runbook: {runbook}
+      @slack-sre-oncall
+  syn_checkout:
+    created: "2024-05-02T14:31:00Z"
+    modified: "2025-10-30T16:12:09Z"
+    creator: alice.nguyen
+    priority: 2
+    tags: ["team:commerce", "synthetics", "env:prod"]
+    message: |-
+      {{#is_alert}}Synthetic checkout flow is failing from {{locations}}.{{/is_alert}}
+      Runbook: {runbook}
+      {{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}
+  redis_frag:
+    created: "2024-03-11T13:20:55Z"
+    modified: "2026-09-23T09:12:40Z"     # demoted from paging to Slack after INC0047003
+    creator: sam.ortega
+    priority: 3
+    tags: ["team:platform", "cluster:redis-sessions", "env:prod"]
+    message: |-
+      {{#is_alert}}redis-sessions memory fragmentation ratio is {{value}}. Sessions may be evicted; checkout logins can fail.{{/is_alert}}
+      Runbook: {runbook}
+      @slack-sre-oncall
+  node_cpu:
+    created: "2025-06-23T09:48:12Z"
+    modified: "2025-06-23T09:48:12Z"
+    creator: sam.ortega
+    priority: 4
+    tags: ["team:platform", "kube_cluster_name:k8s-prod-east", "env:prod"]
+    message: |-
+      {{#is_alert}}CPU on {{host.name}} above 90% for 10 minutes.{{/is_alert}}
+      @slack-sre-oncall
+  search_indexer:
+    created: "2025-02-11T10:05:44Z"
+    modified: "2025-02-11T10:05:44Z"
+    creator: sam.ortega
+    priority: 4
+    tags: ["team:platform", "kube_cronjob:search-indexer", "env:prod"]
+    message: |-
+      {{#is_alert}}search-indexer cron job failed (BackoffLimitExceeded). Product search results stop updating until the next successful run.{{/is_alert}}
+      {{#is_alert}}@pagerduty-Platform{{/is_alert}}
+  ord_disk:
+    created: "2024-08-30T13:20:02Z"
+    modified: "2024-08-30T13:20:02Z"
+    creator: sam.ortega
+    priority: 4
+    tags: ["team:commerce", "role:orders", "env:prod"]
+    message: |-
+      {{#is_alert}}Disk {{device.name}} on {{host.name}} is {{value}} full.{{/is_alert}}
+      {{#is_recovery}}Disk on {{host.name}} back under threshold.{{/is_recovery}}
+      {{#is_alert}}@pagerduty-Platform{{/is_alert}}
+  syn_marketing:
+    created: "2024-02-02T11:40:19Z"
+    modified: "2025-07-14T09:02:33Z"
+    creator: kofi.mensah
+    priority: 3
+    tags: ["team:web", "site:marketing", "env:prod"]
+    message: |-
+      {{#is_alert}}Marketing homepage check failing from {{locations}}.{{/is_alert}}
+      {{#is_recovery}}Marketing homepage check passing again.{{/is_recovery}}
+      @slack-web-platform
+  success_rate:
+    created: "2025-03-03T16:12:40Z"
+    modified: "2025-11-04T15:30:12Z"
+    creator: marcus.okafor
+    priority: 2
+    tags: ["team:payments", "service:payments-gateway", "env:prod"]
+    message: |-
+      {{#is_alert}}Payment authorization success rate is {{value}}% over the last 5 minutes (threshold {{threshold}}%).{{/is_alert}}
+      {{#is_warning}}Payment authorization success rate is {{value}}%.{{/is_warning}}
+      {{#is_recovery}}Payment authorization success rate back above threshold.{{/is_recovery}}
+      @slack-payments
+
+# Text the Datadog agent puts in the can_connect check message (rendered into the event body).
+can_connect_check_message: 'FATAL:  remaining connection slots are reserved for non-replication superuser connections'
+
+synthetics:
+  syn-marketing-home:
+    type: browser
+    locations: ["aws:eu-west-1", "aws:us-east-1"]
+    tick_every: 300
+    creator: kofi.mensah
+    steps: ["Navigate to https://cdn.larkspur.com/", "Assert text present: Autumn collection"]
+  syn-checkout-flow:
+    type: browser
+    locations: ["aws:eu-west-1", "aws:us-east-1"]
+    tick_every: 300
+    creator: alice.nguyen
+    steps: ["Navigate to https://www.larkspur.com/checkout", "Add test SKU 100-200-17 to cart", "Click Checkout", "Fill test card", "Click Pay", "Assert text present: Order confirmed"]

@@ -1,0 +1,647 @@
+[
+  {
+    "type": "message",
+    "subtype": "channel_join",
+    "user": "U03MU4G0DPE",
+    "text": "<@U03MU4G0DPE> has joined the channel",
+    "ts": "1791902100.000006",
+    "team": "T0LARKSPUR"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8812 *p90 latency high on payments-gw* on Payments - Prod: Triggered, assigned to Tom Beckett",
+    "ts": "1791902104.000001",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8814 *checkout-api error rate > 5%* on Checkout - Prod: Acknowledged by Alice Nguyen",
+    "ts": "1791902105.000002",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "IC here. checkout payments failing / slow since ~14:30, 504s on submit. INC0048811. <@U0OUMNOBHU9> <@U01B0NXMOC4> <@U01GG60ZVQK> pls join",
+    "ts": "1791902120.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "87748d1b-49a5-c3b3-e9b3-08182e847219"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "joining. pulling up the checkout dashboards",
+    "ts": "1791902141.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8e962803-dc93-fe21-8c02-21b7392188f4"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "we deployed checkout-api 2.14.3 at 14:28, that's gotta be it. <@U03MU4G0DPE> can we roll back?",
+    "ts": "1791902160.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "9d825290-905a-6de4-13bb-ee57bb749f5e"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "yes, roll it back. <@U01B0NXMOC4> go",
+    "ts": "1791902190.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "403392f9-989c-c23a-848d-85f99e15dfe3"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "on it, rollback job queued. pods look healthy fwiw, nothing crashlooping",
+    "ts": "1791902208.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "4e5d4162-98a7-97c5-b996-e575217bfa6d"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8815 *[Synthetics] checkout flow* merged into #8814 by Alice Nguyen",
+    "ts": "1791902221.000006",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "what do we put on the status page? do we say anything yet",
+    "ts": "1791902228.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "2cdb6b4e-de1c-145f-7144-70c76aa11576"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "is it redis again? the runbook says check redis",
+    "ts": "1791902250.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "3895bd05-0b12-8adc-d585-551309cbd471"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "that runbook is ancient, sessions moved to the cluster last year",
+    "ts": "1791902270.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8cd1528b-4188-d1b9-46af-aba069d3601a"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "db is at 197 of 200 usable, mostly pgw_app, plus 40 from recon_app",
+    "ts": "1791902280.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "54ae6c1d-35ee-ccd0-1193-5b365f0d8415",
+    "thread_ts": "1791902280.000006",
+    "reply_count": 2,
+    "reply_users_count": 1,
+    "latest_reply": "1791902832.000005",
+    "reply_users": [
+      "U01GG60ZVQK"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "hold the status page for ten mins. one line 'investigating checkout errors' when we post",
+    "ts": "1791902310.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "02303241-36c2-24c8-ba6d-70fcb1c449d7",
+    "reactions": [
+      {
+        "name": "+1",
+        "count": 2,
+        "users": [
+          "U01B0NXMOC4",
+          "U0OUMNOBHU9"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "who's IC here? sorry, lost track",
+    "ts": "1791902350.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "54978cc9-dfff-27bb-d7f6-582de7bb041b"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "<@U01B0NXMOC4> alice, she's IC. top of the channel",
+    "ts": "1791902380.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e0c4ae42-d698-ff8b-8fe0-d71c00705f9b"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "marketing site synthetic just went red. checking my side, prob separate",
+    "ts": "1791902420.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "338d1c10-1a40-0e7c-2697-efa9d58d43ca"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "is this a network thing? marketing site is down too",
+    "ts": "1791902460.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "1c9d0de2-2e4b-1a01-accc-bf061a3f04d6"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "still looking",
+    "ts": "1791902540.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "4ed34796-845c-2153-050a-b809a1d0aed5",
+    "thread_ts": "1791902280.000006",
+    "parent_user_id": "U01GG60ZVQK"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8812 escalated to Priya Raman (no acknowledgement after 10 minutes)",
+    "ts": "1791902547.000005",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "first on-call didn't pick up so it went to <@U0XEFKXZ4W1>. good, she's solid",
+    "ts": "1791902560.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e683f553-4582-1ee5-dcd5-f03f7dd6593f"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "checkout-api is back on the old version, watching the error graph",
+    "ts": "1791902575.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "87bb78bd-db7f-ccc8-1926-df22d95bbded"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "rollback done, still seeing 504s",
+    "ts": "1791902590.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "43e88a91-f148-b877-6190-6a03e4ab071b"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "this one has the checkout breakdown https://app.datadoghq.com/dashboard/abc-123-xyz",
+    "ts": "1791902630.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "eb04ad61-3582-5a17-b71e-d58137bff706",
+    "thread_ts": "1791902630.000005",
+    "reply_count": 1,
+    "reply_users_count": 1,
+    "latest_reply": "1791902725.000005",
+    "reply_users": [
+      "U01B0NXMOC4"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "here, catching up. tom's not answering",
+    "ts": "1791902650.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "b83bc05d-9c38-ce65-a292-36feb2cb78d8"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8812 acknowledged by Priya Raman",
+    "ts": "1791902651.000002",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "paged at 10:42 my time, on my laptop now. reading logs",
+    "ts": "1791902680.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "764cefa9-e802-7727-e8f9-8251fa754ca7"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "pay-03 dropped out of the F5 pool. hardware?",
+    "ts": "1791902700.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "a139735b-8cb5-ad14-1521-55f5efc248e0",
+    "thread_ts": "1791902700.000005",
+    "reply_count": 1,
+    "reply_users_count": 1,
+    "latest_reply": "1791902780.000003",
+    "reply_users": [
+      "U01B0NXMOC4"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "404 for me. <@U0OUMNOBHU9> is that dashboard private or dead?",
+    "ts": "1791902725.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "60830a23-9a8d-9461-2f1f-e98fa0838203",
+    "thread_ts": "1791902630.000005",
+    "parent_user_id": "U0OUMNOBHU9"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "solarwinds is also firing on pay-03, so it's not only the f5 view",
+    "ts": "1791902740.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "ee0774cb-c647-81fa-1c65-5e4073349b9f",
+    "reactions": [
+      {
+        "name": "eyes",
+        "count": 2,
+        "users": [
+          "U03MU4G0DPE",
+          "U01B0NXMOC4"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "PayCore status page is all green btw",
+    "ts": "1791902760.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "44587e0a-ec5f-3031-2edc-e255c95c0443"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "can we just drain it and see if things change?",
+    "ts": "1791902780.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "3910f2a7-1559-1c0c-4438-fafd3be9597c",
+    "thread_ts": "1791902700.000005",
+    "parent_user_id": "U0OUMNOBHU9"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "pg_stat_activity on pay-db-01, grouped:\n```\npayments=# select usename, application_name, state, count(*), max(now() - xact_start) as oldest_xact\npayments-#   from pg_stat_activity where backend_type = 'client backend' group by 1, 2, 3 order by 4 desc;\n usename    | application_name    | state               | count | oldest_xact\n------------+---------------------+---------------------+-------+-------------\n pgw_app    | payments-gateway    | idle in transaction |   133 | 00:00:38\n recon_app  | payments-reconciler | active              |    40 | 00:17:12\n orders_app | order-service       | idle                |    20 | \n pgw_app    | payments-gateway    | active              |     4 | 00:00:36\n postgres   | psql                | active              |     1 | 00:00:00\n(5 rows)\n```\noldest ones:\n```\npayments=# select pid, usename, application_name, client_addr, state, xact_start::time, wait_event, query\npayments-#   from pg_stat_activity where state = 'idle in transaction' order by xact_start limit 5;\n pid   | usename | application_name | client_addr | state               | xact_start   | wait_event | query                                                                                                                      \n-------+---------+------------------+-------------+---------------------+--------------+------------+----------------------------------------------------------------------------------------------------------------------------\n 35128 | pgw_app | payments-gateway | 10.20.4.32  | idle in transaction | 14:46:34.112 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 35129 | pgw_app | payments-gateway | 10.20.4.31  | idle in transaction | 14:46:34.495 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 35158 | pgw_app | payments-gateway | 10.20.4.33  | idle in transaction | 14:46:35.002 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 34083 | pgw_app | payments-gateway | 10.20.4.32  | idle in transaction | 14:46:35.429 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 35208 | pgw_app | payments-gateway | 10.20.4.34  | idle in transaction | 14:46:35.767 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n(5 rows)\n```\nno slow queries. the app is holding connections open, not the db.",
+    "ts": "1791902832.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "058209dc-030a-bd2d-66ad-23d54d84b54c",
+    "thread_ts": "1791902280.000006",
+    "parent_user_id": "U01GG60ZVQK"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "next update at 14:55 UTC. one line updates pls, theories go in the thread",
+    "ts": "1791902860.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "3a718a86-1423-f029-78b0-8a71e354e661"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "could be traffic, people hammering the pay button. rps is up a bit",
+    "ts": "1791902890.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "9b462d1c-18c2-2299-8c98-364c5748599d"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "I can kill the idle-in-txn sessions if you want, that'd free the pool for a bit",
+    "ts": "1791902910.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8dd730b0-364e-2482-f948-b278bc15669f"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "pay-03 might be one of several things, not sure yet",
+    "ts": "1791902930.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "6de6b8c4-cabe-a98c-f3aa-6951381f73d0"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "so the DB is the problem?",
+    "ts": "1791902940.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "dfe34c50-56b7-7a5a-dbba-8ff938fb7746"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "no. read the above",
+    "ts": "1791902960.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "9ce9010e-2f20-2302-34cc-1d72c9668ab8"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "is anyone checking the network side properly? kofi might be right",
+    "ts": "1791902980.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "4dd4c19a-e913-d08b-11a6-6d60d4d49bb7"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "support says 40+ tickets, payment spinner",
+    "ts": "1791903000.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "a2772fea-10df-c6d2-a0fd-54f971443a9b"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "should we page more people or wait it out? asking for real",
+    "ts": "1791903030.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "5c9e50ca-a619-25ae-10a0-0628f9b291f3"
+  },
+  {
+    "type": "message",
+    "user": "U0UAC4HTR91",
+    "text": "only change on the payments side today was the 6am release, CAB approved, went fine",
+    "ts": "1791903060.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "f3ead1ab-17d7-f0ae-10a7-899a3d627c79"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "wait for <@U0XEFKXZ4W1> and <@U01GG60ZVQK>, they're both on it",
+    "ts": "1791903080.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "52712367-c0aa-ef95-db86-a5f14ad06b36"
+  },
+  {
+    "type": "message",
+    "user": "U0UAC4HTR91",
+    "text": "it's 10:51 here. i can pull the CAB notes for the payments side if that's useful",
+    "ts": "1791903100.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "c464d58e-69c2-9a8b-cb0b-4ef3cb11b975"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "are we saying anything to customers yet? support is asking in their channel",
+    "ts": "1791903150.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8050537b-4232-b32c-d0c3-0ac2005ff492"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "I'll draft the customer line now, <@U0OUMNOBHU9> can post it once I've ok'd it",
+    "ts": "1791903170.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "f47aa11e-ec43-4446-a6b0-53024854bcaf"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "grabbing a coffee, back at 14:56 UTC. dont fix anything without me :coffee:",
+    "ts": "1791903190.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "15248022-2b08-44dd-bcf8-101a7287b014"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "we had a release at 6:20 this morning but it ran clean for hours, doubt it's that",
+    "ts": "1791903220.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "fa63482f-bf29-76fe-ae64-51c55ff55cbe"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "still broken from where i'm sitting, just waiting on priya and elena now",
+    "ts": "1791903260.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "561a2178-0b77-a40c-f86b-20092f942eee"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "<@U01GG60ZVQK> go ahead and kill them, we need headroom",
+    "ts": "1791903310.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8bccc34a-d57e-39c0-90af-7fa3e441b0b0"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "10:55 my time, still reading logs. <@U03MU4G0DPE> give me 5 min more pls",
+    "ts": "1791903350.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "5da535f9-9068-5cd8-5b1d-f2f5009c91b3"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "killed 30 idle-in-txn sessions from pgw_app",
+    "ts": "1791903360.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "675e5e76-1c50-23d8-ab1e-9b967b809888"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "they're back. refilled in seconds, still 197",
+    "ts": "1791903425.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "580a0e86-35df-6a8f-b449-b51532010a1d"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "leak detector on pay-01 is screaming, every trace goes through PaymentService.authorize. the new retry holds the txn open across the PSP call.",
+    "ts": "1791903480.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "0bb66ced-eff6-a906-833b-b8425b552448",
+    "thread_ts": "1791903480.000005",
+    "reply_count": 1,
+    "reply_users_count": 1,
+    "latest_reply": "1791903525.000006",
+    "reply_users": [
+      "U01B0NXMOC4"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "<@U0XEFKXZ4W1> can you share the finding when you can? is it the payments service side",
+    "ts": "1791903525.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "552b7529-99d5-702c-185c-f7e613cd98fd",
+    "thread_ts": "1791903480.000005",
+    "parent_user_id": "U0XEFKXZ4W1"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "rolling payments-gateway back to 3.7.9 now. I'll raise the emergency change after",
+    "ts": "1791903570.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "9dae67ac-1d6e-8edf-c235-cfdb2f8705b3"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "do it",
+    "ts": "1791903605.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "0bb4da43-b36a-5a82-eb2b-281437d58564"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "3.7.9 on all four nodes",
+    "ts": "1791903980.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "a3fc9eca-730c-21c0-5627-98dd95fdcdb5"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "5xx back to baseline. thanks all",
+    "ts": "1791904110.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "dba9f2da-2c33-8e18-0aed-96a3c783bc5c"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "next update at 15:20 UTC. I'll write the timeline, <@U0OUMNOBHU9> can you own the customer post",
+    "ts": "1791904220.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "fa4e466c-ecd5-d2cb-1ff8-b14caa9762e2"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8812 resolved by Priya Raman",
+    "ts": "1791904231.000002",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8814 resolved by Alice Nguyen",
+    "ts": "1791904246.000006",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "PayCore status page just changed: Degraded performance, Authorizations (EU)",
+    "ts": "1791904260.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "068c8303-9943-1284-026b-4a57395196a9"
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "success rate is stuck around 73%. EU auths failing fast at 3s on 3.7.9",
+    "ts": "1791904360.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "3d12722e-d967-f230-d66f-3b2bc48122f8"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "support now seeing charged twice and card declined tickets",
+    "ts": "1791904410.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8b7054c2-4c9a-213b-cfd3-e614c17c2bb6"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "i'll raise a ticket for the broken dashboard link, it's been bugging me",
+    "ts": "1791904450.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "ab741f4e-b1fb-a102-8e34-69f82d536e99"
+  },
+  {
+    "type": "message",
+    "user": "U0UAC4HTR91",
+    "text": "postmortem: <@U03MU4G0DPE> i can book a slot tomorrow, 10am my time work?",
+    "ts": "1791904580.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "1e6d4cdd-5e5a-66dc-45fe-6cb0ece09623"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "14:00 UTC works for <@U0UAC4HTR91>, i'll put it in the calendar",
+    "ts": "1791904720.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "c672aadb-c6a3-64b3-9218-53b0319be65f"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "thanks all. postmortem invite going out, timeline doc to follow",
+    "ts": "1791904830.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "76e117f2-e2c1-c862-ea5a-f6d3d201e483",
+    "reactions": [
+      {
+        "name": "pray",
+        "count": 3,
+        "users": [
+          "U01B0NXMOC4",
+          "U0OUMNOBHU9",
+          "U01GG60ZVQK"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U0XEFKXZ4W1",
+    "text": "thanks. signing off, it's 11:22 my time and i'm done. ping me if anything",
+    "ts": "1791904930.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "c19b9bfa-31e4-2cb2-8729-85c4639f9946"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "signing off. thanks all :sweat_smile:",
+    "ts": "1791905300.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "d54d2073-675b-f4cc-303d-98b1585f20e0"
+  }
+]

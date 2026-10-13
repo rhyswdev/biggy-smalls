@@ -1,0 +1,29 @@
+{
+ "x-source": "brettwooldridge/HikariCP tag HikariCP-5.1.0",
+ "strings": {
+  "timeout": " - Connection is not available, request timed out after ",
+  "timeout_tail": "(total=\" + getTotalConnections() + \", active=\" + getActiveConnections() + \", idle=\" + getIdleConnections() + \", waiting=\" + getThreadsAwaitingConnection() + \")",
+  "stats": "{} - {}stats (total={}, active={}, idle={}, waiting={})",
+  "before_cleanup": "Before cleanup ",
+  "after_cleanup": "After cleanup  ",
+  "timeout_failure": "Timeout failure ",
+  "cannot_acquire": "{} - Cannot acquire connection from data source",
+  "added_connection": "{} - Added connection {}",
+  "fill_skipped": "{} - Fill pool skipped, pool has sufficient level or currently being filled.",
+  "leak": "Connection leak detection triggered for {} on thread {}, stack trace follows",
+  "leak_exception": "Apparent connection leak detected",
+  "unleaked": "Previously reported leaked connection {} on thread {} was returned to the pool (unleaked)",
+  "rendered": {
+   "timeout": "{pool} - Connection is not available, request timed out after {ms}ms (total={t}, active={a}, idle={i}, waiting={w})",
+   "stats": "{pool} - {prefix}stats (total={t}, active={a}, idle={i}, waiting={w})",
+   "after_cleanup": "{pool} - After cleanup  stats (total={t}, active={a}, idle={i}, waiting={w})",
+   "before_cleanup": "{pool} - Before cleanup stats (total={t}, active={a}, idle={i}, waiting={w})",
+   "timeout_failure": "{pool} - Timeout failure stats (total={t}, active={a}, idle={i}, waiting={w})",
+   "cannot_acquire": "{pool} - Cannot acquire connection from data source",
+   "added_connection": "{pool} - Added connection {conn}",
+   "leak": "Connection leak detection triggered for {conn} on thread {thread}, stack trace follows",
+   "leak_exception": "java.lang.Exception: Apparent connection leak detected",
+   "unleaked": "Previously reported leaked connection {conn} on thread {thread} was returned to the pool (unleaked)"
+  }
+ }
+}

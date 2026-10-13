@@ -1,0 +1,256 @@
+{
+  "result": [
+    {
+      "sys_id": "762d04c9b3fae3ab88ab504e4ed6b731",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "Taking this. Campaign email went out at 19:00 UTC, traffic on submit ~3x. Checking checkout-api first.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 14:20:00"
+    },
+    {
+      "sys_id": "339ccaddcc8c8695454fdcd2fe2c2c34",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "redis-sessions looks fine, fragmentation 1.3, no evictions. Not redis.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-03-04 14:41:00"
+    },
+    {
+      "sys_id": "466d9960ecc78206104da6156dc5019e",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "checkout-api pods all at active=20 idle=0 on the checkout-db pool, 30-40 threads waiting. DB itself is quiet, queries fast. It's our pool size.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 15:05:00"
+    },
+    {
+      "sys_id": "177c669d706c37878480cf809dd2e87e",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "Scaled checkout-api to 12 replicas. p90 dropping.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 15:22:00"
+    },
+    {
+      "sys_id": "d4cbb02a66edac345a16610cca8dde57",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "Pool raised to 40 under CHG0029514, HPA added. Scaling back to 6 tomorrow once HPA is proven.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 16:30:00"
+    },
+    {
+      "sys_id": "17c3ff342cddd574ebbd9b1dc8b51aab",
+      "element": "work_notes",
+      "element_id": "09362a6660d7b16a984efbb6a329a3da",
+      "name": "incident",
+      "value": "Origin cert on the CDN shows expired at 09:04 ET. Renewal job did not fire, checking why.",
+      "sys_created_by": "kofi.mensah",
+      "sys_created_on": "2026-04-14 09:18:00"
+    },
+    {
+      "sys_id": "f9699954f4440cb3bb66601fd502777b",
+      "element": "work_notes",
+      "element_id": "12b6f620603fb8176b36dc1eb5338c65",
+      "name": "incident",
+      "value": "Order Service emails are queued on the relay, not failing. Checking queue depth.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-05-06 13:54:00"
+    },
+    {
+      "sys_id": "86bc7608741c29b56ad5aa6106af4a22",
+      "element": "work_notes",
+      "element_id": "5c5f891a824048d779c6b5550772b9e8",
+      "name": "incident",
+      "value": "Indexer pods hitting OOMKilled on every run since 02:00 ET. Pulling the last three pod events.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-05-27 08:03:00"
+    },
+    {
+      "sys_id": "b46627d889bb53d27a7653789ac4adff",
+      "element": "work_notes",
+      "element_id": "675eb016a4740265c828c6481a8e197e",
+      "name": "incident",
+      "value": "Two nodes in DiskPressure. Eviction list is storefront pods only. Cordoning both nodes for now.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-06-18 22:17:00"
+    },
+    {
+      "sys_id": "5cf2400c2211084deec9f3b8e92611ce",
+      "element": "work_notes",
+      "element_id": "6f7a69e56602cf8c8c11086a1fca4d1c",
+      "name": "incident",
+      "value": "Every authorize to PayCore timing out at 3000ms, gateway returning declines quickly. Pools fine, pay-db-01 at 46 connections.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-07-19 12:09:00"
+    },
+    {
+      "sys_id": "48092466eb354f05f392ece3c7f030bf",
+      "element": "work_notes",
+      "element_id": "6f7a69e56602cf8c8c11086a1fca4d1c",
+      "name": "incident",
+      "value": "PayCore status page: major outage, all regions. Nothing to do on our side but wait. Support briefed on 'card declined'.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-07-19 12:14:00"
+    },
+    {
+      "sys_id": "bd039e6c6172fced628e8cd21b05db4c",
+      "element": "work_notes",
+      "element_id": "6f7a69e56602cf8c8c11086a1fca4d1c",
+      "name": "incident",
+      "value": "PayCore recovered 16:44. Authorize success back to 98%.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-07-19 12:46:00"
+    },
+    {
+      "sys_id": "b76060a5f1446c6e92df3fee39805020",
+      "element": "work_notes",
+      "element_id": "e706a47bbaf5fdde7d5b1f60357b0ece",
+      "name": "incident",
+      "value": "Address validation getting 429s from the provider since 14:50 ET. Checkout is on the local rules fallback. Orders are going through.",
+      "sys_created_by": "ben.kowalski",
+      "sys_created_on": "2026-07-30 15:17:00"
+    },
+    {
+      "sys_id": "b43fbcaaa73294c0caad6b4e4fbff583",
+      "element": "work_notes",
+      "element_id": "61fab8d39ec06c05c254b707b91e707c",
+      "name": "incident",
+      "value": "C: is full on win-rpt-06. Staging file for the finance report cannot be written. Looking at the largest folders.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-08-21 06:39:00"
+    },
+    {
+      "sys_id": "efbdfe1c48add6bbb6b59d4aba3d68fb",
+      "element": "work_notes",
+      "element_id": "ea5f77b5dbf0ee77573a9b4e74dc00d3",
+      "name": "incident",
+      "value": "Refund settlement recon has not started. Parser rejected the acquirer file for the previous business day.",
+      "sys_created_by": "dana.whitfield",
+      "sys_created_on": "2026-09-08 11:35:00"
+    },
+    {
+      "sys_id": "1274889353c576388d3a7517dde41ff2",
+      "element": "work_notes",
+      "element_id": "29527d3103936280aa3334f5cdbaf57d",
+      "name": "incident",
+      "value": "Ratio 1.61, no evictions, used_memory flat. Same flap as last week.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-09-22 05:55:00"
+    },
+    {
+      "sys_id": "987f40c59b6ff1eea3425c4146eacc9e",
+      "element": "work_notes",
+      "element_id": "29527d3103936280aa3334f5cdbaf57d",
+      "name": "incident",
+      "value": "Back to 1.34. Closing as benign; will look at the threshold.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-09-22 06:58:00"
+    },
+    {
+      "sys_id": "9a1a824cf58733c6040a012c6c212448",
+      "element": "work_notes",
+      "element_id": "02fd55868bfb51e0dcac60f8519cd23f",
+      "name": "incident",
+      "value": "Resizer pods are pinned at their CPU limit and throttled. Checking whether the new hero image sizes changed the load.",
+      "sys_created_by": "kofi.mensah",
+      "sys_created_on": "2026-10-02 16:56:00"
+    },
+    {
+      "sys_id": "a1d759dcc9e36e74fb1ecd4dfd710010",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Bridge open, link in #inc-checkout-latency. Keeping this journal as the single record.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 10:36:40"
+    },
+    {
+      "sys_id": "21fa2bfe657414b711936c85bb4272a1",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Reassigning to Payments Engineering. Failures are on submit and the payments-gw p90 monitor fired first (PD 8812, no ack yet). Commerce keeps the bridge.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 10:39:00"
+    },
+    {
+      "sys_id": "66eecb5f472eeb076fd9b2ec8c8c43ea",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "checkout-api rolled back to 2.14.2 (Jenkins #898, done 14:42 UTC). Still seeing 504s on submit.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 10:43:10"
+    },
+    {
+      "sys_id": "d3ac065ed2f08f73f581688738d8e992",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Dashboard links for checkout-api and the payments gateway are pinned in the bridge channel.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-10-13 10:45:20"
+    },
+    {
+      "sys_id": "0bb5e58b36465c7e701728157beaa3f9",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "pg_stat_activity on pay-db-01, grouped:\npayments=# select usename, application_name, state, count(*), max(now() - xact_start) as oldest_xact\npayments-#   from pg_stat_activity where backend_type = 'client backend' group by 1, 2, 3 order by 4 desc;\n usename    | application_name    | state               | count | oldest_xact\n------------+---------------------+---------------------+-------+-------------\n pgw_app    | payments-gateway    | idle in transaction |   133 | 00:00:38\n recon_app  | payments-reconciler | active              |    40 | 00:17:12\n orders_app | order-service       | idle                |    20 | \n pgw_app    | payments-gateway    | active              |     4 | 00:00:36\n postgres   | psql                | active              |     1 | 00:00:00\n(5 rows)\noldest ones:\npayments=# select pid, usename, application_name, client_addr, state, xact_start::time, wait_event, query\npayments-#   from pg_stat_activity where state = 'idle in transaction' order by xact_start limit 5;\n pid   | usename | application_name | client_addr | state               | xact_start   | wait_event | query                                                                                                                      \n-------+---------+------------------+-------------+---------------------+--------------+------------+----------------------------------------------------------------------------------------------------------------------------\n 35128 | pgw_app | payments-gateway | 10.20.4.32  | idle in transaction | 14:46:34.112 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 35129 | pgw_app | payments-gateway | 10.20.4.31  | idle in transaction | 14:46:34.495 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 35158 | pgw_app | payments-gateway | 10.20.4.33  | idle in transaction | 14:46:35.002 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 34083 | pgw_app | payments-gateway | 10.20.4.32  | idle in transaction | 14:46:35.429 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n 35208 | pgw_app | payments-gateway | 10.20.4.34  | idle in transaction | 14:46:35.767 | ClientRead | insert into authorization_attempt (amount,currency,order_id,psp,status,attempt_no,created_at) values ($1,$2,$3,$4,$5,$6,$7)\n(5 rows)\nno slow queries. the app is holding connections open, not the db.",
+      "sys_created_by": "elena.rossi",
+      "sys_created_on": "2026-10-13 10:47:12"
+    },
+    {
+      "sys_id": "352dd7e9d82c1ff3c10c5291284c82a7",
+      "element": "comments",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Customer comms draft is with Comms for review. We will post once the wording is agreed. (10:53 ET)",
+      "sys_created_by": "jordan.pike",
+      "sys_created_on": "2026-10-13 10:53:10"
+    },
+    {
+      "sys_id": "eed8e5c4156768d7b4a4a4a65ad51e10",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Checkout smoke tests re-run at 10:58 ET. Results are in the bridge channel.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-10-13 10:58:30"
+    },
+    {
+      "sys_id": "bc5b7cf01521fbab4406b7daa3f3722c",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Rolled payments-gateway back to 3.7.9 (Jenkins #413, 11:01-11:06 ET). Emergency change CHG0031910 raised. 5xx back to baseline; EU card auths now failing fast, watching the provider.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-10-13 11:09:00"
+    },
+    {
+      "sys_id": "47a957c1c655f63954010ace74cc4c5d",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Next update 15:20 UTC. Support macro updated for payment spinner tickets.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 11:12:45"
+    },
+    {
+      "sys_id": "fb329015ddcce0a1c6c4d0d1d195bfe5",
+      "element": "comments",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Customer comms still in draft with Comms. Will post once approved. (11:22 ET)",
+      "sys_created_by": "jordan.pike",
+      "sys_created_on": "2026-10-13 11:22:00"
+    }
+  ]
+}

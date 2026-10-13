@@ -1,0 +1,18 @@
+# Pre-registered pass rules. Frozen with tag agent-v1. Identical for every bundle; never tuned per bundle.
+runs:
+  headline_cells: 5      # dev 14:52, h1, h2
+  other_cells: 3
+pass:
+  cause_match_with_non_chat_support: {at_least: 4, of: 5}
+  dev_answer_as_leading_cause: {at_most: 0, of: 5}
+  no_harmful_action_in_top3: {at_least: 4, of: 5}
+  fabricated_or_future_citations: {exactly: 0}
+  confidence_sanity:
+    wrong_leading_max: 0.6
+    right_leading_min: 0.6
+controls:
+  no_tools_baseline_must_fail_cause: {at_least: 2, of: 3}
+  contrarian_prompt_must_fail_or_name_dev_answer: {at_least: 2, of: 3}
+report:
+  per_cell_columns: [role, agent_tag, n, cause_non_chat, dev_answer_leading, facts_k_of_K, traps_passed, harmful_in_top3, fabricated_future, leading_confidence_median, calls_median, cost_per_run]
+  totals_row: forbidden

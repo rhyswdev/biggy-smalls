@@ -1,0 +1,665 @@
+2026-10-13 10:16:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 10:16:30,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 135 records reconciled, 0 pending
+2026-10-13 10:18:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 10:18:40,852 INFO  [http-nio-8443-exec-88] c.l.p.s.PaymentService - authorize ok txn=ord-7737891 amount=205.66 USD psp_ms=315 attempts=1
+2026-10-13 10:18:48,098 INFO  [http-nio-8443-exec-16] c.l.p.s.PaymentService - authorize ok txn=ord-7737992 amount=173.74 USD psp_ms=366 attempts=1
+2026-10-13 10:20:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 10:21:30,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 213 records reconciled, 0 pending
+2026-10-13 10:22:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 10:23:24,440 INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-13 10:23:26,340 INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Graceful shutdown complete
+2026-10-13 10:23:26,540 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-13 10:23:26,740 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-13 10:23:32,340 INFO  [main] c.l.p.PaymentsGatewayApplication - Starting PaymentsGatewayApplication v3.8.0 using Java 17.0.12 with PID 5481 (/opt/payments-gateway/payments-gateway-3.8.0.jar started by payments in /opt/payments-gateway)
+2026-10-13 10:23:32,440 INFO  [main] c.l.p.PaymentsGatewayApplication - The following 1 profile is active: "prod"
+2026-10-13 10:23:45,040 INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port 8443 (https)
+2026-10-13 10:23:52,540 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Starting...
+2026-10-13 10:23:52,840 INFO  [main] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@a30ea717
+2026-10-13 10:23:52,940 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-13 10:24:00,446 INFO  [main] c.l.p.psp.PayCoreClient - PSP client configured: endpoint=https://api.paycore.example/v2/authorizations payments.psp.timeout-ms=8000 payments.psp.retries=3 payments.psp.backoff-ms=1000,2000,4000
+2026-10-13 10:24:13,240 INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat started on port 8443 (https) with context path ''
+2026-10-13 10:24:13,540 INFO  [main] c.l.p.PaymentsGatewayApplication - Started PaymentsGatewayApplication in 41.213 seconds (process running for 43.07)
+2026-10-13 10:24:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 10:24:47,000 INFO  [scheduling-1] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 10:26:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 10:26:30,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 254 records reconciled, 0 pending
+2026-10-13 10:28:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 10:29:39,679 INFO  [http-nio-8443-exec-89] c.l.p.s.PaymentService - authorize ok txn=ord-7747096 amount=170.39 EUR psp_ms=1691 attempts=1
+2026-10-13 13:45:03,766 INFO  [http-nio-8443-exec-23] c.l.p.s.PaymentService - authorize ok txn=ord-7747452 amount=166.54 USD psp_ms=326 attempts=1
+2026-10-13 13:46:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 13:47:56,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 223 records reconciled, 0 pending
+2026-10-13 13:48:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 13:50:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 13:52:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 13:52:56,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 87 records reconciled, 0 pending
+2026-10-13 13:53:12,000 INFO  [scheduling-2] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 13:54:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 13:56:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 13:57:56,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 62 records reconciled, 0 pending
+2026-10-13 13:58:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:00:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:02:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:02:56,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 59 records reconciled, 0 pending
+2026-10-13 14:04:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:06:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:07:56,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 90 records reconciled, 0 pending
+2026-10-13 14:08:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:10:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:12:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:12:56,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 93 records reconciled, 0 pending
+2026-10-13 14:14:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:16:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:16:42,463 INFO  [http-nio-8443-exec-6] c.l.p.s.PaymentService - authorize ok txn=ord-7774032 amount=245.64 USD psp_ms=506 attempts=1
+2026-10-13 14:17:29,837 INFO  [http-nio-8443-exec-161] c.l.p.s.PaymentService - authorize ok txn=ord-7774698 amount=114.34 USD psp_ms=285 attempts=1
+2026-10-13 14:17:56,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 127 records reconciled, 0 pending
+2026-10-13 14:18:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:19:00,136 INFO  [http-nio-8443-exec-102] c.l.p.s.PaymentService - authorize ok txn=ord-7775930 amount=207.60 EUR psp_ms=2504 attempts=1
+2026-10-13 14:20:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:20:42,540 INFO  [http-nio-8443-exec-25] c.l.p.s.PaymentService - authorize ok txn=ord-7777360 amount=34.26 EUR psp_ms=2781 attempts=1
+2026-10-13 14:22:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:22:56,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 193 records reconciled, 0 pending
+2026-10-13 14:23:12,000 INFO  [scheduling-4] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 14:24:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:25:09,066 WARN  [http-nio-8443-exec-16] c.l.p.psp.PayCoreClient - slow PSP response: 5017ms for txn=ord-7781061 (warn threshold 5000ms)
+2026-10-13 14:25:29,679 WARN  [http-nio-8443-exec-112] c.l.p.psp.PayCoreClient - slow PSP response: 6081ms for txn=ord-7781335 (warn threshold 5000ms)
+2026-10-13 14:25:56,012 WARN  [http-nio-8443-exec-146] c.l.p.psp.PayCoreClient - slow PSP response: 5449ms for txn=ord-7781712 (warn threshold 5000ms)
+2026-10-13 14:26:03,768 WARN  [http-nio-8443-exec-46] c.l.p.psp.PayCoreClient - slow PSP response: 5542ms for txn=ord-7781820 (warn threshold 5000ms)
+2026-10-13 14:26:08,357 WARN  [http-nio-8443-exec-140] c.l.p.psp.PayCoreClient - slow PSP response: 7277ms for txn=ord-7781859 (warn threshold 5000ms)
+2026-10-13 14:26:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 14:26:22,137 WARN  [http-nio-8443-exec-47] c.l.p.psp.PayCoreClient - slow PSP response: 5762ms for txn=ord-7782074 (warn threshold 5000ms)
+2026-10-13 14:26:39,234 WARN  [http-nio-8443-exec-185] c.l.p.psp.PayCoreClient - slow PSP response: 5345ms for txn=ord-7782319 (warn threshold 5000ms)
+2026-10-13 14:26:51,520 WARN  [http-nio-8443-exec-72] c.l.p.psp.PayCoreClient - slow PSP response: 6946ms for txn=ord-7782468 (warn threshold 5000ms)
+2026-10-13 14:26:58,934 WARN  [http-nio-8443-exec-13] c.l.p.psp.PayCoreClient - slow PSP response: 7459ms for txn=ord-7782565 (warn threshold 5000ms)
+2026-10-13 14:27:19,057 WARN  [http-nio-8443-exec-106] c.l.p.psp.PayCoreClient - slow PSP response: 7528ms for txn=ord-7782846 (warn threshold 5000ms)
+2026-10-13 14:27:37,033 WARN  [http-nio-8443-exec-143] c.l.p.psp.PayCoreClient - slow PSP response: 5732ms for txn=ord-7783123 (warn threshold 5000ms)
+2026-10-13 14:27:52,358 WARN  [http-nio-8443-exec-39] c.l.p.psp.PayCoreClient - slow PSP response: 5020ms for txn=ord-7783347 (warn threshold 5000ms)
+2026-10-13 14:27:54,112 WARN  [http-nio-8443-exec-105] c.l.p.psp.PayCoreClient - slow PSP response: 5956ms for txn=ord-7783359 (warn threshold 5000ms)
+2026-10-13 14:27:56,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 64 records reconciled, 0 pending
+2026-10-13 14:28:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 14:28:30,649 WARN  [http-nio-8443-exec-69] c.l.p.psp.PayCoreClient - slow PSP response: 5222ms for txn=ord-7783880 (warn threshold 5000ms)
+2026-10-13 14:29:12,536 WARN  [http-nio-8443-exec-38] c.l.p.psp.PayCoreClient - slow PSP response: 7773ms for txn=ord-7784431 (warn threshold 5000ms)
+2026-10-13 14:29:21,426 WARN  [http-nio-8443-exec-162] c.l.p.psp.PayCoreClient - slow PSP response: 6379ms for txn=ord-7784575 (warn threshold 5000ms)
+2026-10-13 14:29:29,485 WARN  [http-nio-8443-exec-158] c.l.p.psp.PayCoreClient - slow PSP response: 7604ms for txn=ord-7784671 (warn threshold 5000ms)
+2026-10-13 14:29:48,363 WARN  [http-nio-8443-exec-52] c.l.p.psp.PayCoreClient - slow PSP response: 6571ms for txn=ord-7784949 (warn threshold 5000ms)
+2026-10-13 14:29:55,724 WARN  [http-nio-8443-exec-3] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7785032) retrying in 1000ms
+2026-10-13 14:30:03,535 WARN  [http-nio-8443-exec-99] c.l.p.psp.PayCoreClient - slow PSP response: 6289ms for txn=ord-7785166 (warn threshold 5000ms)
+2026-10-13 14:30:03,750 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@e543fd28
+2026-10-13 14:30:04,728 WARN  [http-nio-8443-exec-3] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7785032) retrying in 2000ms
+2026-10-13 14:30:05,705 WARN  [http-nio-8443-exec-58] c.l.p.psp.PayCoreClient - slow PSP response: 7435ms for txn=ord-7785180 (warn threshold 5000ms)
+2026-10-13 14:30:13,621 WARN  [http-nio-8443-exec-193] c.l.p.psp.PayCoreClient - slow PSP response: 7582ms for txn=ord-7785289 (warn threshold 5000ms)
+2026-10-13 14:30:14,732 WARN  [http-nio-8443-exec-3] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7785032) retrying in 4000ms
+2026-10-13 14:30:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=14, active=12, idle=2, waiting=0)
+2026-10-13 14:30:17,711 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@1eb4845d on thread http-nio-8443-exec-3, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 14:30:22,770 WARN  [http-nio-8443-exec-147] c.l.p.psp.PayCoreClient - slow PSP response: 5794ms for txn=ord-7785442 (warn threshold 5000ms)
+2026-10-13 14:30:26,729 INFO  [http-nio-8443-exec-3] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@1eb4845d on thread http-nio-8443-exec-3 was returned to the pool (unleaked)
+2026-10-13 14:30:26,736 ERROR [http-nio-8443-exec-3] c.l.p.s.PaymentService - authorize failed txn=ord-7785032 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:30:41,976 WARN  [http-nio-8443-exec-81] c.l.p.psp.PayCoreClient - slow PSP response: 7249ms for txn=ord-7785691 (warn threshold 5000ms)
+2026-10-13 14:30:48,750 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@319ff5de
+2026-10-13 14:31:54,000 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@b4e1ca91
+2026-10-13 14:32:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=27, active=22, idle=5, waiting=0)
+2026-10-13 14:32:20,308 WARN  [http-nio-8443-exec-35] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7787057) retrying in 1000ms
+2026-10-13 14:32:29,312 WARN  [http-nio-8443-exec-35] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7787057) retrying in 2000ms
+2026-10-13 14:32:39,316 WARN  [http-nio-8443-exec-35] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7787057) retrying in 4000ms
+2026-10-13 14:32:41,250 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@9ba4710f
+2026-10-13 14:32:42,295 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-35, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 14:32:51,312 INFO  [http-nio-8443-exec-35] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-35 was returned to the pool (unleaked)
+2026-10-13 14:32:51,320 ERROR [http-nio-8443-exec-35] c.l.p.s.PaymentService - authorize failed txn=ord-7787057 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:32:56,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 71 records reconciled, 0 pending
+2026-10-13 14:33:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:33:22,738 WARN  [http-nio-8443-exec-145] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7787931) retrying in 1000ms
+2026-10-13 14:33:31,742 WARN  [http-nio-8443-exec-145] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7787931) retrying in 2000ms
+2026-10-13 14:33:41,746 WARN  [http-nio-8443-exec-145] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7787931) retrying in 4000ms
+2026-10-13 14:33:52,500 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@9bbed1f5
+2026-10-13 14:33:53,750 ERROR [http-nio-8443-exec-145] c.l.p.s.PaymentService - authorize failed txn=ord-7787931 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:34:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=17)
+2026-10-13 14:35:43,933 WARN  [http-nio-8443-exec-172] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7789917) retrying in 1000ms
+2026-10-13 14:35:52,937 WARN  [http-nio-8443-exec-172] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7789917) retrying in 2000ms
+2026-10-13 14:36:02,941 WARN  [http-nio-8443-exec-172] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7789917) retrying in 4000ms
+2026-10-13 14:36:05,920 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-172, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 14:36:14,941 INFO  [http-nio-8443-exec-172] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-172 was returned to the pool (unleaked)
+2026-10-13 14:36:14,945 ERROR [http-nio-8443-exec-172] c.l.p.s.PaymentService - authorize failed txn=ord-7789917 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:36:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=18)
+2026-10-13 14:37:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:37:05,523 WARN  [http-nio-8443-exec-20] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:37:56,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 239 records reconciled, 0 pending
+2026-10-13 14:38:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:38:35,503 WARN  [http-nio-8443-exec-195] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:38:35,503 ERROR [http-nio-8443-exec-195] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=22)
+2026-10-13 14:38:35,505 ERROR [http-nio-8443-exec-195] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7792718: Could not open JPA EntityManager for transaction
+org.springframework.transaction.CannotCreateTransactionException: Could not open JPA EntityManager for transaction
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:466)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+	at com.larkspur.payments.web.AuthorizeController.authorize(AuthorizeController.java:58)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:926)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:831)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
+Caused by: org.hibernate.exception.JDBCConnectionException: Unable to acquire JDBC Connection [HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=22)] [n/a]
+	at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:100)
+	at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:58)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:108)
+	at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:94)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:116)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	... 55 common frames omitted
+Caused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=22)
+	at com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:686)
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:179)
+	at com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:144)
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:99)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	... 63 common frames omitted
+2026-10-13 14:38:47,252 WARN  [http-nio-8443-exec-84] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7792872) retrying in 1000ms
+2026-10-13 14:38:47,606 WARN  [http-nio-8443-exec-135] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:38:47,606 ERROR [http-nio-8443-exec-135] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:38:47,608 ERROR [http-nio-8443-exec-135] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7792931: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:38:56,256 WARN  [http-nio-8443-exec-84] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7792872) retrying in 2000ms
+2026-10-13 14:39:06,260 WARN  [http-nio-8443-exec-84] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7792872) retrying in 4000ms
+2026-10-13 14:39:18,264 ERROR [http-nio-8443-exec-84] c.l.p.s.PaymentService - authorize failed txn=ord-7792872 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:39:37,398 WARN  [http-nio-8443-exec-6] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:39:37,398 ERROR [http-nio-8443-exec-6] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=21)
+2026-10-13 14:39:37,400 ERROR [http-nio-8443-exec-6] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7793834: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:39:56,589 WARN  [http-nio-8443-exec-146] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7794135) retrying in 1000ms
+2026-10-13 14:40:05,593 WARN  [http-nio-8443-exec-146] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7794135) retrying in 2000ms
+2026-10-13 14:40:10,523 WARN  [http-nio-8443-exec-117] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:40:12,864 INFO  [http-nio-8443-exec-105] c.l.p.s.PaymentService - authorize ok txn=ord-7794589 amount=8.62 USD psp_ms=394 attempts=1
+2026-10-13 14:40:15,597 WARN  [http-nio-8443-exec-146] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7794135) retrying in 4000ms
+2026-10-13 14:40:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:40:27,601 ERROR [http-nio-8443-exec-146] c.l.p.s.PaymentService - authorize failed txn=ord-7794135 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:41:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:42:03,643 WARN  [http-nio-8443-exec-25] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:42:03,643 ERROR [http-nio-8443-exec-25] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=22)
+2026-10-13 14:42:03,645 ERROR [http-nio-8443-exec-25] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7796722: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:42:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=23)
+2026-10-13 14:42:20,523 WARN  [http-nio-8443-exec-43] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:42:37,072 WARN  [http-nio-8443-exec-41] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7797368) retrying in 1000ms
+2026-10-13 14:42:40,710 WARN  [http-nio-8443-exec-61] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:42:40,710 ERROR [http-nio-8443-exec-61] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=23)
+2026-10-13 14:42:40,712 ERROR [http-nio-8443-exec-61] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7797510: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:42:46,076 WARN  [http-nio-8443-exec-41] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7797368) retrying in 2000ms
+2026-10-13 14:42:56,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 97 records reconciled, 0 pending
+2026-10-13 14:42:56,080 WARN  [http-nio-8443-exec-41] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7797368) retrying in 4000ms
+2026-10-13 14:43:02,502 WARN  [http-nio-8443-exec-89] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7797919) retrying in 1000ms
+2026-10-13 14:43:08,084 ERROR [http-nio-8443-exec-41] c.l.p.s.PaymentService - authorize failed txn=ord-7797368 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:43:11,506 WARN  [http-nio-8443-exec-89] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7797919) retrying in 2000ms
+2026-10-13 14:43:21,510 WARN  [http-nio-8443-exec-89] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7797919) retrying in 4000ms
+2026-10-13 14:43:33,514 ERROR [http-nio-8443-exec-89] c.l.p.s.PaymentService - authorize failed txn=ord-7797919 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:43:49,232 WARN  [http-nio-8443-exec-198] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7798960) retrying in 1000ms
+2026-10-13 14:43:58,236 WARN  [http-nio-8443-exec-198] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7798960) retrying in 2000ms
+2026-10-13 14:44:08,240 WARN  [http-nio-8443-exec-198] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7798960) retrying in 4000ms
+2026-10-13 14:44:10,523 WARN  [http-nio-8443-exec-88] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:44:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=26)
+2026-10-13 14:44:20,244 ERROR [http-nio-8443-exec-198] c.l.p.s.PaymentService - authorize failed txn=ord-7798960 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:44:44,797 WARN  [http-nio-8443-exec-133] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7800246) retrying in 1000ms
+2026-10-13 14:44:53,801 WARN  [http-nio-8443-exec-133] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7800246) retrying in 2000ms
+2026-10-13 14:45:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:45:03,805 WARN  [http-nio-8443-exec-133] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7800246) retrying in 4000ms
+2026-10-13 14:45:11,013 WARN  [http-nio-8443-exec-8] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7800870) retrying in 1000ms
+2026-10-13 14:45:14,177 WARN  [http-nio-8443-exec-110] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:45:14,177 ERROR [http-nio-8443-exec-110] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:45:14,179 ERROR [http-nio-8443-exec-110] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7801019: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:45:15,809 ERROR [http-nio-8443-exec-133] c.l.p.s.PaymentService - authorize failed txn=ord-7800246 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:45:20,017 WARN  [http-nio-8443-exec-8] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7800870) retrying in 2000ms
+2026-10-13 14:45:30,021 WARN  [http-nio-8443-exec-8] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7800870) retrying in 4000ms
+2026-10-13 14:45:33,000 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-8, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 14:45:34,995 WARN  [http-nio-8443-exec-67] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:45:34,995 ERROR [http-nio-8443-exec-67] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:45:34,997 ERROR [http-nio-8443-exec-67] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7801518: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:45:42,025 ERROR [http-nio-8443-exec-8] c.l.p.s.PaymentService - authorize failed txn=ord-7800870 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:45:42,032 INFO  [http-nio-8443-exec-8] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-8 was returned to the pool (unleaked)
+2026-10-13 14:46:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=28)
+2026-10-13 14:46:20,523 WARN  [http-nio-8443-exec-147] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:46:53,677 WARN  [http-nio-8443-exec-174] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:46:53,677 ERROR [http-nio-8443-exec-174] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=26)
+2026-10-13 14:46:53,679 ERROR [http-nio-8443-exec-174] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7803406: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:47:04,883 WARN  [http-nio-8443-exec-173] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7803603) retrying in 1000ms
+2026-10-13 14:47:13,887 WARN  [http-nio-8443-exec-173] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7803603) retrying in 2000ms
+2026-10-13 14:47:23,891 WARN  [http-nio-8443-exec-173] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7803603) retrying in 4000ms
+2026-10-13 14:47:26,870 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-173, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 14:47:33,980 WARN  [http-nio-8443-exec-26] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:47:33,980 ERROR [http-nio-8443-exec-26] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=26)
+2026-10-13 14:47:33,982 ERROR [http-nio-8443-exec-26] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7804374: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:47:35,895 ERROR [http-nio-8443-exec-173] c.l.p.s.PaymentService - authorize failed txn=ord-7803603 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:47:35,905 INFO  [http-nio-8443-exec-173] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-173 was returned to the pool (unleaked)
+2026-10-13 14:47:53,925 WARN  [http-nio-8443-exec-181] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7804780) retrying in 1000ms
+2026-10-13 14:47:56,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 45 records reconciled, 0 pending
+2026-10-13 14:48:02,929 WARN  [http-nio-8443-exec-181] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7804780) retrying in 2000ms
+2026-10-13 14:48:12,933 WARN  [http-nio-8443-exec-181] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7804780) retrying in 4000ms
+2026-10-13 14:48:15,523 WARN  [http-nio-8443-exec-3] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:48:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=28)
+2026-10-13 14:48:22,170 WARN  [http-nio-8443-exec-175] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:48:22,170 ERROR [http-nio-8443-exec-175] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:48:22,172 ERROR [http-nio-8443-exec-175] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7805530: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:48:24,937 ERROR [http-nio-8443-exec-181] c.l.p.s.PaymentService - authorize failed txn=ord-7804780 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:48:47,110 WARN  [http-nio-8443-exec-18] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:48:47,110 ERROR [http-nio-8443-exec-18] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:48:47,112 ERROR [http-nio-8443-exec-18] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7806129: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:49:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:49:10,022 WARN  [http-nio-8443-exec-168] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7806607) retrying in 1000ms
+2026-10-13 14:49:19,026 WARN  [http-nio-8443-exec-168] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7806607) retrying in 2000ms
+2026-10-13 14:49:29,030 WARN  [http-nio-8443-exec-168] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7806607) retrying in 4000ms
+2026-10-13 14:49:32,009 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-168, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 14:49:41,034 ERROR [http-nio-8443-exec-168] c.l.p.s.PaymentService - authorize failed txn=ord-7806607 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:49:41,047 INFO  [http-nio-8443-exec-168] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-168 was returned to the pool (unleaked)
+2026-10-13 14:49:49,741 WARN  [http-nio-8443-exec-48] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:49:49,741 ERROR [http-nio-8443-exec-48] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:49:49,743 ERROR [http-nio-8443-exec-48] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7807632: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:50:02,333 WARN  [http-nio-8443-exec-48] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:50:02,333 ERROR [http-nio-8443-exec-48] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:50:02,335 ERROR [http-nio-8443-exec-48] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7807934: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:50:14,702 WARN  [http-nio-8443-exec-139] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7808159) retrying in 1000ms
+2026-10-13 14:50:15,523 WARN  [http-nio-8443-exec-85] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:50:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:50:23,706 WARN  [http-nio-8443-exec-139] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7808159) retrying in 2000ms
+2026-10-13 14:50:30,424 WARN  [http-nio-8443-exec-7] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:50:30,424 ERROR [http-nio-8443-exec-7] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:50:30,426 ERROR [http-nio-8443-exec-7] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7808608: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:50:33,710 WARN  [http-nio-8443-exec-139] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7808159) retrying in 4000ms
+2026-10-13 14:50:45,714 ERROR [http-nio-8443-exec-139] c.l.p.s.PaymentService - authorize failed txn=ord-7808159 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:51:37,638 WARN  [http-nio-8443-exec-56] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:51:37,638 ERROR [http-nio-8443-exec-56] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:51:37,640 ERROR [http-nio-8443-exec-56] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7810221: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:52:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:52:47,646 WARN  [http-nio-8443-exec-37] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7811830) retrying in 1000ms
+2026-10-13 14:52:50,523 WARN  [http-nio-8443-exec-103] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:52:56,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 211 records reconciled, 0 pending
+2026-10-13 14:52:56,650 WARN  [http-nio-8443-exec-37] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7811830) retrying in 2000ms
+2026-10-13 14:52:59,369 WARN  [http-nio-8443-exec-9] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:52:59,369 ERROR [http-nio-8443-exec-9] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:52:59,371 ERROR [http-nio-8443-exec-9] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7812183: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:53:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:53:06,654 WARN  [http-nio-8443-exec-37] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7811830) retrying in 4000ms
+2026-10-13 14:53:12,000 INFO  [scheduling-4] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 14:53:18,658 ERROR [http-nio-8443-exec-37] c.l.p.s.PaymentService - authorize failed txn=ord-7811830 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:53:31,442 WARN  [http-nio-8443-exec-150] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:53:31,442 ERROR [http-nio-8443-exec-150] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=26)
+2026-10-13 14:53:31,444 ERROR [http-nio-8443-exec-150] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7812953: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:54:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:54:26,007 WARN  [http-nio-8443-exec-169] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:54:26,007 ERROR [http-nio-8443-exec-169] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:54:26,009 ERROR [http-nio-8443-exec-169] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7814263: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:54:35,523 WARN  [http-nio-8443-exec-151] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:54:37,669 WARN  [http-nio-8443-exec-137] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:54:37,669 ERROR [http-nio-8443-exec-137] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=26)
+2026-10-13 14:54:37,671 ERROR [http-nio-8443-exec-137] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7814542: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:54:39,404 WARN  [http-nio-8443-exec-128] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7814512) retrying in 1000ms
+2026-10-13 14:54:45,938 WARN  [http-nio-8443-exec-170] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:54:45,938 ERROR [http-nio-8443-exec-170] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:54:45,940 ERROR [http-nio-8443-exec-170] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7814741: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:54:48,408 WARN  [http-nio-8443-exec-128] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7814512) retrying in 2000ms
+2026-10-13 14:54:53,443 WARN  [http-nio-8443-exec-194] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:54:53,443 ERROR [http-nio-8443-exec-194] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=25)
+2026-10-13 14:54:53,445 ERROR [http-nio-8443-exec-194] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7814921: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:54:58,412 WARN  [http-nio-8443-exec-128] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7814512) retrying in 4000ms
+2026-10-13 14:55:08,394 WARN  [http-nio-8443-exec-182] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:55:08,394 ERROR [http-nio-8443-exec-182] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:55:08,396 ERROR [http-nio-8443-exec-182] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7815280: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:55:10,416 ERROR [http-nio-8443-exec-128] c.l.p.s.PaymentService - authorize failed txn=ord-7814512 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:55:28,598 WARN  [http-nio-8443-exec-43] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:55:28,598 ERROR [http-nio-8443-exec-43] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=28)
+2026-10-13 14:55:28,600 ERROR [http-nio-8443-exec-43] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7815765: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:55:34,525 WARN  [http-nio-8443-exec-74] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:55:34,525 ERROR [http-nio-8443-exec-74] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=28)
+2026-10-13 14:55:34,527 ERROR [http-nio-8443-exec-74] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7815906: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:56:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=24)
+2026-10-13 14:57:00,523 WARN  [http-nio-8443-exec-146] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 14:57:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 14:57:52,097 WARN  [http-nio-8443-exec-94] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7819136) retrying in 1000ms
+2026-10-13 14:57:56,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 152 records reconciled, 0 pending
+2026-10-13 14:57:59,652 WARN  [http-nio-8443-exec-36] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 14:57:59,652 ERROR [http-nio-8443-exec-36] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:57:59,654 ERROR [http-nio-8443-exec-36] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7819390: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 14:58:01,101 WARN  [http-nio-8443-exec-94] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7819136) retrying in 2000ms
+2026-10-13 14:58:11,105 WARN  [http-nio-8443-exec-94] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7819136) retrying in 4000ms
+2026-10-13 14:58:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=27)
+2026-10-13 14:58:23,109 ERROR [http-nio-8443-exec-94] c.l.p.s.PaymentService - authorize failed txn=ord-7819136 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 14:58:25,523 WARN  [http-nio-8443-exec-143] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 15:00:11,598 WARN  [http-nio-8443-exec-154] o.h.e.j.s.SqlExceptionHelper - SQL Error: 0, SQLState: null
+2026-10-13 15:00:11,598 ERROR [http-nio-8443-exec-154] o.h.e.j.s.SqlExceptionHelper - HikariPool-1 - Connection is not available, request timed out after 5000ms (total=32, active=32, idle=0, waiting=26)
+2026-10-13 15:00:11,600 ERROR [http-nio-8443-exec-154] c.l.p.w.ApiExceptionHandler - authorize failed txn=ord-7822557: Could not open JPA EntityManager for transaction (HikariPool-1 - Connection is not available, request timed out after 5000ms)
+2026-10-13 15:00:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=32, idle=0, waiting=25)
+2026-10-13 15:00:35,523 WARN  [http-nio-8443-exec-81] c.l.p.w.DbHealthIndicator - DB health check failed: HikariPool-1 - Connection is not available, request timed out after 2000ms
+2026-10-13 15:01:02,118 DEBUG [HikariPool-1 connection adder] c.z.h.pool.HikariPool - HikariPool-1 - Cannot acquire connection from data source
+org.postgresql.util.PSQLException: FATAL: remaining connection slots are reserved for non-replication superuser connections
+	at org.postgresql.core.v3.ConnectionFactoryImpl.doAuthentication(ConnectionFactoryImpl.java:698)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:207)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:262)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at com.zaxxer.hikari.util.DriverDataSource.getConnection(DriverDataSource.java:137)
+	at com.zaxxer.hikari.pool.PoolBase.newConnection(PoolBase.java:360)
+	at com.zaxxer.hikari.pool.PoolBase.newPoolEntry(PoolBase.java:202)
+	at com.zaxxer.hikari.pool.HikariPool.createPoolEntry(HikariPool.java:461)
+	at com.zaxxer.hikari.pool.HikariPool$PoolEntryCreator.call(HikariPool.java:724)
+2026-10-13 15:02:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=27, idle=5, waiting=0)
+2026-10-13 15:02:56,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 103 records reconciled, 0 pending
+2026-10-13 15:04:10,211 WARN  [http-nio-8443-exec-188] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7828211) retrying in 1000ms
+2026-10-13 15:04:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=32, active=25, idle=7, waiting=0)
+2026-10-13 15:04:19,215 WARN  [http-nio-8443-exec-188] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7828211) retrying in 2000ms
+2026-10-13 15:04:29,219 WARN  [http-nio-8443-exec-188] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7828211) retrying in 4000ms
+2026-10-13 15:04:32,198 WARN  [HikariPool-1 housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-188, stack trace follows
+java.lang.Exception: Apparent connection leak detected
+	at com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:128)
+	at org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl.getConnection(DatasourceConnectionProviderImpl.java:122)
+	at org.hibernate.internal.NonContextualJdbcConnectionAccess.obtainConnection(NonContextualJdbcConnectionAccess.java:46)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:113)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getPhysicalConnection(LogicalConnectionManagedImpl.java:143)
+	at org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.getConnectionForTransactionManagement(LogicalConnectionManagedImpl.java:273)
+	at org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor.begin(AbstractLogicalConnectionImplementor.java:71)
+	at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.begin(JdbcResourceLocalTransactionCoordinatorImpl.java:232)
+	at org.hibernate.engine.transaction.internal.TransactionImpl.begin(TransactionImpl.java:83)
+	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.beginTransaction(HibernateJpaDialect.java:164)
+	at org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:420)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)
+	at org.springframework.transaction.support.AbstractPlatformTransactionManager.getTransaction(AbstractPlatformTransactionManager.java:405)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.createTransactionIfNecessary(TransactionAspectSupport.java:617)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.larkspur.payments.service.PaymentService$$SpringCGLIB$$0.authorize(<generated>)
+2026-10-13 15:04:41,223 ERROR [http-nio-8443-exec-188] c.l.p.s.PaymentService - authorize failed txn=ord-7828211 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 15:04:41,225 INFO  [http-nio-8443-exec-188] c.z.h.pool.ProxyLeakTask - Previously reported leaked connection org.postgresql.jdbc.PgConnection@a30ea717 on thread http-nio-8443-exec-188 was returned to the pool (unleaked)
+2026-10-13 15:04:52,381 INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-13 15:04:54,281 INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Graceful shutdown complete
+2026-10-13 15:04:54,481 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-13 15:04:54,681 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-13 15:05:00,281 INFO  [main] c.l.p.PaymentsGatewayApplication - Starting PaymentsGatewayApplication v3.7.9 using Java 17.0.12 with PID 26709 (/opt/payments-gateway/payments-gateway-3.7.9.jar started by payments in /opt/payments-gateway)
+2026-10-13 15:05:00,381 INFO  [main] c.l.p.PaymentsGatewayApplication - The following 1 profile is active: "prod"
+2026-10-13 15:05:01,194 WARN  [http-nio-8443-exec-178] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7829435) retrying in 1000ms
+2026-10-13 15:05:01,334 WARN  [http-nio-8443-exec-25] c.l.p.psp.RetryPolicy - authorize attempt 1/4 timed out after 8000ms (txn=ord-7829438) retrying in 1000ms
+2026-10-13 15:05:10,198 WARN  [http-nio-8443-exec-178] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7829435) retrying in 2000ms
+2026-10-13 15:05:10,338 WARN  [http-nio-8443-exec-25] c.l.p.psp.RetryPolicy - authorize attempt 2/4 timed out after 8000ms (txn=ord-7829438) retrying in 2000ms
+2026-10-13 15:05:12,981 INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port 8443 (https)
+2026-10-13 15:05:20,202 WARN  [http-nio-8443-exec-178] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7829435) retrying in 4000ms
+2026-10-13 15:05:20,342 WARN  [http-nio-8443-exec-25] c.l.p.psp.RetryPolicy - authorize attempt 3/4 timed out after 8000ms (txn=ord-7829438) retrying in 4000ms
+2026-10-13 15:05:20,481 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Starting...
+2026-10-13 15:05:20,781 INFO  [main] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6c7cae67
+2026-10-13 15:05:20,881 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-13 15:05:28,387 INFO  [main] c.l.p.psp.PayCoreClient - PSP client configured: endpoint=https://api.paycore.example/v2/authorizations payments.psp.timeout-ms=3000 payments.psp.retries=0 payments.psp.backoff-ms=none
+2026-10-13 15:05:32,206 ERROR [http-nio-8443-exec-178] c.l.p.s.PaymentService - authorize failed txn=ord-7829435 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 15:05:32,346 ERROR [http-nio-8443-exec-25] c.l.p.s.PaymentService - authorize failed txn=ord-7829438 after 4 attempts in 39025ms: PSP timeout
+2026-10-13 15:05:41,181 INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat started on port 8443 (https) with context path ''
+2026-10-13 15:05:41,481 INFO  [main] c.l.p.PaymentsGatewayApplication - Started PaymentsGatewayApplication in 41.213 seconds (process running for 43.07)
+2026-10-13 15:05:48,368 ERROR [http-nio-8443-exec-88] c.l.p.s.PaymentService - authorize failed txn=ord-7830687 after 1 attempt in 3020ms: PSP timeout 3000ms
+2026-10-13 15:05:58,472 ERROR [http-nio-8443-exec-85] c.l.p.s.PaymentService - authorize failed txn=ord-7830929 after 1 attempt in 3028ms: PSP timeout 3000ms
+2026-10-13 15:06:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=5, active=4, idle=1, waiting=0)
+2026-10-13 15:06:18,102 ERROR [http-nio-8443-exec-40] c.l.p.s.PaymentService - authorize failed txn=ord-7831398 after 1 attempt in 3025ms: PSP timeout 3000ms
+2026-10-13 15:06:37,017 ERROR [http-nio-8443-exec-65] c.l.p.s.PaymentService - authorize failed txn=ord-7831842 after 1 attempt in 3034ms: PSP timeout 3000ms
+2026-10-13 15:06:49,596 ERROR [http-nio-8443-exec-21] c.l.p.s.PaymentService - authorize failed txn=ord-7832132 after 1 attempt in 3023ms: PSP timeout 3000ms
+2026-10-13 15:07:56,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 251 records reconciled, 0 pending
+2026-10-13 15:08:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 15:08:41,825 ERROR [http-nio-8443-exec-102] c.l.p.s.PaymentService - authorize failed txn=ord-7834571 after 1 attempt in 3027ms: PSP timeout 3000ms
+2026-10-13 15:08:43,415 ERROR [http-nio-8443-exec-56] c.l.p.s.PaymentService - authorize failed txn=ord-7834604 after 1 attempt in 3027ms: PSP timeout 3000ms
+2026-10-13 15:08:48,029 ERROR [http-nio-8443-exec-188] c.l.p.s.PaymentService - authorize failed txn=ord-7834698 after 1 attempt in 3018ms: PSP timeout 3000ms
+2026-10-13 15:10:02,510 ERROR [http-nio-8443-exec-101] c.l.p.s.PaymentService - authorize failed txn=ord-7836151 after 1 attempt in 3034ms: PSP timeout 3000ms
+2026-10-13 15:10:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 15:12:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 15:12:56,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 174 records reconciled, 0 pending
+2026-10-13 15:13:25,660 ERROR [http-nio-8443-exec-118] c.l.p.s.PaymentService - authorize failed txn=ord-7839560 after 1 attempt in 3036ms: PSP timeout 3000ms
+2026-10-13 15:13:28,667 INFO  [http-nio-8443-exec-100] c.l.p.s.PaymentService - authorize ok txn=ord-7839648 amount=162.02 USD psp_ms=474 attempts=1
+2026-10-13 15:14:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 15:15:11,925 ERROR [http-nio-8443-exec-174] c.l.p.s.PaymentService - authorize failed txn=ord-7841241 after 1 attempt in 3035ms: PSP timeout 3000ms
+2026-10-13 15:16:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 15:16:53,994 ERROR [http-nio-8443-exec-200] c.l.p.s.PaymentService - authorize failed txn=ord-7842840 after 1 attempt in 3037ms: PSP timeout 3000ms
+2026-10-13 15:17:56,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 200 records reconciled, 0 pending
+2026-10-13 15:18:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=4, idle=2, waiting=0)
+2026-10-13 15:20:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=5, idle=1, waiting=0)
+2026-10-13 15:21:59,271 ERROR [http-nio-8443-exec-199] c.l.p.s.PaymentService - authorize failed txn=ord-7847536 after 1 attempt in 3014ms: PSP timeout 3000ms
+2026-10-13 15:22:01,524 ERROR [http-nio-8443-exec-27] c.l.p.s.PaymentService - authorize failed txn=ord-7847570 after 1 attempt in 3042ms: PSP timeout 3000ms
+2026-10-13 15:22:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=4, idle=2, waiting=0)
+2026-10-13 15:22:50,479 ERROR [http-nio-8443-exec-27] c.l.p.s.PaymentService - authorize failed txn=ord-7848311 after 1 attempt in 3047ms: PSP timeout 3000ms
+2026-10-13 15:22:56,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 66 records reconciled, 0 pending
+2026-10-13 15:23:12,000 INFO  [scheduling-2] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 15:23:41,578 ERROR [http-nio-8443-exec-120] c.l.p.s.PaymentService - authorize failed txn=ord-7849082 after 1 attempt in 3019ms: PSP timeout 3000ms
+2026-10-13 15:23:55,650 ERROR [http-nio-8443-exec-16] c.l.p.s.PaymentService - authorize failed txn=ord-7849292 after 1 attempt in 3034ms: PSP timeout 3000ms
+2026-10-13 15:23:56,141 ERROR [http-nio-8443-exec-113] c.l.p.s.PaymentService - authorize failed txn=ord-7849300 after 1 attempt in 3032ms: PSP timeout 3000ms
+2026-10-13 15:24:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:24:17,916 INFO  [http-nio-8443-exec-76] c.l.p.s.PaymentService - authorize ok txn=ord-7849632 amount=162.11 EUR psp_ms=2607 attempts=1
+2026-10-13 15:25:38,656 INFO  [http-nio-8443-exec-129] c.l.p.s.PaymentService - authorize ok txn=ord-7850846 amount=15.87 EUR psp_ms=1568 attempts=1
+2026-10-13 15:25:56,703 INFO  [http-nio-8443-exec-81] c.l.p.s.PaymentService - authorize ok txn=ord-7851129 amount=166.54 USD psp_ms=359 attempts=1
+2026-10-13 15:26:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 15:27:14,922 INFO  [http-nio-8443-exec-104] c.l.p.s.PaymentService - authorize ok txn=ord-7852267 amount=145.50 USD psp_ms=534 attempts=1
+2026-10-13 15:27:56,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 185 records reconciled, 0 pending
+2026-10-13 15:28:15,745 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)

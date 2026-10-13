@@ -1,0 +1,17 @@
+{
+  "result": {
+    "_raw": "Oct 13 14:36:40 lb-int-01 notice mcpd[7114]: 01070638:5: Pool /Common/pool_pay_gw member /Common/10.20.4.33:8443 monitor status down. [ /Common/mon_pay_gw_health: down; last error: /Common/mon_pay_gw_health: Response Code: 503 (Service Unavailable) @2026/10/13 14:36:40. ]  [ was up for 4hr:13mins:36sec ]",
+    "_time": "1791902200.000",
+    "host": "lb-int-01.larkspur.internal",
+    "source": "udp:514",
+    "sourcetype": "f5:bigip:ltm",
+    "index": "network",
+    "linecount": "1",
+    "splunk_server": "idx-02.larkspur.internal"
+  },
+  "sid": "scheduler__sam_ortega__sre_alerts__RMD5c62d6189fef5e6a6_at_1791902220_668",
+  "results_link": "https://splunk.larkspur.internal:8000/app/sre_alerts/search?q=%7Cloadjob%20scheduler__sam_ortega__sre_alerts__RMD5c62d6189fef5e6a6_at_1791902220_668%20%7C%20head%201&earliest=0&latest=now",
+  "search_name": "F5 pool member down",
+  "owner": "sam.ortega",
+  "app": "sre_alerts"
+}

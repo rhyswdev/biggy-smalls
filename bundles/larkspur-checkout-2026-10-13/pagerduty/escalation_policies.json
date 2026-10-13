@@ -1,0 +1,161 @@
+{
+  "escalation_policies": [
+    {
+      "id": "PEP4K9R",
+      "type": "escalation_policy",
+      "summary": "Payments Engineering",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP4K9R",
+      "html_url": "https://larkspur.pagerduty.com/escalation_policies/PEP4K9R",
+      "name": "Payments Engineering",
+      "escalation_rules": [
+        {
+          "id": "JPJ5U41NRDMT9I",
+          "escalation_delay_in_minutes": 10,
+          "targets": [
+            {
+              "id": "PSC1PAY",
+              "type": "schedule_reference",
+              "summary": "Payments Engineering level 1",
+              "self": "https://api.pagerduty.com/schedules/PSC1PAY",
+              "html_url": "https://larkspur.pagerduty.com/schedules/PSC1PAY"
+            }
+          ]
+        },
+        {
+          "id": "ZAWLARKOGOUCVM",
+          "escalation_delay_in_minutes": 10,
+          "targets": [
+            {
+              "id": "PSC2PAY",
+              "type": "schedule_reference",
+              "summary": "Payments Engineering level 2",
+              "self": "https://api.pagerduty.com/schedules/PSC2PAY",
+              "html_url": "https://larkspur.pagerduty.com/schedules/PSC2PAY"
+            }
+          ]
+        }
+      ],
+      "services": [
+        {
+          "id": "PSV7Q2M",
+          "type": "service_reference",
+          "summary": "Payments - Prod",
+          "self": "https://api.pagerduty.com/services/PSV7Q2M",
+          "html_url": "https://larkspur.pagerduty.com/services/PSV7Q2M"
+        }
+      ],
+      "num_loops": 0,
+      "teams": [],
+      "on_call_handoff_notifications": "if_has_services"
+    },
+    {
+      "id": "PEP7W2T",
+      "type": "escalation_policy",
+      "summary": "Database Engineering",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP7W2T",
+      "html_url": "https://larkspur.pagerduty.com/escalation_policies/PEP7W2T",
+      "name": "Database Engineering",
+      "escalation_rules": [
+        {
+          "id": "TSPIDVJYDY6DBI",
+          "escalation_delay_in_minutes": 15,
+          "targets": [
+            {
+              "id": "PSC1DBA",
+              "type": "schedule_reference",
+              "summary": "Database Engineering level 1",
+              "self": "https://api.pagerduty.com/schedules/PSC1DBA",
+              "html_url": "https://larkspur.pagerduty.com/schedules/PSC1DBA"
+            }
+          ]
+        }
+      ],
+      "services": [
+        {
+          "id": "PSV3D8X",
+          "type": "service_reference",
+          "summary": "Database - Prod",
+          "self": "https://api.pagerduty.com/services/PSV3D8X",
+          "html_url": "https://larkspur.pagerduty.com/services/PSV3D8X"
+        }
+      ],
+      "num_loops": 0,
+      "teams": [],
+      "on_call_handoff_notifications": "if_has_services"
+    },
+    {
+      "id": "PEP2N6B",
+      "type": "escalation_policy",
+      "summary": "Commerce Platform",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP2N6B",
+      "html_url": "https://larkspur.pagerduty.com/escalation_policies/PEP2N6B",
+      "name": "Commerce Platform",
+      "escalation_rules": [
+        {
+          "id": "CNGRTUHMDPGEYN",
+          "escalation_delay_in_minutes": 15,
+          "targets": [
+            {
+              "id": "PSC1COM",
+              "type": "schedule_reference",
+              "summary": "Commerce Platform level 1",
+              "self": "https://api.pagerduty.com/schedules/PSC1COM",
+              "html_url": "https://larkspur.pagerduty.com/schedules/PSC1COM"
+            }
+          ]
+        }
+      ],
+      "services": [
+        {
+          "id": "PSV9C1L",
+          "type": "service_reference",
+          "summary": "Checkout - Prod",
+          "self": "https://api.pagerduty.com/services/PSV9C1L",
+          "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+        }
+      ],
+      "num_loops": 0,
+      "teams": [],
+      "on_call_handoff_notifications": "if_has_services"
+    },
+    {
+      "id": "PEP8H3J",
+      "type": "escalation_policy",
+      "summary": "Platform Reliability",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP8H3J",
+      "html_url": "https://larkspur.pagerduty.com/escalation_policies/PEP8H3J",
+      "name": "Platform Reliability",
+      "escalation_rules": [
+        {
+          "id": "9TVS0WWE01AABZ",
+          "escalation_delay_in_minutes": 30,
+          "targets": [
+            {
+              "id": "PSC1PLT",
+              "type": "schedule_reference",
+              "summary": "Platform Reliability level 1",
+              "self": "https://api.pagerduty.com/schedules/PSC1PLT",
+              "html_url": "https://larkspur.pagerduty.com/schedules/PSC1PLT"
+            }
+          ]
+        }
+      ],
+      "services": [
+        {
+          "id": "PSV5P4F",
+          "type": "service_reference",
+          "summary": "Platform",
+          "self": "https://api.pagerduty.com/services/PSV5P4F",
+          "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+        }
+      ],
+      "num_loops": 0,
+      "teams": [],
+      "on_call_handoff_notifications": "if_has_services"
+    }
+  ],
+  "limit": 25,
+  "offset": 0,
+  "more": false,
+  "total": null
+}

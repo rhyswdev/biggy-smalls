@@ -1,0 +1,722 @@
+# Scenario: Larkspur Retail, checkout payments failing, 2026-10-13.
+# The single source of every timestamp, count and number in bundles/larkspur-checkout-2026-10-13/.
+# Never served. Times are UTC clock times on 2026-10-13 ("14:31:07.221") unless written as a full
+# ISO date. `kind` is signal | trap | noise; every noise item has a `tag`: background, defect, or the
+# trap it serves. `sig_id` names hand-written items; `class` names generated line classes.
+# Bodies of hand-written content (messages, notes, runbooks) live in scenario/content/ and are keyed
+# by the ids used here.
+
+meta:
+  bundle: larkspur-checkout-2026-10-13
+  date: "2026-10-13"
+  seed: 20261013
+  t0: "14:00:00"            # epoch 1791900000
+
+# When an observer could first see a record (manifest `t_known`; visibility is decided on it, PLAN 3.4).
+# Documentation only: no code reads this. The rule per source is in smalls_data/parity.py (lint invariant
+# 14), which re-derives every t_known from the served bytes. In short: a record's own time, except
+#   metric points       known when the bucket closes (point time + interval)
+#   change requests     sys_created_on (changes are raised before their work starts)
+#   status snapshots    page.updated_at
+#   Jenkins builds      building version at the start, finished version at start + duration
+#   Dynatrace problems  open version at startTime, closed version at endTime
+#   k8s events          lastTimestamp (the event object as served, count included)
+#   webhook deliveries  the receipt time in the file name
+
+checkpoints:
+  - {id: "1440", at: "14:40:00", core: true}
+  - {id: "1452", at: "14:52:00", core: true}
+  - {id: "1515", at: "15:15:00", core: false, stretch: true}
+
+# Tokens that must not be visible before a checkpoint (PLAN 3.4). Lint invariant 7.
+future_tokens:
+  "1452": ["CHG0031910", "#413", "parked in", "leak detector", "Degraded performance", "charged twice", "card declined"]
+  "1440": ["CHG0031910", "#413", "parked in", "leak detector", "Degraded performance", "charged twice", "card declined",
+           "idle in transaction", "pg_stat_activity", "rollback done", "#898"]
+
+# ---------------------------------------------------------------------------------------------
+# Size budget (PLAN section 2). Targets sit ~15% under the ceilings; the lint fails above a ceiling
+# and reports any count outside +-20% of its target.
+budget:
+  ceilings: {log_lines: 5000, structured_records: 250, vendor_sources: 11}
+  # Re-based after data fix 1 (constant rates, every Postgres connection pair): targets sum to 4,550,
+  # about 9% under the ceiling; nginx (step 9) is sized to fit (docs/DATA.md).
+  log_line_targets:
+    splunk/raw/payments_app: 1950
+    splunk/raw/checkout_api: 1300
+    splunk/raw/postgres: 650
+    splunk/raw/nginx: 570
+    splunk/raw/f5: 20
+    splunk/raw/k8s_events: 60
+  structured_record_target: 210
+  # Categories counted against the 250 ceiling (PLAN section 2 size-budget list). Slack messages,
+  # commits, metric responses, status snapshots, saved searches, Dynatrace entities, Slack users and
+  # channels, ServiceNow groups and Confluence pages are reported separately (see docs/DATA.md).
+  counted: [datadog_events, datadog_monitors, datadog_synthetics, splunk_alerts, solarwinds_alerts, dynatrace_problems,
+            servicenow_incidents, servicenow_journal, servicenow_audit, servicenow_changes, jenkins_builds,
+            cmdb_ci, cmdb_rel_ci, servicenow_users, pagerduty_objects]
+
+# ---------------------------------------------------------------------------------------------
+# Log windows and sampling (PLAN section 2 "Log windows and sampling", data fix 1). Every raw log is a
+# documented sample of what the estate wrote. One constant rate per line class for the whole window;
+# no class changes rate partway through the incident. Request-path lines are kept per cart: checkout-api
+# decides by hashing cartId and the decision travels with the call to the gateway, so a kept cart keeps
+# every line of every one of its requests in both logs. Rates nest (a cart kept at 1 in 400 is also kept
+# at 1 in 100). Each class lists the generator classes it covers (`gen`, never served), the pattern a
+# tool uses to recognise its lines (`match`, on a record's first line) and `keep_1_in`. The block renders
+# into the served integration.yaml without `gen`; lint invariant 15 checks the rates and the shape.
+log_windows:
+  payments_app: [["10:15:00", "10:30:00"], ["13:45:00", "15:30:00"]]
+  checkout_api: [["13:45:00", "15:30:00"]]
+  postgres: [["13:45:00", "15:30:00"]]
+  nginx: [["13:45:00", "15:30:00"]]
+  f5: [["14:30:00", "15:10:00"]]
+  k8s_events: [["13:45:00", "15:30:00"]]
+
+sampling:
+  splunk/raw/payments_app:
+    pipeline: "gateway log forwarder; request lines follow the caller's per-cart decision"
+    key: cartId
+    classes:
+      - {name: lifecycle, gen: [log.startup, log.shutdown, log.startup_config], match: '\[(main|tomcat-shutdown)\] ', keep_1_in: 1, per: line}
+      - {name: scheduler, gen: [log.bg_scheduler], match: '\[scheduling-\d+\] ', keep_1_in: 1, per: line}
+      - {name: pool_stats, gen: [log.hikari_stats, log.hikari_stats_full], match: 'After cleanup  stats', keep_1_in: 4, per: housekeeper run, note: "the housekeeper runs every 30 s per host; one run in four is kept"}
+      - {name: pool_growth, gen: [log.hikari_added], match: '\[HikariPool-1 connection adder\] \S+ - HikariPool-1 - Added connection', keep_1_in: 6, per: line}
+      - {name: cannot_acquire, gen: [log.hikari_cannot_acquire], match: 'Cannot acquire connection from data source', keep_1_in: 24, per: attempt, note: "the connection adder retries every 10 s while the database refuses it"}
+      - {name: health_check_failed, gen: [log.health], match: 'DB health check failed', keep_1_in: 14, per: line}
+      - {name: authorize_ok, gen: [log.request_ok], match: ' - authorize ok txn=', keep_1_in: 1500, per: request}
+      - {name: psp_slow_response, gen: [log.psp_ok_slow], match: ' - slow PSP response: ', keep_1_in: 12, per: request}
+      - {name: psp_retry, gen: [log.psp_retry, log.psp_gave_up], match: ' - authorize (attempt \d+/\d+ timed out|failed txn=\S+ after \d+ attempts )', keep_1_in: 100, per: request, note: "a kept request keeps every attempt line and its final ERROR"}
+      - {name: psp_fail_fast, gen: [log.psp_fail_fast], match: ' - authorize failed txn=\S+ after 1 attempt ', keep_1_in: 60, per: request}
+      - {name: pool_timeout, gen: [log.hikari_timeout], match: '(SqlExceptionHelper - |: Could not open JPA EntityManager)', keep_1_in: 200, per: request, note: "the first kept request per host logs the full cause chain, later ones the one-line form"}
+      - {name: leak_detection, gen: [log.hikari_leak, log.hikari_unleaked], match: '(ProxyLeakTask - Connection leak detection|was returned to the pool \(unleaked\))', keep_1_in: 400, per: request}
+  splunk/raw/checkout_api:
+    pipeline: "Kubernetes container log collector; gateway failures sampled per cart at source, request lines one in N"
+    key: cartId
+    classes:
+      - {name: lifecycle, gen: [log.co_startup, log.co_shutdown], match: '"thread_name":"(main|SpringApplicationShutdownHook)"', keep_1_in: 1, per: line}
+      - {name: gateway_failure, gen: [log.co_gw_timeout, log.co_gw_5xx], match: '("logger_name":"com.larkspur.checkout.payments.PaymentsGatewayClient"|"message":"POST /api/checkout/submit 50[0-9] )', keep_1_in: 100, per: request, note: "a kept request keeps its client ERROR and its 5xx request line"}
+      - {name: debug, gen: [log.co_debug_flood], match: '"level":"DEBUG"', keep_1_in: 70, per: line}
+      - {name: request, gen: [log.co_request], match: '"logger_name":"com.larkspur.checkout.web.RequestLogFilter"', keep_1_in: 2000, per: line, note: "not keyed by cart; successful submits do not join to gateway lines"}
+      - {name: application, gen: [log.co_bg], match: '"level":"(INFO|WARN)"', keep_1_in: 1, per: line}
+  splunk/raw/postgres:
+    pipeline: "database host forwarder"
+    key: backend pid
+    note: "a 'connection received' line belongs to the session with the same pid"
+    classes:
+      - {name: connection, gen: [pg.connect, pg.gw_connect, pg.recon_connect, pg.dba_connect], match: 'LOG:  connection authorized: ', keep_1_in: 1, per: session}
+      - {name: refused, gen: [pg.fatal_53300], match: 'FATAL:  remaining connection slots are reserved', keep_1_in: 12, per: session}
+      - {name: terminated, gen: [pg.terminate_admin], match: 'FATAL:  terminating connection due to administrator command', keep_1_in: 1, per: line}
+      - {name: eof_open_transaction, gen: [pg.eof_open_txn], match: 'LOG:  unexpected EOF on client connection with an open transaction', keep_1_in: 8, per: line}
+      - {name: maintenance, gen: [pg.checkpoint, pg.autovacuum], match: 'LOG:  (checkpoint|automatic)', keep_1_in: 1, per: line}
+  splunk/raw/nginx:
+    pipeline: "edge log forwarder; submit requests follow checkout-api's per-cart decision (cartId is in the query string)"
+    key: cartId
+    classes:
+      - {name: submit_server_error, gen: [nginx.submit_5xx], match: '"POST /api/checkout/submit\?cartId=\d+ HTTP/1\.1" 5\d\d ', keep_1_in: 200, per: request}
+      - {name: submit, gen: [nginx.submit, nginx.cart_resubmit], match: '"POST /api/checkout/submit', keep_1_in: 600, per: request}
+      - {name: checkout, gen: [nginx.request], match: '"(GET|POST) /api/checkout/', keep_1_in: 600, per: line}
+      - {name: other, gen: [nginx.scanner], match: '" \d{3} ', keep_1_in: 1, per: line}
+  splunk/raw/f5:
+    pipeline: "BIG-IP remote syslog"
+    classes:
+      - {name: ltm, gen: [f5.member_flap], match: 'mcpd\[\d+\]: ', keep_1_in: 1, per: line}
+  splunk/raw/k8s_events:
+    pipeline: "Kubernetes event collector"
+    classes:
+      - {name: event, gen: [k8s.event, k8s.rollout, k8s.rollback, k8s.readiness_fail], match: '^\{', keep_1_in: 1, per: event}
+
+# Generator settings for the classes above that are not rates.
+log_shapes:
+  hikari_stats: {every_s: 30}                  # the housekeeper period; pool_stats keeps 1 run in 4
+  cannot_acquire: {every_s: 10}                # pay-04's connection adder retries while refused
+  debug_flood: {window: ["14:28:40", "14:42:05"], lines_per_min: 1680}   # true volume from 2.14.3 pods
+  checkout_background_every_s: 45
+  gateway_background: {settlement_every_s: 300, token_every_s: 1800}
+  postgres:
+    dba_connect_at: "14:34:05.310"             # Elena on a reserved superuser slot, open until after the 14:56 kill
+    checkpoint_every_s: 1200
+    autovacuum_tables: ["payments.public.authorizations", "orders.public.order_events", "payments.public.settlement_lines"]
+  nginx:
+    upstream_port: 8080
+    host: edge-01
+
+# ---------------------------------------------------------------------------------------------
+# The model. Curves are piecewise: `steps` hold a value from each point until the next;
+# `points` interpolate linearly between points. Every metric, every Hikari stats line, every
+# pg_stat_activity count and every number in a note derives from here.
+model:
+  authorization_rate_per_s: {points: [["10:00", 14], ["14:35", 14], ["14:45", 24], ["15:06", 24], ["15:12", 16], ["15:24", 15], ["15:30", 14]]}
+  eu_share: 0.25
+  slow_share:          # share of all authorizations whose PayCore attempts exceed 8 s (EU edge only)
+    steps: [["00:00", 0.0], ["14:26", 0.02], ["14:30", 0.09], ["14:31", 0.17], ["14:32", 0.22], ["14:33", 0.25], ["15:24", 0.0]]
+  psp_latency_ms:      # rendered latency of attempts that are not slow
+    non_eu: [280, 560]
+    eu_baseline: [1500, 2800]          # cross-region edge; with app and DB work the hold is ~3 s (PLAN 1.2 hold model)
+    eu_ramp:           # PayCore EU degradation begins 14:24, under 8 s until 14:26
+      - {from: "14:24:00", to: "14:25:00", range: [2600, 4800]}
+      - {from: "14:25:00", to: "14:26:00", range: [4200, 7600]}
+      - {from: "14:26:00", to: "15:24:00", range: [3400, 7900]}
+    slow_attempt_s: [9, 12]            # always cut at the client timeout
+  hold_time_s: "1.05 + 36 * slow_share"   # PLAN 1.2; Little's law lint at 14:29, 14:31, 14:33
+  little_law_checks: ["14:29", "14:31", "14:33"]
+
+  # Connections on pay-db-01 by minute (PLAN 1.3). Rows hold until the next row.
+  connections:
+    usable: 197
+    rows:
+      - {at: "13:45", gateway: [6, 6, 6, 6], order: 20, recon: 0, other: 1}
+      - {at: "14:29", gateway: [6, 6, 6, 6], order: 20, recon: 0, other: 1}     # 45, baseline
+      - {at: "14:30", gateway: [15, 16, 15, 14], order: 20, recon: 40, other: 1}   # 121
+      - {at: "14:31", gateway: [24, 35, 22, 19], order: 20, recon: 40, other: 1}   # 161, pay-02 hits 35
+      - {at: "14:32", gateway: [32, 35, 31, 27], order: 20, recon: 40, other: 1}   # 186
+      - {at: "14:33", gateway: [35, 35, 35, 31], order: 20, recon: 40, other: 1}   # 197, ceiling
+      - {at: "14:34", gateway: [35, 35, 35, 32], order: 20, recon: 40, other: 0}   # 197, Datadog agent refused
+      - {at: "15:02", gateway: [5, 35, 35, 32], order: 20, recon: 40, other: 0}    # pay-01 restarted on 3.7.9
+      - {at: "15:03", gateway: [5, 5, 35, 32], order: 20, recon: 40, other: 0}
+      - {at: "15:04", gateway: [6, 5, 5, 32], order: 20, recon: 40, other: 0}
+      - {at: "15:05", gateway: [6, 6, 5, 5], order: 20, recon: 40, other: 0}
+      - {at: "15:06", gateway: [6, 6, 6, 5], order: 20, recon: 40, other: 0}
+      - {at: "15:08", gateway: [7, 6, 6, 6], order: 20, recon: 40, other: 1}       # 86 (gateway 25)
+      - {at: "15:16", gateway: [6, 6, 6, 6], order: 20, recon: 0, other: 1}        # reconciler finished 15:15:30
+    # Hikari pool state per VM (total from rows above). waiting = threads queued for a connection.
+    hikari_waiting: {points: [["14:30", 0], ["14:31", 12], ["14:33", 18], ["14:45", 26], ["15:01", 26], ["15:02", 0]]}
+    # During saturation the DBA sees ~133 of the gateway's 137 sessions idle in transaction (PLAN 1.4 14:47):
+    # at ~14 authorizations a second with millisecond inserts only a handful are ever `active` (data fix 7).
+    pgsa_snapshot:
+      at: "14:47:12"
+      gateway_idle_in_txn: 133
+      gateway_active: 4
+      recon_active: 40
+      order_idle: 20
+      oldest_xact_age_s: 38
+      wait_event: ClientRead
+    kill_sessions: {at: "14:56:00", count: 30, refill_within_s: 4, demand_connections: 240, slots: 137, error_rate_effect: "barely moves"}
+
+  # checkout-api traffic by endpoint (requests per second).
+  traffic_per_s:
+    "GET /api/cart": {points: [["00:00", 30]]}
+    "GET /api/checkout/summary": {points: [["00:00", 20]]}
+    "POST /api/checkout/address": {points: [["00:00", 10]]}
+    "POST /api/checkout/submit": {points: [["00:00", 14], ["14:35", 14], ["14:45", 24], ["15:06", 24], ["15:12", 16], ["15:24", 15], ["15:30", 14]]}
+    storefront_browse: {points: [["00:00", 400]]}
+  resubmit:            # customer retries: the same cart resubmits 2 to 5 times
+    from: "14:35:00"
+    until: "15:08:00"
+    per_cart: [2, 5]
+
+  checkout_error_rate_pct:    # all checkout-api requests, 5xx
+    points: [["00:00", 0.2], ["14:25", 0.2], ["14:26", 0.4], ["14:27", 0.45], ["14:28", 2.1], ["14:29", 0.6], ["14:30", 1.4],
+             ["14:31", 3.0], ["14:32", 5.8], ["14:33", 9.0], ["14:34", 11.5], ["14:35", 14.0], ["14:40", 15.5], ["14:45", 17.0],
+             ["14:56", 16.6], ["15:00", 17.0], ["15:02", 15.0], ["15:04", 10.0], ["15:06", 4.0], ["15:07", 1.0], ["15:08", 0.2]]
+  gw_latency_p90_s:            # checkout-api client spans to peer.service:payments-gw
+    points: [["00:00", 0.62], ["14:23", 0.62], ["14:24", 0.70], ["14:25", 1.10], ["14:26", 1.30], ["14:29", 1.50], ["14:30", 3.40],
+             ["14:31", 8.60], ["14:32", 10.0], ["15:05", 10.0], ["15:06", 3.0], ["15:24", 3.0], ["15:25", 0.62]]
+  gw_latency_p99_s:
+    points: [["00:00", 2.70], ["14:23", 2.70], ["14:24", 3.90], ["14:25", 6.80], ["14:26", 10.0], ["15:05", 10.0], ["15:06", 3.10],
+             ["15:24", 3.05], ["15:25", 2.70]]
+  payment_success_rate_pct:
+    points: [["00:00", 98.5], ["14:30", 98.5], ["14:31", 96.0], ["14:32", 88.0], ["14:33", 79.0], ["14:34", 70.0], ["14:35", 64.0],
+             ["14:40", 60.0], ["14:45", 58.0], ["15:01", 58.0], ["15:04", 63.0], ["15:06", 72.0], ["15:08", 73.0], ["15:24", 73.0],
+             ["15:25", 97.0], ["15:26", 98.5]]
+  redis_fragmentation_ratio:   # hourly over six days; the flap
+    baseline: 1.32
+    flap_peak: 1.62
+    flap_every_h: 2
+    since: "2026-10-07T14:00:00Z"
+
+# ---------------------------------------------------------------------------------------------
+# The estate the generator renders around the events.
+estate:
+  gateway_vms: [pay-01, pay-02, pay-03, pay-04]
+  checkout_pods:
+    replicaset_2_14_2: checkout-api-6d8c9b7f4d
+    replicaset_2_14_3: checkout-api-7f5c8d9b6
+    initial: [checkout-api-6d8c9b7f4d-x2k1p, checkout-api-6d8c9b7f4d-q8m4z, checkout-api-6d8c9b7f4d-b7w9n,
+              checkout-api-6d8c9b7f4d-h3j6t, checkout-api-6d8c9b7f4d-p5r2c, checkout-api-6d8c9b7f4d-v9k8d]
+    rollout_2_14_3: [checkout-api-7f5c8d9b6-m4n7q, checkout-api-7f5c8d9b6-z2x8c, checkout-api-7f5c8d9b6-t6y3u,
+                     checkout-api-7f5c8d9b6-k9l2p, checkout-api-7f5c8d9b6-w5e7r, checkout-api-7f5c8d9b6-g8h1j]
+    rollback_2_14_2: [checkout-api-6d8c9b7f4d-n4c6v, checkout-api-6d8c9b7f4d-s7d2f, checkout-api-6d8c9b7f4d-y1u5i,
+                      checkout-api-6d8c9b7f4d-e3r9t, checkout-api-6d8c9b7f4d-a6s4d, checkout-api-6d8c9b7f4d-f2g7h]
+    # pod replacement times: one old pod stops as each new pod becomes ready
+    rollout_ready: ["14:28:12", "14:28:24", "14:28:36", "14:28:47", "14:28:58", "14:29:10"]
+    readiness_failure: {pod: checkout-api-7f5c8d9b6-t6y3u, from: "14:28:20", seconds: 40}
+    rollback_ready: ["14:40:52", "14:41:07", "14:41:21", "14:41:36", "14:41:50", "14:42:05"]
+    nodes: [node-east-03, node-east-07, node-east-09, node-east-11, node-east-12, node-east-14]
+    pod_ip_prefix: 10.42.
+  gateway_thread_pool: http-nio-8443-exec-
+  # Order ids are sequential per authorization, anchored so ord-7781901 (gateway_signals.first_retry) is
+  # the request borrowed at 14:26:04.031 on pay-01.
+  # Carts are 8-digit ids from a large space, so two customers rarely share one; repeats are resubmits.
+  cart_id_range: [55100000, 56099999]
+
+# ---------------------------------------------------------------------------------------------
+# Events. One entry per artifact or artifact family. Grouped by source; the `timeline` section at
+# the end maps every row of PLAN 1.4 to these ids.
+
+history:
+  - {id: inc0042041, number: INC0042041, opened: "2026-03-04T19:12:00Z", resolved: "2026-03-04T21:40:00Z", closed: "2026-03-07T19:00:00Z",
+     kind: trap, sig_id: sig.inc0042041, ci: Checkout API, group: Commerce Platform, priority: 2, content: servicenow/history.yaml#inc0042041}
+  - {id: inc0045210, number: INC0045210, opened: "2026-07-19T16:05:00Z", resolved: "2026-07-19T16:48:00Z", closed: "2026-07-22T16:00:00Z",
+     kind: signal, sig_id: sig.inc0045210, ci: Payments Gateway, group: Payments Engineering, priority: 2, content: servicenow/history.yaml#inc0045210}
+  - {id: inc0047003, number: INC0047003, opened: "2026-09-22T09:41:00Z", resolved: "2026-09-22T11:05:00Z", closed: "2026-09-25T11:00:00Z",
+     kind: trap, sig_id: sig.inc0047003, ci: redis-sessions-01, group: Platform Reliability, priority: 4, content: servicenow/history.yaml#inc0047003}
+
+changes:      # ServiceNow change_request. Times UTC; rendered in America/New_York.
+  - {id: chg0031850, number: CHG0031850, type: normal, state: Closed, summary_key: chg0031850, ci: fw-dc-edge-02, group: Platform Reliability,
+     planned: ["13:30:00", "14:30:00"], actual: ["13:34:00", "13:52:00"], kind: noise, tag: background}
+  - {id: chg0031877, number: CHG0031877, type: normal, state: Closed, risk: Moderate, cab_date: "2026-10-09T14:00:00Z", ci: Payments Gateway,
+     group: Payments Engineering, requested_by: dana.whitfield, assigned_to: priya.raman,
+     planned: ["10:00:00", "11:00:00"], actual: ["10:19:00", "10:25:00"], jenkins: "payments-gateway-deploy#412",
+     kind: signal, sig_id: sig.chg0031877}
+  - {id: chg0031880, number: CHG0031880, type: normal, state: Implement, ci: Marketing Website, group: Web Platform, requested_by: kofi.mensah,
+     planned: ["14:30:00", "15:00:00"], actual: ["14:36:00", null], kind: trap, sig_id: sig.chg0031880}
+  - {id: chg0031899, number: CHG0031899, type: standard, state: Closed, ci: win-rpt-05, group: Platform Reliability,
+     planned: ["11:00:00", "13:00:00"], actual: ["11:02:00", "12:41:00"], kind: noise, tag: background}
+  - {id: chg0031902, number: CHG0031902, type: standard, state: Closed, ci: Checkout API, group: Commerce Platform, requested_by: ben.kowalski,
+     planned: ["14:15:00", "14:45:00"], actual: ["14:27:30", "14:29:10"], jenkins: "checkout-api-deploy#897",
+     kind: trap, sig_id: sig.chg0031902}
+  - {id: chg0031910, number: CHG0031910, type: emergency, state: Review, ci: Payments Gateway, group: Payments Engineering, requested_by: priya.raman,
+     opened: "15:09:00", planned: ["15:01:00", "15:06:00"], actual: ["15:01:10", "15:06:00"], jenkins: "payments-gateway-deploy#413",
+     kind: signal, sig_id: sig.chg0031910}
+  # Worker-written noise changes (scenario/content/servicenow/changes-noise.yaml): the week's releases the
+  # Jenkins builds cite, and the day's unrelated work. Created times are in the content file.
+  - {id: chg0031702, number: CHG0031702, type: normal, state: Closed, risk: Moderate, cab_date: "2026-09-30T14:00:00Z", ci: Payments Gateway,
+     group: Payments Engineering, planned: ["2026-10-01T10:00:00Z", "2026-10-01T11:00:00Z"], actual: ["2026-10-01T10:31:15Z", "2026-10-01T10:36:13Z"],
+     jenkins: "payments-gateway-deploy#410", kind: noise, tag: background}
+  - {id: chg0031744, number: CHG0031744, type: standard, state: Closed, ci: Checkout API, group: Commerce Platform,
+     planned: ["2026-10-07T13:00:00Z", "2026-10-07T13:30:00Z"], actual: ["2026-10-07T13:05:22Z", "2026-10-07T13:07:03Z"],
+     jenkins: "checkout-api-deploy#894", kind: noise, tag: background}
+  - {id: chg0031760, number: CHG0031760, type: standard, state: Closed, ci: Storefront Web, group: Web Platform,
+     planned: ["2026-10-08T11:00:00Z", "2026-10-08T11:30:00Z"], actual: ["2026-10-08T11:14:09Z", "2026-10-08T11:16:30Z"],
+     jenkins: "storefront-web-deploy#1203", kind: noise, tag: background}
+  - {id: chg0031791, number: CHG0031791, type: standard, state: Closed, ci: Checkout API, group: Commerce Platform,
+     planned: ["2026-10-09T09:30:00Z", "2026-10-09T10:00:00Z"], actual: ["2026-10-09T09:48:03Z", "2026-10-09T09:49:40Z"],
+     jenkins: "checkout-api-deploy#895", kind: noise, tag: background}
+  - {id: chg0031835, number: CHG0031835, type: standard, state: Closed, ci: Storefront Web, group: Web Platform,
+     planned: ["2026-10-12T10:00:00Z", "2026-10-12T11:00:00Z"], actual: ["2026-10-12T10:02:55Z", "2026-10-12T10:33:36Z"],
+     jenkins: "storefront-web-deploy#1205", kind: noise, tag: background}
+  - {id: chg0031884, number: CHG0031884, type: standard, state: Closed, ci: win-rpt-05, group: Platform Reliability,
+     planned: ["09:00:00", "10:00:00"], actual: ["09:02:00", "09:41:00"], kind: noise, tag: background}
+  - {id: chg0031891, number: CHG0031891, type: standard, state: Closed, ci: status.larkspur.internal, group: Web Platform,
+     planned: ["12:00:00", "12:30:00"], actual: ["12:04:00", "12:16:00"], kind: noise, tag: background}
+  - {id: chg0031904, number: CHG0031904, type: normal, state: Scheduled, ci: k8s-prod-east, group: Platform Reliability,
+     planned: ["16:00:00", "17:00:00"], actual: [null, null], kind: noise, tag: background}
+  - {id: chg0031906, number: CHG0031906, type: standard, state: Assess, ci: Storefront Web, group: Web Platform,
+     planned: ["17:00:00", "17:30:00"], actual: [null, null], kind: noise, tag: background}
+
+jenkins:
+  # timestamp is the build start; duration in seconds. building/result derive at runtime.
+  - {job: payments-gateway-deploy, number: 410, start: "2026-10-01T10:31:15Z", duration: 298, result: SUCCESS, params: {VERSION: 3.7.9, TARGET_ENV: prod, CHANGE_TICKET: CHG0031702}, user: priya.raman, kind: noise, tag: background}
+  - {job: payments-gateway-deploy, number: 411, start: "2026-10-12T15:02:40Z", duration: 305, result: SUCCESS, params: {VERSION: 3.8.0, TARGET_ENV: staging, CHANGE_TICKET: ""}, user: dana.whitfield, kind: noise, tag: background}
+  - {job: payments-gateway-deploy, number: 412, start: "10:19:48", duration: 312, result: SUCCESS, params: {VERSION: 3.8.0, TARGET_ENV: prod, CHANGE_TICKET: CHG0031877},
+     user: jordan.pike, changeset: content/jenkins/jk412.yaml, kind: signal, sig_id: sig.jk412_changeset}
+  - {job: payments-gateway-deploy, number: 413, start: "15:01:10", duration: 290, result: SUCCESS, params: {VERSION: 3.7.9, TARGET_ENV: prod, CHANGE_TICKET: ""},
+     user: priya.raman, kind: signal, sig_id: sig.jk413}
+  - {job: checkout-api-deploy, number: 894, start: "2026-10-07T13:05:22Z", duration: 101, result: SUCCESS, params: {VERSION: 2.14.1, TARGET_ENV: prod, CHANGE_TICKET: CHG0031744}, user: ben.kowalski, kind: noise, tag: background}
+  - {job: checkout-api-deploy, number: 895, start: "2026-10-09T09:48:03Z", duration: 97, result: SUCCESS, params: {VERSION: 2.14.2, TARGET_ENV: prod, CHANGE_TICKET: CHG0031791}, user: ben.kowalski, kind: noise, tag: background}
+  - {job: checkout-api-deploy, number: 896, start: "2026-10-12T16:20:41Z", duration: 93, result: SUCCESS, params: {VERSION: 2.14.3, TARGET_ENV: staging, CHANGE_TICKET: ""}, user: ben.kowalski, kind: noise, tag: background}
+  - {job: checkout-api-deploy, number: 897, start: "14:27:30", duration: 95, result: SUCCESS, params: {VERSION: 2.14.3, TARGET_ENV: prod, CHANGE_TICKET: CHG0031902},
+     user: ben.kowalski, changeset: content/jenkins/jk897.yaml, kind: trap, sig_id: sig.jk897_checkout_deploy}
+  - {job: checkout-api-deploy, number: 898, start: "14:40:30", duration: 95, result: SUCCESS, params: {VERSION: 2.14.2, TARGET_ENV: prod, CHANGE_TICKET: CHG0031902},
+     user: alice.nguyen, kind: signal, sig_id: sig.jk898_rollback}
+  - {job: payments-reconciler, number: 2309, start: "2026-10-11T14:30:00Z", duration: 2652, result: SUCCESS, params: {}, user: null, kind: noise, tag: background}
+  - {job: payments-reconciler, number: 2310, start: "2026-10-12T14:30:00Z", duration: 2731, result: SUCCESS, params: {}, user: null, kind: noise, tag: background}
+  - {job: payments-reconciler, number: 2311, start: "14:30:00", duration: 2730, result: SUCCESS, params: {}, user: null, kind: signal, sig_id: sig.jk2311_start}
+  - {job: storefront-web-deploy, number: 1203, start: "2026-10-08T11:14:09Z", duration: 141, result: SUCCESS, params: {VERSION: 5.31.0, TARGET_ENV: prod, CHANGE_TICKET: CHG0031760}, user: kofi.mensah, kind: noise, tag: background}
+  - {job: storefront-web-deploy, number: 1204, start: "2026-10-12T10:02:55Z", duration: 66, result: FAILURE, params: {VERSION: 5.32.0, TARGET_ENV: prod, CHANGE_TICKET: CHG0031835}, user: kofi.mensah, kind: noise, tag: background}
+  - {job: storefront-web-deploy, number: 1205, start: "2026-10-12T10:31:18Z", duration: 138, result: SUCCESS, params: {VERSION: 5.32.0, TARGET_ENV: prod, CHANGE_TICKET: CHG0031835}, user: kofi.mensah, kind: noise, tag: background}
+
+# Gateway log signal lines with exact times (hand-written templates in content/logs/payments.yaml).
+gateway_signals:
+  - {id: startup_380, hosts: {pay-01: "10:20:30", pay-02: "10:21:40", pay-03: "10:22:50", pay-04: "10:24:00"}, version: 3.8.0,
+     kind: signal, sig_id: sig.startup_timeout_8000, class: log.startup_config}
+  - {id: startup_379, hosts: {pay-01: "15:01:58", pay-02: "15:03:08", pay-03: "15:04:18", pay-04: "15:05:28"}, version: 3.7.9,
+     kind: signal, sig_id: sig.startup_timeout_3000, class: log.startup_config}
+  - {id: first_retry, host: pay-01, at: "14:26:12.044", order: ord-7781901, borrow_at: "14:26:04.031", thread: http-nio-8443-exec-17,
+     kind: signal, sig_id: sig.first_psp_retry, class: log.psp_retry}
+  - {id: first_leak, host: pay-01, at: "14:26:34.031", order: ord-7781901, thread: http-nio-8443-exec-17, connection: "org.postgresql.jdbc.PgConnection@5b2a8e1d",
+     kind: signal, sig_id: sig.first_leak, class: log.hikari_leak}
+  - {id: first_pool_timeout, host: pay-02, at: "14:31:07.221", thread: http-nio-8443-exec-44, stats: {total: 35, active: 35, idle: 0, waiting: 12},
+     kind: signal, sig_id: sig.first_pool_timeout, class: log.hikari_timeout}
+  - {id: stats_full, host: pay-02, at: "14:31:34.009", stats: {total: 35, active: 35, idle: 0, waiting: 12},
+     kind: signal, sig_id: sig.hikari_stats_full, class: log.hikari_stats_full}
+  - {id: cannot_acquire_first, host: pay-04, at: "14:33:02.118", kind: signal, sig_id: sig.gw_53300_cause, class: log.hikari_cannot_acquire}
+  - {id: leak_rising, from: "14:30:00", note: "leak warnings rise from 14:30 (sampling, not a single line)", kind: signal, class: log.hikari_leak}
+  - {id: psp_fail_fast, from: "15:06:00", until: "15:24:00", note: "EU authorizations fail fast: PSP timeout 3000ms", kind: signal, class: log.psp_fail_fast}
+
+checkout_signals:
+  - {id: first_checkout_timeout, pod: checkout-api-6d8c9b7f4d-q8m4z, at: "14:26:14.052", order: ord-7781901, version: 2.14.2,
+     kind: signal, sig_id: sig.first_checkout_timeout, class: log.co_gw_timeout}
+  - {id: debug_flood, from: "14:28:40", until: "14:42:05", volume_multiplier: 5, kind: trap, class: log.co_debug_flood}
+
+postgres_signals:
+  - {id: recon_connect, at: "14:30:00.180", count: 40, spacing_ms: [8, 40], client: jenkins-agent-03,
+     kind: signal, sig_id: sig.pg_recon_authorized, class: pg.recon_connect}
+  - {id: first_53300, at: "14:33:02.118", users: [pgw_app, datadog], kind: signal, sig_id: sig.pg_53300_first, class: pg.fatal_53300}
+  - {id: kill_sessions, at: "14:56:00.410", count: 30, kind: signal, sig_id: sig.pg_kill_sessions, class: pg.terminate_admin}
+  - {id: eof_open_txn, note: "at each gateway VM's Hikari shutdown before its 3.7.9 start, 15:01 to 15:05", kind: signal, class: pg.eof_open_txn}
+
+# Datadog. ~12 monitors, ~40 events (the events file is the stream export for
+# 2026-10-12T18:00Z to 2026-10-13T15:30Z), 8 metric queries, 2 synthetics.
+datadog:
+  events_export_from: "2026-10-12T18:00:00Z"
+  monitors:
+    - {id: 7391240, key: p90_gw, name: "p90 latency high on payments-gw", type: query alert, paging: "@pagerduty-Payments-Prod",
+       query: "max(last_5m):p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 6",
+       thresholds: {critical: 6.0, warning: 4.0},
+       transitions: [{at: "14:32:10", to: Alert, sig_id: sig.dd_p90_alert, kind: signal}, {at: "15:09:20", to: OK, kind: signal}], slice: true}
+    - {id: 7391241, key: p99_gw, name: "p99 latency on payments-gw", type: query alert, paging: "@slack-sre-oncall",
+       query: "max(last_5m):p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 15",
+       thresholds: {critical: 15.0, warning: 8.0},
+       transitions: [{at: "14:27:10", to: Warn, sig_id: sig.dd_p99_warn, kind: signal}, {at: "15:09:40", to: OK, kind: signal}], slice: true}
+    - {id: 7391255, key: co_errors, name: "checkout-api error rate > 5%", type: query alert, paging: "@pagerduty-Checkout-Prod",
+       query: "sum(last_1m):sum:trace.servlet.request.errors{service:checkout-api,env:prod}.as_count() / sum:trace.servlet.request.hits{service:checkout-api,env:prod}.as_count() * 100 > 5",
+       thresholds: {critical: 5.0, warning: 2.0}, evaluation_delay_s: 60,
+       # Evaluated over the served series (the generator checks it): the 2.14.3 rollout's 14:28 blip warns at
+       # 14:30:00 with the 60 s evaluation delay.
+       transitions: [{at: "14:30:00", to: Warn, kind: trap, sig_id: sig.dd_errors_warn_blip}, {at: "14:31:00", to: OK, kind: trap},
+                     {at: "14:33:00", to: Warn, kind: signal}, {at: "14:34:00", to: Alert, kind: signal, sig_id: sig.dd_error_rate},
+                     {at: "15:08:00", to: Warn, kind: signal}, {at: "15:09:00", to: OK, kind: signal}], slice: true}
+    - {id: 7301990, key: pg_can_connect, name: "Postgres can_connect on {{host.name}}", type: service check, paging: "@pagerduty-Database-Prod",
+       query: "\"postgres.can_connect\".over(\"host:pay-db-01\").by(\"host\",\"db\").last(2).count_by_status()",
+       transitions: [{at: "14:33:30", to: Alert, kind: signal, sig_id: sig.dd_can_connect}, {at: "15:08:40", to: OK, kind: signal}], slice: true}
+    - {id: 7391301, key: co_log_volume, name: "checkout-api log volume anomaly", type: log alert, paging: "@slack-sre-oncall",
+       query: "logs(\"service:checkout-api env:prod\").index(\"main\").rollup(\"count\").last(\"10m\") > 18000",
+       transitions: [{at: "14:30:40", to: Alert, kind: trap, sig_id: sig.dd_log_volume}, {at: "14:44:50", to: OK, kind: trap}], slice: true}
+    - {id: 7390118, key: syn_checkout, name: "[Synthetics] checkout flow", type: synthetics alert, paging: "@pagerduty-Checkout-Prod",
+       synthetic: syn-checkout-flow,
+       transitions: [{at: "14:35:30", to: Alert, kind: signal, sig_id: sig.dd_synthetic_checkout}, {at: "15:10:10", to: OK, kind: signal}], slice: true}
+    - {id: 7288104, key: redis_frag, name: "redis-sessions memory fragmentation high", type: metric alert, paging: "@slack-sre-oncall",
+       query: "avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5",
+       thresholds: {critical: 1.5, warning: 1.4}, flap: {every_minutes: 130, alert_for_minutes: 28, last_alert_at: "14:12:00", recovered_at: "14:41:00"},
+       kind: trap, sig_id: sig.dd_redis_fires, class: dd.redis_flap, muted_by: {who: sam.ortega, at: "14:14:00"}, slice: true}
+    - {id: 7312877, key: node_cpu, name: "CPU saturation on {{host.name}}", type: metric alert, paging: "@slack-sre-oncall",
+       query: "avg(last_10m):avg:system.cpu.user{kube_cluster_name:k8s-prod-east} by {host} > 90",
+       transitions: [{at: "14:15:00", to: Alert, host: node-east-14, kind: noise, tag: background}, {at: "14:38:00", to: OK, host: node-east-14, kind: noise, tag: background}], slice: true}
+    - {id: 7344120, key: search_indexer, name: "search-indexer cron job failed", type: event-v2 alert, paging: "@pagerduty-Platform",
+       query: "events(\"source:kubernetes kube_cronjob:search-indexer reason:BackoffLimitExceeded\").rollup(\"count\").last(\"5m\") > 0",
+       transitions: [{at: "14:10:05", to: Alert, kind: noise, tag: background}], slice: true}
+    - {id: 7266031, key: ord_disk, name: "Disk space low on {{host.name}}", type: metric alert, paging: "@pagerduty-Platform",
+       query: "max(last_5m):avg:system.disk.in_use{role:orders} by {host,device} > 0.9",
+       transitions: [{at: "13:52:10", to: Alert, host: ord-01, kind: noise, tag: defect}, {at: "13:53:00", to: OK, host: ord-01, kind: noise, tag: defect}], slice: true}
+    - {id: 7390233, key: syn_marketing, name: "[Synthetics] marketing site homepage", type: synthetics alert, paging: "@slack-web-platform",
+       synthetic: syn-marketing-home,
+       transitions: [{at: "14:40:00", to: Alert, kind: trap, sig_id: sig.marketing_synthetic}, {at: "15:02:30", to: OK, kind: trap}], slice: true}
+    - {id: 7391260, key: success_rate, name: "Payment authorization success rate low", type: query alert, paging: "@slack-payments",
+       query: "avg(last_5m):avg:payments.authorize.success_rate{env:prod} < 95",
+       thresholds: {critical: 95.0, warning: 97.0},
+       # Evaluated over the served series (the generator checks it): payments fail from 14:26, so it warns at 14:30.
+       transitions: [{at: "14:30:00", to: Warn, kind: signal}, {at: "14:31:00", to: Alert, kind: signal, sig_id: sig.dd_success_rate},
+                     {at: "15:29:00", to: OK, kind: signal}], slice: true}
+  synthetics:
+    - {public_id: syn-checkout-flow, monitor: 7390118, name: "checkout flow", url: "https://www.larkspur.com/checkout"}
+    - {public_id: syn-marketing-home, monitor: 7390233, name: "marketing site homepage", url: "https://cdn.larkspur.com/"}
+  metrics:
+    window: ["13:45:00", "15:30:00"]
+    interval_s: 60
+    queries:
+      - {file: checkout-api.hits.by_resource.json, query: "sum:trace.servlet.request.hits{service:checkout-api,env:prod} by {resource_name}", slice: true, kind: trap}
+      - {file: checkout-api.errors.by_version.json, query: "sum:trace.servlet.request.errors{service:checkout-api,env:prod} by {version}", slice: true, kind: signal}
+      - {file: payments-gw.p90.json, query: "p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}", slice: true, kind: signal}
+      - {file: payments-gw.p99.json, query: "p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}", slice: true, kind: signal}
+      - {file: postgresql.connections.by_db.json, query: "sum:postgresql.connections{host:pay-db-01} by {db}", slice: true, kind: signal, nulls: ["14:33", "15:07"]}
+      - {file: payments.authorize.success_rate.json, query: "avg:payments.authorize.success_rate{env:prod}", slice: true, kind: signal}
+      - {file: storefront-web.hits.json, query: "sum:trace.servlet.request.hits{service:storefront-web,env:prod}", slice: true, kind: noise, tag: traffic-spike}
+      - {file: redis-sessions.fragmentation.json, query: "avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}", slice: true, kind: trap,
+         window: ["2026-10-07T14:00:00Z", "2026-10-13T15:00:00Z"], interval_s: 3600}
+
+dynatrace:
+  - {display_id: P-26101288, start: "14:15:00", end: "14:39:00", title: "CPU saturation", severity: RESOURCE_CONTENTION, impact: INFRASTRUCTURE,
+     affected: node-east-14, kind: noise, tag: background, slice: true}
+  - {display_id: P-26101350, start: "14:29:00", end: "15:26:00", title: "Response time degradation", severity: PERFORMANCE, impact: SERVICES,
+     affected: PaymentsGateway, root_cause: api.paycore.example, kind: signal, sig_id: sig.dt_p26101350, slice: true}
+  - {display_id: P-26101362, start: "14:33:00", end: "15:12:00", title: "Response time degradation", severity: PERFORMANCE, impact: SERVICES,
+     affected: PaymentsGateway, root_cause: pay-db-01.larkspur.internal, evidence: "Failure rate increase (connection refusals)",
+     kind: trap, sig_id: sig.dt_p26101362, slice: true}
+  - {display_id: P-26101377, start: "14:40:00", end: "15:03:00", title: "Availability: synthetic monitor failing", severity: AVAILABILITY, impact: APPLICATION,
+     affected: cdn.larkspur.com, kind: trap, sig_id: sig.dt_p26101377, slice: true}
+
+pagerduty:
+  services:
+    - {id: PSV7Q2M, name: Payments - Prod, policy: PEP4K9R}
+    - {id: PSV3D8X, name: Database - Prod, policy: PEP7W2T}
+    - {id: PSV9C1L, name: Checkout - Prod, policy: PEP2N6B}
+    - {id: PSV5P4F, name: Platform, policy: PEP8H3J, urgency: low}
+  policies:
+    - {id: PEP4K9R, name: Payments Engineering, levels: [{level: 1, user: tom.beckett, schedule: PSC1PAY}, {level: 2, user: priya.raman, schedule: PSC2PAY}], delay_min: 10}
+    - {id: PEP7W2T, name: Database Engineering, levels: [{level: 1, user: elena.rossi, schedule: PSC1DBA}], delay_min: 15}
+    - {id: PEP2N6B, name: Commerce Platform, levels: [{level: 1, user: alice.nguyen, schedule: PSC1COM}], delay_min: 15}
+    - {id: PEP8H3J, name: Platform Reliability, levels: [{level: 1, user: sam.ortega, schedule: PSC1PLT}], delay_min: 30}
+  incidents:
+    - {number: 8810, id: QARVU3UMK0EH5N, dedup_key: "monitor-7266031-host:ord-01,device:/data", service: Platform, title: "Disk space low on ord-01", urgency: low, created: "13:52:12",
+       log: [{type: trigger, at: "13:52:12"}, {type: assign, at: "13:52:12", user: sam.ortega}, {type: resolve, at: "13:53:02", via: "datadog recovery"}],
+       kind: noise, tag: defect}
+    - {number: 8811, id: QWUYRGF214IXSR, dedup_key: "monitor-7344120", service: Platform, title: "search-indexer cron job failed", urgency: low, created: "14:10:05",
+       log: [{type: trigger, at: "14:10:05"}, {type: assign, at: "14:10:05", user: sam.ortega}, {type: acknowledge, at: "14:19:40", user: sam.ortega}],
+       kind: noise, tag: background}
+    - {number: 8812, id: QPZMPSIAOYTRMH, dedup_key: "monitor-7391240", service: Payments - Prod, title: "p90 latency high on payments-gw", urgency: high, created: "14:32:25",
+       log: [{type: trigger, at: "14:32:25"}, {type: assign, at: "14:32:25", user: tom.beckett}, {type: notify, at: "14:32:26", user: tom.beckett},
+             {type: escalate, at: "14:42:25", user: priya.raman, channel: timeout, sig_id: sig.pd8812_escalated, kind: signal},
+             {type: notify, at: "14:42:26", user: priya.raman}, {type: acknowledge, at: "14:44:10", user: priya.raman, sig_id: sig.pd8812_ack_priya, kind: signal},
+             {type: resolve, at: "15:10:30", user: priya.raman}],
+       kind: signal, sig_id: sig.pd8812}
+    - {number: 8813, id: QFN7LYAPC7UY3H, dedup_key: "monitor-7301990-host:pay-db-01,db:postgres", service: Database - Prod, title: "postgres.can_connect CRITICAL on pay-db-01", urgency: high, created: "14:33:50",
+       log: [{type: trigger, at: "14:33:50"}, {type: assign, at: "14:33:50", user: elena.rossi}, {type: acknowledge, at: "14:34:12", user: elena.rossi}, {type: resolve, at: "15:08:50", via: "datadog recovery"}],
+       kind: signal, sig_id: sig.pd8813}
+    - {number: 8814, id: Q8Q920Q2BA9LW9, dedup_key: "monitor-7391255", service: Checkout - Prod, title: "checkout-api error rate > 5%", urgency: high, created: "14:34:15",
+       log: [{type: trigger, at: "14:34:15"}, {type: assign, at: "14:34:15", user: alice.nguyen}, {type: acknowledge, at: "14:35:02", user: alice.nguyen}, {type: merge_in, at: "14:37:00", from: 8815, user: alice.nguyen},
+             {type: resolve, at: "15:10:45", user: alice.nguyen}],
+       kind: signal, sig_id: sig.pd8814}
+    - {number: 8815, id: QSO1W7PHJDJ1EO, dedup_key: "monitor-7390118", service: Checkout - Prod, title: "[Synthetics] checkout flow", urgency: high, created: "14:35:40",
+       log: [{type: trigger, at: "14:35:40"}, {type: assign, at: "14:35:40", user: alice.nguyen}, {type: resolve, at: "14:37:00", user: alice.nguyen, merged_into: 8814}],
+       kind: signal, sig_id: sig.pd8815_merged}
+
+servicenow:
+  live:
+    id: inc0048811
+    number: INC0048811
+    opened: "14:33:41"
+    opened_by: svc-datadog
+    source_monitor: 7391240
+    caller: svc-datadog
+    business_service: Online Checkout
+    ci: Payments Gateway
+    initial_group: Commerce Platform            # auto-rule keys on business service Online Checkout
+    priority: 2
+    kind: trap
+    sig_id: sig.inc0048811_opened
+    reassign: {at: "14:39:00", to_group: Payments Engineering, to_user: priya.raman, by: alice.nguyen, kind: signal, sig_id: sig.inc_reassigned}
+    # Field history for rewind (sys_audit), UTC.
+    audit:
+      - {at: "14:33:41", field: state, old: "", new: New, by: svc-datadog}
+      - {at: "14:35:20", field: state, old: New, new: In Progress, by: alice.nguyen}
+      - {at: "14:35:20", field: assigned_to, old: "", new: alice.nguyen, by: alice.nguyen}
+      - {at: "14:39:00", field: assignment_group, old: Commerce Platform, new: Payments Engineering, by: alice.nguyen}
+      - {at: "14:39:00", field: assigned_to, old: alice.nguyen, new: "", by: alice.nguyen}
+      - {at: "14:44:30", field: assigned_to, old: "", new: priya.raman, by: priya.raman}
+      - {at: "14:50:30", field: priority, old: "2", new: "1", by: alice.nguyen}
+      - {at: "15:30:00", field: state, old: In Progress, new: Resolved, by: priya.raman}
+    resolved: "15:30:00"
+    journal:     # hand-written signal entries; worker filler in content/servicenow/journal-filler.yaml
+      - {at: "14:43:10", by: alice.nguyen, element: work_notes, key: wn_rollback, kind: signal, sig_id: sig.inc_wn_rollback}
+      - {at: "14:47:12", by: elena.rossi, element: work_notes, key: wn_idle_txn, kind: signal, sig_id: sig.inc_wn_idle_txn, class: pgsa.idle_in_txn}
+      - {at: "14:39:00", by: alice.nguyen, element: work_notes, key: wn_reassign, kind: signal, sig_id: sig.inc_wn_reassign}
+      - {at: "15:09:00", by: priya.raman, element: work_notes, key: wn_rollback_gw, kind: signal, sig_id: sig.inc_wn_gw_rollback}
+  customer_incidents:
+    numbers_from: INC0048812
+    early: {count: 3, between: ["14:41:00", "14:50:00"], kind: signal, sig_id: sig.customer_inc_early, content: servicenow/incidents-customer.yaml}
+    late: {count: 8, between: ["15:05:00", "15:30:00"], kind: signal, sig_id: sig.customer_inc_late, content: servicenow/incidents-customer.yaml}
+  noise_incidents: {count: 8, months: 6, content: servicenow/incidents-noise.yaml, kind: noise, tag: prior-incident}
+
+splunk:
+  saved_searches:
+    - {name: Payments pool exhaustion, fires: true, threshold: "count > 20 in 5m", runbook: PGW-DB-CONN-TIMEOUT}
+    - {name: PSP slow calls, fires: false, threshold: "count > 1000 in 5m"}   # peaks near 660 in 5 min at 14:25 to 14:30
+    - {name: Postgres connection refusals, fires: true, threshold: "count > 0 in 1m"}
+    - {name: F5 pool member down, fires: true, threshold: "count > 0 in 1m"}
+    - {name: checkout-api 5xx rate, fires: false, threshold: "count > 1000 in 5m", disabled: true}
+    - {name: Edge scanner hits, fires: false, threshold: "count > 200 in 15m"}
+  alerts:
+    - {search: Payments pool exhaustion, at: "14:32:00", first_row: first_pool_timeout, kind: signal, sig_id: sig.splunk_alert_pool, slice: true}
+    - {search: Payments pool exhaustion, at: "14:32:40", duplicate_of: "14:32:00", kind: noise, tag: defect, slice: true}
+    - {search: Postgres connection refusals, at: "14:34:00", first_row: first_53300, kind: signal, sig_id: sig.splunk_alert_53300, slice: true}
+    - {search: F5 pool member down, at: "14:37:00", first_row: f5_first_down, kind: trap, sig_id: sig.splunk_alert_f5, slice: true}
+
+f5:
+  pool: /Common/pool_pay_gw
+  monitor: /Common/mon_pay_gw_health
+  flaps:   # member, down, up. Drained members go idle, pass health, are re-enabled, fill again.
+    - {member: pay-03, down: "14:36:40", up: "14:38:10", id: f5_first_down, sig_id: sig.f5_pay03_down, kind: trap}
+    - {member: pay-01, down: "14:39:25", up: "14:40:55"}
+    - {member: pay-03, down: "14:41:30", up: "14:43:05"}
+    - {member: pay-04, down: "14:44:50", up: "14:46:20"}
+    - {member: pay-03, down: "14:47:35", up: "14:49:10"}
+    - {member: pay-02, down: "14:50:40", up: "14:52:15"}
+    - {member: pay-03, down: "14:53:30", up: "14:55:00"}
+    - {member: pay-01, down: "14:57:45", up: "14:59:15"}
+    - {member: pay-03, down: "15:00:30", up: "15:02:00"}
+    - {member: pay-04, down: "15:03:40", up: "15:05:05"}
+  class: f5.member_flap
+  kind: trap
+
+solarwinds:
+  - {id: 55012, entity: pay-03, name: "Application Component down", component: Payments HTTP, triggered: "14:40:45.4370000", reset: "14:46:45.1180000",
+     kind: trap, sig_id: sig.sw_pay03}
+  - {id: 55019, entity: pay-03, name: "Application Component down", component: Payments HTTP, triggered: "14:53:50.0920000", reset: "15:06:50.6610000",
+     kind: trap, sig_id: sig.sw_pay03_again}
+  - {id: 54977, entity: win-rpt-07, name: "Volume almost full", component: "C:\\", triggered: "09:12:03.5500000", reset: null, kind: noise, tag: background}
+
+paycore:
+  - {version: 1, captured: "13:45:00", valid_from: null, valid_to: "15:10:22", indicator: none, kind: trap, sig_id: sig.psp_green}
+  - {version: 2, captured: "15:10:22", valid_from: "15:10:22", valid_to: "15:30:00", indicator: minor, incident_status: investigating,
+     created: "15:10:22", started: "14:24:00", kind: signal, sig_id: sig.psp_v2}
+  - {version: 3, captured: "15:30:00", valid_from: "15:30:00", valid_to: null, indicator: minor, incident_status: monitoring,
+     recovered: "15:24:00", kind: signal, sig_id: sig.psp_v3}
+
+k8s:
+  # Rendered from estate.checkout_pods plus these.
+  - {id: search_indexer_fail, at: "14:10:05", object: CronJob/search-indexer, reason: BackoffLimitExceeded, kind: noise, tag: background}
+  - {id: hpa_storefront, at: ["13:58:20", "14:44:10", "15:16:30"], object: HorizontalPodAutoscaler/storefront-web, kind: noise, tag: traffic-spike}
+  - {id: node_east_14_pressure, at: "14:16:30", object: Node/node-east-14, reason: NodeHasDiskPressure, kind: noise, tag: background}
+  - {id: rollout_897, from: "14:28:05", to: "14:29:10", kind: trap, sig_id: sig.k8s_rollout_2143}
+  - {id: readiness_fail, at: "14:28:20", kind: trap, sig_id: sig.k8s_readiness_fail}
+  - {id: rollback_898, from: "14:40:35", to: "14:42:05", kind: signal, sig_id: sig.k8s_rollback_2142}
+
+slack:
+  channels:
+    - {name: inc-checkout-latency, created: "14:35:00", creator: alice.nguyen, purpose: "Checkout latency / payment failures 13 Oct"}
+    - {name: sre-oncall, created: "2023-02-14T10:00:00Z", creator: sam.ortega, purpose: "SRE on-call chatter and alert routing"}
+  fixed: content/slack/fixed.yaml          # hand-written signal and trap messages (main session)
+  chatter: [content/slack/inc-checkout-latency.yaml, content/slack/sre-oncall.yaml]   # workers
+
+confluence:
+  - {key: CHECKOUT-LATENCY, file: runbooks/CHECKOUT-LATENCY.md, updated: "2024-03-11", author: sam.ortega, kind: trap, sig_id: sig.runbook_stale, slice: true}
+  - {key: PGW-DB-CONN-TIMEOUT, file: runbooks/PGW-DB-CONN-TIMEOUT.md, updated: "2026-08-02", author: elena.rossi, kind: signal, sig_id: sig.runbook_pgw, slice: true}
+  - {key: KB0010418, file: runbooks/KB0010418.md, updated: "2026-06-17", author: elena.rossi, kind: signal, sig_id: sig.kb_idle_txn, slice: true}
+  - {key: KB0009871, file: runbooks/KB0009871.md, updated: "2026-03-09", author: alice.nguyen, kind: trap, sig_id: sig.kb_stale_checkout, slice: true}
+  - {key: KB0010502, file: runbooks/KB0010502.md, updated: "2026-09-24", author: dana.whitfield, kind: signal, sig_id: sig.kb_psp_retry_design, slice: true}
+  - {key: KB0010233, file: runbooks/KB0010233.md, updated: "2026-05-12", author: jordan.pike, kind: noise, tag: background, slice: true}
+  - {key: F5-CERT-ROTATION, file: runbooks/F5-CERT-ROTATION.md, updated: "2025-06-03", author: sam.ortega, kind: noise, tag: background, slice: true}
+  - {key: SPLUNK-ACCESS, file: runbooks/SPLUNK-ACCESS.md, updated: "2026-01-15", author: sam.ortega, kind: noise, tag: background, slice: true}
+
+triggers:
+  - {checkpoint: "1440", file: triggers/1440.md, from: alice.nguyen}
+  - {checkpoint: "1452", file: triggers/1452.md, from: alice.nguyen}
+  - {checkpoint: "1515", file: triggers/1515.md, from: alice.nguyen}
+
+# ---------------------------------------------------------------------------------------------
+# Noise inventory (PLAN 2, budget rule): every noise class, with the trap it serves or its tag.
+noise:
+  - {class: log.request_ok, tag: background}
+  - {class: log.hikari_stats, tag: background, note: "baseline stats lines outside saturation"}
+  - {class: log.bg_scheduler, tag: background, note: "settlement-sync and token refresh INFO lines on the gateway"}
+  - {class: log.co_request, tag: background}
+  - {class: log.co_debug_flood, tag: visible-deploy}
+  - {class: log.co_bg, tag: background, note: "address-validation fallbacks, cart cache misses"}
+  - {class: pg.checkpoint, tag: background}
+  - {class: pg.autovacuum, tag: background}
+  - {class: pg.connect, tag: background, note: "order-service pool reconnects on maxLifetime"}
+  - {class: nginx.request, tag: background}
+  - {class: nginx.scanner, tag: background}
+  - {class: nginx.cart_resubmit, tag: traffic-spike}
+  - {class: log.startup, tag: background, note: "gateway startup lines around each rolling restart"}
+  - {class: log.shutdown, tag: background}
+  - {class: log.co_startup, tag: background, note: "checkout-api pod lifecycle during rollout and rollback"}
+  - {class: log.co_shutdown, tag: background}
+  - {class: dd.event.node_cpu, tag: background}
+  - {class: dt.problem, tag: background, note: "P-26101288 CPU saturation on node-east-14"}
+  - {class: dt.entity, tag: background, note: "Dynatrace entity list"}
+  - {class: jk.build, tag: background, note: "earlier and unrelated builds"}
+  - {class: snow.change, tag: background, note: "firewall and patching changes"}
+  - {class: spl.alert, tag: defect, note: "the duplicate webhook delivery"}
+  - {class: spl.search, tag: background, note: "saved searches other than pool exhaustion"}
+  - {class: slack.chatter, tag: background, note: "worker-written chatter"}
+  - {class: slack.bot.datadog, tag: background, note: "bot posts for non-incident monitors"}
+  - {class: k8s.event, tag: background}
+  - {class: dd.redis_flap, tag: redis}
+  - {class: log.truncated, tag: defect, note: "forwarder line-length cut mid-trace on pay-03; next line starts with a bare frame"}
+  - {class: spl.duplicate_delivery, tag: defect, note: "pool-exhaustion webhook re-POSTed 40 s later with the same sid"}
+  - {class: dd.fire_and_resolve, tag: defect, note: "ord-01 disk warning triggers and recovers within 50 s; PD 8810 auto-resolved"}
+  - {class: snow.empty_fields, tag: defect, note: "every field of the table present, most as empty strings"}
+  - {class: snow.incident.noise, tag: prior-incident, note: "closed incidents of the last six months: the similarity corpus"}
+  - {class: snow.journal.noise, tag: prior-incident, note: "triage notes on the closed noise incidents"}
+  - {class: snow.journal.filler, tag: background, note: "status pings and comms notes on INC0048811"}
+  - {class: snow.audit, tag: background, note: "INC0048811 field history other than the reassignment"}
+  - {class: snow.ci, tag: background, note: "the CMDB service model"}
+  - {class: snow.rel, tag: background, note: "CMDB relationships"}
+  - {class: snow.user, tag: background, note: "sys_user, Marcus Okafor active=false"}
+  - {class: snow.group, tag: background, note: "sys_user_group"}
+  - {class: pd.service, tag: background, note: "PagerDuty services"}
+  - {class: pd.policy, tag: background, note: "escalation policies other than Payments Engineering"}
+  - {class: pd.oncall, tag: background, note: "on-call shifts other than Priya's"}
+  - {class: pd.log, tag: background, note: "assign, notify, acknowledge and resolve entries"}
+  - {class: pd.incident, tag: background, note: "PD 8811 search-indexer"}
+  - {class: dd.event.ord_disk, tag: defect, note: "the ord-01 disk warning that fires and resolves within 50 s"}
+  - {class: dd.event.search_indexer, tag: background}
+  - {class: metric.storefront-web.hits, tag: traffic-spike, note: "browse traffic, flat"}
+  - {class: nginx.submit, tag: background, note: "successful submits at the edge"}
+  - {class: sw.alert, tag: background, note: "win-rpt-07 volume alert"}
+  - {class: conf.page, tag: background, note: "rollback, F5 certificate and Splunk access pages"}
+defects:
+  truncated_line: {host: pay-03, near: "14:38:00", limit_bytes: 2048}
+
+# ---------------------------------------------------------------------------------------------
+# PLAN 1.4, row by row, mapped to the items above. `visible` is the first checkpoint whose cut
+# (t < now) includes the row; "after" means after 15:15.
+timeline:
+  - {at: "2026-03-04", row: "INC0042041 checkout-db pool exhaustion; KB0009871", refs: [inc0042041, KB0009871], kind: trap, visible: "1440"}
+  - {at: "2026-07-19", row: "INC0045210 PayCore outage, 3000 ms fail fast", refs: [inc0045210], kind: signal, visible: "1440"}
+  - {at: "2026-09-22", row: "INC0047003 redis fragmentation closed as benign", refs: [inc0047003], kind: trap, visible: "1440"}
+  - {at: "6 days before", row: "redis fragmentation flaps every ~2 h", refs: [datadog.monitors.redis_frag, redis-sessions.fragmentation.json], kind: trap, visible: "1440"}
+  - {at: "10:00", row: "CHG0031877 payments-gateway 3.8.0 release", refs: [chg0031877], kind: signal, visible: "1440"}
+  - {at: "10:19:48", row: "Jenkins payments-gateway-deploy #412 3.8.0", refs: ["payments-gateway-deploy#412"], kind: signal, visible: "1440"}
+  - {at: "10:20:30", row: "rolling restarts with timeout-ms=8000 retries=3", refs: [startup_380], kind: signal, visible: "1440"}
+  - {at: "11:00", row: "CHG0031899 Windows patching", refs: [chg0031899], kind: noise, visible: "1440"}
+  - {at: "13:30", row: "CHG0031850 firewall rule for vendor SFTP", refs: [chg0031850], kind: noise, visible: "1440"}
+  - {at: "14:10:05", row: "search-indexer cron fails; PD 8811", refs: [datadog.monitors.search_indexer, pd.8811, search_indexer_fail], kind: noise, visible: "1440"}
+  - {at: "14:12:00", row: "redis fragmentation fires; 14:14 Sam snoozes", refs: [datadog.monitors.redis_frag, slack.sre_sam_1414], kind: trap, visible: "1440"}
+  - {at: "14:15:00", row: "node-east-14 CPU saturation", refs: [datadog.monitors.node_cpu, P-26101288], kind: noise, visible: "1440"}
+  - {at: "14:24:00", row: "PayCore EU degradation begins (backdated started_at)", refs: [paycore.v2], kind: signal, visible: "1515"}
+  - {at: "14:24", row: "PayCore latency rises; slow share ramp", refs: [model.slow_share, model.psp_latency_ms], kind: signal, visible: "1440"}
+  - {at: "14:26:12", row: "first authorize attempt 1/4 timed out on pay-01", refs: [first_retry], kind: signal, visible: "1440"}
+  - {at: "14:26:14", row: "first checkout-api timeout for ord-7781901 on 2.14.2", refs: [first_checkout_timeout], kind: signal, visible: "1440"}
+  - {at: "14:26:34", row: "first HikariCP leak warning on pay-01", refs: [first_leak], kind: signal, visible: "1440"}
+  - {at: "14:27:10", row: "Datadog 7391241 p99 warn, posts to #sre-oncall", refs: [datadog.monitors.p99_gw, slack.sre_dd_1427], kind: signal, visible: "1440"}
+  - {at: "14:27:30", row: "Jenkins checkout-api-deploy #897 2.14.3, CHG0031902", refs: ["checkout-api-deploy#897", chg0031902], kind: trap, visible: "1440"}
+  - {at: "14:28:05", row: "checkout-api rollout; readiness failure; 2.1% blip; DEBUG flood; 7391301", refs: [rollout_897, readiness_fail, debug_flood, datadog.monitors.co_log_volume, datadog.monitors.co_errors], kind: trap, visible: "1440"}
+  - {at: "14:29:00", row: "Dynatrace P-26101350 external service api.paycore.example", refs: [P-26101350], kind: signal, visible: "1440"}
+  - {at: "14:30:00", row: "reconciler #2311 starts; 40 recon_app connections", refs: ["payments-reconciler#2311", recon_connect], kind: signal, visible: "1440"}
+  - {at: "14:30", row: "housekeeper stats show pools growing", refs: [log.hikari_stats], kind: signal, visible: "1440"}
+  - {at: "14:31:07", row: "first pool timeout on pay-02; Splunk alert 14:32", refs: [first_pool_timeout, splunk.alerts.0], kind: signal, visible: "1440"}
+  - {at: "14:31:34", row: "After cleanup stats total=35 active=35 idle=0 waiting=12", refs: [stats_full], kind: signal, visible: "1440"}
+  - {at: "14:31", row: "error rate 3 / 9 / 14 percent", refs: [model.checkout_error_rate_pct], kind: signal, visible: "1440"}
+  - {at: "14:32:10", row: "Datadog 7391240 p90 Triggered (paging)", refs: [datadog.monitors.p90_gw], kind: signal, visible: "1440"}
+  - {at: "14:32:25", row: "PagerDuty 8812, Tom Beckett", refs: [pd.8812], kind: signal, visible: "1440"}
+  - {at: "14:33:00", row: "Dynatrace P-26101362 root cause pay-db-01", refs: [P-26101362], kind: trap, visible: "1440"}
+  - {at: "14:33:02", row: "Postgres FATAL 53300; pay-04 Cannot acquire", refs: [first_53300, cannot_acquire_first], kind: signal, visible: "1440"}
+  - {at: "14:33:30", row: "postgres.can_connect CRITICAL; 7301990; nulls", refs: [datadog.monitors.pg_can_connect, postgresql.connections.by_db.json], kind: signal, visible: "1440"}
+  - {at: "14:33:41", row: "INC0048811 auto-created, Commerce Platform, P2", refs: [inc0048811], kind: trap, visible: "1440"}
+  - {at: "14:33:50", row: "PagerDuty 8813 Database - Prod, Elena", refs: [pd.8813], kind: signal, visible: "1440"}
+  - {at: "14:34:00", row: "Datadog 7391255 error rate > 5% Triggered", refs: [datadog.monitors.co_errors], kind: signal, visible: "1440"}
+  - {at: "14:34:15", row: "PagerDuty 8814 Checkout - Prod; Alice acks 14:35:02", refs: [pd.8814], kind: signal, visible: "1440"}
+  - {at: "14:34:30", row: "Elena in #sre-oncall: max_connections, mostly pgw_app", refs: [slack.sre_elena_1434], kind: signal, visible: "1440"}
+  - {at: "14:35:00", row: "#inc-checkout-latency created; PD bot posts", refs: [slack.inc_channel_created], kind: signal, visible: "1440"}
+  - {at: "14:35:30", row: "synthetic checkout flow failing; PD 8815 merged into 8814", refs: [datadog.monitors.syn_checkout, pd.8815], kind: signal, visible: "1440"}
+  - {at: "14:35", row: "submit traffic +70% by 14:45; repeated cart ids", refs: [model.traffic_per_s, model.resubmit, nginx.cart_resubmit], kind: trap, visible: "1440"}
+  - {at: "14:36:00", row: "Ben: deployed checkout-api 2.14.3 at 14:28", refs: [slack.inc_ben_1436], kind: trap, visible: "1440"}
+  - {at: "14:36:40", row: "F5 pay-03 monitor status down; flapping until 15:05", refs: [f5_first_down, f5.flaps], kind: trap, visible: "1440"}
+  - {at: "14:37:30", row: "Sam: is it redis again? Alice: runbook is ancient", refs: [slack.inc_sam_1437, slack.inc_alice_1437], kind: trap, visible: "1440"}
+  - {at: "14:38:00", row: "Elena: 197 of 200 usable, plus 40 from recon_app", refs: [slack.inc_elena_1438], kind: signal, visible: "1440"}
+  - {at: "14:39:00", row: "INC0048811 reassigned to Payments Engineering", refs: [inc0048811.reassign], kind: signal, visible: "1440"}
+  - {at: "14:40:00", row: "Checkpoint 1; trigger 1", refs: [triggers.1440], kind: checkpoint}
+  - {at: "14:36:00", row: "CHG0031880 DNS TTL change starts (raised 12 Oct, visible since)", refs: [chg0031880], kind: trap, visible: "1440"}
+  - {at: "14:40:00", row: "marketing site synthetic fails; P-26101377", refs: [datadog.monitors.syn_marketing, P-26101377], kind: trap, visible: "1452"}
+  - {at: "14:40:30", row: "Jenkins #898 rollback to 2.14.2", refs: ["checkout-api-deploy#898", rollback_898], kind: signal, visible: "1452"}
+  - {at: "14:40:45", row: "SolarWinds Payments HTTP on PAY-03 Down", refs: [solarwinds.55012], kind: trap, visible: "1452"}
+  - {at: "14:41:00", row: "Kofi: network thing? marketing site down too", refs: [slack.inc_kofi_1441], kind: trap, visible: "1452"}
+  - {at: "14:42:25", row: "PD 8812 escalates to Priya (timeout)", refs: [pd.8812.escalate], kind: signal, visible: "1452"}
+  - {at: "14:43:10", row: "Alice: rollback done, still seeing 504s; work note", refs: [slack.inc_alice_1443, wn_rollback], kind: signal, visible: "1452"}
+  - {at: "14:44:10", row: "Priya acks 8812", refs: [pd.8812.acknowledge, slack.inc_priya_1444], kind: signal, visible: "1452"}
+  - {at: "14:45:00", row: "Sam: pay-03 dropped out of the F5 pool. hardware?", refs: [slack.inc_sam_1445], kind: trap, visible: "1452"}
+  - {at: "14:46:00", row: "Kofi: PayCore status page is all green", refs: [slack.inc_kofi_1446], kind: trap, visible: "1452"}
+  - {at: "14:47:12", row: "Elena pastes pg_stat_activity in thread; work note", refs: [slack.inc_elena_1447, wn_idle_txn, model.connections.pgsa_snapshot], kind: signal, visible: "1452"}
+  - {at: "14:48:30", row: "Elena offers to kill idle-in-txn sessions", refs: [slack.inc_elena_1448], kind: trap, visible: "1452"}
+  - {at: "14:49:00", row: "Ben: so the DB is the problem? Elena: no", refs: [slack.inc_ben_1449, slack.inc_elena_1449], kind: signal, visible: "1452"}
+  - {at: "14:41", row: "customer incidents INC0048812 to INC0048814", refs: [servicenow.customer_incidents.early], kind: signal, visible: "1452"}
+  - {at: "14:50:00", row: "Alice: support says 40+ tickets", refs: [slack.inc_alice_1450], kind: signal, visible: "1452"}
+  - {at: "14:51:00", row: "Jordan: only change on payments side was the 6am release", refs: [slack.inc_jordan_1451], kind: signal, visible: "1452"}
+  - {at: "14:52:00", row: "Checkpoint 2; trigger 2", refs: [triggers.1452], kind: checkpoint}
+  - {at: "14:53:40", row: "Priya: release at 6:20 this morning, doubt it", refs: [slack.inc_priya_1453], kind: trap, visible: "1515"}
+  - {at: "14:56:00", row: "Elena kills 30 idle-in-transaction sessions", refs: [kill_sessions, slack.inc_elena_1456], kind: signal, visible: "1515"}
+  - {at: "14:58:00", row: "Priya: leak detector on pay-01, retry holds the txn", refs: [slack.inc_priya_1458], kind: signal, visible: "1515"}
+  - {at: "15:01:10", row: "Jenkins #413 3.7.9, no change ticket", refs: ["payments-gateway-deploy#413", startup_379], kind: signal, visible: "1515"}
+  - {at: "15:09:00", row: "emergency CHG0031910 raised after the fact", refs: [chg0031910], kind: signal, visible: "1515"}
+  - {at: "15:06", row: "pools reset; 5xx baseline by 15:08; monitors and PD recover", refs: [model.connections, datadog.monitors, pd], kind: signal, visible: "1515"}
+  - {at: "15:08", row: "success rate ~73%; PSP timeout 3000ms", refs: [psp_fail_fast, payments.authorize.success_rate.json], kind: signal, visible: "1515"}
+  - {at: "15:05", row: "customer incidents INC0048815 to INC0048822", refs: [servicenow.customer_incidents.late], kind: signal, visible: "1515"}
+  - {at: "15:10:22", row: "PayCore status v2 Degraded performance, started_at 07:24 PT", refs: [paycore.v2], kind: signal, visible: "1515"}
+  - {at: "15:15:00", row: "Checkpoint 3; trigger 3", refs: [triggers.1515], kind: checkpoint}
+  - {at: "15:15:30", row: "reconciler #2311 finishes", refs: ["payments-reconciler#2311"], kind: signal, visible: after}
+  - {at: "15:24:00", row: "PayCore recovers; v3 monitoring 15:30", refs: [paycore.v3], kind: signal, visible: after}
+  - {at: "15:30:00", row: "INC0048811 resolved", refs: [inc0048811.audit], kind: signal, visible: after}

@@ -1,0 +1,13 @@
+{
+ "x-source": "transcribed from the ServiceNow data dictionary for the table (no PDI export; see docs/schemas.md)",
+ "mode": "field-list",
+ "fields": [
+  "element",
+  "element_id",
+  "name",
+  "sys_created_by",
+  "sys_created_on",
+  "sys_id",
+  "value"
+ ]
+}

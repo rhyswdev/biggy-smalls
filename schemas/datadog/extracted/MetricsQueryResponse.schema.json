@@ -1,0 +1,231 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$ref": "#/components/schemas/MetricsQueryResponse",
+ "components": {
+  "schemas": {
+   "MetricsQueryMetadata": {
+    "description": "Object containing all metric names returned and their associated metadata.",
+    "properties": {
+     "aggr": {
+      "description": "Aggregation type.",
+      "example": "avg",
+      "readOnly": true,
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "display_name": {
+      "description": "Display name of the metric.",
+      "example": "system.cpu.idle",
+      "readOnly": true,
+      "type": "string"
+     },
+     "end": {
+      "description": "End of the time window, milliseconds since Unix epoch.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "expression": {
+      "description": "Metric expression.",
+      "example": "system.cpu.idle{host:foo,env:test}",
+      "readOnly": true,
+      "type": "string"
+     },
+     "interval": {
+      "description": "Number of milliseconds between data samples.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "length": {
+      "description": "Number of data samples.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "metric": {
+      "description": "Metric name.",
+      "example": "system.cpu.idle",
+      "readOnly": true,
+      "type": "string"
+     },
+     "pointlist": {
+      "description": "List of points of the timeseries in milliseconds.",
+      "example": [
+       [
+        1681683300000.0,
+        77.62145685254418
+       ]
+      ],
+      "items": {
+       "$ref": "#/components/schemas/Point"
+      },
+      "readOnly": true,
+      "type": "array"
+     },
+     "query_index": {
+      "description": "The index of the series' query within the request.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "scope": {
+      "description": "Metric scope, comma separated list of tags.",
+      "example": "host:foo,env:test",
+      "readOnly": true,
+      "type": "string"
+     },
+     "start": {
+      "description": "Start of the time window, milliseconds since Unix epoch.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "tag_set": {
+      "description": "Unique tags identifying this series.",
+      "items": {
+       "description": "Unique tags identifying this series.",
+       "type": "string"
+      },
+      "readOnly": true,
+      "type": "array"
+     },
+     "unit": {
+      "description": "Detailed information about the metric unit.\nThe first element describes the \"primary unit\" (for example, `bytes` in `bytes per second`).\nThe second element describes the \"per unit\" (for example, `second` in `bytes per second`).\nIf the second element is not present, the API returns null.",
+      "items": {
+       "$ref": "#/components/schemas/MetricsQueryUnit"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "readOnly": true,
+      "type": "array"
+     }
+    },
+    "type": "object"
+   },
+   "MetricsQueryResponse": {
+    "description": "Response Object that includes your query and the list of metrics retrieved.",
+    "properties": {
+     "error": {
+      "description": "Message indicating the errors if status is not `ok`.",
+      "readOnly": true,
+      "type": "string"
+     },
+     "from_date": {
+      "description": "Start of requested time window, milliseconds since Unix epoch.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     },
+     "group_by": {
+      "description": "List of tag keys on which to group.",
+      "items": {
+       "description": "Tag key to group by your metric.",
+       "type": "string"
+      },
+      "readOnly": true,
+      "type": "array"
+     },
+     "message": {
+      "description": "Message indicating `success` if status is `ok`.",
+      "readOnly": true,
+      "type": "string"
+     },
+     "query": {
+      "description": "Query string",
+      "readOnly": true,
+      "type": "string"
+     },
+     "res_type": {
+      "description": "Type of response.",
+      "example": "time_series",
+      "readOnly": true,
+      "type": "string"
+     },
+     "series": {
+      "description": "List of timeseries queried.",
+      "items": {
+       "$ref": "#/components/schemas/MetricsQueryMetadata"
+      },
+      "readOnly": true,
+      "type": "array"
+     },
+     "status": {
+      "description": "Status of the query.",
+      "example": "ok",
+      "readOnly": true,
+      "type": "string"
+     },
+     "to_date": {
+      "description": "End of requested time window, milliseconds since Unix epoch.",
+      "format": "int64",
+      "readOnly": true,
+      "type": "integer"
+     }
+    },
+    "type": "object"
+   },
+   "MetricsQueryUnit": {
+    "description": "Object containing the metric unit family, scale factor, name, and short name.",
+    "properties": {
+     "family": {
+      "description": "Unit family, allows for conversion between units of the same family, for scaling.",
+      "example": "time",
+      "readOnly": true,
+      "type": "string"
+     },
+     "name": {
+      "description": "Unit name",
+      "example": "minute",
+      "readOnly": true,
+      "type": "string"
+     },
+     "plural": {
+      "description": "Plural form of the unit name.",
+      "example": "minutes",
+      "readOnly": true,
+      "type": "string"
+     },
+     "scale_factor": {
+      "description": "Factor for scaling between units of the same family.",
+      "example": 60.0,
+      "format": "double",
+      "readOnly": true,
+      "type": "number"
+     },
+     "short_name": {
+      "description": "Abbreviation of the unit.",
+      "example": "min",
+      "readOnly": true,
+      "type": "string"
+     }
+    },
+    "type": [
+     "object",
+     "null"
+    ]
+   },
+   "Point": {
+    "description": "Array of timeseries points.",
+    "example": [
+     1575317847.0,
+     0.5
+    ],
+    "items": {
+     "description": "Each point is of the form `[POSIX_timestamp, numeric_value]`.\nThe timestamp should be in seconds and current.\nThe numeric value format should be a 32bit float gauge-type value.\nCurrent is defined as not more than 10 minutes in the future or more than 1 hour in the past.",
+     "format": "double",
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "maxItems": 2,
+    "minItems": 2,
+    "type": "array"
+   }
+  }
+ },
+ "x-source": "datadog-api-client-python .generator/schemas/v1/openapi.yaml"
+}

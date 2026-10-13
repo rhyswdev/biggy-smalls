@@ -1,0 +1,27 @@
+{
+ "x-source": "transcribed logstash-logback-encoder LogstashEncoder default fields plus MDC and shipper fields",
+ "fields": [
+  "@timestamp",
+  "@version",
+  "message",
+  "logger_name",
+  "thread_name",
+  "level",
+  "level_value",
+  "stack_trace",
+  "traceId",
+  "spanId",
+  "orderId",
+  "cartId",
+  "service",
+  "version",
+  "kubernetes"
+ ],
+ "kubernetes": [
+  "namespace",
+  "pod_name",
+  "container_name",
+  "node_name",
+  "labels"
+ ]
+}
