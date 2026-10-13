@@ -1,0 +1,112 @@
+# A second pass over the candidates of facets-1.toml, on 2026-10-13, for two reasons.
+#
+# 1. One reworded line. In facets-1 the `security` option ("Authentication, authorisation, certificates,
+#    access or audit.") answered yes to lines about authorising a payment: the word, not the meaning. Here
+#    it reads "Who is allowed to do what: ..." in the yes/no form, and `signal_one` asks the shipped
+#    pick-one question with the same rewording, to see whether the shipped profile gains from it too.
+# 2. A cold repeat. Every other question is unchanged, so its answers here against facets-1's say how
+#    steady a candidate is.
+#
+# Nothing here ships.
+
+# The shipped `signal` options, unchanged, asked as yes/no each instead of pick-one.
+[signal_any]
+type = "multi"
+applies = ["log line", "alert", "alert definition", "incident ticket"]
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Does it report this: {meaning}"
+
+[signal_any.options]
+latency = "Something is slow: response times, durations, waits, slow queries."
+errors = "A request or operation failed: exceptions, error codes, rejected calls."
+saturation = "A finite resource is full or running out: pools, queues, connections, threads, memory, disk, quotas."
+availability = "Something is down, unreachable, unhealthy, restarting or failing over."
+traffic = "The amount of work arriving changed: request rate, volume, throughput."
+change = "Something was deployed, configured, started, stopped or scheduled on purpose."
+security = "Who is allowed to do what: logins, permissions, certificates, access control, audit trails."
+routine = "Normal operation with nothing wrong: a request served, a heartbeat, a job finished."
+
+# Which finite resource a text is about: the resource list of the USE method (utilisation, saturation,
+# errors per resource), with its software resources folded into one option.
+[resource]
+applies = ["log line", "alert", "alert definition", "incident ticket"]
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Choose the one resource it is mainly about. Choose `other` if it is about no particular resource or you cannot tell."
+
+[resource.options]
+cpu = "Processor time: load, utilisation, run queue, throttling."
+memory = "Memory: heap, garbage collection, swap, out of memory, fragmentation."
+disk = "Storage and file input or output: disk space, volumes, read or write errors, waiting on a disk."
+network = "The network path: sockets, name resolution, encrypted handshakes, packets, routes, balancer members."
+pool = "A bounded pool or limit in software: connections, sessions, threads, workers, file descriptors, queues, rate limits."
+other = "No particular resource, or cannot tell."
+
+# How something failed: the failure classes of the canonical RPC status codes.
+[fault]
+applies = ["log line", "alert", "alert definition", "incident ticket"]
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. If it reports a failure, choose the one way it failed. Choose `other` if it reports no failure or you cannot tell."
+
+[fault.options]
+timeout = "It took too long and was given up on: a deadline or a timeout passed."
+unavailable = "The other side could not be reached or refused: connection refused or reset, service unavailable, no healthy member."
+exhausted = "A limit was hit: a pool, quota, queue or capacity had no room left."
+denied = "Not allowed: authentication or permission failed."
+not_found = "The thing asked for does not exist."
+invalid = "The request or the data was wrong: validation, parsing or format errors."
+crashed = "A process, container or machine died, was killed, restarted or was evicted."
+other = "No failure, or none of the above, or cannot tell."
+
+# Which tier a text is about. The ruling left `layer` out of v1 and named it the first facet to add back.
+[layer]
+applies = ["log line", "alert", "alert definition", "incident ticket"]
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Choose the one tier it is mainly about. Choose `other` if you cannot tell."
+
+[layer.options]
+application = "Application code and its framework: handling requests, business logic, a service starting or stopping."
+database = "A database or data store: connections to it, queries, transactions, replication, maintenance."
+network = "The network between things: load balancers, proxies, name resolution, firewalls, certificates in transit, the edge."
+platform = "What things run on: machines, the operating system, containers, the orchestrator, scaling."
+external = "A third party outside the estate: a provider or a vendor interface."
+other = "None of the above, or cannot tell."
+
+# The shipped `signal` options on metric series, which v1 does not tag.
+[signal_metric]
+applies = ["metric series"]
+instructions = "`text` is the query of one metric time series from a monitoring system. Choose the one category that best describes what the series measures. Choose `other` if none fits or you cannot tell."
+
+[signal_metric.options]
+latency = "Something is slow: response times, durations, waits, slow queries."
+errors = "A request or operation failed: exceptions, error codes, rejected calls."
+saturation = "A finite resource is full or running out: pools, queues, connections, threads, memory, disk, quotas."
+availability = "Something is down, unreachable, unhealthy, restarting or failing over."
+traffic = "The amount of work arriving changed: request rate, volume, throughput."
+other = "None of the above, or cannot tell."
+
+# The shipped `act` options, unchanged, asked as yes/no each.
+[act_any]
+type = "multi"
+applies = ["chat message", "work note"]
+instructions = "`text` is one `kind` written by a person while an IT incident is being worked: a chat message or a note on a ticket. Does the writer do this: {meaning}"
+
+[act_any.options]
+observation = "Reports something seen, with or without data: a number, a graph, a log line, a symptom."
+hypothesis = "Proposes or doubts a cause."
+action_taken = "Says something has been done."
+action_proposed = "Suggests, requests or agrees what to do next."
+question = "Asks for information."
+status = "Sums up where things stand for others: impact, progress, handover."
+social = "Greetings, thanks, acknowledgements; nothing about the substance."
+
+# The shipped `signal` question, pick-one, with only the `security` line reworded.
+[signal_one]
+applies = ["log line", "alert", "alert definition", "incident ticket"]
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Choose the one category that best describes what it reports. Choose `other` if none fits or you cannot tell."
+
+[signal_one.options]
+latency = "Something is slow: response times, durations, waits, slow queries."
+errors = "A request or operation failed: exceptions, error codes, rejected calls."
+saturation = "A finite resource is full or running out: pools, queues, connections, threads, memory, disk, quotas."
+availability = "Something is down, unreachable, unhealthy, restarting or failing over."
+traffic = "The amount of work arriving changed: request rate, volume, throughput."
+change = "Something was deployed, configured, started, stopped or scheduled on purpose."
+security = "Who is allowed to do what: logins, permissions, certificates, access control, audit trails."
+routine = "Normal operation with nothing wrong: a request served, a heartbeat, a job finished."
+other = "None of the above, or cannot tell."

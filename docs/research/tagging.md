@@ -156,3 +156,52 @@ Five API calls on 2026-10-13, all with synthetic text written for the check. The
 5. The SDK at 0.7.4 on Python 3.12.13, key passed explicitly, two questions: 200, 0.29 s.
 
 Plus one offline SDK run through `httpx2.MockTransport`, with no network. The SDK was installed into a throwaway environment outside the repo; nothing was written to the repo.
+
+## 7. What the tags give on the bundle, and candidate facets we tried
+
+Written on 2026-10-13, after the first `make tag` run. The shipped taxonomy is unchanged by this section: it records what we measured and tried, so the next ruling has numbers. Every candidate was run through `smalls tag --experiment`, which writes beside its spec file under `eval/tags/experiments/` and never touches the committed cache. The profiles and candidates were written by a session that knows the development incident, so each candidate is tied to a vocabulary older than it, and the risk that remains is stated per candidate.
+
+### 7.1 What the shipped tags are good for
+
+**Counts over time by meaning.** With tags on, grouping the visible log records at 14:52 by `signal` in 5-minute buckets, each count multiplied by its `keep_1_in`:
+
+| From (UTC) | latency | errors | saturation | routine | untagged |
+|---|---|---|---|---|---|
+| 14:00 | 0 | 2 | 0 | 35,807 | 51 |
+| 14:20 | 1 | 4 | 0 | 37,006 | 53 |
+| 14:25 | 710 | 201 | 0 | 35,998 | 4,342 |
+| 14:30 | 205 | 1,605 | 248 | 38,246 | 15,232 |
+| 14:35 | 0 | 7,103 | 2,272 | 41,144 | 24,968 |
+| 14:45 | 4 | 15,106 | 4,908 | 47,006 | 21,717 |
+
+`routine` stays flat while `latency` appears first, then `errors` and `saturation`: the order of events shows without the agent knowing one vendor string. This is what `search_logs group_by=signal` with a bucket returns.
+
+**Other uses the contract already names**: one word across vendors (`signal=saturation` reaches log lines, alert definitions, alerts and tickets); the theories in a channel (`act=hypothesis`) apart from what has been done (`act=action_taken`); changes by kind.
+
+**The weakness.** The untagged column is large, and it is the diagnostic lines. A pick-one question splits its probability when a text is two things at once: a failed request that is also an exhausted pool answered `saturation` 0.50 and `errors` 0.48; a 504 answered `errors` 0.64 and `availability` 0.35. Of the untagged log records, the top two answers were `availability` and `errors` for 319, `errors` and `saturation` for 111, `errors` and `latency` for 73. The floor does what it is for (no wrong tag), and the price is paid on exactly these lines.
+
+### 7.2 Candidates
+
+A second sample of 45 units, sharing none with the first, was labelled by hand before the candidates were run (`eval/tags/experiments/facets-1.labels.yaml`): 17 for `signal`-type candidates, 14 for `act`, and all 14 metric series. For a yes/no candidate the label is every option that applies. Figures are at the floor of 0.93 unless said.
+
+| Candidate | What it is, and where its options come from | Blind sample: stored, right | Over the bundle | Repeat: stored values not reproduced |
+|---|---|---|---|---|
+| `act` as yes/no | The shipped `act` options, one yes/no question each | 12 stored on 9 of 14 units, 12 right (pick-one: 5 of 14 units) | 76 of 110 units, 16 with two or more values (pick-one: 37) | 4 of 97 |
+| `signal` as yes/no | The shipped `signal` options, one yes/no question each | 8 stored on 5 of 17 units, 8 right (pick-one: 12 of 17 units) | 2,255 of 3,989 log records with the reworded option below (pick-one: 1,914); either form: 2,662 | 2 of 82 |
+| `signal` on metric series | The shipped golden-signal options on a series' query | 13 of 14 series, 13 right | 13 of 14 | 0 of 13 |
+| `resource` | Which finite resource: the USE method's list, software resources folded into one `pool` option | 6 of 17 units, 6 right | 35 of 165 units (pool 19, disk 6, cpu 5, memory 4, network 1); 610 log records | 0 of 35 |
+| `fault` | How it failed: the classes of the canonical RPC status codes | 3 of 17 units, 3 right | 31 of 165 units (not_found 10, exhausted 9, timeout 6, unavailable 4); 676 log records | 0 of 31 |
+| `layer` | Which tier a text is about; the facet the ruling named first to add back | 8 of 17 units, 8 right | 80 of 165 units (application 37, database 22, platform 17); 2,057 log records | 4 of 80 |
+
+What we read from it:
+
+- **`act` gains most from yes/no.** A message that reports and proposes gets both labels where pick-one gave neither. `status` and `social` almost never answer yes at the floor (1 and 0 units), so those two would stay pick-one's job or go unused.
+- **`signal` as yes/no complements pick-one; it does not replace it.** It tags the two-things lines (a refused call as `errors` and `availability`, a pool timeout as `errors` and `saturation`), but it rarely says yes to `routine` (10 units against pick-one's many). The best coverage is the union of the two forms.
+- **A wording defect the sample did not catch.** In the yes/no form the `security` option ("Authentication, authorisation, certificates, access or audit.") answered yes at up to 0.94 on lines about authorising a payment: the word, not the meaning; 13 units, 661 log records. Reworded to "Who is allowed to do what: logins, permissions, certificates, access control, audit trails.", it answers yes on 1 unit. In the shipped pick-one form the same collision only costs a tag (the line splits between `latency` and `security` and stays untagged), and the rewording there changes little (82 to 88 units). None of the 17 sampled units held such a line, which is the plain limit of a sample this size: 8 right of 8 did not see it. A yes/no facet should not ship on that sample alone.
+- **Metric series tag cleanly.** A query string names what it measures (`...request.duration`, `...connections`, `...request.hits`). The one untagged series is a success rate. This would let the source inventory group series by golden signal.
+- **`resource` and `fault` are precise and sparse**, as they should be: most lines are about no resource and report no failure. They would answer "which resource" and "how it failed" directly (`resource=disk`, `fault=timeout`). The risk is the one open point O1 already names: their busiest values here (`pool`, `exhausted`, `timeout`) are this incident's own mechanism, and although the option lists come from the USE method and the RPC status codes, we cannot show they would read the same to someone who had not seen this incident.
+- **`layer` mostly restates the source**, as the ruling expected: application lines from application logs, database lines from the database log. It adds something only where a line is about another tier than the one that wrote it (a pool error in an application log tagged `database`).
+
+### 7.3 What it cost, and what is not measured
+
+Two experiment passes of 289 requests each over the same units (762,816 input tokens together, about 3 cents), on top of the 494 requests of the shipped run. The second pass repeated every unchanged question, which is where the "not reproduced" column comes from; no pick-one candidate changed value between passes. Not measured: stability under shuffled option order for the candidates; precision on more than 14 to 17 units per candidate; anything on a bundle other than the development one.
