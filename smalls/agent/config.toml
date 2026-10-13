@@ -1,0 +1,80 @@
+# The agent's configuration. This is the only file in which a model name may appear: code, prompts and
+# docs name a model by its role. Pick a profile with --profile or SMALLS_PROFILE; SMALLS_MODEL overrides
+# the chosen profile's model. Under pytest the profile is always the scripted one unless SMALLS_LIVE=1,
+# so a test never goes live because a key happens to be set.
+
+default_profile = "anthropic"
+
+# Budgets. Starting values, to be re-set after the first measured run.
+call_budget = 30            # gated tool calls (reads and actions) per run
+revision_calls = 5          # extra calls after a verifier asks for a revision
+extra_turns = 6             # model turns allowed beyond the call budget, because internal calls are free
+stale_rounds = 3            # rounds with no board change before the gate says "submit now"
+stuck_empty = 3             # consecutive empty reads before the stuck hint
+context_fraction = 0.85     # restart (or stop) when a call's input reaches this share of the input limit
+headless = "defer"          # what an unattended run that is not an eval run answers a gate with
+auto_approve = true         # reads run without asking; --interactive turns this off. Actions always ask.
+timeout_s = 600             # per model call; set explicitly because the client library's default is none
+runs_dir = "eval/runs"
+
+[sweep]                     # the opening sweep's windows, relative to now
+alerts = "-2h"
+chat = "-2h"
+changes = "-24h"
+
+[verifier]
+enabled = true
+claims_profile = "anthropic-small"      # claim support is short reading: the cheaper tier of the same provider
+contrarian_profile = "anthropic"        # the contrarian pass needs the strong model
+digest_tokens = 1500                    # the digest of rows that were shown but not cited
+
+[profiles.scripted]         # keyless and deterministic; proves the plumbing, not the model
+provider = "scripted"
+model = "scripted"
+
+[profiles.anthropic]        # the investigator
+provider = "anthropic"
+model = "claude-opus-5-5"
+max_tokens = 32000
+max_input_tokens = 1000000
+effort = "medium"           # fixed for the run: changing it invalidates the prompt cache
+thinking = { type = "adaptive", display = "summarized" }
+cache = true
+
+[profiles.anthropic-small]
+provider = "anthropic"
+model = "claude-haiku-5-5"
+max_tokens = 16000
+max_input_tokens = 1000000
+effort = "medium"
+thinking = { type = "adaptive", display = "summarized" }
+cache = true
+
+[profiles.openai]           # the cross-provider verifier profile; needs the optional client group
+provider = "openai"
+model = ""                  # set SMALLS_MODEL
+reasoning = { effort = "medium", summary = "auto" }
+use_responses_api = true
+
+# USD per million tokens, for run records. A 5-minute cache write costs 1.25 times the input rate and a
+# 1-hour write twice it. Rates as cached from the provider's reference on 2026-10-06.
+[pricing."claude-opus-5-5"]
+input = 4.00
+output = 20.00
+cache_read = 0.20
+cache_write = 5.00
+cache_write_1h = 8.00
+
+[pricing."claude-haiku-5-5"]    # for prompts up to 100K tokens; a claim-support packet is far smaller
+input = 0.10
+output = 0.50
+cache_read = 0.01
+cache_write = 0.125
+cache_write_1h = 0.20
+
+[pricing.scripted]
+input = 0.0
+output = 0.0
+cache_read = 0.0
+cache_write = 0.0
+cache_write_1h = 0.0

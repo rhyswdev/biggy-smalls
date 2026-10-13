@@ -1,0 +1,291 @@
+"""Drives the graph, maps the framework's stream parts to the event protocol, and writes the run record.
+
+This is the only module that knows about stream modes. A server would call `Runner.start()` and forward
+each event; the terminal renders the same events; the run record stores them.
+
+Stream modes used, as typed v2 parts `{type, ns, data}`: `messages` (token chunks: reasoning and text
+deltas), `updates` (node outputs: proposed calls, gate decisions, validation, the report; and the
+`__interrupt__` entry that carries a pending gate) and `custom` (what nodes write with the stream writer:
+model-call usage, tool started and finished, board changes, the budget).
+
+One process holds one store and one clock. A resume in a new process rebuilds the tools, which is
+deterministic, and takes `now` and the rest of the runtime context from `run.json`, because the framework
+does not checkpoint it.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable
+
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.errors import GraphRecursionError
+from langgraph.types import Command
+
+from smalls.agent import gate, prompts
+from smalls.agent.config import SCRIPTED, Config
+from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
+from smalls.agent.graph import build_graph, iso, partial_report
+from smalls.agent.internal_tools import toolset
+from smalls.agent.models import import_local, input_limit, make_model, reasoning_text
+from smalls.agent.record import RunRecord, commit, cost, key_names, new_run_id, sha, usage_totals, versions
+from smalls.agent.state import RunContext
+from smalls.contracts.envelope import Envelope
+from smalls.tools import registry
+from smalls.tools.registry import ToolContext, ToolSpec
+
+Decider = Callable[[list[dict[str, Any]]], dict[str, dict[str, Any]]]
+
+
+@dataclass
+class Toolbox:
+    """The read tools a run investigates with, and how to build their context. Injected, so offline tests
+    run the agent over a fixture."""
+
+    read_tools: dict[str, ToolSpec]
+    inventory: Callable[[ToolContext], Envelope]
+    context: Callable[[datetime, str], ToolContext]
+    describe: dict[str, Any] = field(default_factory=dict)      # what run.json says about it
+
+
+def module_toolbox(path: str) -> Toolbox:
+    """A toolbox from a module that exposes `registry()` and `inventory(ctx)`, such as the test fixture."""
+    module = import_local(path)
+    return Toolbox(module.registry(), module.inventory, lambda now, run_id: ToolContext(store=None, now=now, tags=False, run_id=run_id),
+                   {"registry": path, "bundle": None, "tags": False})
+
+
+def bundle_toolbox(bundle: Path | str, tags: bool | None = None) -> Toolbox:
+    """The real tools over a bundle. The store is built once, and its clock is set when the context is."""
+    from smalls.tools import inventory, store
+
+    tags = store.tags_enabled() if tags is None else tags
+    built = store.build(bundle, tags=tags)
+
+    def context(now: datetime, run_id: str) -> ToolContext:
+        built.set_now(now)
+        return ToolContext(store=built, now=now, tags=tags, run_id=run_id)
+
+    return Toolbox(registry.registry(tags=tags), inventory.build, context,
+                   {"registry": "bundle", "bundle": built.bundle.name, "tags": tags})
+
+
+def resume_hint(run_id: str) -> str:
+    """The command that resumes a paused run, for the way this run was started."""
+    if os.environ.get("SMALLS_RUNNER") == "compose":
+        return f"docker compose run --rm smalls smalls resume {run_id}"
+    return f"uv run smalls resume {run_id}"
+
+
+class Runner:
+    def __init__(self, cfg: Config, toolbox: Toolbox, run_id: str | None = None, *, sinks: list[Sink] | None = None,
+                 decider: Decider | None = None, stop_at_gate: bool = False, attended: bool = False, eval_run: bool = False,
+                 script: Any = None, durability: str | None = None):
+        self.cfg = cfg
+        self.toolbox = toolbox
+        self.record = RunRecord(cfg.runs_dir, run_id or new_run_id())
+        self.run_id = self.record.run_id
+        self.dir = self.record.dir
+        self.jsonl = JsonlSink(self.record.path("events.jsonl"))
+        self.bus = Bus(self.run_id, [self.jsonl, *(sinks or [])], start_seq=last_seq(self.record.path("events.jsonl")))
+        self.attended = attended
+        self.eval_run = eval_run
+        self.stop_at_gate = stop_at_gate
+        self.durability = durability
+        self.tools = toolset(toolbox.read_tools)
+        # Who answers a gate when nobody is asked: an eval run approves and records; any other unattended
+        # run takes the configured answer, which defers by default (J15).
+        self.decider = decider or gate.headless("approve" if eval_run else cfg.headless)
+        gate.guard_headless_approval(getattr(self.decider, "choice", ""), self.tools)
+        spec = cfg.investigator
+        self.script = script if script is not None else spec.params.get("script")
+        if spec.provider == SCRIPTED:
+            spec = spec.with_params(script=self.script)
+        self.spec = spec
+        self.model, bind = make_model(spec, timeout_s=cfg.timeout_s, cache_ttl="1h" if attended else None)
+        self.conn = sqlite3.connect(self.record.checkpoints(), check_same_thread=False)
+        self.graph = build_graph(self.model, toolbox.read_tools, toolbox.inventory, provider=spec.provider, bind_kwargs=bind,
+                                 checkpointer=SqliteSaver(self.conn))
+        self.config = {"configurable": {"thread_id": self.run_id}, "recursion_limit": 6 * (cfg.call_budget + cfg.extra_turns) + 40}
+        self._ctx: RunContext | None = None
+        self._investigating = False
+
+    # -- entry points --------------------------------------------------------------------------------------
+
+    def start(self, trigger: str, now: datetime, *, checkpoint: str | None = None, arm: str = "C", channel: str | None = None) -> dict[str, Any]:
+        self._ctx = self._context(now, checkpoint=checkpoint, channel=channel)
+        definitions = [registry.definition(spec) for spec in self.tools.values()]
+        self.record.write_json("run.json", {
+            "run_id": self.run_id, "created": gate.now_iso(), "arm": arm, "checkpoint": checkpoint, "now": iso(now), "trigger": trigger,
+            **self.toolbox.describe, "profile": self.spec.profile, "provider": self.spec.provider, "model": self.spec.model,
+            "script": self.script if isinstance(self.script, str) else None, "commit": commit(),
+            "prompt_sha": sha("\n".join(prompts.load(name) for name in prompts.NAMES)),
+            "tools_sha": sha(json.dumps(definitions, sort_keys=True)), "sweep": self.cfg.sweep, "versions": versions(),
+            "key_variables": key_names(), "runner": os.environ.get("SMALLS_RUNNER", "host"), "eval_run": self.eval_run,
+            "config": self.cfg.public(),
+            "context": {"now": now.isoformat(), "checkpoint": checkpoint, "channel": channel, "call_budget": self._ctx.call_budget,
+                        "extra_turns": self._ctx.extra_turns, "revision_calls": self._ctx.revision_calls,
+                        "stale_rounds": self._ctx.stale_rounds, "stuck_empty": self._ctx.stuck_empty,
+                        "context_fraction": self._ctx.context_fraction, "max_input_tokens": self._ctx.max_input_tokens,
+                        "max_tokens": self._ctx.max_tokens, "auto_approve": self._ctx.auto_approve, "sweep": self._ctx.sweep,
+                        "verifier": self._ctx.verifier}})
+        self.bus.emit("run_started", now=iso(now), trigger=trigger, checkpoint=checkpoint, profile=self.spec.profile,
+                      auto_approve=self._ctx.auto_approve, attended=self.attended, tags=self.toolbox.describe.get("tags"))
+        self.bus.emit("phase", name="orient")
+        return self._drive({"trigger": trigger})
+
+    def resume(self, answers: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+        """Resume a run paused at a gate, from a new process: the checkpointer has the state, and
+        `run.json` has the context."""
+        saved = self.record.read_json("run.json")["context"]
+        self._ctx = self._context(datetime.fromisoformat(saved["now"]), saved=saved)
+        state = self.graph.get_state(self.config)
+        if not state.interrupts:
+            raise SystemExit(f"run {self.run_id} is not waiting at a gate")
+        pending = state.interrupts[0]
+        answers = answers or self.decider(pending.value["calls"])
+        self.bus.emit("phase", name="resumed", interrupt_id=pending.id)
+        return self._drive(Command(resume={pending.id: answers}))
+
+    def _context(self, now: datetime, *, checkpoint: str | None = None, channel: str | None = None, saved: dict[str, Any] | None = None) -> RunContext:
+        cfg, saved = self.cfg, saved or {}
+        return RunContext(
+            run_id=self.run_id, now=now, tool_ctx=self.toolbox.context(now, self.run_id),
+            call_budget=saved.get("call_budget", cfg.call_budget), extra_turns=saved.get("extra_turns", cfg.extra_turns),
+            revision_calls=saved.get("revision_calls", cfg.revision_calls), stale_rounds=saved.get("stale_rounds", cfg.stale_rounds),
+            stuck_empty=saved.get("stuck_empty", cfg.stuck_empty), context_fraction=saved.get("context_fraction", cfg.context_fraction),
+            max_input_tokens=saved.get("max_input_tokens", input_limit(self.spec, self.model)),
+            max_tokens=saved.get("max_tokens", int(self.spec.params.get("max_tokens") or 0)),
+            auto_approve=saved.get("auto_approve", cfg.auto_approve), via="cli" if self.attended else "headless",
+            checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
+            sweep=saved.get("sweep", dict(cfg.sweep)), verifier=saved.get("verifier", bool(cfg.verifier.get("enabled"))),
+            evidence=self.record.evidence)
+
+    # -- the loop ------------------------------------------------------------------------------------------
+
+    def _drive(self, inp: Any) -> dict[str, Any]:
+        started = time.perf_counter()
+        extra = {"durability": self.durability} if self.durability else {}
+        while True:
+            try:
+                for part in self.graph.stream(inp, self.config, context=self._ctx, stream_mode=["messages", "updates", "custom"],
+                                              version="v2", **extra):
+                    self._map(part["type"], part["data"])
+            except GraphRecursionError:
+                # The graph cannot route to finalize once this is raised, so the runner renders the partial.
+                values = dict(self.graph.get_state(self.config).values)
+                values.update(status="incomplete", stop_reason="the recursion limit was reached",
+                              report=partial_report(values, "the recursion limit was reached"))
+                self.bus.emit("error", where="graph", message="recursion limit reached", next="partial report")
+                self.bus.emit("report", report=values["report"], status="incomplete")
+                return self._finish(values, time.perf_counter() - started)
+            state = self.graph.get_state(self.config)
+            if not state.interrupts:
+                break
+            pending = state.interrupts[0]
+            if self.stop_at_gate:
+                values = dict(state.values)
+                values["status"] = "paused"
+                self._write_derived(values, time.perf_counter() - started)
+                self.bus.emit("run_paused", interrupt_id=pending.id, resume=resume_hint(self.run_id))
+                return {"status": "paused", "run_id": self.run_id}
+            inp = Command(resume={pending.id: self.decider(pending.value["calls"])})
+        return self._finish(dict(state.values), time.perf_counter() - started)
+
+    def _map(self, mode: str, data: Any) -> None:
+        if mode == "messages":
+            message, meta = data
+            if meta.get("langgraph_node") == "agent":
+                reasoning, text = reasoning_text(message)
+                if reasoning:
+                    self.bus.emit("thinking_delta", text=reasoning)
+                if text:
+                    self.bus.emit("text_delta", text=text)
+            return
+        if mode == "custom":    # model_call, tool_started, tool_result, hypothesis_update, board_status, budget
+            data = dict(data)
+            kind = data.pop("type")
+            if kind == "model_call":
+                data["cost_usd"] = cost(data, self.cfg.price(data.get("model") or self.spec.model))
+            self.bus.emit(kind, **data)
+            return
+        for node, update in data.items():
+            if node == "__interrupt__":
+                for pending in update:
+                    self.bus.emit("gate_pending", interrupt_id=pending.id, **pending.value)
+            elif node == "agent":
+                if not self._investigating:
+                    self._investigating = True
+                    self.bus.emit("phase", name="investigate")
+                proposed = update.get("proposed") or []
+                for call in proposed:
+                    spec = self.tools.get(call["tool"])
+                    self.bus.emit("tool_call_proposed", call_id=call["call_id"], tool=call["tool"], by=call.get("by", "agent"),
+                                  kind=spec.kind if spec else "unknown", rationale=call.get("rationale"), args=call["args"])
+                if not proposed or any(call["tool"] == "submit_report" for call in proposed):
+                    self.bus.emit("phase", name="report")
+            elif node in ("gate", "ask"):
+                waits = [w["wait_ms"] for w in update.get("gate_waits", [])]
+                for decision in update.get("gate_log", []):
+                    self.bus.emit("gate_decision", **decision, wait_ms=waits[0] if node == "ask" and waits else None)
+                for note in update.get("ic_notes", []):
+                    self.bus.emit("ic_note", **note)
+            elif node == "tools":
+                if update.get("validation"):
+                    self.bus.emit("validation", **update["validation"])
+                if update.get("report"):
+                    self.bus.emit("draft_report", report=update["report"])
+            elif node == "finalize":
+                self.bus.emit("report", report=update["report"], status=update["status"])
+
+    # -- the record ----------------------------------------------------------------------------------------
+
+    def _usage_calls(self, values: dict[str, Any]) -> list[dict[str, Any]]:
+        """From the usage channel in state, so it is complete across a pause and a resume."""
+        return [{**call, "cost_usd": cost(call, self.cfg.price(call.get("model") or self.spec.model))} for call in values.get("usage", [])]
+
+    def _write_derived(self, values: dict[str, Any], wall_s: float) -> dict[str, Any]:
+        usage_calls = self._usage_calls(values)
+        events = read_events(self.record.path("events.jsonl"))
+        counts: dict[str, int] = {}
+        for event in events:
+            counts[event.type] = counts.get(event.type, 0) + 1
+        decided: dict[str, int] = {}
+        for g in values.get("gate_log", []):
+            key = f"{g['by']['who']}:{g['decision']}"
+            decided[key] = decided.get(key, 0) + 1
+        statuses: dict[str, int] = {}
+        for entry in values.get("ledger", []):
+            statuses[entry["status"]] = statuses.get(entry["status"], 0) + 1
+        first = datetime.fromisoformat(events[0].t_wall) if events else datetime.now(timezone.utc)
+        summary = {"run_id": self.run_id, "status": values.get("status"), "stop_reason": values.get("stop_reason"),
+                   "wall_s_total": round((datetime.now(timezone.utc) - first).total_seconds(), 3), "wall_s_last_segment": round(wall_s, 3),
+                   "gate_wait_ms": round(sum(w["wait_ms"] for w in values.get("gate_waits", [])), 1),   # once per round, across processes
+                   "model_calls": len(usage_calls), "retries": sum(1 for c in usage_calls if (c.get("attempt") or 1) > 1),
+                   "tool_calls": values.get("calls_used", 0), "calls_by_status": statuses, "gate": decided,
+                   "validation": values.get("validation"), "revisions": values.get("revisions", 0),
+                   "tokens": usage_totals(usage_calls), "events": counts,
+                   "event_bytes": self.record.path("events.jsonl").stat().st_size, "dropped_sinks": self.bus.dropped}
+        self.record.write_derived(values, usage_calls, summary)
+        return summary
+
+    def _finish(self, values: dict[str, Any], wall_s: float) -> dict[str, Any]:
+        self.bus.emit("phase", name="done")
+        summary = self._write_derived(values, wall_s)
+        self.bus.emit("run_finished", status=values.get("status"), stop_reason=values.get("stop_reason"),
+                      tool_calls=summary["tool_calls"], model_calls=summary["model_calls"], tokens=summary["tokens"],
+                      wall_s=summary["wall_s_total"])
+        return {"status": values.get("status"), "run_id": self.run_id, "report": values.get("report"), "summary": summary}
+
+    def state(self) -> dict[str, Any]:
+        return self.graph.get_state(self.config).values
+
+    def close(self) -> None:
+        self.jsonl.close()
+        self.conn.close()

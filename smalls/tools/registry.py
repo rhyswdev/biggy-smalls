@@ -15,11 +15,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.report import Rationale, strip_keys
-from smalls.tools import descriptions, schemas
+from smalls.tools import descriptions, errors, schemas
 
 if TYPE_CHECKING:
     from smalls.tools.store import Store
@@ -80,6 +80,19 @@ def surface(*, tags: bool) -> dict[str, ToolSpec]:
 def registry(*, tags: bool) -> dict[str, ToolSpec]:
     """The tools the agent may call: the built ones, in the fixed order."""
     return {name: spec for name, spec in surface(tags=tags).items() if name in BUILT}
+
+
+def call(spec: ToolSpec, raw_args: dict[str, Any], ctx: ToolContext) -> Envelope:
+    """The one path every caller uses: the agent, the sweep, the CLI and the leak test. It validates the
+    arguments, runs the tool and turns any exception into the error text of ruling A2, so it never raises."""
+    try:
+        args = spec.args.model_validate(raw_args or {})
+    except ValidationError as problem:
+        return errors.bad_arguments(spec.name, problem)
+    try:
+        return spec.fn(args, ctx)
+    except Exception as exc:
+        return errors.internal(spec.name, exc)
 
 
 # -- the model-facing schema -------------------------------------------------------------------------------

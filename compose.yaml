@@ -12,3 +12,13 @@ services:
     env_file:
       - path: .env
         required: false
+    # The agent's settings, passed through by name when set on the host. No key is named here: keys arrive
+    # only through env_file. SMALLS_RUNNER tells a run it was started through compose, so a resume hint
+    # prints the compose form of the command.
+    environment:
+      - SMALLS_TAGS
+      - SMALLS_PROFILE
+      - SMALLS_MODEL
+      - SMALLS_COMMIT
+      - SMALLS_LIVE
+      - SMALLS_RUNNER=compose

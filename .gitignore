@@ -8,6 +8,10 @@ schemas/kubernetes/swagger.json
 .venv/
 __pycache__/
 
+# run records: the checkpoint databases and the runs index are rebuilt, never committed
+checkpoints.sqlite*
+eval/runs/index.sqlite*
+
 # local secrets: never commit; copy .env.example to .env
 .env
 .env.*

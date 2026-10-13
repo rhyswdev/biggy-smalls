@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 from smalls import cli
 
@@ -15,6 +16,7 @@ def test_cli_names_its_commands(capsys):
     assert e.value.code == 0
     out = capsys.readouterr().out
     assert "ingest" in out and "tag" in out
+    assert "run" in out and "resume" in out and "replay" in out      # the agent's commands, under the same name
 
 
 def test_cli_refuses_a_folder_that_is_not_a_bundle(tmp_path):
@@ -36,4 +38,9 @@ def test_no_secret_can_reach_the_image():
     assert not re.search(r"(KEY|TOKEN|SECRET|PASSWORD)", "\n".join(x for x in dockerfile.splitlines() if not x.startswith("#")))
     assert not re.search(r"^\s*COPY\s+(\.\s|\.env)", dockerfile, re.M)
     compose = (ROOT / "compose.yaml").read_text()
-    assert "required: false" in compose and "environment:" not in compose
+    assert "required: false" in compose
+    # The environment block passes the agent's settings through by name. It names no key, and the only
+    # value it sets is the mark that says a run was started through compose.
+    passed = yaml.safe_load(compose)["services"]["smalls"]["environment"]
+    assert [item for item in passed if "=" in item] == ["SMALLS_RUNNER=compose"]
+    assert all(item.startswith("SMALLS_") and not re.search(r"(KEY|TOKEN|SECRET|PASSWORD)", item) for item in passed)

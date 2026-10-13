@@ -49,11 +49,43 @@ def bundle_strings(facts: dict | None = None) -> list[str]:
     return sorted(s for s in out if len(s) >= 3)
 
 
+AGENT_SIDE = ("smalls/agent", "smalls/tools")
+TEXT_FILES = (".md", ".yaml", ".yml", ".toml", ".json")
+
+
+def string_literals(source: str) -> str:
+    """Every string a Python file holds, docstrings and f-string parts included, joined by newlines.
+    Comments are not strings and are not read."""
+    import ast
+
+    return "\n".join(node.value for node in ast.walk(ast.parse(source)) if isinstance(node, ast.Constant) and isinstance(node.value, str))
+
+
+def agent_side_texts(root: Path | None = None) -> list[tuple[str, str]]:
+    """Every string under the agent and the tool layer: the prompt files, the tool descriptions, the
+    config, and the string literals of the code, because a tool's row layout, footer or error sentence
+    reaches the model as surely as a prompt does."""
+    root = root or Path(__file__).resolve().parent.parent
+    out = []
+    for folder in AGENT_SIDE:
+        for path in sorted((root / folder).rglob("*")):
+            if "__pycache__" in path.parts or not path.is_file():
+                continue
+            where = path.relative_to(root).as_posix()
+            if path.suffix == ".py":
+                out.append((where, string_literals(path.read_text(encoding="utf-8"))))
+            elif path.suffix in TEXT_FILES:
+                out.append((where, path.read_text(encoding="utf-8")))
+    return out
+
+
 def prompt_texts() -> list[tuple[str, str]]:
-    """Every prompt text on the agent side, as (where, text)."""
+    """Every prompt text on the agent side, as (where, text): what a tag request carries, then every
+    string under `smalls/agent/` and `smalls/tools/`, which takes in the four prompt files and
+    `descriptions.yaml`."""
     from smalls.tools.ingest.tagging import profiles
 
-    return [*profiles.prompt_texts(), ("smalls/tools/ingest/tagging/profiles.toml", (profiles.HERE / "profiles.toml").read_text())]
+    return [*profiles.prompt_texts(), *agent_side_texts()]
 
 
 def find(texts: list[tuple[str, str]], strings: list[str] | None = None) -> list[str]:

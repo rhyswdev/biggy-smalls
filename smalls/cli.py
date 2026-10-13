@@ -2,6 +2,9 @@
 
     smalls ingest --bundle <folder> [--dump x.db] [--now HH:MM]   build the store, print the ingest report
     smalls tag    --bundle <folder> [--report | --sample]         compute tag answers into the committed cache
+    smalls run    --now <time> --trigger <text> [--bundle <folder>]   investigate (python -m smalls.agent run)
+    smalls resume <run_id>                                        resume a run paused at a gate
+    smalls replay <run_id|folder>                                 re-render a run record; no model, no key
 
 `ingest` reads only the bundle and the committed tag cache: no key, no network. `tag` is the only command
 that calls the classifier and the only one that needs JEV_API_KEY. `smalls tools call` arrives with the tools.
@@ -76,6 +79,11 @@ def parser() -> argparse.ArgumentParser:
     tag.add_argument("--sample", action="store_true", help="offline: print the sample to label by hand, as YAML")
     tag.add_argument("--experiment", metavar="spec.toml", help="ask a file of candidate facets instead; answers go beside it, not in the cache")
     tag.set_defaults(run=cmd_tag)
+
+    # `smalls run`, `smalls resume` and `smalls replay` are the agent's own commands under this name.
+    from smalls.agent.__main__ import add_run_commands
+
+    add_run_commands(sub)
     return p
 
 

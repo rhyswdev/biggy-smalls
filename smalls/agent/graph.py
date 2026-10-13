@@ -1,0 +1,367 @@
+"""The investigator as an explicit StateGraph (docs/research/agent-design.md axis 1 and section 3):
+
+    orient -> agent -> gate -> [ask] -> tools -> agent ... -> finalize
+
+- orient (code): the first user turn, from `now`, the source inventory, the trigger and the budget.
+- agent (model): one model call with every tool bound. The system prompt and the tool list never change,
+  so they are a stable cached prefix, and the message history only grows.
+- gate (code): applies the approval policy to each proposed call and writes the calls that need a person to
+  state, with the round and the time asked. It runs once, so the policy is never decided again on resume.
+- ask (code): only calls `interrupt()`, and records who decided and how long it took.
+- tools (code): runs approved calls, turns rejections and deferrals into results, writes the ledger and the
+  board, validates a submitted report, and appends the status line.
+- finalize (code): the report with the fields code writes, or a partial one rendered from the board.
+
+The registry and the inventory are injected, which is how offline tests run the same graph over a fixture.
+"""
+
+from __future__ import annotations
+
+import time
+from datetime import datetime, timezone
+from typing import Any, Callable
+
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
+from langgraph.config import get_stream_writer
+from langgraph.graph import END, START, StateGraph
+from langgraph.runtime import Runtime
+from langgraph.types import RetryPolicy, interrupt
+
+from smalls.agent import board, gate, prompts, validator
+from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, toolset
+from smalls.agent.models import provider_tools, retryable
+from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext, merge_hypotheses
+from smalls.contracts.envelope import Envelope
+from smalls.contracts.handles import ic_note_handle
+from smalls.contracts.report import Rationale, Report
+from smalls.tools import errors, registry
+from smalls.tools.registry import ToolContext, ToolSpec
+
+Inventory = Callable[[ToolContext], Envelope]
+NO_PRIOR_BOARD = "none"
+UNPARSEABLE = "Could not parse the arguments for {tool}: {error}. Call it again with valid arguments."
+ACCEPTED = "Report accepted."
+NOT_ACCEPTED = "Report not accepted. {findings} Fix these and submit again."
+NOT_RECORDED = "Not recorded. {findings}"
+RECORDED = "Recorded: {what}."
+NOTE_ROW = "{handle}  incident commander, {at}: {text}"
+
+
+def iso(t: datetime) -> str:
+    return t.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def rounds(state: dict[str, Any]) -> int:
+    """Model turns so far. Counted from the usage rows, which a restart carries over; the messages it does not."""
+    return sum(1 for row in state.get("usage", []) if row.get("node") == "agent")
+
+
+def proposals(state: dict[str, Any]) -> list[dict[str, Any]]:
+    """One row per gated action call with its gate decision: written by code from the ledger, never by the
+    model, so the report cannot say an action is awaiting approval while the ledger says it was refused."""
+    decided = {g["call_id"]: g for g in state.get("gate_log", [])}
+    out = []
+    for entry in state.get("ledger", []):
+        if entry.get("kind") != "action":
+            continue
+        g = decided.get(entry["call_id"], {})
+        out.append({"call_id": entry["call_id"], "tool": entry["tool"], "args": entry["args"], "rationale": entry.get("rationale"),
+                    "decision": g.get("decision", "deferred"), "by": g.get("by") or {"who": "policy", "via": "headless"},
+                    "reason": g.get("reason"), "decided_at": g.get("decided_at")})
+    return out
+
+
+def partial_report(state: dict[str, Any], why: str) -> dict[str, Any]:
+    """Rendered by code from the board when the agent did not submit a report. Only board entries that
+    passed the citation check exist, so this is as grounded as a submitted report."""
+    as_of = state.get("as_of")
+    return {"as_of": as_of, "summary": f"Incomplete ({why}). This is the investigation board as it stood.", "impact": None,
+            "hypotheses": board.for_report(state.get("hypotheses") or {}, as_of), "timeline": list(state.get("timeline") or []),
+            "actions": [], "do_not": [], "alerts": [{"handle": h, "verdict": "unassessed"} for h in state.get("swept") or []],
+            "open_questions": list(state.get("open_questions") or []), "stakeholder_update": None,
+            "proposed_actions": proposals(state), "validation": None}
+
+
+def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory: Inventory, *, provider: str = "scripted",
+                bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None):
+    tools = toolset(read_tools)
+    definitions = [registry.definition(spec, texts) for spec in tools.values()]
+    bound = model.bind_tools(provider_tools(definitions, provider), **(bind_kwargs or {}))
+    system = prompts.load("investigator")
+
+    def orient(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        ctx = runtime.context
+        listed = inventory(ctx.tool_ctx)
+        first = prompts.first_turn(now=iso(ctx.now), inventory=listed.text, trigger=state["trigger"],
+                                   budget=f"{ctx.call_budget} tool calls, {ctx.turn_cap()} model turns",
+                                   prior_board=NO_PRIOR_BOARD)
+        # The inventory names handles without showing them, so it enters the ledger as referenced only.
+        entry: LedgerEntry = {"call_id": "inventory", "round": 0, "by": "harness", "tool": "inventory", "kind": "internal", "args": {},
+                              "rationale": None, "status": "ok", "shown": list(listed.shown), "referenced": list(listed.referenced),
+                              "t_known": {}, "native_query": None, "window": None, "chars": len(listed.text), "latency_ms": 0.0,
+                              "repeat_of": None, "used_tag_input": False, "empty": False, "identity": None}
+        return {"messages": [HumanMessage(first)], "as_of": iso(ctx.now), "checkpoint": ctx.checkpoint, "calls_used": 0,
+                "report_attempts": 0, "revisions": 0, "status": "investigating", "proposed": [], "stop_reason": None,
+                "ledger": [entry]}
+
+    def agent(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        ctx = runtime.context
+        writer = get_stream_writer()
+        started = time.perf_counter()
+        ai = bound.invoke([SystemMessage(system), *state["messages"]])
+        usage = ai.usage_metadata or {}
+        row = {"node": "agent", "round": rounds(state) + 1, "attempt": getattr(runtime.execution_info, "node_attempt", 1),
+               "latency_ms": round((time.perf_counter() - started) * 1000, 1), "usage": usage,
+               "stop_reason": ai.response_metadata.get("stop_reason"), "model": ai.response_metadata.get("model_name")}
+        writer({"type": "model_call", **row})
+        proposed: list[Call] = [{"call_id": c["id"], "tool": c["name"], "by": "agent", "invalid": None,
+                                 "args": {k: v for k, v in c["args"].items() if k != "rationale"},
+                                 "rationale": c["args"].get("rationale")} for c in ai.tool_calls]
+        proposed += [{"call_id": c["id"], "tool": c.get("name") or "unknown", "by": "agent", "args": {}, "rationale": None,
+                      "invalid": str(c.get("error") or "invalid JSON")} for c in ai.invalid_tool_calls]
+        update: dict[str, Any] = {"messages": [ai], "usage": [row], "proposed": proposed}
+        # The context guard is measured, not estimated: this call's real input plus the room the next
+        # answer needs, against the model's input limit.
+        if ctx.max_input_tokens and (usage.get("input_tokens") or 0) + ctx.max_tokens >= ctx.context_fraction * ctx.max_input_tokens:
+            update["stop_reason"] = "the context limit was reached"
+        return update
+
+    def route_agent(state: InvestigationState) -> str:
+        proposed = state.get("proposed") or []
+        submitting = len(proposed) == 1 and proposed[0]["tool"] == SUBMIT_REPORT
+        if not proposed or (state.get("stop_reason") and not submitting):
+            return "finalize"
+        return "gate"
+
+    def gate_node(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        ctx = runtime.context
+        calls = list(state.get("proposed") or [])
+        seen = validator.Seen.of(state)
+        refuse = None
+        if not any(c["tool"] == UPDATE_BOARD for c in calls):
+            refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds)
+        decisions, ask = gate.apply(calls, tools, used=state.get("calls_used", 0), budget=ctx.budget(state.get("revisions", 0)),
+                                    auto_approve=ctx.auto_approve, via=ctx.via, refuse_gated=refuse)
+        # An action never reaches a person with evidence no tool showed.
+        for card in list(ask):
+            if card["kind"] != "action":
+                continue
+            unknown, only_listed = seen.split(card["args"].get("evidence") or [])
+            if unknown or only_listed:
+                ask.remove(card)
+                call = next(c for c in calls if c["call_id"] == card["call_id"])
+                decisions[card["call_id"]] = gate.decision(call, "rejected", "policy", ctx.via, validator.explain(unknown, only_listed))
+        pending = {"round": rounds(state), "asked_at": gate.now_iso(), "calls": ask} if ask else None
+        return {"decisions": decisions, "gate_log": list(decisions.values()), "pending": pending}
+
+    def route_gate(state: InvestigationState) -> str:
+        return "ask" if state.get("pending") else "tools"
+
+    def ask(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        # Only the interrupt lives here. On resume this node runs again from the top, which is harmless.
+        # Resume value per call: {"approve": true} | {"approve": false, "reason": "..."} | {"defer": true}
+        pend = state["pending"]
+        answers = interrupt(pend)
+        decided_at = datetime.now(timezone.utc)
+        wait_ms = round((decided_at - datetime.fromisoformat(pend["asked_at"])).total_seconds() * 1000, 1)
+        decisions = dict(state["decisions"])
+        new, notes = [], []
+        for card in pend["calls"]:
+            reply = (answers or {}).get(card["call_id"])
+            verdict, who, reason = gate.answer(card, reply)
+            via = "headless" if who == "policy" else "cli"
+            handle = None
+            if who == "human" and reason and verdict == "rejected":     # a person's reason is a citable note
+                at = decided_at.isoformat(timespec="milliseconds")
+                handle = ic_note_handle(runtime.context.run_id, at, reason)
+                notes.append({"handle": handle, "text": reason, "submitted_at": at, "by": "incident commander", "call_id": card["call_id"]})
+            d = gate.decision(card, verdict, who, via, handle or reason, reason)
+            decisions[card["call_id"]] = d
+            new.append(d)
+        return {"decisions": decisions, "gate_log": new, "pending": None, "ic_notes": notes,
+                "gate_waits": [{"round": pend["round"], "asked_at": pend["asked_at"], "decided_at": decided_at.isoformat(),
+                                "wait_ms": wait_ms, "calls": len(new)}]}
+
+    def tools_node(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        ctx = runtime.context
+        writer = get_stream_writer()
+        decisions = state["decisions"]
+        round_now = rounds(state)
+        seen = validator.Seen.of(state)
+        notes = {n["call_id"]: n for n in state.get("ic_notes", [])}
+        used = state.get("calls_used", 0)
+        attempts = state.get("report_attempts", 0)
+        current = dict(state.get("hypotheses") or {})
+        out: list[ToolMessage] = []
+        ledger: list[LedgerEntry] = []
+        update: dict[str, Any] = {}
+        accepted = None
+
+        for call in state.get("proposed") or []:
+            d = decisions[call["call_id"]]
+            spec = tools.get(call["tool"])
+            entry: LedgerEntry = {"call_id": call["call_id"], "round": round_now, "by": call.get("by", "agent"), "tool": call["tool"],
+                                  "kind": spec.kind if spec else "unknown", "args": call["args"], "rationale": call.get("rationale"),
+                                  "status": "ok", "shown": [], "referenced": [], "t_known": {}, "native_query": None, "window": None,
+                                  "chars": 0, "latency_ms": 0.0, "repeat_of": None, "used_tag_input": False, "empty": False,
+                                  "identity": None}
+            started = time.perf_counter()
+            if call.get("invalid"):
+                env = errors.error(UNPARSEABLE.format(tool=call["tool"], error=call["invalid"]))
+            elif d["decision"] == "rejected":
+                text = gate.REJECTED.format(who=d["by"]["who"], reason=(d.get("reason_text") or d.get("reason") or "").rstrip("."))
+                note = notes.get(call["call_id"])
+                if note:
+                    text += "\n" + NOTE_ROW.format(handle=note["handle"], at=note["submitted_at"], text=note["text"])
+                env = errors.error(text)
+                entry["status"] = "rejected"
+            elif d["decision"] == "deferred":       # neither run nor refused: no signal either way
+                env = Envelope(gate.DEFERRED)
+                entry["status"] = "deferred"
+            else:
+                writer({"type": "tool_started", "call_id": call["call_id"], "tool": call["tool"]})
+                if call["tool"] == UPDATE_BOARD:
+                    env, merged, args = _update_board(spec, call, seen, current, round_now)
+                    if merged:
+                        update.setdefault("hypotheses", {}).update(merged)
+                        current = merge_hypotheses(current, merged)
+                        for hid in merged:      # the event carries the merged entry, not the partial update
+                            writer({"type": "hypothesis_update", **current[hid]})
+                    if args and args.timeline:
+                        update["timeline"] = [*update.get("timeline", []), *(row.model_dump() for row in args.timeline)]
+                    if args and args.open_questions:
+                        update["open_questions"] = [*update.get("open_questions", []), *args.open_questions]
+                elif call["tool"] == SUBMIT_REPORT:
+                    env, result = _submit_report(spec, call, state, seen, current, round_now, attempts)
+                    attempts = result["attempts"]
+                    update["validation"] = result["validation"]
+                    if result.get("report"):
+                        accepted = result["report"]
+                        if result["merged"]:
+                            update.setdefault("hypotheses", {}).update(result["merged"])
+                            current = merge_hypotheses(current, result["merged"])
+                else:
+                    env = _run(spec, call, ctx)
+                    if env.meta.get("error") != "arguments":       # a call counts when it runs (J5)
+                        used += 1
+                    if env.status == "ok" and ctx.evidence:
+                        ctx.evidence(call["call_id"], env.rows)
+                entry.update(status=env.status, shown=list(env.shown), referenced=list(env.referenced),
+                             t_known={r.handle: r.t_known for r in env.rows}, native_query=env.native_query,
+                             window=list(env.window) if env.window else None, used_tag_input=bool(env.meta.get("tag")),
+                             empty=bool(env.meta.get("empty")))
+            seen.add(entry)     # handles from earlier calls in the same batch are citable too
+            entry["chars"] = len(env.text)
+            entry["latency_ms"] = round((time.perf_counter() - started) * 1000, 2)
+            ledger.append(entry)
+            writer({"type": "tool_result", **{k: entry[k] for k in ("call_id", "tool", "kind", "by", "status", "shown", "referenced",
+                                                                    "native_query", "window", "chars", "latency_ms")},
+                    "first_line": env.text.split("\n", 1)[0][:200]})
+            out.append(ToolMessage(env.text, tool_call_id=call["call_id"], name=call["tool"],
+                                   status="error" if env.status == "error" or entry["status"] == "rejected" else "success"))
+
+        limit = ctx.budget(state.get("revisions", 0))
+        turns_left = ctx.turn_cap(state.get("revisions", 0)) - round_now
+        if accepted is None and out:        # appended once, when the message is created: the history is append-only
+            line = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left)
+            out[-1].content = f"{out[-1].content}\n{line}"
+            writer({"type": "board_status", "line": line, "ready": not board.missing_for_ready(current),
+                    "stale": board.stale_ids(current, round_now)})
+        writer({"type": "budget", "used": used, "limit": limit, "turns_left": turns_left})
+        update.update(messages=out, ledger=ledger, calls_used=used, report_attempts=attempts, proposed=[])
+        if accepted is not None:
+            update["report"] = accepted
+        return update
+
+    def _run(spec: ToolSpec, call: Call, ctx: RunContext) -> Envelope:
+        if call.get("by", "agent") == "agent":      # the model owes a reason for every gated call
+            try:
+                Rationale.model_validate(call.get("rationale"))
+            except Exception:
+                return errors.bad_arguments(spec.name, "rationale: an object with `tests` and `expect` is required")
+        return registry.call(spec, call["args"], ctx.tool_ctx)
+
+    def _update_board(spec: ToolSpec, call: Call, seen: validator.Seen, current: dict[str, Any], round_now: int):
+        """Returns (the result, the hypothesis updates to merge, the arguments when the write was taken)."""
+        try:
+            args = spec.args.model_validate(call["args"])
+        except Exception as problem:
+            return errors.bad_arguments(spec.name, problem), {}, None
+        unknown, only_listed = seen.split(validator.board_handles(args))
+        if unknown or only_listed:      # board writes are grounded like reports
+            return errors.error(NOT_RECORDED.format(findings=validator.explain(unknown, only_listed))), {}, None
+        merged, problems, notes = board.apply_update(current, args.hypotheses or [], round=round_now, call_id=call["call_id"])
+        if problems:
+            return errors.error(NOT_RECORDED.format(findings="; ".join(problems) + ".")), {}, None
+        after = merge_hypotheses(current, merged)
+        what = [f"{hid} {after[hid]['status']} {after[hid]['confidence']:.2f}" for hid in merged]
+        what += [f"{len(args.timeline)} timeline rows"] if args.timeline else []
+        what += [f"{len(args.open_questions)} open questions"] if args.open_questions else []
+        text = RECORDED.format(what="; ".join(what) or "nothing changed")
+        return Envelope(" ".join([text, *(n + "." for n in notes)])), merged, args
+
+    def _submit_report(spec: ToolSpec, call: Call, state: dict[str, Any], seen: validator.Seen, current: dict[str, Any],
+                       round_now: int, attempts: int) -> tuple[Envelope, dict[str, Any]]:
+        """Validate a submitted report. One retry per submission cycle covers every finding; after it a
+        bad handle is dropped and recorded, and a claim left with no handle is kept and flagged (J14)."""
+        result: dict[str, Any] = {"attempts": attempts, "validation": state.get("validation"), "merged": {}}
+        try:
+            args = spec.args.model_validate(call["args"])
+        except Exception as problem:
+            return errors.bad_arguments(spec.name, problem), result
+        merged, problems, notes = board.apply_update(current, args.hypotheses, round=round_now, call_id=call["call_id"], allow_new=False)
+        after = merge_hypotheses(current, merged)
+        draft = {**args.model_dump(exclude={"hypotheses"}), "as_of": state["as_of"], "hypotheses": board.for_report(after, state["as_of"])}
+        unknown, only_listed = seen.split(validator.report_handles(draft))
+        findings = [p + "." for p in problems]
+        if unknown or only_listed:
+            findings.append(validator.explain(unknown, only_listed))
+        if findings and attempts == 0:
+            result.update(attempts=1, validation={"ok": False, "attempts": 1, "findings": findings})
+            return errors.error(NOT_ACCEPTED.format(findings=" ".join(findings))), result
+        if problems:        # the board would not take the update even on the retry: the board stands as it was
+            merged, after = {}, current
+            draft["hypotheses"] = board.for_report(after, state["as_of"])
+        bad = [*unknown, *only_listed]
+        report, flagged = validator.drop(draft, bad) if bad else (draft, [])
+        merged = {hid: {k: ([h for h in v if h not in bad] if isinstance(v, list) else v) for k, v in upd.items()} for hid, upd in merged.items()}
+        validation = {"ok": not (bad or problems), "attempts": attempts + 1, "dropped": bad, "flagged": flagged, "continuity": None}
+        report["validation"] = validation
+        result.update(attempts=attempts, validation=validation, merged=merged, report=report)
+        return Envelope(" ".join([ACCEPTED, *(n + "." for n in notes)])), result
+
+    def route_tools(state: InvestigationState, runtime: Runtime[RunContext]) -> str:
+        if state.get("report") or state.get("stop_reason"):
+            return "finalize"
+        if rounds(state) >= runtime.context.turn_cap(state.get("revisions", 0)):   # internal calls are free, so turns are capped too
+            return "finalize"
+        return "agent"
+
+    def finalize(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        if state.get("report"):
+            report = {**state["report"], "proposed_actions": proposals(state)}
+            Report.model_validate(report)
+            return {"status": "completed", "report": report}
+        why = state.get("stop_reason") or ("the model-turn limit was reached" if rounds(state) >= runtime.context.turn_cap(state.get("revisions", 0))
+                                           else "the agent stopped without submitting a report")
+        report = partial_report(state, why)
+        Report.model_validate(report)
+        return {"status": "incomplete", "report": report, "stop_reason": why}
+
+    retry = RetryPolicy(max_attempts=2, retry_on=retryable)
+    g = StateGraph(InvestigationState, context_schema=RunContext)
+    g.add_node("orient", orient)
+    g.add_node("agent", agent, retry_policy=retry)
+    g.add_node("gate", gate_node)
+    g.add_node("ask", ask)
+    g.add_node("tools", tools_node)
+    g.add_node("finalize", finalize)
+    g.add_edge(START, "orient")
+    g.add_edge("orient", "agent")
+    g.add_conditional_edges("agent", route_agent, ["gate", "finalize"])
+    g.add_conditional_edges("gate", route_gate, ["ask", "tools"])
+    g.add_edge("ask", "tools")
+    g.add_conditional_edges("tools", route_tools, ["agent", "finalize"])
+    g.add_edge("finalize", END)
+    return g.compile(checkpointer=checkpointer)
