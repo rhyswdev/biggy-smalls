@@ -33,8 +33,9 @@ schemas:
 	bash schemas/fetch.sh
 	$(PY) schemas/extract.py
 
+# The store half of the leak test, at 14:40 and 14:52. The tool-output half joins it with the tools.
 leak-test:
-	@echo "leak-test: stub until step 6 (tool layer)"
+	$(UV) run --python 3.12 pytest -q tests/test_leak.py
 
 tools-smoke:
 	@echo "tools-smoke: stub until step 6 (tool layer)"

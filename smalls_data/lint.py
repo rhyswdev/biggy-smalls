@@ -621,7 +621,7 @@ class Lint:
                   self.inv7_tokens, self.inv8_clocks, self.inv10_served, self.inv9_aliases, self.inv11_schema, self.inv12_strings, self.inv13_budget,
                   self.inv14_parity, self.inv15_sampling):
             f()
-        self.notes.append("[10] served files checked; the leak test through tool outputs arrives in step 6a (make leak-test)")
+        self.notes.append("[10] served files checked; the store half is `make leak-test`; the tool-output half arrives with the tools (step 6a-tools)")
 
 
 def main() -> int:
