@@ -465,6 +465,7 @@ Each is asserted in agent-design from the provider reference. Row C4 confirms it
 8. Usage fields price correctly, including the split cache-write counters.
 9. An explicit timeout is set, and long outputs stream.
 10. No sampling parameter is sent.
+11. One live call succeeds from inside the container, with keys arriving only through the `env_file`.
 
 A refusal stop reason cannot be provoked on demand, so its handling (server-side fallback if the client library passes it through, else the fallback profile once) is confirmed by a scripted test, not a live call.
 
@@ -480,9 +481,9 @@ Live runs spend money. None starts without our go-ahead, and the matrix is sized
 
 | # | Build | Accepted when |
 |---|---|---|
-| A0 | Rebase onto `step6a-ingestion`. Confirm section 6.1 and work through section 9. | `make data`, `make lint` and `make test` pass on the rebased branch; any difference from 6.1 is written into this record |
+| A0 | Rebase onto `step6a-ingestion`. Confirm section 6.1 and work through section 9. | `make data`, `make lint`, `make test` and `make docker-test` pass on the rebased branch; any difference from 6.1 is written into this record |
 | A1 | Contracts: the envelope, the registry types, the argument models for all eleven tools with `rationale`, `handle_class()`, the report model with G3 and its generated JSON Schema | A full example report and a partial one both validate; the schema file matches the model; `python -m smalls.agent schema` prints every tool and report schema, with tags on and off, and `--size` prints the prefix size; the scorer session can start |
-| A2 | Port the LangGraph spike to `smalls/agent/` (agent-design row 1), on the pins in 7.0, with the registry injected and the fixture registry of 7.4. With it: the stable v2 stream parts, caching on by default, the measured context-window guard (axis 2), the headless rule of J15, the validator checking shown handles, `ic:note` handles, the run-record files of 7.2 | The ported tests pass, the bundle-string and model-name tests among them; a scripted run over the fixture registry writes a complete run record; a replay renders it with no key |
+| A2 | Port the LangGraph spike to `smalls/agent/` (agent-design row 1), on the pins in 7.0, with the registry injected and the fixture registry of 7.4. With it: the stable v2 stream parts, caching on by default, the measured context-window guard (axis 2), the headless rule of J15, the validator checking shown handles, `ic:note` handles, the run-record files of 7.2 | The ported tests pass, the bundle-string and model-name tests among them; a scripted run over the fixture registry writes a complete run record; a replay renders it with no key. In the container (section 10.5): the rebuilt image passes `make docker-test`, a scripted run writes its record on the mount, and a run paused in one container resumes in another |
 
 ### Phase B: five tools
 
@@ -534,6 +535,7 @@ Live runs spend money. None starts without our go-ahead, and the matrix is sized
 ### Done means
 
 - From a clean clone with a key, one command investigates the bundle at the second checkpoint and writes a schema-valid report with zero fabricated, unseen or future citations. With no key, one command replays a committed run.
+- With only Docker installed, the tests, the replay and a run all work through `docker compose run`, and a run started in a container can be resumed or replayed from the host.
 - The leading hypothesis cites a non-chat handle for each link; each rejected hypothesis states what contradicts it; the report lists what not to do; every alert stream the sweep showed has a verdict. Once the scorer exists, its owner check passes.
 - The agent stops on its own inside its budget, and a run that degrades says so: `incomplete`, dropped citations, policy rejections and `stuck` events are all counted.
 - A run paused at a gate resumes in a new process. A rejected action reaches the model with its reason and appears in `proposed_actions` as written by code.
@@ -556,22 +558,77 @@ Section 6.1 was read from the ingestion branch, not from a rebased tree. Row A0 
 7. Whether the existing base-table test also needs `clock` added to its list, since no tool may set the clock.
 8. The tags default (G6). It is one default in `store.tags_enabled()`, the ingestion tests that assert the old one, and the lines that state it in CLAUDE.md, PLAN (decision 12, section 4 and section 6.1), `ingestion-decisions.md` (O2 and T6) and HANDOFF. If the ingestion session is still running, it makes the change on its branch and this track picks it up by rebasing; otherwise row A0 makes it.
 
-## 10. Compose and running (G2)
+## 10. Running in Docker (G2)
 
-No service is added. Shared files are edited in the row that needs them.
+The agent runs inside the one compose service that ingestion built. No service is added in this step: LangGraph is a library in the app process, its checkpointer is a SQLite file, and nothing listens on a port until the UI step. `uv` on the host stays the primary path, and the container runs the same commands for someone who has only Docker.
 
-- `pyproject.toml` (row A2): `langgraph`, `langgraph-checkpoint-sqlite`, `langchain`, `langchain-core`, `langchain-anthropic` and `rich` join `dependencies` at the pins in 7.0. `langchain-openai` goes in an optional group, since only the cross-provider verifier profile needs it.
-- `Dockerfile` (row A2): sync that optional group too.
-- `compose.yaml` (row C3): pass `SMALLS_TAGS`, `SMALLS_PROFILE`, `SMALLS_MODEL` and `SMALLS_COMMIT` through by name. Take the image tag from an environment variable, so two checkouts never overwrite each other's image.
-- `.dockerignore` and `.gitignore` (row A2): `.claude/`, checkpoint databases and the runs index.
-- `Makefile`: `tools-smoke` in B5; `run`, `resume`, `demo` in C3; `regress`, `matrix` in D6.
+### 10.1 What we checked
 
-Things that differ inside the container:
+On 2026-10-13 we built a throwaway image on the project's base (the same `python:3.12-slim-bookworm`, the same `uv`, the virtualenv outside the source tree, the same non-root user) with the spike's locked dependencies, ran it and removed it.
 
-- `docker compose run` gives a terminal, so gates ask; `-T` or `--headless` makes a run unattended.
-- Run records land on the bind mount. If the checkpoint database is slow there, `SMALLS_STATE_DIR` moves it. Row D10 tests a pause in one container and a resume in another.
-- The image has no git, and a worktree's `.git` points at a host path. `run.json` takes the commit from `SMALLS_COMMIT`, which the Makefile sets, then from git, then records "unknown".
-- Keys reach the container only through the `env_file` at run time. A run record stores the names of the variables that were set, never their values, and row D1 scans each run directory for key values.
+- The LangGraph and LangChain packages at the pins in 7.0 install from wheels on arm64. No compiler and no extra system package is needed.
+- The spike's 19 offline tests pass inside the container as the non-root user.
+- A scripted run paused at a gate in one container and was resumed, with a rejection, in a second one. The run record and the checkpoint database sat on a bind-mounted folder between the two, and the recorded gate wait matched the real gap.
+- The container's SQLite is 3.40.1, with FTS5 and JSON1. That is older than a host Python's is likely to be.
+- The image has no git, so the run record's commit came out empty.
+- The resume hint printed a host command.
+
+The last three are fixed by the rules in 10.4.
+
+### 10.2 What changes, and in which row
+
+We build on the ingestion branch's Docker setup as it stands and change as little of it as we can, because that session is still running and every line we leave alone is a conflict that cannot happen. Row A0's rebase brings `Dockerfile`, `compose.yaml`, `.dockerignore` and the Makefile in byte for byte; nothing is copied by hand. The structure stays theirs: one service called `smalls`, an image that holds dependencies only, the repository bind-mounted at `/app`, keys through `env_file` at run time, and `docker compose run --rm smalls <the host command>` as the way to run anything.
+
+| File | Change | Row |
+|---|---|---|
+| `Dockerfile` | None for the agent. Its packages are core dependencies, and the existing sync line installs those. The environment is fixed at build time (`UV_NO_SYNC=1`), so the image is rebuilt when a dependency changes; `make docker-test` already rebuilds. One group joins the sync line later, when the cross-provider verifier profile needs its client | none, then E1 |
+| `.dockerignore` | None. It is an allowlist of what the Dockerfile copies, and the agent lives under `smalls/`, which is already on it | none |
+| `compose.yaml` | One added block on the existing service, and nothing else touched: an `environment:` list that passes `SMALLS_TAGS`, `SMALLS_PROFILE`, `SMALLS_MODEL`, `SMALLS_COMMIT` and `SMALLS_LIVE` through by name and sets `SMALLS_RUNNER=compose` | A2 |
+| `Makefile` | The existing stubs `run`, `demo` and `tools-smoke` are filled in, and `resume`, `regress` and `matrix` are added, all in the style of the targets already there (`$(UV) run --python 3.12 ...`, the `BUNDLE` variable, the optional `--env-file .env`). `docker-test` is left as it is | B5, C3, D6 |
+| `pyproject.toml`, `uv.lock` | `langgraph`, `langgraph-checkpoint-sqlite`, `langchain`, `langchain-core`, `langchain-anthropic` and `rich` join `dependencies` at the pins in 7.0. `langchain-openai` goes in an optional group in row E1 | A2 |
+| `.gitignore` | Two added lines: checkpoint databases and the runs index | A2 |
+
+Two things this worktree needs differ from the main checkout, and neither is a tracked change. The ingestion session builds `smalls:dev` from the main checkout while this worktree builds an image with more packages in it, and with one tag whichever built last would win. And the worktree has no `.env`. Compose loads a `compose.override.yaml` beside `compose.yaml` on its own, so the worktree keeps one, untracked and listed in `.git/info/exclude`, that sets `image: smalls:agent` and points `env_file` at the main checkout's `.env`. It is deleted when the branches meet.
+
+### 10.3 The same commands, both ways
+
+| What | On the host | In the container |
+|---|---|---|
+| Offline tests | `make test` | `docker compose run --rm smalls make test` |
+| One tool call | `smalls tools call <name> --now <time> ...` | `docker compose run --rm smalls smalls tools call <name> --now <time> ...` |
+| Replay a committed run, no key | `make demo` | `docker compose run --rm smalls make demo` |
+| A live run, gates asking | `make run` | `docker compose run --rm smalls make run` |
+| Resume a paused run | `smalls resume <run_id>` | `docker compose run --rm smalls smalls resume <run_id>` |
+| The regression set, unattended | `make regress` | `docker compose run --rm -T smalls make regress` |
+
+Run records land in `eval/runs/` on the bind mount either way, so a run started in a container can be replayed, resumed or scored from the host, and the other way round.
+
+### 10.4 Rules the container makes necessary
+
+1. **A test never goes live because a key happens to be set.** Compose passes the whole `.env` into every container, tests included; on the host a key reaches a command only through `--env-file`. So nothing decides to call a model by looking for a key. Under pytest the profile is the scripted one, live checks run only when `SMALLS_LIVE=1`, and a test asserts both.
+2. **The commit comes from the host.** The image has no git, and a worktree's `.git` points at a host path. `run.json` takes the commit from `SMALLS_COMMIT`, which the Makefile sets, then from git, then records "unknown".
+3. **A hint prints the command for the way the run was started.** With `SMALLS_RUNNER=compose` the resume line is the compose form.
+4. **Attended or not is decided by the terminal.** `docker compose run` attaches one, so gates ask; `-T` or `--headless` makes the run unattended, and then J15 applies: only an eval run approves and records, any other unattended run defers.
+5. **An interrupted run still leaves its record.** Ctrl-C reaches the process, records are written in `finally` (row D1), and `--rm` removes the container, not the files on the mount.
+6. **State stays on the bind mount.** The checkpoint database worked there across two containers. `SMALLS_STATE_DIR` moves it if it ever proves slow.
+7. **Nothing depends on a newer SQLite than the container's.** The suite runs in both places, and a result that differs between them is a bug in the tool, not in the test.
+8. **Keys arrive only at run time,** through the `env_file`. `make docker-test` already checks that the image holds none, a run record stores the names of the variables that were set and never their values, and row D1 scans each run directory for key values.
+9. **A live run needs outbound HTTPS to the model provider** and nothing else. No port is published.
+
+One limit we inherit and do not change here: the container user has a fixed uid, so on a Linux host with a different uid the bind mount may not be writable. The run instructions say so.
+
+### 10.5 Acceptance in the container, by row
+
+| Row | Checked in the container |
+|---|---|
+| A0 | `make docker-test` passes on the rebased branch |
+| A2 | The image is rebuilt with the agent's packages and `make docker-test` passes with the agent's tests; a scripted run writes a complete record on the mount; a run paused in one container resumes in another |
+| B5 | The leak test passes there, at both checkpoints |
+| C3 | The run that `make demo` replays renders the same in the container as on the host |
+| C4 | One live call succeeds from inside the container, with keys arriving only through the `env_file` |
+| D1 | An interrupted container run leaves a full record |
+| D6 | The regression set runs unattended with `-T` |
+| D10 | The terminal renders in an attached container; pause and resume across containers print what a replay prints |
 
 ## 11. Open points
 
