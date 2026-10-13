@@ -8,7 +8,8 @@ Rules, in order:
    path segment that holds a digit.
 2. Any other double-quoted value becomes `"<*>"` (user agents, referers, image names).
 3. Any token that holds a digit becomes `<*>`: timestamps, ids, counts, durations, addresses, versions.
-4. A run of masks separated only by spaces collapses to one.
+4. Masks joined by punctuation alone (`<*>:<*>:<*>`, an address and its port) collapse to one, and then
+   so does a run of masks separated only by spaces (a date and its time).
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ MASK = "<*>"
 _HTTP = re.compile(r'"?\b(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) (/[^\s?"]*)(?:\?[^\s"]*)?(?: HTTP/[\d.]+)?"? ([1-5]\d\d)\b')
 _QUOTED = re.compile(r'"[^"\n]*"')
 _TOKEN = re.compile(r"[^\s=:,;()\[\]{}\"'<>|/@]+")
+_JOINED = re.compile(r"<\*>(?:[:.,/-]<\*>)+")
 _RUN = re.compile(r"<\*>(?: +<\*>)+")
 _KEPT = re.compile(r"\x00(\d+)\x00")
 
@@ -41,7 +43,7 @@ def mask(line: str) -> str:
     s = _HTTP.sub(keep, line)
     s = _QUOTED.sub(f'"{MASK}"', s)
     s = _TOKEN.sub(lambda m: m.group(0) if m.group(0).startswith("\x00") or not _has_digit(m.group(0)) else MASK, s)
-    s = _RUN.sub(MASK, s)
+    s = _RUN.sub(MASK, _JOINED.sub(MASK, s))
     return _KEPT.sub(lambda m: kept[int(m.group(1))], s)
 
 
