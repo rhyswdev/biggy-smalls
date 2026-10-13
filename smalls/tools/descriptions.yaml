@@ -1,0 +1,163 @@
+rationale: PLACEHOLDER
+tools:
+  list_alerts:
+    description: PLACEHOLDER
+    params:
+      since: PLACEHOLDER
+      until: PLACEHOLDER
+      source: PLACEHOLDER
+      text: PLACEHOLDER
+      state: PLACEHOLDER
+      signal: PLACEHOLDER
+  get_record:
+    description: PLACEHOLDER
+    params:
+      handle: PLACEHOLDER
+      part: PLACEHOLDER
+  search_logs:
+    description: PLACEHOLDER
+    params:
+      terms: PLACEHOLDER
+      sourcetype: PLACEHOLDER
+      host: PLACEHOLDER
+      since: PLACEHOLDER
+      until: PLACEHOLDER
+      group_by: PLACEHOLDER
+      bucket: PLACEHOLDER
+      limit: PLACEHOLDER
+      signal: PLACEHOLDER
+  query_metrics:
+    description: PLACEHOLDER
+    params:
+      metric: PLACEHOLDER
+      scope: PLACEHOLDER
+      since: PLACEHOLDER
+      until: PLACEHOLDER
+      rollup: PLACEHOLDER
+  list_changes:
+    description: PLACEHOLDER
+    params:
+      since: PLACEHOLDER
+      until: PLACEHOLDER
+      text: PLACEHOLDER
+      change_kind: PLACEHOLDER
+  itsm_query:
+    description: PLACEHOLDER
+    params:
+      table: PLACEHOLDER
+      filters: PLACEHOLDER
+      text: PLACEHOLDER
+      fields: PLACEHOLDER
+      limit: PLACEHOLDER
+      signal: PLACEHOLDER
+  search_knowledge:
+    description: PLACEHOLDER
+    params:
+      query: PLACEHOLDER
+      k: PLACEHOLDER
+  get_topology:
+    description: PLACEHOLDER
+    params:
+      entity: PLACEHOLDER
+      hops: PLACEHOLDER
+  get_oncall:
+    description: PLACEHOLDER
+    params:
+      service: PLACEHOLDER
+      policy: PLACEHOLDER
+  read_chat:
+    description: PLACEHOLDER
+    params:
+      channel: PLACEHOLDER
+      since: PLACEHOLDER
+      until: PLACEHOLDER
+      text: PLACEHOLDER
+      thread_ts: PLACEHOLDER
+      act: PLACEHOLDER
+  check_status_page:
+    description: PLACEHOLDER
+    params:
+      provider: PLACEHOLDER
+  propose_action:
+    description: PLACEHOLDER
+    params:
+      kind: PLACEHOLDER
+      target: PLACEHOLDER
+      params: PLACEHOLDER
+      evidence: PLACEHOLDER
+  update_board:
+    description: PLACEHOLDER
+    params:
+      hypotheses: PLACEHOLDER
+      timeline: PLACEHOLDER
+      open_questions: PLACEHOLDER
+  submit_report:
+    description: PLACEHOLDER
+    params:
+      summary: PLACEHOLDER
+      impact: PLACEHOLDER
+      hypotheses: PLACEHOLDER
+      timeline: PLACEHOLDER
+      actions: PLACEHOLDER
+      do_not: PLACEHOLDER
+      alerts: PLACEHOLDER
+      open_questions: PLACEHOLDER
+      stakeholder_update: PLACEHOLDER
+objects:
+  Rationale:
+    tests: PLACEHOLDER
+    expect: PLACEHOLDER
+  Pair:
+    name: PLACEHOLDER
+    value: PLACEHOLDER
+  HypothesisFields:
+    id: PLACEHOLDER
+    statement: PLACEHOLDER
+    role: PLACEHOLDER
+    status: PLACEHOLDER
+    subject: PLACEHOLDER
+    entities: PLACEHOLDER
+    changes: PLACEHOLDER
+    confidence: PLACEHOLDER
+    support: PLACEHOLDER
+    against: PLACEHOLDER
+  HypothesisUpdate:
+    source: PLACEHOLDER
+    because: PLACEHOLDER
+    discriminating: PLACEHOLDER
+  TimelineRow:
+    t_utc: PLACEHOLDER
+    event: PLACEHOLDER
+    evidence: PLACEHOLDER
+  Impact:
+    business_service: PLACEHOLDER
+    cis: PLACEHOLDER
+    priority: PLACEHOLDER
+    assignment_group: PLACEHOLDER
+    oncall: PLACEHOLDER
+    customer: PLACEHOLDER
+  Priority:
+    suggested: PLACEHOLDER
+    impact: PLACEHOLDER
+    urgency: PLACEHOLDER
+  Action:
+    rank: PLACEHOLDER
+    action: PLACEHOLDER
+    owner: PLACEHOLDER
+    evidence: PLACEHOLDER
+  DoNot:
+    action: PLACEHOLDER
+    why: PLACEHOLDER
+    evidence: PLACEHOLDER
+  AlertVerdict:
+    handle: PLACEHOLDER
+    verdict: PLACEHOLDER
+  StakeholderUpdate:
+    status: PLACEHOLDER
+    customer_impact: PLACEHOLDER
+    scope: PLACEHOLDER
+    changed_since_last: PLACEHOLDER
+    next_steps: PLACEHOLDER
+    next_update_at: PLACEHOLDER
+action_kinds:
+  PLACEHOLDER_KIND: PLACEHOLDER

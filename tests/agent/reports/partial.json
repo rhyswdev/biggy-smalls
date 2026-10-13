@@ -1,0 +1,28 @@
+{
+  "as_of": "2026-03-02T02:20:00Z",
+  "summary": "Incomplete (the model-turn limit was reached). This is the investigation board as it stood.",
+  "impact": null,
+  "hypotheses": [
+    {
+      "id": "h-disk",
+      "statement": "The run failed because its spool volume filled up.",
+      "role": "cause",
+      "status": "open",
+      "subject": "worker-01",
+      "entities": ["worker-01"],
+      "changes": [],
+      "confidence": 0.4,
+      "support": ["log:worker-01/0a1b2c3d"],
+      "against": [],
+      "source": "derived",
+      "history": [{"as_of": "2026-03-02T02:20:00Z", "status": "open", "confidence": 0.4, "because": ["log:worker-01/0a1b2c3d"]}]
+    }
+  ],
+  "timeline": [],
+  "actions": [],
+  "do_not": [],
+  "alerts": [{"handle": "dd:ev1000000001", "verdict": "unassessed"}],
+  "open_questions": [],
+  "stakeholder_update": null,
+  "proposed_actions": []
+}

@@ -82,6 +82,25 @@ def is_handle(s: str) -> bool:
     return bool(HANDLE_RE.match(s))
 
 
+def handle_class(handle: str) -> str:
+    """What kind of evidence a handle stands for. This is the one definition, shared by the agent's board
+    checks and the scorer.
+
+    - `chat`: something a person said in a channel, or an incident commander's note. It can steer an
+      investigation but cannot on its own support a causal link.
+    - `aggregate`: a count a tool computed for one call. It is minted per run and has no time of its own.
+    - `metric`: a metric series, with or without a window.
+    - `record`: everything else, one served record.
+    """
+    if handle.startswith(("slack:", "ic:note/")):
+        return "chat"
+    if handle.startswith("q:"):
+        return "aggregate"
+    if handle.startswith("metric:"):
+        return "metric"
+    return "record"
+
+
 # -- one function per prefix ------------------------------------------------------------------------
 
 

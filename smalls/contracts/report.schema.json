@@ -1,0 +1,638 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Action": {
+      "additionalProperties": false,
+      "properties": {
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rank",
+        "action",
+        "owner",
+        "evidence"
+      ],
+      "title": "Action",
+      "type": "object"
+    },
+    "DoNot": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "why": {
+          "title": "Why",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "action",
+        "why",
+        "evidence"
+      ],
+      "title": "DoNot",
+      "type": "object"
+    },
+    "GateBy": {
+      "additionalProperties": false,
+      "properties": {
+        "who": {
+          "enum": [
+            "policy",
+            "auto",
+            "human"
+          ],
+          "title": "Who",
+          "type": "string"
+        },
+        "via": {
+          "enum": [
+            "cli",
+            "web",
+            "headless"
+          ],
+          "title": "Via",
+          "type": "string"
+        }
+      },
+      "required": [
+        "who",
+        "via"
+      ],
+      "title": "GateBy",
+      "type": "object"
+    },
+    "HistoryRow": {
+      "additionalProperties": false,
+      "properties": {
+        "as_of": {
+          "title": "As Of",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "leading",
+            "open",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "because": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Because",
+          "type": "array"
+        }
+      },
+      "required": [
+        "as_of",
+        "status",
+        "confidence"
+      ],
+      "title": "HistoryRow",
+      "type": "object"
+    },
+    "Hypothesis": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "statement": {
+          "title": "Statement",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "cause",
+            "trigger",
+            "contributing",
+            "symptom",
+            "unrelated"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "leading",
+            "open",
+            "rejected"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "subject": {
+          "title": "Subject",
+          "type": "string"
+        },
+        "entities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entities",
+          "type": "array"
+        },
+        "changes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Changes",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "support": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Support",
+          "type": "array"
+        },
+        "against": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Against",
+          "type": "array"
+        },
+        "source": {
+          "enum": [
+            "stated",
+            "derived"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/HistoryRow"
+          },
+          "title": "History",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "role",
+        "status",
+        "subject",
+        "entities",
+        "changes",
+        "confidence",
+        "support",
+        "against",
+        "source",
+        "history"
+      ],
+      "title": "Hypothesis",
+      "type": "object"
+    },
+    "Impact": {
+      "additionalProperties": false,
+      "properties": {
+        "business_service": {
+          "title": "Business Service",
+          "type": "string"
+        },
+        "cis": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cis",
+          "type": "array"
+        },
+        "priority": {
+          "$ref": "#/$defs/Priority"
+        },
+        "assignment_group": {
+          "title": "Assignment Group",
+          "type": "string"
+        },
+        "oncall": {
+          "title": "Oncall",
+          "type": "string"
+        },
+        "customer": {
+          "title": "Customer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "business_service",
+        "cis",
+        "priority",
+        "assignment_group",
+        "oncall",
+        "customer"
+      ],
+      "title": "Impact",
+      "type": "object"
+    },
+    "Priority": {
+      "additionalProperties": false,
+      "properties": {
+        "suggested": {
+          "title": "Suggested",
+          "type": "string"
+        },
+        "impact": {
+          "title": "Impact",
+          "type": "string"
+        },
+        "urgency": {
+          "title": "Urgency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "suggested",
+        "impact",
+        "urgency"
+      ],
+      "title": "Priority",
+      "type": "object"
+    },
+    "ProposedAction": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "args": {
+          "additionalProperties": true,
+          "title": "Args",
+          "type": "object"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Rationale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "rejected",
+            "deferred"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "by": {
+          "$ref": "#/$defs/GateBy"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "decided_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Decided At"
+        }
+      },
+      "required": [
+        "call_id",
+        "tool",
+        "args",
+        "rationale",
+        "decision",
+        "by",
+        "reason",
+        "decided_at"
+      ],
+      "title": "ProposedAction",
+      "type": "object"
+    },
+    "Rationale": {
+      "additionalProperties": false,
+      "properties": {
+        "tests": {
+          "title": "Tests",
+          "type": "string"
+        },
+        "expect": {
+          "title": "Expect",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tests",
+        "expect"
+      ],
+      "title": "Rationale",
+      "type": "object"
+    },
+    "ReportAlert": {
+      "additionalProperties": false,
+      "properties": {
+        "handle": {
+          "title": "Handle",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "this_incident",
+            "other_incident",
+            "noise",
+            "unassessed"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        }
+      },
+      "required": [
+        "handle",
+        "verdict"
+      ],
+      "title": "ReportAlert",
+      "type": "object"
+    },
+    "StakeholderUpdate": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "customer_impact": {
+          "title": "Customer Impact",
+          "type": "string"
+        },
+        "scope": {
+          "title": "Scope",
+          "type": "string"
+        },
+        "changed_since_last": {
+          "title": "Changed Since Last",
+          "type": "string"
+        },
+        "next_steps": {
+          "title": "Next Steps",
+          "type": "string"
+        },
+        "next_update_at": {
+          "title": "Next Update At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "customer_impact",
+        "scope",
+        "changed_since_last",
+        "next_steps",
+        "next_update_at"
+      ],
+      "title": "StakeholderUpdate",
+      "type": "object"
+    },
+    "TimelineRow": {
+      "additionalProperties": false,
+      "properties": {
+        "t_utc": {
+          "title": "T Utc",
+          "type": "string"
+        },
+        "event": {
+          "title": "Event",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "t_utc",
+        "event",
+        "evidence"
+      ],
+      "title": "TimelineRow",
+      "type": "object"
+    },
+    "Validation": {
+      "additionalProperties": false,
+      "properties": {
+        "ok": {
+          "title": "Ok",
+          "type": "boolean"
+        },
+        "attempts": {
+          "title": "Attempts",
+          "type": "integer"
+        },
+        "dropped": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Dropped",
+          "type": "array"
+        },
+        "flagged": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Flagged",
+          "type": "array"
+        },
+        "continuity": {
+          "anyOf": [
+            {
+              "enum": [
+                "passed",
+                "failed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Continuity"
+        }
+      },
+      "required": [
+        "ok",
+        "attempts"
+      ],
+      "title": "Validation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "as_of": {
+      "title": "As Of",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "impact": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Impact"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "hypotheses": {
+      "items": {
+        "$ref": "#/$defs/Hypothesis"
+      },
+      "title": "Hypotheses",
+      "type": "array"
+    },
+    "timeline": {
+      "items": {
+        "$ref": "#/$defs/TimelineRow"
+      },
+      "title": "Timeline",
+      "type": "array"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/Action"
+      },
+      "title": "Actions",
+      "type": "array"
+    },
+    "do_not": {
+      "items": {
+        "$ref": "#/$defs/DoNot"
+      },
+      "title": "Do Not",
+      "type": "array"
+    },
+    "alerts": {
+      "items": {
+        "$ref": "#/$defs/ReportAlert"
+      },
+      "title": "Alerts",
+      "type": "array"
+    },
+    "open_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Open Questions",
+      "type": "array"
+    },
+    "stakeholder_update": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/StakeholderUpdate"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "proposed_actions": {
+      "items": {
+        "$ref": "#/$defs/ProposedAction"
+      },
+      "title": "Proposed Actions",
+      "type": "array"
+    },
+    "validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Validation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "as_of",
+    "summary",
+    "impact",
+    "hypotheses",
+    "timeline",
+    "actions",
+    "do_not",
+    "alerts",
+    "open_questions",
+    "stakeholder_update",
+    "proposed_actions"
+  ],
+  "title": "Report",
+  "type": "object"
+}
