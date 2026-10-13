@@ -33,6 +33,8 @@ Claim tags: **[V]** verified (I read the primary source or ran it here), **[S]**
 
 **Rulings applied.** `docs/decisions/step6-decisions.md` ruled on every open point here on 2026-10-13. Where the two differ, that record wins. The summary, the decisions table and section 3a have been updated to match. Section 7's effort table is the original estimate; the step 6 build order supersedes it.
 
+**Ingestion ruled.** `docs/decisions/ingestion-decisions.md` now rules on ingestion, and wins where it differs from this doc. The in-memory store stands. "No model, no disk cache" at ingest is amended narrowly: a closed-set classifier's labels are read from a committed cache, and the startup build stays deterministic and offline. The view is `visible` with a required `t_known`, not `visible_record` with a `coalesce`. Versions replace rewind for ServiceNow and PagerDuty incidents. A compose database was costed and not adopted.
+
 ## 1. What I verified
 
 | Item | Finding | Tag |

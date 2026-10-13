@@ -9,7 +9,7 @@ Docs (all under `docs/`):
 - `PLAN.md`: the plan. `HANDOFF.md`: status and next step; update it when a step lands.
 - `requirements.md`: the assessment we are judged against, and our working priorities.
 - `DATA.md`: data judgment calls, numbered. `schemas.md`: vendor schema authorities and kept deviations.
-- `decisions/`: rulings (step 6 tool layer). `research/agent-design.md`: the settled agent design and its rulings; `research/ingestion-and-retrieval.md`: the research behind the tool layer.
+- `decisions/`: rulings (`step6-decisions.md`: step 6 tool layer; `ingestion-decisions.md`: step 6a ingestion and tagging). `research/agent-design.md`: the settled agent design and its rulings; `research/ingestion-and-retrieval.md`: the research behind the tool layer; `research/tagging.md`: the research behind the tagging pass.
 
 Doc rules: no markdown outside `docs/` unless something reads it (`scenario/content/` is generator input; `spikes/agent/README.md` belongs to the spike; `eval/heldout/` is the held-out session's). Fold a review's findings into PLAN, DATA or a decision record, then delete the review; git keeps it. Write docs as a shared working document: record what was decided and why, in the first person plural, not who said what; name no outside people.
 
@@ -19,7 +19,9 @@ Conventions:
 - Fixtures stay in each vendor's native shape, validated against the authorities in `docs/schemas.md`. Normalising and correlating happen in `smalls/tools/` at runtime.
 - `_internal/` (manifest, answer key) and `scenario/content/` are never served to the agent.
 - The agent's prompts must not contain bundle-specific strings (PayCore, Hikari, pay-db, 3.8.0, Larkspur). A lint checks this.
-- Held-out rule: a session that writes or edits the agent prompt, the agent loop, `smalls/tools/`, the scorer or the judge prompt must not read `eval/heldout/`, `scenario/variants/`, or `bundles/h*/`. Held-out data is authored in a separate session that does not read agent code, prompts or run transcripts. See `eval/heldout/README.md`.
-- Default stack is Python 3.12 with `uv`; `make data`, `make lint`, `make leak-test`, `make score`.
+- The store is in-process SQLite, rebuilt at every start; there is no database service. `compose.yaml` runs the app service, and later services join it; `uv` on the host stays the primary path.
+- Tags: `make tag` is the only command that calls the classifier, and it needs `JEV_API_KEY`. Ingest reads the committed `tags/cache.jsonl` and never the network. Tag profiles are prompt text, so the bundle-string rule and the held-out rule both apply to them. A tag is a query facet, never evidence, and is applied only at high confidence. Tags are off by default; `SMALLS_TAGS=on` turns them on.
+- Held-out rule: a session that writes or edits the agent prompt, the agent loop, `smalls/tools/` (tag profiles included), the scorer or the judge prompt must not read `eval/heldout/`, `scenario/variants/`, or `bundles/h*/`. Held-out data is authored in a separate session that does not read agent code, prompts or run transcripts. See `eval/heldout/README.md`.
+- Default stack is Python 3.12 with `uv`; `make data`, `make lint`, `make ingest`, `make tag`, `make leak-test`, `make score`.
 - Branch: `main`. Commit small, push often; the container is ephemeral.
-- Do not put model identifiers in commits, code comments or docs.
+- Design model-agnostic: the agent model and the classifier version are config values. Code, prompts and docs refer to them by role and assume no particular model.

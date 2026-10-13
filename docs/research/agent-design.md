@@ -401,7 +401,7 @@ A contrarian always proposes something, so "a check was proposed" alone would tr
 | Stakeholder update | Marginal: it is one field of the report | Judge checklist |
 | Lower effort on the same model | Try before a cheaper model: one cache namespace, and quality often holds [V-ref] | Effort as a matrix dimension |
 
-**Recommendation:** nothing beyond the verifier. Add the compressor arm only if run records show tool-result tokens dominating cost.
+**Recommendation:** nothing beyond the verifier. Add the compressor arm only if run records show tool-result tokens dominating cost. One narrow exception was adopted later, for ingestion: a closed-set classifier labels records in a separate step, never in the agent loop and never producing evidence (`docs/decisions/ingestion-decisions.md`).
 
 ## 3. Architecture, state schema, event protocol, gate protocol
 
@@ -629,6 +629,8 @@ Three independent critics reviewed the recommendations on axes 1 to 9 after the 
 | 5 | Verifier on evidence packets | Modify: add uncited shown rows | Agree; 7a first | Agree; evidence side store | Keep (i), with an uncited-evidence digest and `evidence.jsonl` |
 | 6 | Local run log | Agree | Agree | Modify: failed runs leave the thinnest record | Keep, and write the derived files in `finally` |
 | 7 | No extra models | Agree | Agree | Agree; state the failover | Keep; failover is a restart from the board on a fallback profile |
+
+Row 7 has one narrow exception, adopted for ingestion and ruled in `docs/decisions/ingestion-decisions.md`: a closed-set classifier labels records in a separate step, never in the agent loop and never producing evidence.
 
 ### 8.2 Findings that change the design
 

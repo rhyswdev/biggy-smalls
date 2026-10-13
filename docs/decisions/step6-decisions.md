@@ -62,6 +62,8 @@ The assessment view is to stop investing in realism after the fixes that mislead
 
 ## 4. Build order for step 6
 
+The order of items 2 to 6 is re-cut by `docs/decisions/ingestion-decisions.md`: ingestion for every source lands first as step 6a, then the tools as 6a-tools; D3 stands.
+
 1. Data fixes 1 to 10, regenerate, `make lint` and `make test` pass (about 2.75 h).
 2. `smalls/tools/store.py`: store, `clock`, `visible` view, loader limited to `sources:`, path guard against `_internal/`, `scenario/` and `smalls_data` imports, `integration.yaml` reader, per-source clock parsing and record folding, handle parity test (about 1 h).
 3. Log adapters and `search_logs`: rows and stats by minute, host or level, traces folded to 3 frames, 30-row default, footer with total and how to narrow, sampled counts labelled, SPL echo (about 1.5 h). Agent-loop code may start here.
