@@ -203,8 +203,10 @@ def test_a_definition_with_no_visible_transition_is_not_a_row_and_the_footer_cou
     fired = {p for (p,) in ctx.store.conn.execute("SELECT DISTINCT parent FROM visible WHERE kind = 'alert' AND parent IS NOT NULL")}
     silent = [h for (h,) in ctx.store.conn.execute("SELECT handle FROM visible WHERE kind = 'alert_def' AND stream_key IS NOT NULL") if h not in fired]
     assert len(silent) > 3
-    assert f"[{len(silent)} alert definitions have no visible transition and are not rows: nothing says they have fired]" in env.text
-    assert not set(silent) & set(env.shown) and not [h for h in silent if h in env.text]
+    footer = next(line for line in env.text.splitlines() if "have no visible transition" in line)
+    assert footer.startswith(f"[{len(silent)} alert definitions have no visible transition and are not rows, since nothing says they have fired: ")
+    # They are named, so each can be fetched, but none is shown: a definition that has not fired is not an alert.
+    assert all(h in footer for h in silent) and set(silent) <= set(env.referenced) and not set(silent) & set(env.shown)
 
 
 @pytest.mark.parametrize("checkpoint", CHECKPOINTS)

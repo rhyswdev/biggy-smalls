@@ -63,7 +63,8 @@ def render(ctx: ToolContext, record: dict[str, Any]) -> tuple[str, list[str], li
     """A record as (its first line, its body lines, the handles it points at)."""
     now = ctx.store.now
     flags = derive.loads(record["flags"])
-    head = f"{record['handle']}  {record['kind']} from {record['source']}/{record['dataset']}, as it stood at {iso(now)}"
+    # The header says "at now" and does not print the time: `now` appears in a result only as a window's end.
+    head = f"{record['handle']}  {record['kind']} from {record['source']}/{record['dataset']}, as it stood at now"
     if record["t_known"]:
         head += f"; known {derive.stamp(record['t_known'], record['t_native'])}"
     if record["valid_from"] is not None:

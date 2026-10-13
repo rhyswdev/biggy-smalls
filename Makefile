@@ -2,6 +2,8 @@
 UV ?= uv
 PY := $(UV) run --python 3.12 python
 BUNDLE ?= bundles/larkspur-checkout-2026-10-13
+# The replay clock for the targets that need one: the second checkpoint.
+NOW ?= 14:52
 
 .PHONY: data lint ingest tag docker-test leak-test tools-smoke score demo run heldout test schemas
 
@@ -33,12 +35,13 @@ schemas:
 	bash schemas/fetch.sh
 	$(PY) schemas/extract.py
 
-# The store half of the leak test, at 14:40 and 14:52. The tool-output half joins it with the tools.
+# Both halves of the leak test, at 14:40 and 14:52: the store, then the output of every tool that is built.
 leak-test:
-	$(UV) run --python 3.12 pytest -q tests/test_leak.py
+	$(UV) run --python 3.12 pytest -q tests/test_leak.py tests/test_leak_tools.py
 
+# Call every built tool once at NOW and print one line per tool. No key, no network.
 tools-smoke:
-	@echo "tools-smoke: stub until step 6 (tool layer)"
+	$(UV) run --python 3.12 smalls tools smoke --bundle $(BUNDLE) --now $(NOW)
 
 score:
 	@echo "score: stub until step 7 (scorer)"

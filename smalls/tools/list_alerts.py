@@ -33,6 +33,7 @@ from smalls.tools.windows import Window, iso, resolve
 
 FACET = "signal"
 MIN_ID_CHARS = 5        # an id shorter than this could match a page's key by accident
+MAX_SILENT = 20         # how many definitions that have not fired the footer names
 NO_NATIVE = "(no single native query: this merges the alert sources)"
 
 
@@ -73,10 +74,12 @@ def run(args: Any, ctx: ToolContext) -> Parts:
         footer.append(f"[tag filter {FACET}={signal}: {len(rows)} of the {len(matched)} streams that match without it. {untagged} of those "
                       f"{len(matched)} carry no {FACET} tag, and a missing tag says nothing about a stream]")
     if silent:
-        footer.append(f"[{silent} alert definitions have no visible transition and are not rows: nothing says they have fired]")
+        named = " ".join(silent[:MAX_SILENT]) + (f" and {len(silent) - MAX_SILENT} more" if len(silent) > MAX_SILENT else "")
+        footer.append(f"[{len(silent)} alert definitions have no visible transition and are not rows, since nothing says they have fired: {named}]")
     drop = [name for name, value in (("the tag filter", signal), ("text=", args.text), ("source=", args.source),
                                      ("state=active", args.state == "active")) if value]
-    return Parts(rows=[_line(s, tagged) for s in rows], footer=footer, window=window, now=ctx.store.now, what="alert streams",
+    return Parts(rows=[_line(s, tagged) for s in rows], footer=footer, referenced=silent[:MAX_SILENT], window=window, now=ctx.store.now,
+                 what="alert streams",
                  native_query=NO_NATIVE, narrow="Add source=, text= or state=active, or shorten the window.",
                  empty_hint=("Drop " + " or ".join(drop) + ", or widen the window.") if drop else "Widen the window.",
                  tag=f"{FACET}={signal}" if signal else None)
@@ -85,8 +88,8 @@ def run(args: Any, ctx: ToolContext) -> Parts:
 # -- building the streams ----------------------------------------------------------------------------------
 
 
-def _streams(ctx: ToolContext) -> tuple[list[Stream], int]:
-    """Every alert stream over the whole visible history, oldest first, and how many definitions have none."""
+def _streams(ctx: ToolContext) -> tuple[list[Stream], list[str]]:
+    """Every alert stream over the whole visible history, oldest first, and the definitions that have none."""
     now = ctx.store.now
     records = derive.query(ctx, "SELECT rid, handle, source, dataset, kind, native_id, entity_raw, stream_key, t_event, t_end, t_known, "
                                 "valid_from, version, t_native, sev, status, title, body, parent, tags, "
@@ -117,7 +120,7 @@ def _streams(ctx: ToolContext) -> tuple[list[Stream], int]:
                 page.definitions.append(s.head["handle"])      # the page is claimed: it is not a row of its own
     claimed = {h for s in streams for h in s.pages}
     fired = {h for s in streams for h in s.definitions}
-    silent = sum(1 for d in definitions if d["stream_key"] and d["handle"] not in fired)
+    silent = sorted(d["handle"] for d in definitions if d["stream_key"] and d["handle"] not in fired)
     listed = [s for s in streams if not (s.is_page and s.head["handle"] in claimed)]
     return sorted(listed, key=lambda s: (s.first, s.head["rid"])), silent
 

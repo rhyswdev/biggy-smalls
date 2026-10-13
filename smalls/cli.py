@@ -86,6 +86,28 @@ def tool_arguments(spec, pairs: list[str]) -> dict:
     return out
 
 
+# One plain call per tool for `smalls tools smoke`. A tool that needs a handle or a name takes it from an
+# earlier result, so nothing here names anything in a bundle.
+SMOKE_ARGUMENTS = {"list_alerts": {"since": "-2h"}, "search_logs": {"since": "-30m"}, "list_changes": {"since": "-24h"},
+                   "read_chat": {"since": "-2h"}}
+
+
+def smoke(built: dict, ctx) -> int:
+    """Call every built tool once and print one line per tool. Exits non-zero if any call is an error."""
+    from smalls.tools import registry
+
+    failed = 0
+    seen: list[str] = []
+    for name, spec in sorted(built.items(), key=lambda item: item[0] == "get_record"):      # get_record last: it needs a handle
+        arguments = {"handle": seen[0]} if name == "get_record" and seen else SMOKE_ARGUMENTS.get(name, {})
+        env = registry.call(spec, arguments, ctx)
+        seen += list(env.shown)
+        failed += env.status != "ok"
+        print(f"{name:<18} {env.status:<6} {len(env.rows):>3} rows {len(env.referenced):>3} referenced {len(env.text) // 4:>5} tokens"
+              + ("" if env.status == "ok" else f"   {env.text.splitlines()[0][:120]}"))
+    return 1 if failed else 0
+
+
 def cmd_tools(args: argparse.Namespace) -> int:
     import json
     from datetime import datetime, timezone
@@ -107,12 +129,14 @@ def cmd_tools(args: argparse.Namespace) -> int:
             raise SystemExit(f"smalls: no tool named {unknown[0]}; the tools are: {', '.join(surface)}")
         print(json.dumps([registry.definition(surface[n]) for n in names], indent=2, ensure_ascii=False))
         return 0
-    if args.name not in built:
+    if args.tools_command == "call" and args.name not in built:
         raise SystemExit(f"smalls: no tool named {args.name}; the tools that are built: {', '.join(built)}")
-    spec = built[args.name]
     s = store.build(_bundle(args.bundle), tags=tags)
     now = s.set_now(args.now)
     ctx = registry.ToolContext(store=s, now=datetime.fromtimestamp(now / 1000, timezone.utc), tags=tags)
+    if args.tools_command == "smoke":
+        return smoke(built, ctx)
+    spec = built[args.name]
     env = registry.call(spec, tool_arguments(spec, args.arguments), ctx)
     print(env.text)
     print(f"--- status: {env.status}")
@@ -135,7 +159,10 @@ def parser() -> argparse.ArgumentParser:
     listing = tools_sub.add_parser("list", help="the eleven tools, which are built, and their caps")
     schema = tools_sub.add_parser("schema", help="the tool definitions the model is given")
     schema.add_argument("name", nargs="?")
-    for command in (call, listing, schema):
+    smoke_cmd = tools_sub.add_parser("smoke", help="call every built tool once at a given now; one line per tool")
+    smoke_cmd.add_argument("--now", required=True, metavar="TIME")
+    smoke_cmd.add_argument("--bundle", default=os.environ.get("SMALLS_BUNDLE"), help="bundle folder (or SMALLS_BUNDLE)")
+    for command in (call, listing, schema, smoke_cmd):
         command.add_argument("--tags", choices=["on", "off"], help="with or without the tag inputs (default: SMALLS_TAGS)")
     tools.set_defaults(run=cmd_tools)
 
