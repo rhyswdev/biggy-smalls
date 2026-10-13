@@ -6,8 +6,11 @@
     smalls resume <run_id>                                        resume a run paused at a gate
     smalls replay <run_id|folder>                                 re-render a run record; no model, no key
 
+    smalls tools call <name> --now <time> key=value ...           call one tool; print its text, then its handles
+    smalls tools list | schema [<name>]                           the tool surface
+
 `ingest` reads only the bundle and the committed tag cache: no key, no network. `tag` is the only command
-that calls the classifier and the only one that needs JEV_API_KEY. `smalls tools call` arrives with the tools.
+that calls the classifier and the only one that needs JEV_API_KEY.
 """
 
 from __future__ import annotations
@@ -62,9 +65,79 @@ def cmd_tag(args: argparse.Namespace) -> int:
     return run.main(bundle, repeats=not args.no_repeats)
 
 
+def tool_arguments(spec, pairs: list[str]) -> dict:
+    """`key=value` pairs as a tool's arguments. A value is read as JSON when it parses as JSON, so a list
+    or a list of name and value pairs can be written inline; a text input is always taken as written."""
+    import json
+
+    out = {}
+    for pair in pairs:
+        key, sep, value = pair.partition("=")
+        if not sep:
+            raise SystemExit(f"smalls: {pair!r} is not key=value")
+        field = spec.args.model_fields.get(key)
+        if field is not None and field.annotation in (str, str | None):
+            out[key] = value
+            continue
+        try:
+            out[key] = json.loads(value)
+        except ValueError:
+            out[key] = value
+    return out
+
+
+def cmd_tools(args: argparse.Namespace) -> int:
+    import json
+    from datetime import datetime, timezone
+
+    from smalls.tools import registry, store
+
+    tags = store.tags_enabled() if args.tags is None else args.tags == "on"
+    surface = registry.surface(tags=tags)
+    built = registry.registry(tags=tags)
+    if args.tools_command == "list":
+        for name, spec in surface.items():
+            cap = f"{spec.cap_tokens} tokens" + (f", {spec.cap_rows} rows" if spec.cap_rows else "")
+            print(f"{name:<18} {'built' if name in built else 'not built':<10} cap {cap}")
+        return 0
+    if args.tools_command == "schema":
+        names = [args.name] if args.name else list(surface)
+        unknown = [n for n in names if n not in surface]
+        if unknown:
+            raise SystemExit(f"smalls: no tool named {unknown[0]}; the tools are: {', '.join(surface)}")
+        print(json.dumps([registry.definition(surface[n]) for n in names], indent=2, ensure_ascii=False))
+        return 0
+    if args.name not in built:
+        raise SystemExit(f"smalls: no tool named {args.name}; the tools that are built: {', '.join(built)}")
+    spec = built[args.name]
+    s = store.build(_bundle(args.bundle), tags=tags)
+    now = s.set_now(args.now)
+    ctx = registry.ToolContext(store=s, now=datetime.fromtimestamp(now / 1000, timezone.utc), tags=tags)
+    env = registry.call(spec, tool_arguments(spec, args.arguments), ctx)
+    print(env.text)
+    print(f"--- status: {env.status}")
+    print(f"--- shown ({len(env.shown)}): {' '.join(env.shown)}")
+    print(f"--- referenced ({len(env.referenced)}): {' '.join(env.referenced)}")
+    return 0 if env.status == "ok" else 1
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="smalls", description="Smalls: incident investigation over raw operational evidence.")
     sub = p.add_subparsers(dest="command", required=True)
+
+    tools = sub.add_parser("tools", help="call one tool against a bundle, or print the tool surface")
+    tools_sub = tools.add_subparsers(dest="tools_command", required=True)
+    call = tools_sub.add_parser("call", help="call a tool at a given now and print its result and its handles")
+    call.add_argument("name")
+    call.add_argument("arguments", nargs="*", metavar="key=value", help="a value is read as JSON when it parses as JSON")
+    call.add_argument("--now", required=True, metavar="TIME", help="the replay clock: HH:MM on the bundle's day, or an ISO time")
+    call.add_argument("--bundle", default=os.environ.get("SMALLS_BUNDLE"), help="bundle folder (or SMALLS_BUNDLE)")
+    listing = tools_sub.add_parser("list", help="the eleven tools, which are built, and their caps")
+    schema = tools_sub.add_parser("schema", help="the tool definitions the model is given")
+    schema.add_argument("name", nargs="?")
+    for command in (call, listing, schema):
+        command.add_argument("--tags", choices=["on", "off"], help="with or without the tag inputs (default: SMALLS_TAGS)")
+    tools.set_defaults(run=cmd_tools)
 
     ingest = sub.add_parser("ingest", help="build the in-memory store from a bundle and print the ingest report")
     ingest.add_argument("--bundle", default=os.environ.get("SMALLS_BUNDLE"), help="bundle folder (or SMALLS_BUNDLE)")

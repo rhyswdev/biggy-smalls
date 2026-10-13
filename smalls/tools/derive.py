@@ -24,6 +24,7 @@ import json
 from typing import Any
 
 from smalls.tools.registry import ToolContext
+from smalls.tools.store import render_native
 from smalls.tools.windows import iso
 
 
@@ -124,7 +125,63 @@ def stream_state(stream: Any, now: int) -> None:
         stream.spans = [(r["t_known"], r["t_known"] + 1) for r in records]
 
 
+def monitor_groups(ctx: ToolContext, definition: str) -> list[dict[str, Any]]:
+    """A monitor's groups, each with the state its last visible transition gives it (K4). Empty when no
+    transition is visible: then no state is claimed."""
+    events = query(ctx, "SELECT stream_key, t_known, status, sev FROM visible WHERE kind = 'alert' AND parent = ? ORDER BY t_known, rid", (definition,))
+    groups: dict[str, dict[str, Any]] = {}
+    for e in events:
+        g = groups.setdefault(e["stream_key"], {"key": e["stream_key"], "transitions": 0})
+        g.update(state=e["status"] or "unknown", sev=e["sev"], last=e["t_known"], transitions=g["transitions"] + 1)
+    return list(groups.values())
+
+
+def service_status(ctx: ToolContext, service_id: str) -> tuple[str, str]:
+    """A paging service's status at `now`, from the incident versions valid then (K4): critical if one is
+    triggered; warning if one is acknowledged and none is triggered; otherwise active."""
+    rows = query(ctx, "SELECT status FROM visible WHERE kind = 'incident' AND json_extract(attrs, '$.service_id') = ?", (service_id,))
+    triggered = sum(1 for r in rows if r["status"] == "triggered")
+    acknowledged = sum(1 for r in rows if r["status"] == "acknowledged")
+    if triggered:
+        return "critical", f"{triggered} incident{'s' if triggered != 1 else ''} triggered"
+    if acknowledged:
+        return "warning", f"{acknowledged} incident{'s' if acknowledged != 1 else ''} acknowledged, none triggered"
+    return "active", "no open incident"
+
+
 def channels(ctx: ToolContext) -> list[str]:
     """The chat channels that have a visible message. The channel list file has no clock, so a channel
     created after `now` must not be listed from it."""
     return [r["dataset"] for r in query(ctx, "SELECT DISTINCT dataset FROM visible WHERE kind = 'message' ORDER BY dataset")]
+
+
+def chat_names(ctx: ToolContext) -> dict[str, str]:
+    """A chat user's id to the name people see, from the users reference file. That file has no clock, and
+    it holds names only, so it is safe at any `now`."""
+    names: dict[str, str] = {}
+    for row in query(ctx, "SELECT native, flags FROM ref WHERE name = 'users'"):
+        for user in json.loads(render_native(row["native"], row["flags"])):
+            profile = user.get("profile") or {}
+            names[user["id"]] = profile.get("display_name") or user.get("real_name") or profile.get("real_name") or user.get("name") or user["id"]
+    return names
+
+
+def threads(messages: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """The visible replies of each thread, by the handle of the message that starts it, oldest first."""
+    out: dict[str, list[dict[str, Any]]] = {}
+    for m in messages:
+        if m["parent"]:
+            out.setdefault(m["parent"], []).append(m)
+    return out
+
+
+def thread_summary(replies: list[dict[str, Any]], names: dict[str, str]) -> dict[str, Any]:
+    """A thread's count, repliers and latest reply, from the replies visible at `now` (K4). The export's
+    own summary was taken later and is withheld."""
+    repliers = []
+    for r in replies:
+        attrs = loads(r["attrs"])
+        who = names.get(attrs.get("user")) or attrs.get("username") or attrs.get("user") or "(unknown)"
+        if who not in repliers:
+            repliers.append(who)
+    return {"count": len(replies), "repliers": repliers, "latest": max(r["t_known"] for r in replies)}
