@@ -1,25 +1,28 @@
 # Hand labels for the tag precision check (docs/decisions/ingestion-decisions.md section 4.6).
 #
-# 89 units. Each was labelled by hand from its own text and the one-line option meanings, and committed
+# 134 units. Each was labelled by hand from its own text and the one-line option meanings, and committed
 # before the classifier answered the question it is scored against, so git shows the labels came first.
-# The sample is fixed by code: within each kind of unit, a run of units in unit-id order, and a unit id is
-# a hash of the text (`smalls tag --sample` prints it).
+# Each sample is a run of units of one kind in unit-id order, and a unit id is a hash of the text.
 #
-# - `signal` (35): the first 21 units of the log, alert, alert-definition and ticket kinds, labelled before
-#   the first `make tag` run; and all 14 metric series, labelled before the candidate experiment that
-#   first asked about them.
-# - `act` (34): asked as one yes/no question per option, so a unit carries `labels`, every option that
-#   applies with the main one first, and `also_acceptable`, readings we would not count as wrong. A stored
-#   value outside both is an error. 14 units were labelled before the candidate experiment and 20 before
-#   the run that adopted the yes/no form. The 20 units first labelled for the pick-one form are kept in
-#   labels-act-pick-one.yaml with the table they produced: they carry one label each, and we had seen
-#   answers for them before the form changed.
-# - `change_kind` (20): the first units of each kind, labelled before the first `make tag` run.
+# A unit carries either `label`, one option, or `labels`, every option that applies with the main one first,
+# plus `also_acceptable`, readings we would not count as wrong. A unit with one `label` is scored on the
+# pick-one question only; a unit with `labels` is scored on every question asked of its kind, and a stored
+# value outside `labels` and `also_acceptable` is an error.
+#
+# - `signal` (80): the first 21 units of the log, alert, alert-definition and ticket kinds, one label each,
+#   made before the first `make tag` run; all 14 metric series; and 45 units with `labels`, 17 made before
+#   the first candidate experiment and 28 made before `signal` as yes/no was scored. Seven of the 45 carry
+#   `seen`: we had come across one of their answers while reading earlier results. The 28 skip the 34
+#   largest log templates, whose yes/no answers we had already read.
+# - `act` (34): 14 made before the candidate experiment and 20 before the run that adopted the yes/no
+#   form. The 20 units first labelled for the pick-one form are in labels-act-pick-one.yaml with the table
+#   they produced: they carry one label each, and we had seen answers for them before the form changed.
+# - `change_kind` (20): the first units of each kind, made before the first `make tag` run.
 #
 # How we labelled:
 # - only the text below, never what we know about the incident: a deploy run is a release even when a
 #   later record shows it was the rollback, because nothing in its own text says so;
-# - for a pick-one facet, a text that does two things takes the label of what it leads with;
+# - for one `label`, a text that does two things takes the label of what it leads with;
 # - the meanings are read as written: a commit that changes application code is not "a new version built
 #   or deployed", so it is `other` unless it is the release commit or the release merge itself;
 # - `other` is a label like any other: for such a unit the right outcome is no tag.
@@ -229,6 +232,428 @@ units:
   kind: metric series
   text: avg:payments.authorize.success_rate{env:prod}
   label: errors
+- unit: 2046d6ad1f45
+  facet: signal
+  kind: log line
+  text: WARN com.larkspur.checkout.tax.TaxRateClient - tax rate lookup slow (<*>), using cached rates
+  labels:
+  - latency
+  also_acceptable: []
+- unit: 23b8d064ca95
+  facet: signal
+  kind: log line
+  text: '<*> UTC [<*>] @ LOG:  checkpoint complete: wrote <*> buffers (<*>); <*> WAL file(s) added, <*> removed, <*> recycled; write=<*> s, sync=<*> s, total=<*> s; sync files=<*>, longest=<*> s, average=<*> s; distance=<*> kB, estimate=<*> kB'
+  labels:
+  - routine
+  also_acceptable: []
+- unit: 249c5e0b2c94
+  facet: signal
+  kind: log line
+  text: <*> DEBUG [<*> connection adder] c.z.h.pool.HikariPool - <*> - Cannot acquire connection from data source
+  labels:
+  - errors
+  - availability
+  also_acceptable:
+  - saturation
+- unit: 2f4d0b8ed9a3
+  facet: signal
+  kind: log line
+  text: 'Oct <*> notice mcpd[<*>]: <*>: Pool /Common/pool_pay_gw member /Common/<*> monitor status down. [ /Common/mon_pay_gw_health: down; last error: /Common/mon_pay_gw_health: Response Code: <*> (Service Unavailable) @<*> ]  [ was up for <*> ]'
+  labels:
+  - availability
+  also_acceptable:
+  - errors
+- unit: 32f09a423192
+  facet: signal
+  kind: log line
+  text: 'Normal ScalingReplicaSet Deployment/checkout-api: Scaled down replica set <*> to <*>'
+  labels:
+  - change
+  also_acceptable: []
+- unit: 362f7c16a49a
+  facet: signal
+  kind: log line
+  text: DEBUG org.hibernate.orm.jdbc.bind - binding parameter (<*>:BIGINT) <- [<*>]
+  labels:
+  - routine
+  also_acceptable: []
+  seen: the pick-one answer
+- unit: 37c7682161a3
+  facet: signal
+  kind: log line
+  text: <*> INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Graceful shutdown complete
+  labels:
+  - change
+  also_acceptable:
+  - routine
+- unit: 37ebca8db86e
+  facet: signal
+  kind: log line
+  text: INFO com.larkspur.checkout.CheckoutApiApplication - Started CheckoutApiApplication in <*> seconds (process running for <*>)
+  labels:
+  - change
+  also_acceptable:
+  - routine
+- unit: 2419988c1b08
+  facet: signal
+  kind: alert definition
+  text: 'redis-sessions memory fragmentation high
+
+    {{#is_alert}}redis-sessions memory fragmentation ratio is {{value}}. Sessions may be evicted; checkout logins can fail.{{/is_alert}}
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    @slack-sre-oncall'
+  labels:
+  - saturation
+  also_acceptable: []
+- unit: 28a2e93595c8
+  facet: signal
+  kind: alert definition
+  text: 'checkout-api error rate > 5%
+
+    {{#is_alert}}checkout-api 5xx rate is {{value}}% over the last 5 minutes. Customers cannot complete checkout.{{/is_alert}}
+
+    {{#is_warning}}checkout-api 5xx rate is {{value}}%.{{/is_warning}}
+
+    Check recent checkout-api deploys first.
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    {{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}'
+  labels:
+  - errors
+  also_acceptable:
+  - availability
+- unit: 314f002ad5da
+  facet: signal
+  kind: alert definition
+  text: 'CPU saturation on {{host.name}}
+
+    {{#is_alert}}CPU on {{host.name}} above 90% for 10 minutes.{{/is_alert}}
+
+    @slack-sre-oncall'
+  labels:
+  - saturation
+  also_acceptable: []
+- unit: 1b02becc6a2b
+  facet: signal
+  kind: alert
+  text: redis-sessions memory fragmentation high
+  labels:
+  - saturation
+  also_acceptable: []
+- unit: 247f7d7fdaaf
+  facet: signal
+  kind: alert
+  text: '[Synthetics] marketing site homepage'
+  labels: []
+  also_acceptable:
+  - availability
+- unit: 2888c2a50070
+  facet: signal
+  kind: alert
+  text: CPU saturation
+  labels:
+  - saturation
+  also_acceptable: []
+- unit: 25398e91066d
+  facet: signal
+  kind: incident ticket
+  text: 'Card payments failing - PayCore outage
+
+    Payment authorizations failing for all card payments. payments-gateway logs show PSP timeouts on every call to api.paycore.example. PayCore status page shows major outage.'
+  labels:
+  - errors
+  - availability
+  also_acceptable: []
+- unit: 2cc082ffe706
+  facet: signal
+  kind: incident ticket
+  text: 'Product pages slow (p90 3 s), image resizer pods CPU throttled
+
+    Product page p90 response time on the storefront has risen to about 3 s since 16:20 ET. The image resizer pods show sustained CPU throttling and product images are slow to load.'
+  labels:
+  - latency
+  - saturation
+  also_acceptable: []
+- unit: 4d40dbc42e16
+  facet: signal
+  kind: incident ticket
+  text: 'Customer card declined on the website
+
+    Customer emailed that their card declined on the website for order 7849362 and they then paid with a different card that worked. They want to know whether the first card was charged anyway. Agent said they would check the account and reply by email.'
+  labels:
+  - errors
+  also_acceptable: []
+- unit: 381288c6f90c
+  facet: signal
+  kind: log line
+  text: 'Normal SuccessfulCreate CronJob/search-indexer: Created job <*>'
+  labels:
+  - change
+  also_acceptable:
+  - routine
+- unit: 39d8790e0e12
+  facet: signal
+  kind: log line
+  text: <*> WARN  [<*> housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@<*> on thread <*>, stack trace follows
+  labels:
+  - saturation
+  also_acceptable:
+  - errors
+  - latency
+- unit: 3bcefa97d3dd
+  facet: signal
+  kind: log line
+  text: '<*> UTC [<*>] datadog@postgres LOG:  connection authorized: user=datadog database=postgres application_name=datadog-agent'
+  labels:
+  - routine
+  also_acceptable:
+  - security
+  seen: the yes/no security answer under the reworded option
+- unit: 4d02f5af0709
+  facet: signal
+  kind: log line
+  text: <*> INFO  [<*>] c.l.p.s.PaymentService - authorize ok txn=<*> amount=<*> EUR psp_ms=<*> attempts=<*>
+  labels:
+  - routine
+  also_acceptable: []
+  seen: the yes/no security answer under the first wording
+- unit: 5a979afdffb7
+  facet: signal
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /.env 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  labels:
+  - errors
+  also_acceptable:
+  - security
+  seen: the pick-one answer under the reworded option
+- unit: 608eb97614ff
+  facet: signal
+  kind: log line
+  text: <*> INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+  labels:
+  - change
+  also_acceptable:
+  - availability
+  seen: the pick-one answer
+- unit: 66a13b257ad8
+  facet: signal
+  kind: log line
+  text: 'Normal Started Pod/<*>: Started container checkout-api'
+  labels:
+  - change
+  also_acceptable:
+  - routine
+- unit: 681b31e4c1d1
+  facet: signal
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /xmlrpc.php 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  labels:
+  - errors
+  also_acceptable:
+  - security
+- unit: 791657480f4d
+  facet: signal
+  kind: log line
+  text: <*> INFO  [main] c.z.h.pool.HikariPool - <*> - Added connection org.postgresql.jdbc.PgConnection@<*>
+  labels:
+  - routine
+  also_acceptable:
+  - change
+- unit: 7d736b1a1d4e
+  facet: signal
+  kind: log line
+  text: 'Normal SuccessfulRescale HorizontalPodAutoscaler/storefront-web: New size: <*>; reason: All metrics below target'
+  labels:
+  - change
+  also_acceptable:
+  - routine
+  - traffic
+- unit: 828a9f7d911d
+  facet: signal
+  kind: log line
+  text: INFO com.larkspur.checkout.CheckoutApiApplication - Starting CheckoutApiApplication <*> using Java <*> with PID <*> (/app/checkout-api.jar started by app in /app)
+  labels:
+  - change
+  also_acceptable:
+  - routine
+- unit: 856f2da70bd6
+  facet: signal
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /wp-login.php 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  labels:
+  - errors
+  also_acceptable:
+  - security
+  seen: the pick-one answer under the reworded option
+- unit: 319fa7f3a6e9
+  facet: signal
+  kind: alert definition
+  text: 'F5 pool member down
+
+    A member of the payments gateway pool failed its health monitor.'
+  labels:
+  - availability
+  also_acceptable:
+  - errors
+- unit: 4bc24eabbc0b
+  facet: signal
+  kind: alert definition
+  text: '[Synthetics] checkout flow
+
+    {{#is_alert}}Synthetic checkout flow is failing from {{locations}}.{{/is_alert}}
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    {{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}'
+  labels:
+  - availability
+  also_acceptable:
+  - errors
+- unit: 5560892985a8
+  facet: signal
+  kind: alert definition
+  text: 'Payment authorization success rate low
+
+    {{#is_alert}}Payment authorization success rate is {{value}}% over the last 5 minutes (threshold {{threshold}}%).{{/is_alert}}
+
+    {{#is_warning}}Payment authorization success rate is {{value}}%.{{/is_warning}}
+
+    {{#is_recovery}}Payment authorization success rate back above threshold.{{/is_recovery}}
+
+    @slack-payments'
+  labels:
+  - errors
+  also_acceptable:
+  - availability
+- unit: 5e40bcfee484
+  facet: signal
+  kind: alert definition
+  text: 'search-indexer cron job failed
+
+    {{#is_alert}}search-indexer cron job failed (BackoffLimitExceeded). Product search results stop updating until the next successful run.{{/is_alert}}
+
+    {{#is_alert}}@pagerduty-Platform{{/is_alert}}'
+  labels:
+  - errors
+  also_acceptable:
+  - availability
+- unit: 69f4031b0735
+  facet: signal
+  kind: alert definition
+  text: '[Synthetics] marketing site homepage
+
+    {{#is_alert}}Marketing homepage check failing from {{locations}}.{{/is_alert}}
+
+    {{#is_recovery}}Marketing homepage check passing again.{{/is_recovery}}
+
+    @slack-web-platform'
+  labels:
+  - availability
+  also_acceptable:
+  - errors
+- unit: 54c21201f3ef
+  facet: signal
+  kind: alert
+  text: Application Component down
+  labels:
+  - availability
+  also_acceptable: []
+- unit: 6720ea7f2c24
+  facet: signal
+  kind: alert
+  text: F5 pool member down
+  labels:
+  - availability
+  also_acceptable: []
+- unit: 6ad16120abdd
+  facet: signal
+  kind: alert
+  text: CPU saturation on node-east-14
+  labels:
+  - saturation
+  also_acceptable: []
+- unit: 6da931760c94
+  facet: signal
+  kind: alert
+  text: 'Availability: synthetic monitor failing'
+  labels:
+  - availability
+  also_acceptable:
+  - errors
+- unit: 6f9b32ee05f0
+  facet: signal
+  kind: alert
+  text: Volume almost full
+  labels:
+  - saturation
+  also_acceptable: []
+- unit: 58c2ce21ca5c
+  facet: signal
+  kind: incident ticket
+  text: 'Payment spinner never finishes at checkout
+
+    Customer called: pressed pay on order 7794287, the spinner ran for a long time and then the page said something went wrong. No confirmation email. Wants to know if the order went through.'
+  labels:
+  - errors
+  - latency
+  also_acceptable:
+  - availability
+- unit: 5958886083f4
+  facet: signal
+  kind: incident ticket
+  text: 'Customer charged twice at checkout
+
+    Customer called to say they were charged twice: their first attempt, order 7828258, showed an error, they paid again and can see both charges on their bank app. They want one of them refunded today. Agent logged the case and told the customer a payments team will look at it.'
+  labels:
+  - errors
+  also_acceptable: []
+- unit: 5d267ec2d45a
+  facet: signal
+  kind: incident ticket
+  text: 'Nightly finance report failed on win-rpt-06, C: drive full
+
+    The nightly finance report on win-rpt-06 failed at 02:10 ET with a disk write error. The C: drive has no free space left.'
+  labels:
+  - saturation
+  - errors
+  also_acceptable: []
+  seen: the pick-one answer under the reworded option
+- unit: 6c34199a6d33
+  facet: signal
+  kind: incident ticket
+  text: 'Checkout spinner, no confirmation shown
+
+    Customer typed in chat that the spinner kept going after they tapped pay on order 7828211 and no confirmation appeared. They refreshed the page and were not sure whether the purchase had gone through. Agent said the team is looking into checkout and asked them to wait for a follow-up.'
+  labels:
+  - latency
+  also_acceptable:
+  - errors
+  - availability
+- unit: 745e69723cbc
+  facet: signal
+  kind: incident ticket
+  text: 'Checkout spinner, payment never completes
+
+    Customer emailed to say the payment spinner kept going for several minutes after they pressed pay on order 7829438. They were not sure whether the payment went through and did not get a confirmation. Agent asked for a screenshot and replied that the case is open.'
+  labels:
+  - latency
+  also_acceptable:
+  - errors
+  - availability
+- unit: 78f4d2153844
+  facet: signal
+  kind: incident ticket
+  text: 'Address validation fell back to local rules after provider HTTP 429
+
+    Checkout address validation calls to the external provider have returned HTTP 429 since 14:50 ET, and the Checkout API has switched to local rules. Orders are completing, but address suggestions and standardization are not being applied.'
+  labels:
+  - errors
+  also_acceptable:
+  - saturation
+  - availability
 - unit: 21554cee65ea
   facet: act
   kind: chat message
