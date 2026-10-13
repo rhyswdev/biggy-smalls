@@ -18,6 +18,7 @@ import yaml
 
 from smalls.contracts.manifest import ManifestRow
 from smalls_data import lint_schema as ls
+from smalls_data import prompt_lint
 from smalls_data import shape
 from smalls_data.parity import Parity
 from smalls_data.gen.core import BUNDLES, SCENARIO, Clock, Curve
@@ -616,10 +617,18 @@ class Lint:
                 self.err(15, f"{cls}: Spearman {rho} at {w}-minute buckets, 14:20 to 15:10, not above {shape.THRESHOLD}")
         self.notes.append("[15] " + "; ".join(report))
 
+    def inv16_prompt_text(self) -> None:
+        """No bundle string in prompt text on the agent side (the tag profiles; the agent's prompts later)."""
+        strings = prompt_lint.bundle_strings(self.facts)
+        texts = prompt_lint.prompt_texts()
+        for hit in prompt_lint.find(texts, strings):
+            self.err(16, hit)
+        self.notes.append(f"[16] {len(texts)} prompt texts checked against {len(strings)} bundle strings")
+
     def run(self) -> None:
         for f in (self.inv1_connections, self.inv2_little, self.inv3_sequences, self.inv4_splunk_raw, self.inv5_visibility, self.inv6_answer_key,
                   self.inv7_tokens, self.inv8_clocks, self.inv10_served, self.inv9_aliases, self.inv11_schema, self.inv12_strings, self.inv13_budget,
-                  self.inv14_parity, self.inv15_sampling):
+                  self.inv14_parity, self.inv15_sampling, self.inv16_prompt_text):
             f()
         self.notes.append("[10] served files checked; the store half is `make leak-test`; the tool-output half arrives with the tools (step 6a-tools)")
 

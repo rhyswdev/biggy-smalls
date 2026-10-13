@@ -40,7 +40,7 @@ CREATE TABLE record (
   version      INTEGER NOT NULL DEFAULT 1,
   source       TEXT NOT NULL,          -- the integration.yaml sources: key
   dataset      TEXT NOT NULL,          -- the file-level set inside the source (incident, events, log, ...)
-  kind         TEXT NOT NULL,          -- log, alert, change, build, commit, incident, note, message, doc, status, config, ...
+  kind         TEXT NOT NULL,          -- log, alert, alert_def, change, build, commit, incident, note, event, message, doc, status, config, ...
   native_id    TEXT,
   host         TEXT,                   -- from the Splunk host rule; differs from the handle's file-stem host for F5 and k8s
   entity_raw   TEXT,                   -- unresolved; alias resolution arrives with get_topology in step 7
@@ -195,8 +195,7 @@ class IngestReport:
                              ("unparsed", self.unparsed[:20]), ("no sampling class", self.unsampled[:20])):
             for item in items:
                 lines.append(f"  ! {label} {item}")
-        if self.tags:
-            lines.append("  tags: " + ", ".join(f"{k} {v}" for k, v in self.tags.items()))
+        lines.append("  tags: " + ", ".join(f"{k} {v}" for k, v in self.tags.items()))
         lines.append(f"  built in {self.elapsed_ms:.0f} ms")
         return "\n".join(lines)
 
@@ -316,12 +315,10 @@ def tags_enabled(value: str | None = None) -> bool:
     return value == "on"
 
 
-def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
-    """Ingest a bundle into a fresh in-memory store. Reads the bundle's served files and, with tags on, the
-    committed tag cache: no network, no key, and the clock is left unset."""
+def read(bundle_root: Path | str) -> tuple[Bundle, list[Record], list[Point], list[Ref]]:
+    """Run every adapter over a bundle's served files. No database, no clock, no tags."""
     from smalls.tools.ingest import adapter_for
 
-    started = time.perf_counter()
     bundle = Bundle(bundle_root)
     report = bundle.report
     records: list[Record] = []
@@ -353,13 +350,31 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
                 refs.append(item)
                 report.count(source, "refs")
     report.templates = len({r.template_id for r in records if r.template_id})
+    return bundle, records, points, refs
+
+
+def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
+    """Ingest a bundle into a fresh in-memory store. Reads the bundle's served files and, with tags on, the
+    committed tag cache: no network, no key, and the clock is left unset. `tags` defaults to SMALLS_TAGS."""
+    started = time.perf_counter()
+    bundle, records, points, refs = read(bundle_root)
+    report = bundle.report
+    tagged: list[dict] = [{"tag_key": None, "tags": {}}] * len(records)
+    answers: list[tuple] = []
+    if tags_enabled() if tags is None else tags:
+        from smalls.tools.ingest.tagging import cache as tag_cache
+
+        tagged, answers, stats = tag_cache.apply(records)
+        report.tags = {"mode": "on", **stats}
+    else:
+        report.tags = {"mode": "off"}
 
     conn = sqlite3.connect(":memory:")
     conn.executescript(DDL)
     with conn:
-        for rid, r in enumerate(records, 1):
+        for rid, (r, t) in enumerate(zip(records, tagged), 1):
             row = {c: getattr(r, c, None) for c in _RECORD_COLUMNS}
-            row.update(tag_key=None, tags="{}", attrs=dumps(r.attrs), flags=dumps(r.flags), locator=str(r.locator))
+            row.update(tag_key=t["tag_key"], tags=dumps(t["tags"]), attrs=dumps(r.attrs), flags=dumps(r.flags), locator=str(r.locator))
             conn.execute(f"INSERT INTO record (rid, {', '.join(_RECORD_COLUMNS)}) VALUES (?, {', '.join('?' * len(_RECORD_COLUMNS))})",
                          (rid, *(row[c] for c in _RECORD_COLUMNS)))
             conn.executemany("INSERT INTO chunk (rid, seq, heading, text) VALUES (?, ?, ?, ?)",
@@ -368,6 +383,7 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
                          [(p.handle, p.series, p.t, p.value, p.interval_s, p.t_known, p.path, p.locator) for p in points])
         conn.executemany("INSERT INTO ref (source, name, native, flags) VALUES (?, ?, ?, ?)",
                          [(x.source, x.name, x.native, dumps(x.flags)) for x in refs])
+        conn.executemany("INSERT INTO tag_answer (tag_key, facet, value, p, chosen) VALUES (?, ?, ?, ?, ?)", answers)
         conn.execute("INSERT INTO chunk_fts (chunk_fts) VALUES ('rebuild')")
     report.elapsed_ms = (time.perf_counter() - started) * 1000
     return Store(conn, bundle)

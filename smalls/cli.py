@@ -1,7 +1,7 @@
 """The `smalls` command.
 
     smalls ingest --bundle <folder> [--dump x.db] [--now HH:MM]   build the store, print the ingest report
-    smalls tag    --bundle <folder> [--measure]                   compute tag answers into the committed cache
+    smalls tag    --bundle <folder> [--report | --sample]         compute tag answers into the committed cache
 
 `ingest` reads only the bundle and the committed tag cache: no key, no network. `tag` is the only command
 that calls the classifier and the only one that needs JEV_API_KEY. `smalls tools call` arrives with the tools.
@@ -41,8 +41,19 @@ def cmd_ingest(args: argparse.Namespace) -> int:
 
 
 def cmd_tag(args: argparse.Namespace) -> int:
-    _bundle(args.bundle)
-    raise SystemExit("smalls tag: the tagging pass arrives with build row 6 of docs/decisions/ingestion-decisions.md")
+    bundle = _bundle(args.bundle)
+    if args.sample:
+        from smalls.tools import store
+        from smalls.tools.ingest.tagging import measure
+
+        print(measure.skeleton(measure.units_of(store.read(bundle)[1])), end="")
+        return 0
+    from smalls.tools.ingest.tagging import run
+
+    if args.report:
+        print(run.report(bundle))
+        return 0
+    return run.main(bundle, repeats=not args.no_repeats)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -57,6 +68,9 @@ def parser() -> argparse.ArgumentParser:
 
     tag = sub.add_parser("tag", help="call the classifier for every tag-cache miss (needs JEV_API_KEY)")
     tag.add_argument("--bundle", default=os.environ.get("SMALLS_BUNDLE"), help="bundle folder (or SMALLS_BUNDLE)")
+    tag.add_argument("--no-repeats", action="store_true", help="fill the cache only; skip the stability repeats")
+    tag.add_argument("--report", action="store_true", help="offline: print the precision, coverage and stability table")
+    tag.add_argument("--sample", action="store_true", help="offline: print the sample to label by hand, as YAML")
     tag.set_defaults(run=cmd_tag)
     return p
 

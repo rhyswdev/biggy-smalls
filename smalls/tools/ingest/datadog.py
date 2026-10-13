@@ -64,7 +64,7 @@ def adapter(bundle, source: str) -> Iterator[Item]:
             t = ms_of(datetime.fromisoformat(mon["created"]))
             options = mon.get("options") or {}
             yield Record(
-                handle=H.dd_monitor_handle(mon["id"]), source=source, dataset="monitors", kind="config", path=rel, locator=pointer,
+                handle=H.dd_monitor_handle(mon["id"]), source=source, dataset="monitors", kind="alert_def", path=rel, locator=pointer,
                 native=raw, t_event=t, t_known=t, native_id=str(mon["id"]), entity_raw=_entity(mon.get("tags")),
                 stream_key=_stream(mon["id"]), t_native=mon["created"], tz_rule=tz_rule, title=mon.get("name"), body=mon.get("message"),
                 attrs=clean({"type": mon.get("type"), "query": mon.get("query"), "tags": mon.get("tags"),
@@ -76,7 +76,7 @@ def adapter(bundle, source: str) -> Iterator[Item]:
         for pointer, raw, syn in elements(bundle.text(rel), "/"):
             request = ((syn.get("config") or {}).get("request") or {})
             yield Record(
-                handle=H.dd_synthetic_handle(syn["public_id"]), source=source, dataset="synthetics", kind="config", path=rel,
+                handle=H.dd_synthetic_handle(syn["public_id"]), source=source, dataset="synthetics", kind="alert_def", path=rel,
                 locator=pointer, native=raw, t_event=0, t_known=0, native_id=syn["public_id"],
                 entity_raw=request.get("url") or _entity(syn.get("tags")), stream_key=_stream(syn.get("monitor_id")),
                 status=syn.get("status"), title=syn.get("name"), body=syn.get("message"),

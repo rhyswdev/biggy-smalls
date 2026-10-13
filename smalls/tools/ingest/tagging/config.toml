@@ -1,0 +1,19 @@
+# Tagging configuration. The pinned classifier version lives here and nowhere else (rule T10): code,
+# profiles and docs say "the pinned classifier version". Changing the classifier is this one line and a
+# `make tag` run. Every value here is config, never a model choice.
+
+[classifier]
+version = "jev-1.13.0"
+# Vendor list price, used only to print what a `make tag` run cost.
+usd_per_million_input_tokens = 0.042
+
+[rules]
+# A tag is applied only when the chosen option is not `other` and its probability is at or above the
+# floor (rule T2). It starts at 0.8 and is raised for precision; the measured value and its table are in
+# docs/DATA.md. The cache keeps raw probabilities, so moving it needs no new calls.
+floor = 0.8
+
+[run]
+concurrency = 8
+# Cold repeats over the hand-labelled sample for the stability check; the last one shuffles option order.
+repeats = 3

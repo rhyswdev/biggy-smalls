@@ -1,0 +1,50 @@
+# Tag profiles: one closed-set question per facet (taxonomy v1, ruling O5). This file is prompt text: it
+# falls under the bundle-string lint and the held-out rule, and it is frozen with the agent. A request
+# sends one record's own text as `{"kind": ..., "text": ...}` and one of these questions, and nothing else.
+#
+# Options are listed in a fixed order with `other` last. `routine` sits just before `other` because the
+# classifier leans toward the first option, and a signal tagged `routine` is the costly error.
+# Any change to the instructions or the options bumps `version`, which changes every cache key of the profile.
+
+[signal]
+version = 1
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Choose the one category that best describes what it reports. Choose `other` if none fits or you cannot tell."
+
+[signal.options]
+latency = "Something is slow: response times, durations, waits, slow queries."
+errors = "A request or operation failed: exceptions, error codes, rejected calls."
+saturation = "A finite resource is full or running out: pools, queues, connections, threads, memory, disk, quotas."
+availability = "Something is down, unreachable, unhealthy, restarting or failing over."
+traffic = "The amount of work arriving changed: request rate, volume, throughput."
+change = "Something was deployed, configured, started, stopped or scheduled on purpose."
+security = "Authentication, authorisation, certificates, access or audit."
+routine = "Normal operation with nothing wrong: a request served, a heartbeat, a job finished."
+other = "None of the above, or cannot tell."
+
+[act]
+version = 1
+instructions = "`text` is one `kind` written by a person while an IT incident is being worked: a chat message or a note on a ticket. Choose the one category that best describes what the writer is doing. Choose `other` if none fits or you cannot tell."
+
+[act.options]
+observation = "Reports something seen, with or without data: a number, a graph, a log line, a symptom."
+hypothesis = "Proposes or doubts a cause."
+action_taken = "Says something has been done."
+action_proposed = "Suggests, requests or agrees what to do next."
+question = "Asks for information."
+status = "Sums up where things stand for others: impact, progress, handover."
+social = "Greetings, thanks, acknowledgements; nothing about the substance."
+other = "None of the above, or cannot tell."
+
+[change_kind]
+version = 1
+instructions = "`text` is one `kind` from the change history of an IT estate: a change request, a run of a build or deploy pipeline, or a source commit. Choose the one category that best describes what kind of change it is. Choose `other` if none fits or you cannot tell."
+
+[change_kind.options]
+release = "A new version of application code is built or deployed."
+rollback = "A return to an earlier version or setting."
+config = "A setting, flag, limit or parameter changes with no new code."
+infra = "Hosts, containers, clusters, capacity, operating system or platform components."
+network = "Firewalls, load balancers, DNS, routes."
+data = "Schemas, migrations, indexes, data fixes, backups, restores."
+job = "A scheduled or batch job is added, changed or run."
+other = "None of the above, or cannot tell."

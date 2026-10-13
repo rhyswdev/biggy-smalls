@@ -45,7 +45,7 @@ def saved_searches(bundle, source: str) -> Iterator[Item]:
     for pointer, raw, s in elements(text, "/"):
         t, ambiguous = integ.parse(source, s["updated"])
         yield Record(
-            handle=H.splunk_search_handle(s["name"]), source=source, dataset="saved_searches", kind="config", path=source,
+            handle=H.splunk_search_handle(s["name"]), source=source, dataset="saved_searches", kind="alert_def", path=source,
             locator=pointer, native=raw, t_event=t, t_known=t, native_id=s["name"], t_native=s["updated"],
             tz_rule=integ.tz_rule(source), status="disabled" if str(s.get("disabled")) == "1" else "enabled",
             title=s["name"], body=s.get("description"),
