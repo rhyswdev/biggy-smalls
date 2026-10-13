@@ -1,15 +1,25 @@
 # Hand labels for the tag precision check (docs/decisions/ingestion-decisions.md section 4.6).
 #
-# 61 units, about 20 per facet. The sample is fixed by code before any label exists: within each kind of
-# unit, the first units by unit id, which is a hash of the text (`smalls tag --sample` prints it). Each unit
-# was labelled by hand from its own text and the one-line option meanings in the tag profiles, and this file
-# was committed before the first `make tag` run, so git shows the labels came before any classifier answer.
+# 89 units. Each was labelled by hand from its own text and the one-line option meanings, and committed
+# before the classifier answered the question it is scored against, so git shows the labels came first.
+# The sample is fixed by code: within each kind of unit, a run of units in unit-id order, and a unit id is
+# a hash of the text (`smalls tag --sample` prints it).
+#
+# - `signal` (35): the first 21 units of the log, alert, alert-definition and ticket kinds, labelled before
+#   the first `make tag` run; and all 14 metric series, labelled before the candidate experiment that
+#   first asked about them.
+# - `act` (34): asked as one yes/no question per option, so a unit carries `labels`, every option that
+#   applies with the main one first, and `also_acceptable`, readings we would not count as wrong. A stored
+#   value outside both is an error. 14 units were labelled before the candidate experiment and 20 before
+#   the run that adopted the yes/no form. The 20 units first labelled for the pick-one form are kept in
+#   labels-act-pick-one.yaml with the table they produced: they carry one label each, and we had seen
+#   answers for them before the form changed.
+# - `change_kind` (20): the first units of each kind, labelled before the first `make tag` run.
 #
 # How we labelled:
 # - only the text below, never what we know about the incident: a deploy run is a release even when a
 #   later record shows it was the rollback, because nothing in its own text says so;
-# - a text that does two things takes the label of what it leads with ("rollback done, still seeing 504s"
-#   is action_taken);
+# - for a pick-one facet, a text that does two things takes the label of what it leads with;
 # - the meanings are read as written: a commit that changes application code is not "a new version built
 #   or deployed", so it is `other` unless it is the release commit or the release merge itself;
 # - `other` is a label like any other: for such a unit the right outcome is no tag.
@@ -149,106 +159,363 @@ units:
 
     Customer on chat says they tried to pay three times, the last one order 7803921, each time the spinner goes and then an error. Cart and address pages are fine. Asked them to wait while we check.'
   label: errors
-- unit: 01a5866b1c5e
+- unit: 09e4f994cf64
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:get_/api/cart,service:checkout-api}
+  label: traffic
+- unit: 0b8856590bfc
+  facet: signal
+  kind: metric series
+  text: avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}
+  label: saturation
+- unit: 0f1345c99e52
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:post_/api/checkout/address,service:checkout-api}
+  label: traffic
+- unit: 14614ae2e926
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.errors{env:prod,service:checkout-api,version:2.14.2}
+  label: errors
+- unit: 1bb6d0118dc5
+  facet: signal
+  kind: metric series
+  text: sum:postgresql.connections{db:orders,host:pay-db-01}
+  label: saturation
+- unit: 28e7884c3519
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,service:storefront-web}
+  label: traffic
+- unit: 3273199b7eca
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.errors{env:prod,service:checkout-api,version:2.14.3}
+  label: errors
+- unit: 3bc00d8f2e7c
+  facet: signal
+  kind: metric series
+  text: sum:postgresql.connections{db:payments,host:pay-db-01}
+  label: saturation
+- unit: 4fa8de158dc1
+  facet: signal
+  kind: metric series
+  text: sum:postgresql.connections{db:postgres,host:pay-db-01}
+  label: saturation
+- unit: 71c6dc5ec726
+  facet: signal
+  kind: metric series
+  text: p99:trace.http.request.duration{env:prod,peer.service:payments-gw,service:checkout-api}
+  label: latency
+- unit: 8b95a0765d45
+  facet: signal
+  kind: metric series
+  text: p90:trace.http.request.duration{env:prod,peer.service:payments-gw,service:checkout-api}
+  label: latency
+- unit: d616b3bde4a8
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:get_/api/checkout/summary,service:checkout-api}
+  label: traffic
+- unit: d9f100b74f5d
+  facet: signal
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:post_/api/checkout/submit,service:checkout-api}
+  label: traffic
+- unit: febd80256087
+  facet: signal
+  kind: metric series
+  text: avg:payments.authorize.success_rate{env:prod}
+  label: errors
+- unit: 21554cee65ea
   facet: act
   kind: chat message
-  text: next update at 14:55 UTC. one line updates pls, theories go in the thread
-  label: action_proposed
-- unit: 039995aac69c
+  text: pay-03 dropped out of the F5 pool. hardware?
+  labels:
+  - observation
+  - hypothesis
+  also_acceptable:
+  - question
+- unit: 267c3f364eee
   facet: act
   kind: chat message
-  text: checkout-api is back on the old version, watching the error graph
-  label: action_taken
-- unit: 04df7ee99668
+  text: heads up, CDN DNS TTL change on the marketing site this afternoon. low risk, will post when done
+  labels:
+  - action_proposed
+  also_acceptable:
+  - status
+- unit: 2cd8d99f7729
   facet: act
   kind: chat message
-  text: who's IC here? sorry, lost track
-  label: question
-- unit: 06f2287cfa88
+  text: is anyone checking the network side properly? kofi might be right
+  labels:
+  - question
+  - hypothesis
+  also_acceptable:
+  - action_proposed
+- unit: 2d6465a08f8d
   facet: act
   kind: chat message
-  text: we had a release at 6:20 this morning but it ran clean for hours, doubt it's that
-  label: hypothesis
-- unit: 0a144659f789
+  text: no. read the above
+  labels:
+  - action_proposed
+  also_acceptable: []
+- unit: 30105a3d76e3
   facet: act
   kind: chat message
-  text: killed 30 idle-in-txn sessions from pgw_app
-  label: action_taken
-- unit: 17af5bbac246
+  text: solarwinds is also firing on pay-03, so it's not only the f5 view
+  labels:
+  - observation
+  also_acceptable:
+  - hypothesis
+- unit: 38b45238386d
   facet: act
   kind: chat message
-  text: support says 40+ tickets, payment spinner
-  label: observation
-- unit: 1d6f939a905f
+  text: still looking
+  labels:
+  - status
+  also_acceptable: []
+- unit: 3e6462cdd6dc
   facet: act
   kind: chat message
-  text: PayCore status page is all green btw
-  label: observation
-- unit: 1dd36c6811a9
+  text: marketing site synthetic just went red. checking my side, prob separate
+  labels:
+  - observation
+  - hypothesis
+  also_acceptable:
+  - action_taken
+  - status
+- unit: 40d1113c4258
   facet: act
   kind: chat message
-  text: wait for <@U0XEFKXZ4W1> and <@U01GG60ZVQK>, they're both on it
-  label: action_proposed
-- unit: 1e0c112be743
+  text: 5xx back to baseline. thanks all
+  labels:
+  - observation
+  - social
+  also_acceptable:
+  - status
+- unit: 440b8985da0f
   facet: act
   kind: chat message
-  text: is it redis again? the runbook says check redis
-  label: hypothesis
-- unit: 1ec95b298459
+  text: muted the redis-sessions frag monitor for an hour. it's the usual flap, INC0047003 says it's benign
+  labels:
+  - action_taken
+  - hypothesis
+  also_acceptable:
+  - observation
+- unit: 476451dadcec
   facet: act
   kind: chat message
-  text: success rate is stuck around 73%. EU auths failing fast at 3s on 3.7.9
-  label: observation
-- unit: 1f3bc2ce42c4
-  facet: act
-  kind: chat message
-  text: paged at 10:42 my time, on my laptop now. reading logs
-  label: status
-- unit: 1f910ee0bb43
-  facet: act
-  kind: chat message
-  text: thanks. signing off, it's 11:22 my time and i'm done. ping me if anything
-  label: social
-- unit: 201406fbd7db
-  facet: act
-  kind: chat message
-  text: rollback done, still seeing 504s
-  label: action_taken
-- unit: 20c15eb729d1
-  facet: act
-  kind: chat message
-  text: could be traffic, people hammering the pay button. rps is up a bit
-  label: hypothesis
-- unit: 00c8ad803698
+  text: db is at 197 of 200 usable, mostly pgw_app, plus 40 from recon_app
+  labels:
+  - observation
+  also_acceptable: []
+- unit: 3e5c39213804
   facet: act
   kind: work note
-  text: Refund settlement recon has not started. Parser rejected the acquirer file for the previous business day.
-  label: observation
-- unit: 10f770cace01
+  text: 'C: is full on win-rpt-06. Staging file for the finance report cannot be written. Looking at the largest folders.'
+  labels:
+  - observation
+  also_acceptable:
+  - action_taken
+  - status
+- unit: 4157e8c6a4c2
   facet: act
   kind: work note
-  text: Taking this. Campaign email went out at 19:00 UTC, traffic on submit ~3x. Checking checkout-api first.
-  label: action_taken
-- unit: 2866b9b19679
+  text: 'Rolled payments-gateway back to 3.7.9 (Jenkins #413, 11:01-11:06 ET). Emergency change CHG0031910 raised. 5xx back to baseline; EU card auths now failing fast, watching the provider.'
+  labels:
+  - action_taken
+  - observation
+  also_acceptable:
+  - status
+- unit: 45146244731a
   facet: act
   kind: work note
-  text: Back to 1.34. Closing as benign; will look at the threshold.
-  label: observation
-- unit: 28a180595d44
+  text: "pg_stat_activity on pay-db-01, grouped:\npayments=# select usename, application_name, state, count(*), max(now() - xact_start) as oldest_xact\npayments-#   from pg_stat_activity where backend_type = 'client backend' group by 1, 2, 3 order by 4 desc;\n usename    | application_name    | state               | count | oldest_xact\n------------+---------------------+---------------------+-------+-------------\n pgw_app    | payments-gateway    | idle in transaction |   133 | 00:00:38\n recon_app  | payments-reconciler | active              |    40 | 00:17:12\n orders_app | order-service       | idle                |    20 | \n pgw_app    | payments-gateway    | active              |     4 | 00:00:36\n postgres   | psql                | active              |     1 | 00:00:00\n(5 rows)\noldest ones:\npayments=# select pid, usename, application_name, client_addr, state, xact_start::time, wait_event, query\npayments-#   from pg_stat_activity where state = 'idle in transaction' order by xact_start limit 5;\n pid   | usename | application_name | client_addr | state               | xact_start   | wait_event | query                                                                                             "
+  labels:
+  - observation
+  also_acceptable: []
+- unit: 45c0e7bd9b52
   facet: act
   kind: work note
-  text: Order Service emails are queued on the relay, not failing. Checking queue depth.
-  label: observation
-- unit: 3be1fbd7ab35
+  text: Next update 15:20 UTC. Support macro updated for payment spinner tickets.
+  labels:
+  - status
+  - action_taken
+  also_acceptable: []
+- unit: 48c0b88279f4
+  facet: act
+  kind: chat message
+  text: 'lunch cancelled apparently. sandwich at desk it is :sandwich:'
+  labels:
+  - social
+  also_acceptable: []
+- unit: 4e4be894ba5d
+  facet: act
+  kind: chat message
+  text: 'postmortem: <@U03MU4G0DPE> i can book a slot tomorrow, 10am my time work?'
+  labels:
+  - action_proposed
+  - question
+  also_acceptable: []
+- unit: 4e4d017ed7ac
+  facet: act
+  kind: chat message
+  text: rolling payments-gateway back to 3.7.9 now. I'll raise the emergency change after
+  labels:
+  - action_taken
+  - action_proposed
+  also_acceptable:
+  - status
+- unit: 4e5811559645
+  facet: act
+  kind: chat message
+  text: <@U0XEFKXZ4W1> can you share the finding when you can? is it the payments service side
+  labels:
+  - question
+  - action_proposed
+  also_acceptable:
+  - hypothesis
+- unit: 50900e008677
+  facet: act
+  kind: chat message
+  text: that runbook is ancient, sessions moved to the cluster last year
+  labels:
+  - observation
+  - hypothesis
+  also_acceptable: []
+- unit: 50b7269dc25f
+  facet: act
+  kind: chat message
+  text: yes, roll it back. <@U01B0NXMOC4> go
+  labels:
+  - action_proposed
+  also_acceptable: []
+- unit: 52370dcce6d9
+  facet: act
+  kind: chat message
+  text: IC here. checkout payments failing / slow since ~14:30, 504s on submit. INC0048811. <@U0OUMNOBHU9> <@U01B0NXMOC4> <@U01GG60ZVQK> pls join
+  labels:
+  - status
+  - observation
+  - action_proposed
+  also_acceptable: []
+- unit: 536896b11f6b
+  facet: act
+  kind: chat message
+  text: only change on the payments side today was the 6am release, CAB approved, went fine
+  labels:
+  - observation
+  also_acceptable:
+  - hypothesis
+  - status
+- unit: 580cc2153c8d
+  facet: act
+  kind: chat message
+  text: i'll raise a ticket for the broken dashboard link, it's been bugging me
+  labels:
+  - action_proposed
+  also_acceptable:
+  - observation
+- unit: 5980c160be22
+  facet: act
+  kind: chat message
+  text: next update at 15:20 UTC. I'll write the timeline, <@U0OUMNOBHU9> can you own the customer post
+  labels:
+  - action_proposed
+  also_acceptable:
+  - status
+  - question
+- unit: 5d67016c5774
+  facet: act
+  kind: chat message
+  text: 'signing off. thanks all :sweat_smile:'
+  labels:
+  - social
+  also_acceptable:
+  - status
+- unit: 61e9f33cca26
+  facet: act
+  kind: chat message
+  text: node-east-14 cpu is a batch pod in the analytics namespace, nothing customer facing. should settle off by itself
+  labels:
+  - observation
+  - hypothesis
+  also_acceptable: []
+- unit: 64226acdd480
+  facet: act
+  kind: chat message
+  text: so the DB is the problem?
+  labels:
+  - question
+  - hypothesis
+  also_acceptable: []
+- unit: 67bb2ef9de24
+  facet: act
+  kind: chat message
+  text: thanks all. postmortem invite going out, timeline doc to follow
+  labels:
+  - social
+  also_acceptable:
+  - status
+  - action_proposed
+  - action_taken
+- unit: 559f3907bc88
   facet: act
   kind: work note
-  text: Checkout smoke tests re-run at 10:58 ET. Results are in the bridge channel.
-  label: action_taken
-- unit: 3d8e9871bd17
+  text: 'PayCore status page: major outage, all regions. Nothing to do on our side but wait. Support briefed on ''card declined''.'
+  labels:
+  - observation
+  - action_taken
+  also_acceptable:
+  - status
+  - hypothesis
+  - action_proposed
+- unit: 563c1d7e9ca1
   facet: act
   kind: work note
-  text: Origin cert on the CDN shows expired at 09:04 ET. Renewal job did not fire, checking why.
-  label: observation
+  text: Pool raised to 40 under CHG0029514, HPA added. Scaling back to 6 tomorrow once HPA is proven.
+  labels:
+  - action_taken
+  - action_proposed
+  also_acceptable:
+  - status
+- unit: 58288c42e351
+  facet: act
+  kind: work note
+  text: Two nodes in DiskPressure. Eviction list is storefront pods only. Cordoning both nodes for now.
+  labels:
+  - observation
+  - action_taken
+  also_acceptable:
+  - action_proposed
+  - status
+- unit: 6440ceb6f105
+  facet: act
+  kind: work note
+  text: Address validation getting 429s from the provider since 14:50 ET. Checkout is on the local rules fallback. Orders are going through.
+  labels:
+  - observation
+  also_acceptable:
+  - status
+- unit: 6a8330c45434
+  facet: act
+  kind: work note
+  text: Ratio 1.61, no evictions, used_memory flat. Same flap as last week.
+  labels:
+  - observation
+  also_acceptable:
+  - hypothesis
+- unit: 6ace0045e7e8
+  facet: act
+  kind: work note
+  text: Scaled checkout-api to 12 replicas. p90 dropping.
+  labels:
+  - action_taken
+  - observation
+  also_acceptable: []
 - unit: 0b22f55fda6e
   facet: change_kind
   kind: change request

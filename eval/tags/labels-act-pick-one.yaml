@@ -1,0 +1,105 @@
+# The 20 `act` units labelled for the pick-one form of the `act` profile (version 1), before the first
+# `make tag` run. They are no longer scored: `act` is now asked as one yes/no question per option, these
+# carry one label each, and we saw the pick-one answers for them before the form changed. Their result
+# is the `act` row of the first table in docs/DATA.md entry 120.
+units:
+- unit: 01a5866b1c5e
+  facet: act
+  kind: chat message
+  text: next update at 14:55 UTC. one line updates pls, theories go in the thread
+  label: action_proposed
+- unit: 039995aac69c
+  facet: act
+  kind: chat message
+  text: checkout-api is back on the old version, watching the error graph
+  label: action_taken
+- unit: 04df7ee99668
+  facet: act
+  kind: chat message
+  text: who's IC here? sorry, lost track
+  label: question
+- unit: 06f2287cfa88
+  facet: act
+  kind: chat message
+  text: we had a release at 6:20 this morning but it ran clean for hours, doubt it's that
+  label: hypothesis
+- unit: 0a144659f789
+  facet: act
+  kind: chat message
+  text: killed 30 idle-in-txn sessions from pgw_app
+  label: action_taken
+- unit: 17af5bbac246
+  facet: act
+  kind: chat message
+  text: support says 40+ tickets, payment spinner
+  label: observation
+- unit: 1d6f939a905f
+  facet: act
+  kind: chat message
+  text: PayCore status page is all green btw
+  label: observation
+- unit: 1dd36c6811a9
+  facet: act
+  kind: chat message
+  text: wait for <@U0XEFKXZ4W1> and <@U01GG60ZVQK>, they're both on it
+  label: action_proposed
+- unit: 1e0c112be743
+  facet: act
+  kind: chat message
+  text: is it redis again? the runbook says check redis
+  label: hypothesis
+- unit: 1ec95b298459
+  facet: act
+  kind: chat message
+  text: success rate is stuck around 73%. EU auths failing fast at 3s on 3.7.9
+  label: observation
+- unit: 1f3bc2ce42c4
+  facet: act
+  kind: chat message
+  text: paged at 10:42 my time, on my laptop now. reading logs
+  label: status
+- unit: 1f910ee0bb43
+  facet: act
+  kind: chat message
+  text: thanks. signing off, it's 11:22 my time and i'm done. ping me if anything
+  label: social
+- unit: 201406fbd7db
+  facet: act
+  kind: chat message
+  text: rollback done, still seeing 504s
+  label: action_taken
+- unit: 20c15eb729d1
+  facet: act
+  kind: chat message
+  text: could be traffic, people hammering the pay button. rps is up a bit
+  label: hypothesis
+- unit: 00c8ad803698
+  facet: act
+  kind: work note
+  text: Refund settlement recon has not started. Parser rejected the acquirer file for the previous business day.
+  label: observation
+- unit: 10f770cace01
+  facet: act
+  kind: work note
+  text: Taking this. Campaign email went out at 19:00 UTC, traffic on submit ~3x. Checking checkout-api first.
+  label: action_taken
+- unit: 2866b9b19679
+  facet: act
+  kind: work note
+  text: Back to 1.34. Closing as benign; will look at the threshold.
+  label: observation
+- unit: 28a180595d44
+  facet: act
+  kind: work note
+  text: Order Service emails are queued on the relay, not failing. Checking queue depth.
+  label: observation
+- unit: 3be1fbd7ab35
+  facet: act
+  kind: work note
+  text: Checkout smoke tests re-run at 10:58 ET. Results are in the bridge channel.
+  label: action_taken
+- unit: 3d8e9871bd17
+  facet: act
+  kind: work note
+  text: Origin cert on the CDN shows expired at 09:04 ET. Renewal job did not fire, checking why.
+  label: observation
