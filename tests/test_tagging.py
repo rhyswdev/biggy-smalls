@@ -287,17 +287,18 @@ def test_ingest_applies_cached_tags_and_counts_misses(all_units, tmp_path, monke
     assert low.conn.execute("SELECT count(*) FROM point WHERE tags != '{}'").fetchone()[0] == 0
 
 
-def test_tags_are_off_by_default_and_the_store_is_as_it_was_before_tagging(monkeypatch):
+def test_tags_are_on_by_default_and_off_gives_the_store_as_it_was_before_tagging(monkeypatch):
     monkeypatch.delenv("SMALLS_TAGS", raising=False)
+    on = store.build(BUNDLE)
+    assert on.report.tags["mode"] == "on" and on.report.tags["misses"] == 0
+    assert parity.problems(on.conn, parity.manifest()) == []
+    monkeypatch.setenv("SMALLS_TAGS", "off")
     built = store.build(BUNDLE)
     assert built.report.tags == {"mode": "off"}
     assert built.conn.execute("SELECT count(*) FROM record WHERE tags != '{}' OR tag_key IS NOT NULL").fetchone()[0] == 0
     assert built.conn.execute("SELECT count(*) FROM point WHERE tags != '{}' OR tag_key IS NOT NULL").fetchone()[0] == 0
     assert built.conn.execute("SELECT count(*) FROM tag_answer").fetchone()[0] == 0
     assert parity.problems(built.conn, parity.manifest()) == []
-    monkeypatch.setenv("SMALLS_TAGS", "on")
-    on = store.build(BUNDLE)
-    assert on.report.tags["mode"] == "on" and parity.problems(on.conn, parity.manifest()) == []
 
 
 def test_ingest_with_tags_on_opens_no_socket_and_never_imports_the_sdk():

@@ -247,7 +247,7 @@ Read from `main` at `0db38df`, on the rebased branch.
 - The full-text table holds page sections, close notes of incidents and journal entries, each hanging off its own record version, so a note is searchable exactly when it is visible.
 - Logs: terms are matched against `native` as well as `body`. A template is shown as `masker.mask(title)` of one of its rows. `keep_1_in` is the rate and `sample_per` the unit; no column holds a sampling class name.
 - Tags: with tags on, `tags` is `{facet: value}`. `signal` and `act` are lists, because a text can be two things at once; `change_kind` is one value. A list is filtered with `json_each`, and a row with two values counts under both. A metric series carries its `signal` on every `point` row. The floor is measured (0.90, with a small tolerance) and sits in the tagging config. All three facets met the precision bar and are offered. About three quarters of the taggable units carry a tag, and about three in ten log records carry no `signal`.
-- `store.tags_enabled()` still defaults to off on `main`. Row A0b applies G6.
+- `store.tags_enabled()` defaulted to off on `main`. Row A0b applied G6, so on this branch it defaults to on.
 - The store half of the leak test is `tests/test_leak.py`. It has the time scanner, the checkpoint list, the future tokens and the two exemptions for scheduled times.
 - The bundle-string lint is `smalls_data/prompt_lint.py`; `prompt_texts()` returns the list of texts it scans, and our five files are added to that list.
 - The CLI takes its bundle from `--bundle` or `SMALLS_BUNDLE`; the Makefile's `BUNDLE` variable supplies it.
@@ -545,7 +545,7 @@ Live runs spend money. None starts without our go-ahead, and the matrix is sized
 | # | Build | Accepted when |
 |---|---|---|
 | A0 | **Done on 2026-10-13.** Rebase onto `main` at `0db38df`, which holds the finished ingestion work. Section 6.1 confirmed against the code; section 9 records what changed. | `make data` left the tree unchanged; `make lint` exited clean; `make test` gave 107 passed and 1 skipped; `make docker-test` gave 108 passed and found no key in the image |
-| A0b | The tags default (G6): the default in `store.tags_enabled()`, the tests that assert the old one, and the lines that state it in CLAUDE.md, PLAN (decision 12, section 4, section 6.1), `ingestion-decisions.md` (O2, T6, and O4's reason) and HANDOFF | With no flag set, `store.build` loads tags with zero cache misses; `SMALLS_TAGS=off` gives a store with none; the suite passes on the host and in the container |
+| A0b | **Done on 2026-10-13.** The tags default (G6): the default in `store.tags_enabled()`, the tests that assert the old one, and the lines that state it in CLAUDE.md, PLAN (decision 12, section 4, section 6.1), `ingestion-decisions.md` (O2, T6, and O4's reason) and HANDOFF | With no flag set, `store.build` loads tags with zero cache misses; `SMALLS_TAGS=off` gives a store with none (`test_tags_are_on_by_default_and_off_gives_the_store_as_it_was_before_tagging`, `test_tags_are_on_unless_turned_off`); `make test` gave 107 passed and 1 skipped on the host and 108 passed in the container |
 | A1 | Contracts: the envelope, the registry types, the argument models for all eleven tools with `rationale`, `handle_class()`, the report model with G3 and its generated JSON Schema | A full example report and a partial one both validate; the schema file matches the model; `python -m smalls.agent schema` prints every tool and report schema, with tags on and off, and `--size` prints the prefix size; the scorer session can start |
 | A2 | Port the LangGraph spike to `smalls/agent/` (agent-design row 1), on the pins in 7.0, with the registry injected and the fixture registry of 7.4. With it: the stable v2 stream parts, caching on by default, the measured context-window guard (axis 2), the headless rule of J15, the validator checking shown handles, `ic:note` handles, the run-record files of 7.2 | The ported tests pass, the bundle-string and model-name tests among them; a scripted run over the fixture registry writes a complete run record; a replay renders it with no key. In the container (section 10.5): the rebuilt image passes `make docker-test`, a scripted run writes its record on the mount, and a run paused in one container resumes in another |
 
@@ -696,7 +696,7 @@ One limit we inherit and do not change here: the container user has a fixed uid,
 | Row | Checked in the container |
 |---|---|
 | A0 | Done: `make docker-test` passes on the rebased branch, 108 tests |
-| A0b | The suite passes there with tags on by default |
+| A0b | Done: the suite passes there with tags on by default, 108 tests |
 | A2 | The image is rebuilt with the agent's packages and `make docker-test` passes with the agent's tests; a scripted run writes a complete record on the mount; a run paused in one container resumes in another |
 | B5 | The leak test passes there, at both checkpoints |
 | C3 | The run that `make demo` replays renders the same in the container as on the host |
@@ -731,3 +731,13 @@ P1 (the tags default) and P7 (the 2k clip) were ruled on 2026-10-13: G6 and G7.
 - **CLAUDE.md**: this record in the doc map; the blind-room rule; the new make targets.
 - **agent-design section 6**: measured numbers after row C4.
 - **DATA**: the re-measured OR-join result for `search_knowledge`.
+
+## 13. Judgment calls made while building
+
+Calls beyond sections 6.5 and 7.3, recorded in the row that made them. Each is ours to overrule.
+
+| Row | Call | Why |
+|---|---|---|
+| A0b | Beyond the lines the row names, we also corrected the other places that stated the old default as a present fact: PLAN's row 6a acceptance, `ingestion-decisions.md` sections 4.2 and 4.7, `DATA.md` 122 and `research/tagging.md` open point 8. Each keeps what was true when it was written and says that G6 changed it. | A reader who lands on any one of them should not come away believing tags are off. |
+| A0b | In this worktree the "image holds no key" check is run by hand against `smalls:agent`. `make docker-test` is left as it is, and its last line names `smalls:dev`, the main checkout's image. | Section 10.2 leaves the target alone and gives this worktree its own image tag, so the target's last line checks the other image here. The check is the same command with the tag changed. It goes away with the override when the branches meet. |
+| A0b | The baseline command for the spike's tests rewrites `spikes/agent/uv.lock` by one line (it picks up the `tagging` group the rebase brought in). We restore the file after each run and do not commit the change. | The spike is being ported, not maintained, and a lock change there is noise in this track's history. |

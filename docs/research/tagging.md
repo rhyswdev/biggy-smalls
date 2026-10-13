@@ -143,7 +143,7 @@ Two consequences. Facets should be semantic judgments, never something code can 
 5. **Maximum questions per request.** Only the token budgets are documented. The largest documented single request has 218 options in one `Choice`; another cookbook asks 62 questions in one request.
 6. **Token accounting.** The fixed overhead per request and the cost per question are inferred from four data points, not documented.
 7. **Retention.** How long request bodies are kept on a standard account is not stated. The bundle is synthetic, which is why this did not block the decision.
-8. **How held-out bundles get tags.** Deferred: we settle it separately, outside this step. Tags are off by default, so held-out runs need none and nothing waits on it (decision record, O4). The other question raised here, whether a pinned version in config counts as a model identifier under the repo rule, is ruled: the rule means model-agnostic design, and a version held in config and referred to by role is that rule applied (O3).
+8. **How held-out bundles get tags.** Deferred: we settle it separately, outside this step. Tags were off by default when this was written, so held-out runs needed none and nothing waited on it (decision record, O4). Ruling G6 has since turned the default on, so this is settled before a held-out run (`docs/decisions/tools-agent-build.md`, open point P8). The other question raised here, whether a pinned version in config counts as a model identifier under the repo rule, is ruled: the rule means model-agnostic design, and a version held in config and referred to by role is that rule applied (O3).
 
 ## 6. What was run live
 

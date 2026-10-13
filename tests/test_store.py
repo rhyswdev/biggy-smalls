@@ -149,8 +149,10 @@ def test_render_native_leaves_out_withheld_fields():
     assert base.withhold([{"members": [1], "name": "x"}], ("[].members",)) == [{"name": "x"}]
 
 
-def test_tags_are_off_unless_asked(monkeypatch):
+def test_tags_are_on_unless_turned_off(monkeypatch):
     monkeypatch.delenv("SMALLS_TAGS", raising=False)
+    assert store.tags_enabled() is True
+    monkeypatch.setenv("SMALLS_TAGS", "off")
     assert store.tags_enabled() is False
     monkeypatch.setenv("SMALLS_TAGS", "on")
     assert store.tags_enabled() is True

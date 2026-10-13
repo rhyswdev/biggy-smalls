@@ -309,8 +309,8 @@ class Store:
 
 
 def tags_enabled(value: str | None = None) -> bool:
-    """`SMALLS_TAGS=on|off`, default off (ruling O2). A config value, never a model choice."""
-    value = (os.environ.get("SMALLS_TAGS", "off") if value is None else value).strip().lower()
+    """`SMALLS_TAGS=on|off`, default on (ruling G6, which replaces O2). A config value, never a model choice."""
+    value = (os.environ.get("SMALLS_TAGS", "on") if value is None else value).strip().lower()
     if value not in ("on", "off"):
         raise ValueError(f"SMALLS_TAGS must be on or off, not {value!r}")
     return value == "on"
