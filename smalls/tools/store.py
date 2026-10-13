@@ -70,7 +70,7 @@ CREATE TABLE point (handle TEXT NOT NULL, series TEXT NOT NULL, t INTEGER NOT NU
                     tag_key TEXT, tags TEXT NOT NULL DEFAULT '{}');   -- a metric series is tagged like a record
 CREATE TABLE chunk (rid INTEGER NOT NULL REFERENCES record(rid), seq INTEGER NOT NULL, heading TEXT, text TEXT NOT NULL);
 CREATE VIRTUAL TABLE chunk_fts USING fts5(heading, text, content='chunk', tokenize='porter unicode61');
-CREATE TABLE tag_answer (tag_key TEXT NOT NULL, facet TEXT NOT NULL, value TEXT NOT NULL, p REAL NOT NULL, chosen INTEGER NOT NULL);
+CREATE TABLE tag_answer (tag_key TEXT NOT NULL, profile TEXT NOT NULL, facet TEXT NOT NULL, value TEXT NOT NULL, p REAL NOT NULL, chosen INTEGER NOT NULL);
 CREATE TABLE ref (source TEXT NOT NULL, name TEXT NOT NULL, native TEXT NOT NULL,   -- files with no manifest rows
                   flags TEXT NOT NULL DEFAULT '{}');
 CREATE TABLE clock (now INTEGER NOT NULL);   -- zero or one row; empty means nothing is visible
@@ -385,7 +385,7 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
                           for p, t in zip(points, tagged_points)])
         conn.executemany("INSERT INTO ref (source, name, native, flags) VALUES (?, ?, ?, ?)",
                          [(x.source, x.name, x.native, dumps(x.flags)) for x in refs])
-        conn.executemany("INSERT INTO tag_answer (tag_key, facet, value, p, chosen) VALUES (?, ?, ?, ?, ?)", answers)
+        conn.executemany("INSERT INTO tag_answer (tag_key, profile, facet, value, p, chosen) VALUES (?, ?, ?, ?, ?, ?)", answers)
         conn.execute("INSERT INTO chunk_fts (chunk_fts) VALUES ('rebuild')")
     report.elapsed_ms = (time.perf_counter() - started) * 1000
     return Store(conn, bundle)

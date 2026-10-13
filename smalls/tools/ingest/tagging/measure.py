@@ -3,11 +3,12 @@ sample, and the precision, coverage and stability table with the floor it sets. 
 it reads the labels, the committed cache and the committed repeats.
 
 - Precision: of the values stored on labelled units, how many match the hand label. The bar is 9 in 10.
-  A pick-one unit has one label; a yes/no unit has every option that applies, and readings we would not
-  count as wrong.
+  A unit labelled with one option is scored on the pick-one question only; a unit labelled with every
+  option that applies (and the readings we would not count as wrong) is scored on every question asked of
+  its kind, and its stored values are those of all of them together.
 - Coverage: how many labelled units got a tag at all. Reported, no bar.
-- Stability: a stored value flips when a cold repeat does not reproduce it: the value comes back more
-  than the tolerance under the floor, because the repeat was less sure or answered something else. The
+- Stability: a stored value flips when a cold repeat does not reproduce it: in that repeat no question
+  brings the value back within the tolerance of the floor, because it was less sure or answered something else. The
   stored value is the cached answer's, since the cache is the only answer ingest ever uses; the last repeat
   lists the options in a shuffled order. The tolerance (config, 0.02) is the classifier's own wobble: it
   rounds to 0.01 and moves by about that between identical requests, so a value at 0.94 that comes back at
@@ -35,9 +36,9 @@ REPEATS = ROOT / "eval" / "tags" / "repeats.jsonl"
 BAR = 0.9
 START = 0.8
 
-# Which units of each kind the sample takes, as (skip, take) in unit-id order. A unit id is a hash of the
-# text, so the sample is fixed before any label or answer exists. The two message kinds skip the units
-# first labelled for the pick-one form of their profile (eval/tags/labels-act-pick-one.yaml).
+# The sample `smalls tag --sample` prints for a bundle: which units of each kind, as (skip, take) in
+# unit-id order. A unit id is a hash of the text, so a sample is fixed before any label or answer exists.
+# The labels file for the development bundle grew from this by further runs of units, described at its top.
 SAMPLE = {"log line": (0, 10), "alert definition": (0, 4), "alert": (0, 3), "incident ticket": (0, 4), "metric series": (0, 14),
           "chat message": (14, 24), "work note": (6, 10),
           "change request": (0, 8), "pipeline run": (0, 6), "commit": (0, 6)}
@@ -65,7 +66,7 @@ def skeleton(units: dict[str, Unit]) -> str:
     rows = []
     for u in sample(units):
         row = {"unit": u.id, "facet": u.facet, "kind": u.kind, "text": u.text}
-        row.update({"labels": [], "also_acceptable": []} if u.profile.multi else {"label": ""})
+        row.update({"labels": [], "also_acceptable": []} if any(p.multi for p in u.profiles) else {"label": ""})
         rows.append(row)
     return yaml.safe_dump({"units": rows}, sort_keys=False, allow_unicode=True, width=10_000)
 
@@ -78,24 +79,33 @@ def load_repeats(path: Path = REPEATS) -> list[dict]:
     return [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x] if path.is_file() else []
 
 
+def scored_profiles(unit: Unit, lab: dict) -> tuple:
+    """The questions a labelled unit is scored on: all of its kind's when the label is every option that
+    applies, the pick-one ones when it is a single option."""
+    return unit.profiles if "labels" in lab else tuple(p for p in unit.profiles if not p.multi)
+
+
 def outcomes(labels: list[dict], entries: dict[str, dict], repeats: list[dict], units: dict[str, Unit]) -> list[dict]:
-    """Per labelled unit: what the label says should be stored, what would also be acceptable, the cached
-    answer and the repeat answers (under the current profile and classifier versions only)."""
-    by_unit: dict[str, list[dict]] = {}
+    """Per labelled unit: what the label says should be stored, what would also be acceptable, and for each
+    question it is scored on the cached answer and the repeat answers (current profile and classifier
+    versions only)."""
+    by_unit: dict[tuple[str, str], list[dict]] = {}
     for rep in repeats:
-        by_unit.setdefault(rep["unit"], []).append(rep)
+        by_unit.setdefault((rep["unit"], rep["profile"]), []).append(rep)
     out = []
     for lab in labels:
         unit = units.get(lab["unit"])
         if unit is None:
             continue
-        profile = unit.profile
-        entry = entries.get(tag_key(unit, profile))
-        reps = [r["answer"] for r in sorted(by_unit.get(unit.id, []), key=lambda r: r["repeat"])
-                if r["profile"] == profile.id and r["classifier"] == (entry or {}).get("classifier")]
+        scored = []
+        for profile in scored_profiles(unit, lab):
+            entry = entries.get(tag_key(unit, profile))
+            reps = [r["answer"] for r in sorted(by_unit.get((unit.id, profile.id), []), key=lambda r: r["repeat"])
+                    if r["classifier"] == (entry or {}).get("classifier")]
+            scored.append((profile, entry["answer"] if entry else None, reps))
         want = [v for v in (lab["labels"] if "labels" in lab else [lab["label"]]) if v != OTHER]
-        out.append({"unit": unit.id, "facet": unit.facet, "kind": unit.kind, "profile": profile, "want": want,
-                    "ok": set(want) | set(lab.get("also_acceptable") or []), "answer": entry["answer"] if entry else None, "repeats": reps})
+        out.append({"unit": unit.id, "facet": unit.facet, "kind": unit.kind, "want": want, "ok": set(want) | set(lab.get("also_acceptable") or []),
+                    "scored": scored, "answered": bool(scored) and all(a is not None for _, a, _ in scored)})
     return out
 
 
@@ -111,25 +121,30 @@ def table(rows: list[dict], floor: float, tol: float | None = None) -> dict[str,
     out: dict[str, dict] = {}
     for facet in facets():
         mine = [r for r in rows if r["facet"] == facet]
-        answered = [r for r in mine if r["answer"] is not None]
+        answered = [r for r in mine if r["answered"]]
         tagged = stored = right = flips = value_flips = 0
         confused: Counter = Counter()
         for r in answered:
-            values = decide(r["answer"], r["profile"], floor)
-            again = [decide(a, r["profile"], floor) for a in r["repeats"]]
+            values: list[str] = []
+            for profile, answer, _ in r["scored"]:
+                values += [v for v in decide(answer, profile, floor) if v not in values]
+            n = min(len(reps) for _, _, reps in r["scored"])
             tagged += bool(values)
             stored += len(values)
             for v in values:
                 right += v in r["ok"]
                 if v not in r["ok"]:
                     confused[f"{'+'.join(r['want']) or OTHER} tagged {v}"] += 1
-                flips += any(_p(a, v, r["profile"].multi) < floor - tol - 1e-9 for a in r["repeats"])
-                if not r["profile"].multi:
-                    value_flips += any(x and v not in x for x in again)
+                # reproduced in a repeat when any question brings it back within the tolerance of the floor
+                flips += any(max(_p(reps[i], v, profile.multi) for profile, _, reps in r["scored"]) < floor - tol - 1e-9 for i in range(n))
+            for profile, answer, reps in r["scored"]:
+                if not profile.multi:
+                    first = decide(answer, profile, floor)
+                    value_flips += bool(first) and any(x and x != first for x in (decide(a, profile, floor) for a in reps))
         out[facet] = {"labelled": len(mine), "answered": len(answered), "applied": tagged, "stored": stored, "correct": right,
                       "precision": right / stored if stored else None, "coverage": tagged / len(mine) if mine else None,
-                      "repeats": min((len(r["repeats"]) for r in answered), default=0), "flips": flips, "value_flips": value_flips,
-                      "confused": dict(sorted(confused.items()))}
+                      "repeats": min((len(reps) for r in answered for _, _, reps in r["scored"]), default=0), "flips": flips,
+                      "value_flips": value_flips, "confused": dict(sorted(confused.items()))}
     return out
 
 

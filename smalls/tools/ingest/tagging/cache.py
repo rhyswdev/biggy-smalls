@@ -13,8 +13,8 @@ import os
 from pathlib import Path
 
 from smalls.tools.ingest.base import Point, Record
-from smalls.tools.ingest.tagging.profiles import OTHER, Profile, floor
-from smalls.tools.ingest.tagging.units import Unit, code_tags, tag_key, unit_for, unit_for_point
+from smalls.tools.ingest.tagging.profiles import OTHER, Profile, facets, floor, multi_facets
+from smalls.tools.ingest.tagging.units import Unit, code_tags, tag_key, unit_for, unit_for_point, unit_key
 
 DEFAULT_CACHE = Path(__file__).resolve().parents[4] / "tags" / "cache.jsonl"
 
@@ -56,45 +56,53 @@ def decide(answer: dict, profile: Profile, at: float | None = None) -> list[str]
 
 
 def answer_rows(key: str, answer: dict, profile: Profile) -> list[tuple]:
-    """The `tag_answer` rows of one answer: every option with its probability. `chosen` is the classifier's
-    own answer, whatever the floor: its choice, or a yes more likely than not."""
+    """The `tag_answer` rows of one answer: every option with its probability, under the profile that asked.
+    `chosen` is the classifier's own answer, whatever the floor: its choice, or a yes more likely than not."""
     if profile.multi:
-        return [(key, profile.facet, name, float(p), int(p >= 0.5)) for name, p in (answer.get("nouls") or {}).items()]
-    return [(key, profile.facet, name, float(p), int(name == answer.get("choice"))) for name, p in (answer.get("probabilities") or {}).items()]
+        return [(key, profile.name, profile.facet, name, float(p), int(p >= 0.5)) for name, p in (answer.get("nouls") or {}).items()]
+    return [(key, profile.name, profile.facet, name, float(p), int(name == answer.get("choice")))
+            for name, p in (answer.get("probabilities") or {}).items()]
 
 
-def as_tag(values: list[str], profile: Profile):
-    """How a profile's stored values sit in `tags`: a list for a yes/no profile, the one value for pick-one."""
-    return list(values) if profile.multi else values[0]
+def as_tag(values: list[str], facet: str):
+    """How a facet's stored values sit in `tags`: a list where a yes/no profile writes the facet, else the one value."""
+    return list(values) if facet in multi_facets() else values[0]
 
 
 def apply(records: list[Record], points: list[Point] = (), path: Path | None = None) -> tuple[list[dict], list[dict], list[tuple], dict]:
     """Tag every record and metric point from the cache. Returns each record's and each point's
-    `{tag_key, tags}` in order; the `tag_answer` rows; and the counts for the ingest report."""
+    `{tag_key, tags}` in order; the `tag_answer` rows; and the counts for the ingest report. A unit's tag is
+    every value any of its profiles stores; a profile with no cached answer is a miss and stores nothing."""
     entries = read(path)
-    answers: dict[str, list[tuple]] = {}
-    stats = {"units": 0, "hits": 0, "misses": 0, "applied": 0, "below_floor": 0, "other": 0, "by_code": 0}
-    seen: dict[str, list[str] | None] = {}
+    order = facets()
+    answers: dict[tuple[str, str], list[tuple]] = {}
+    stats = {"units": 0, "asked": 0, "hits": 0, "misses": 0, "applied": 0, "below_floor": 0, "other": 0, "by_code": 0}
+    seen: dict[str, list[str]] = {}
 
     def tag(unit: Unit | None, tags: dict) -> dict:
         if unit is None:
             return {"tag_key": None, "tags": tags}
-        profile = unit.profile
-        key = tag_key(unit, profile)
+        key = unit_key(unit)
         if key not in seen:
             stats["units"] += 1
-            entry = entries.get(key)
-            if entry is None:
-                stats["misses"] += 1
-                seen[key] = None
-            else:
+            values: list[str] = []
+            answered = chose_other = False
+            for profile in unit.profiles:
+                stats["asked"] += 1
+                entry = entries.get(tag_key(unit, profile))
+                if entry is None:
+                    stats["misses"] += 1
+                    continue
                 stats["hits"] += 1
-                values = decide(entry["answer"], profile)
-                seen[key] = values
-                stats["applied" if values else "other" if entry["answer"].get("choice") == OTHER else "below_floor"] += 1
-                answers[key] = answer_rows(key, entry["answer"], profile)
+                answered = True
+                chose_other |= entry["answer"].get("choice") == OTHER
+                values += [v for v in decide(entry["answer"], profile) if v not in values]
+                answers[(key, profile.name)] = answer_rows(key, entry["answer"], profile)
+            seen[key] = sorted(values, key=order[unit.facet].index)
+            if answered:
+                stats["applied" if values else "other" if chose_other else "below_floor"] += 1
         if seen[key]:
-            tags[unit.facet] = as_tag(seen[key], profile)
+            tags[unit.facet] = as_tag(seen[key], unit.facet)
         return {"tag_key": key, "tags": tags}
 
     per_record = []

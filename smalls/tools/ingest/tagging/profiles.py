@@ -65,20 +65,22 @@ def profiles() -> dict[str, Profile]:
             raise ValueError(f"profile {name}: `other` must be the last option")
         out[name] = Profile(name=name, facet=p.get("facet", name), version=int(p["version"]), multi=multi, kinds=tuple(p["kinds"]),
                             instructions=p["instructions"], options=options)
-    kinds = [k for p in out.values() for k in p.kinds]
-    if len(kinds) != len(set(kinds)):
-        raise ValueError("a kind of unit belongs to one profile")
+    facet_of: dict[str, str] = {}
+    for p in out.values():
+        for kind in p.kinds:
+            if facet_of.setdefault(kind, p.facet) != p.facet:
+                raise ValueError(f"the profiles asked about a {kind} must write one facet")
     return out
 
 
-def for_kind(kind: str) -> Profile:
-    """The one profile asked about a kind of unit."""
-    return next(p for p in profiles().values() if kind in p.kinds)
+def for_kind(kind: str) -> tuple[Profile, ...]:
+    """The profiles asked about a kind of unit, in file order. They all write the same facet."""
+    return tuple(p for p in profiles().values() if kind in p.kinds)
 
 
 def kinds() -> tuple[str, ...]:
     """The words a request uses for what a unit is. They are prompt text too."""
-    return tuple(k for p in profiles().values() for k in p.kinds)
+    return tuple(dict.fromkeys(k for p in profiles().values() for k in p.kinds))
 
 
 def facets() -> dict[str, tuple[str, ...]]:

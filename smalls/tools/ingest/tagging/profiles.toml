@@ -8,8 +8,10 @@
 # (`{meaning}` is replaced by the option's line), for texts that do two things at once; it has no `other`,
 # since no confident yes already stores nothing.
 #
-# `facet` is the tag a profile writes; it defaults to the profile's name. Any change to the instructions
-# or the options bumps `version`, which changes every cache key of the profile.
+# `facet` is the tag a profile writes; it defaults to the profile's name. A kind of unit may be asked by
+# more than one profile of the same facet, each in its own request, and the tag is then every value any
+# of them stores. Any change to the instructions or the options bumps `version`, which changes every cache
+# key of the profile.
 
 [signal]
 version = 1
@@ -26,6 +28,28 @@ change = "Something was deployed, configured, started, stopped or scheduled on p
 security = "Authentication, authorisation, certificates, access or audit."
 routine = "Normal operation with nothing wrong: a request served, a heartbeat, a job finished."
 other = "None of the above, or cannot tell."
+
+# The `signal` options again, one yes/no question each, for the lines pick-one leaves untagged because
+# they are two things at once: a refused call is a failure and an outage, a pool timeout a failure and an
+# exhausted resource. Pick-one stays because it is the form that recognises `routine`. One line differs:
+# `security` reads "Who is allowed to do what", because with nothing competing against it the shorter line
+# answered yes to any text with the word "authorize" in it.
+[signal_any]
+facet = "signal"
+version = 1
+type = "multi"
+kinds = ["log line", "alert", "alert definition", "incident ticket"]
+instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Does it report this: {meaning}"
+
+[signal_any.options]
+latency = "Something is slow: response times, durations, waits, slow queries."
+errors = "A request or operation failed: exceptions, error codes, rejected calls."
+saturation = "A finite resource is full or running out: pools, queues, connections, threads, memory, disk, quotas."
+availability = "Something is down, unreachable, unhealthy, restarting or failing over."
+traffic = "The amount of work arriving changed: request rate, volume, throughput."
+change = "Something was deployed, configured, started, stopped or scheduled on purpose."
+security = "Who is allowed to do what: logins, permissions, certificates, access control, audit trails."
+routine = "Normal operation with nothing wrong: a request served, a heartbeat, a job finished."
 
 # The golden-signal options of `signal` on a metric series, which says what it measures in its query.
 [signal_metric]

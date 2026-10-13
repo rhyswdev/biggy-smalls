@@ -3,9 +3,9 @@ no neighbouring records, no bundle summary, no corpus statistics. Many records s
 record of a template, every version of a ticket whose text did not change, every event of one alert,
 every bucket of one metric series.
 
-The unit's kind decides its profile, and the profile its facet (taxonomy v1 as amended):
+The unit's kind decides the profiles it is asked by, and they its facet (taxonomy v1 as amended):
 - signal: log records, by template; alerts, by title; alert definitions and incident tickets, by title and
-  text; metric series, by their query
+  text (each of these asked pick-one and as a yes or no per option); metric series, by their query
 - act: chat messages a person wrote, and notes on tickets and pages
 - change_kind: change requests, pipeline runs and commits
 A bot post is `act=automated` by its subtype, in code, with no request. Everything else is untagged.
@@ -32,12 +32,12 @@ class Unit:
     text: str
 
     @property
-    def profile(self) -> Profile:
+    def profiles(self) -> tuple[Profile, ...]:
         return for_kind(self.kind)
 
     @property
     def facet(self) -> str:
-        return self.profile.facet
+        return self.profiles[0].facet
 
     @property
     def state(self) -> dict:
@@ -54,11 +54,17 @@ class Unit:
         return hashlib.sha256(self.canonical.encode("utf-8")).hexdigest()[:12]
 
 
-def tag_key(unit: Unit, profile: Profile | None = None, version: str | None = None) -> str:
-    """sha256 over the pinned classifier version, the profile id and version, and the canonical state."""
-    profile = profile or unit.profile
+def tag_key(unit: Unit, profile: Profile, version: str | None = None) -> str:
+    """The cache key of one request: sha256 over the pinned classifier version, the profile id and
+    version, and the canonical state."""
     parts = (version or classifier_version(), profile.id, unit.canonical)
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()
+
+
+def unit_key(unit: Unit, version: str | None = None) -> str:
+    """The key a row carries (`tag_key`): the pinned classifier version and the canonical state, whichever
+    profiles were asked. It joins a row to every answer about its text."""
+    return hashlib.sha256("\n".join((version or classifier_version(), unit.canonical)).encode("utf-8")).hexdigest()
 
 
 def _join(*parts: str | None, clip: int = CLIP_SHORT) -> str:

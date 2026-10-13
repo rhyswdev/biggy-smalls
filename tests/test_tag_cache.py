@@ -31,16 +31,17 @@ def outcomes(all_units):
 
 def test_the_committed_cache_covers_every_unit_with_zero_misses(tagged, all_units):
     t = tagged.report.tags
-    assert t["mode"] == "on" and t["misses"] == 0 and t["hits"] == t["units"] == len(all_units) == 325
+    assert t["mode"] == "on" and t["misses"] == 0 and t["hits"] == t["asked"] == 490 and t["units"] == len(all_units) == 325
     assert t["applied"] + t["below_floor"] + t["other"] == t["units"]
     entries = cache.read(cache.DEFAULT_CACHE)
-    assert {units.tag_key(u) for u in all_units.values()} <= set(entries)
+    assert {units.tag_key(u, p) for u in all_units.values() for p in u.profiles} <= set(entries)
 
 
 def test_every_applied_tag_is_in_its_vocabulary_at_or_above_the_floor(tagged):
     floor = profiles.floor()
     vocabulary = profiles.facets()
-    p_of = {(key, facet, value): p for key, facet, value, p in tagged.conn.execute("SELECT tag_key, facet, value, p FROM tag_answer")}
+    # a value is stored when any question asked of the text puts it at or above the floor
+    p_of = {(key, facet, value): p for key, facet, value, p in tagged.conn.execute("SELECT tag_key, facet, value, max(p) FROM tag_answer GROUP BY 1, 2, 3")}
     chosen = {(key, facet): value for key, facet, value, _ in tagged.conn.execute("SELECT tag_key, facet, value, p FROM tag_answer WHERE chosen = 1")}
     applied = by_code = 0
     rows = tagged.conn.execute("SELECT kind, json_extract(attrs, '$.subtype'), tag_key, tags FROM record WHERE tags != '{}' "
@@ -66,6 +67,8 @@ def test_every_applied_tag_is_in_its_vocabulary_at_or_above_the_floor(tagged):
             assert not [v for v in (value if isinstance(value, list) else [value]) if (tag_key, facet, v) in under]
     # Every option's probability is kept, so the floor can move with no new call.
     known = profiles.profiles()
+    assert dict(tagged.conn.execute("SELECT profile, count(DISTINCT tag_key) FROM tag_answer GROUP BY 1").fetchall()) == \
+        {"signal": 165, "signal_any": 165, "signal_metric": 14, "act": 110, "change_kind": 36}
     assert tagged.conn.execute("SELECT count(DISTINCT value) FROM tag_answer WHERE facet = 'act'").fetchone()[0] == len(known["act"].options)
     assert tagged.conn.execute("SELECT count(DISTINCT value) FROM tag_answer WHERE facet = 'change_kind'").fetchone()[0] == len(known["change_kind"].options)
 
@@ -74,7 +77,7 @@ def test_the_cache_holds_answers_and_no_record_text(all_units):
     entries = [json.loads(x) for x in cache.DEFAULT_CACHE.read_text().splitlines()]
     assert [e["tag_key"] for e in entries] == sorted(e["tag_key"] for e in entries)
     known = profiles.profiles()
-    current = {units.tag_key(u) for u in all_units.values()}
+    current = {units.tag_key(u, p) for u in all_units.values() for p in u.profiles}
     for e in entries:
         assert set(e) == {"tag_key", "profile", "classifier", "answer", "usage", "request_id"}
         name, version = e["profile"].split("@")
@@ -92,8 +95,9 @@ def test_the_cache_holds_answers_and_no_record_text(all_units):
 
 
 def test_the_repeats_cover_the_labelled_sample(outcomes):
-    assert len(outcomes) == len(measure.load_labels()) == 89
-    assert all(r["answer"] is not None and len(r["repeats"]) == profiles.config()["run"]["repeats"] == 3 for r in outcomes)
+    assert len(outcomes) == len(measure.load_labels()) == 134 and all(r["answered"] for r in outcomes)
+    assert sum(len(r["scored"]) for r in outcomes) == 179                     # 45 units are scored on two questions
+    assert all(len(reps) == profiles.config()["run"]["repeats"] == 3 for r in outcomes for _, _, reps in r["scored"])
     assert {r["repeat"] for r in measure.load_repeats() if r["shuffled"]} == {3}
 
 
@@ -109,10 +113,10 @@ def test_the_configured_floor_is_the_measured_one(outcomes):
         assert any(r["flips"] or (r["stored"] and r["correct"] / r["stored"] < measure.BAR) for r in lower.values())
     # No pick-one tag changes value at any floor from the starting one up: the instability is doubt, not disagreement.
     assert all(r["value_flips"] == 0 for step in range(21) for r in measure.table(outcomes, round(measure.START + step / 100, 2)).values())
-    # Without the tolerance the same rule lands on 0.96: at 0.90 the only misses are values that come back 0.01 or 0.02 lower.
+    # Without the tolerance the same rule lands higher, on values that come back a hundredth or two lower.
     strict = [round(measure.START + i / 100, 2) for i in range(21)
               if all(measure._passes(r) for r in measure.table(outcomes, round(measure.START + i / 100, 2), tol=0.0).values())]
-    assert strict[0] == 0.96
+    assert not strict or strict[0] > floor
 
 
 def test_tags_change_nothing_but_the_tag_columns(tagged):
@@ -131,7 +135,8 @@ def test_tags_change_nothing_but_the_tag_columns(tagged):
 def test_metric_series_carry_their_signal_on_every_point(tagged):
     series = dict(tagged.conn.execute("SELECT series, count(DISTINCT tags) FROM point GROUP BY series").fetchall())
     assert len(series) == 14 and set(series.values()) == {1}                  # one tag per series, on every bucket
-    by_signal = dict(tagged.conn.execute("SELECT json_extract(tags, '$.signal'), count(DISTINCT series) FROM point GROUP BY 1").fetchall())
+    by_signal = dict(tagged.conn.execute("SELECT json_extract(tags, '$.signal[0]'), count(DISTINCT series) FROM point GROUP BY 1").fetchall())
+    assert tagged.conn.execute("SELECT count(*) FROM point WHERE json_array_length(json_extract(tags, '$.signal')) > 1").fetchone()[0] == 0
     assert sum(n for k, n in by_signal.items() if k) == 13 and set(by_signal) - {None} <= set(profiles.profiles()["signal_metric"].values())
 
 

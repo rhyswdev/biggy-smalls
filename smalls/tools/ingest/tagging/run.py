@@ -77,14 +77,15 @@ def _one(got: dict, profile: Profile) -> dict:
 def fill(units: dict[str, Unit], ask: Ask, path: Path | None = None, concurrency: int = 8) -> dict:
     """Ask the classifier for every unit whose key the cache lacks, and write the cache."""
     entries = cache.read(path)
-    wanted = {tag_key(u): u for u in units.values()}
-    jobs = [(key, u.state, u.profile.questions()) for key, u in sorted(wanted.items()) if key not in entries]
+    wanted = {tag_key(u, p): (u, p) for u in units.values() for p in u.profiles}
+    jobs = [(key, u.state, p.questions()) for key, (u, p) in sorted(wanted.items()) if key not in entries]
     done, failures = _ask_all(jobs, ask, concurrency)
     for (key, _, _), got in done:
-        entries[key] = {"tag_key": key, "profile": wanted[key].profile.id, **_one(got, wanted[key].profile)}
+        profile = wanted[key][1]
+        entries[key] = {"tag_key": key, "profile": profile.id, **_one(got, profile)}
     if done:
         cache.write(entries, path)
-    return {"units": len(wanted), "cached": len(wanted) - len(jobs), "requests": len(done), "failures": failures,
+    return {"units": len(units), "asked": len(wanted), "cached": len(wanted) - len(jobs), "requests": len(done), "failures": failures,
             "input_tokens": sum(g["usage"].get("input_tokens") or 0 for _, g in done),
             "output_tokens": sum(g["usage"].get("output_tokens") or 0 for _, g in done)}
 
@@ -100,11 +101,11 @@ def repeat(units: dict[str, Unit], ask: Ask, n: int, path: Path = measure.REPEAT
         unit = units.get(lab["unit"])
         if unit is None:
             continue
-        profile = unit.profile
-        for i in range(1, n + 1):
-            if (unit.id, profile.id, i) not in seen:
-                shuffled = i == n
-                jobs.append(((unit.id, profile, i, shuffled), unit.state, profile.questions(f"{unit.id}:{i}" if shuffled else None)))
+        for profile in measure.scored_profiles(unit, lab):
+            for i in range(1, n + 1):
+                if (unit.id, profile.id, i) not in seen:
+                    shuffled = i == n
+                    jobs.append(((unit.id, profile, i, shuffled), unit.state, profile.questions(f"{unit.id}:{i}" if shuffled else None)))
     done, failures = _ask_all(jobs, ask, concurrency)
     for ((unit_id, profile, i, shuffled), _, _), got in done:
         have.append({"unit": unit_id, "profile": profile.id, "pinned": version, "repeat": i, "shuffled": shuffled, **_one(got, profile)})
@@ -133,7 +134,7 @@ def report(bundle_root: Path | str) -> str:
     rows = measure.outcomes(measure.load_labels(), cache.read(), measure.load_repeats(), units)
     floor, hopeless = measure.final_floor(rows)
     configured = profile_floor()
-    lines = [f"labelled units: {len(rows)}; answered: {sum(1 for r in rows if r['answer'])}",
+    lines = [f"labelled units: {len(rows)}; answered: {sum(1 for r in rows if r['answered'])}",
              f"configured floor {configured:.2f}; measured floor {floor if floor is None else format(floor, '.2f')} "
              f"(search starts at {measure.START:.2f}; a repeat within {tolerance():.2f} under the floor reproduces a value)"
              + (f"; below the bar at any floor (stored, not offered as a filter): {', '.join(hopeless)}" if hopeless else ""),
@@ -165,8 +166,8 @@ def main(bundle_root: Path | str, ask: Ask | None = None, repeats: bool = True) 
     _, records, points, _ = store.read(bundle_root)
     units = measure.units_of(records, points)
     run_cfg = config()["run"]
-    need = len(units) - len({tag_key(u) for u in units.values()} & set(cache.read()))
-    print(f"smalls tag: {len(units)} units in the bundle, {need} not in the cache")
+    keys = {tag_key(u, p) for u in units.values() for p in u.profiles}
+    print(f"smalls tag: {len(units)} units in the bundle, {len(keys)} questions to ask of them, {len(keys - set(cache.read()))} not in the cache")
     ask = ask or sdk_ask()
     filled = fill(units, ask, concurrency=int(run_cfg["concurrency"]))
     print(f"  cache: {filled['requests']} requests, {filled['input_tokens']} input tokens, {filled['output_tokens']} output tokens; {filled['cached']} already cached")
