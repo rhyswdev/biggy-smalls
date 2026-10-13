@@ -63,8 +63,17 @@ CAPS: dict[str, tuple[int, int | None]] = {
     "check_status_page": (500, None),
 }
 
-# The tools that are built: name -> the function behind it. It grows through build phases B and D.
-BUILT: dict[str, Callable[[BaseModel, ToolContext], Envelope]] = {}
+# The tools that are built: name -> the function behind it. It grows through build phases B and D. Filled
+# on first use, because a tool module imports this one for its context type.
+BUILT: dict[str, Callable[[BaseModel, ToolContext], Any]] = {}
+
+
+def _load_built() -> None:
+    if BUILT:
+        return
+    from smalls.tools import search_logs
+
+    BUILT.update({"search_logs": search_logs.run})
 
 
 def _not_built(args: BaseModel, ctx: ToolContext) -> Envelope:
@@ -73,6 +82,7 @@ def _not_built(args: BaseModel, ctx: ToolContext) -> Envelope:
 
 def surface(*, tags: bool) -> dict[str, ToolSpec]:
     """All eleven tools in their fixed order, built or not. Tag inputs exist only when `tags` is true."""
+    _load_built()
     return {name: ToolSpec(name, "read", args, BUILT.get(name, _not_built), *CAPS[name])
             for name, args in schemas.args_models(tags=tags).items()}
 

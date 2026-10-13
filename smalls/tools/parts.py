@@ -47,6 +47,8 @@ class Parts:
     window: Window | None = None
     now: int | None = None                  # epoch ms; printed when the window was clamped
     total: int | None = None                # how many matched before any limit; defaults to len(rows)
+    hidden_span: tuple[int, int] | None = None      # first and last known time of the rows the tool's own limit left out
+    aggregate: bool = False                 # a count table: `total` is what it counted, and no row is ever cut from it
     what: str = "rows"
     keep: str = "oldest"                    # which end survives a cut: "oldest" or "newest"
     narrow: str = "Narrow the window or add a filter."
@@ -79,8 +81,8 @@ def _cut_range(parts: Parts, dropped: list[Line], hidden: int) -> str:
     """What a truncated result leaves out, in words the model can narrow on."""
     n = len(dropped) + hidden
     which = "the newest" if parts.keep == "oldest" else "the oldest"
-    times = [row.t_known for row in dropped if row.t_known is not None]
-    span = f", from {iso(min(times))} to {iso(max(times))}" if times and not hidden else ""
+    times = [row.t_known for row in dropped if row.t_known is not None] + list(parts.hidden_span or ())
+    span = f", from {iso(min(times))} to {iso(max(times))}" if times and (parts.hidden_span or not hidden) else ""
     return f"{which} {n}{span}"
 
 
@@ -102,6 +104,14 @@ def render(parts: Parts, *, cap_tokens: int, cap_rows: int | None = None) -> Env
     def drop_one() -> None:
         dropped.append(rows.pop() if parts.keep == "oldest" else rows.pop(0))
 
+    if parts.aggregate:
+        text = _assemble(Parts(header=parts.header, footer=parts.footer, window=parts.window, now=parts.now,
+                               native_query=parts.native_query, native_label=parts.native_label), rows[:1], 1, None)
+        return Envelope(text, rows=[Row(row.handle, row.text, None) for row in rows[:1]], referenced=list(dict.fromkeys(
+                            [*(ref for row in rows[:1] for ref in row.refs), *parts.referenced])),
+                        native_query=parts.native_query, window=parts.window.iso if parts.window else None,
+                        meta={**parts.meta, "total": total, "returned": total, "truncated": False, "empty": False,
+                              "clamped": bool(parts.window and parts.window.clamped), "sampled": parts.sampled, "tag": parts.tag})
     while cap_rows is not None and len(rows) > cap_rows:
         drop_one()
     while True:

@@ -370,7 +370,9 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
     else:
         report.tags = {"mode": "off"}
 
-    conn = sqlite3.connect(":memory:")
+    # The agent's graph runs each node on a worker thread, so the connection is used from a thread other
+    # than the one that built it. It is still used by one caller at a time: tools run one after another.
+    conn = sqlite3.connect(":memory:", check_same_thread=False)
     conn.executescript(DDL)
     with conn:
         for rid, (r, t) in enumerate(zip(records, tagged), 1):
