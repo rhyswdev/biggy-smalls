@@ -418,7 +418,7 @@ def test_the_strict_adapter_for_a_provider_that_wants_every_property_required():
     assert "maximum" not in logs["parameters"]["properties"]["limit"]["anyOf"][0]
     board_tool = next(t for t in tools if t["function"]["name"] == "update_board")["function"]["parameters"]
     update = board_tool["$defs"]["HypothesisUpdate"]
-    assert update["required"] == list(update["properties"]) and update["properties"]["id"] == {"type": "string", "description": "PLACEHOLDER"}
+    assert update["required"] == list(update["properties"]) and update["properties"]["id"]["type"] == "string" and "anyOf" not in update["properties"]["id"]
     plain = provider_tools(definitions(), "scripted")
     assert plain[0]["type"] == "function" and "strict" not in plain[0]["function"]
 

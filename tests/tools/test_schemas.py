@@ -108,7 +108,7 @@ def test_the_argument_conventions_of_k1(defs):
         params = defs[name]["parameters"]
         assert "since" in params["required"] and "until" not in params["required"], name
     p = {name: d["parameters"]["properties"] for name, d in defs.items()}
-    assert p["search_logs"]["terms"]["maxItems"] == 8 and p["search_logs"]["bucket"] == {"default": "1m", "enum": ["1m", "5m"], "type": "string", "description": "PLACEHOLDER"}
+    assert p["search_logs"]["terms"]["maxItems"] == 8 and {k: v for k, v in p["search_logs"]["bucket"].items() if k != "description"} == {"default": "1m", "enum": ["1m", "5m"], "type": "string"}
     assert (p["search_logs"]["limit"]["minimum"], p["search_logs"]["limit"]["maximum"], p["search_logs"]["limit"]["default"]) == (1, 50, 30)
     assert p["search_logs"]["group_by"]["enum"][:4] == ["minute", "host", "level", "template"]
     assert p["list_alerts"]["state"]["enum"] == ["active", "all"] and p["list_alerts"]["state"]["default"] == "all"

@@ -667,7 +667,7 @@ v1 is single-tenant and runs from the CLI. These lines say what changes in produ
 - **Runtime.**
   - Async nodes and an async saver, which also gives node timeouts: they are unavailable on sync nodes.
   - Investigations run on workers, never in the API process.
-  - Events go through a broker (Redis Streams, NATS, or Postgres `LISTEN`/`NOTIFY`) keyed by run and `seq`. `Last-Event-ID` maps one to one, so only the transport changes.
+  - Events go through a broker (a stream store, NATS, or Postgres `LISTEN`/`NOTIFY`) keyed by run and `seq`. `Last-Event-ID` maps one to one, so only the transport changes.
 - **Tenancy.** `thread_id = tenant:run`, a tenant-scoped tool layer, and handles resolved inside the tenant's scope. Per-run SQLite files isolate writers, not tenants.
 - **Observability.**
   - Stamp `trace_id = run_id` and `span_id = call_id` now, so OpenTelemetry later is a mapping.

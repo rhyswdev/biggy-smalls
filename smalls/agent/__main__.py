@@ -5,6 +5,9 @@
     python -m smalls.agent resume <run_id> [--reject <reason>] [--interactive]
     python -m smalls.agent replay <run_id|folder>          re-render a run record; no model, no key
     python -m smalls.agent schema [--tags on|off] [--size] [--write] [--skeleton]
+    python -m smalls.agent blind-room <folder>             write the prompt author's folder, outside the repository
+    python -m smalls.agent blind-check [<folder>]          the placeholder gate, the slot check, the coverage check
+    python -m smalls.agent blind-install <folder>          copy the author's five files in, unedited
 
 The agent takes the trigger as text and `now` as a time. Which trigger belongs to which checkpoint is the
 caller's business (the Makefile and the eval harness).
@@ -185,10 +188,42 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_blind(args: argparse.Namespace) -> int:
+    """The mechanical side of the blind prompt pass. Nothing here writes prose."""
+    from smalls.agent import blind
+
+    if args.command == "blind-room":
+        placeholders = descriptions.skeleton({name: spec.args for name, spec in surface(tags=True).items()}, gated=Rationale)
+        files = blind.write_room(args.folder, schema_document(tags=True, texts=placeholders), placeholders)
+        print(f"wrote {len(files)} files to {Path(args.folder).resolve()}:")
+        print("\n".join(f"  {name}" for name in files))
+        return 0
+    folder = Path(args.folder) if args.folder else None
+    if args.command == "blind-install":
+        findings = blind.check(folder, skeleton())
+        if findings:
+            print("\n".join(findings))
+            raise SystemExit("not installed: the checks above failed")
+        print("\n".join(f"installed {name}" for name in blind.install(folder)))
+        return 0
+    findings = blind.check(folder, skeleton())      # with no folder, the files as installed
+    print("\n".join(findings) if findings else "placeholder gate, slot check and descriptions coverage: all pass")
+    return 1 if findings else 0
+
+
 def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="python -m smalls.agent", description="The Smalls investigator.")
     sub = p.add_subparsers(dest="command", required=True)
     add_run_commands(sub)
+    room = sub.add_parser("blind-room", help="write the prompt author's folder; it must be outside the repository")
+    room.add_argument("folder")
+    room.set_defaults(run=cmd_blind)
+    check = sub.add_parser("blind-check", help="run the checks that need nothing from the dataset, on a folder or on the installed files")
+    check.add_argument("folder", nargs="?")
+    check.set_defaults(run=cmd_blind)
+    install = sub.add_parser("blind-install", help="copy the author's five files in, unedited, if the checks pass")
+    install.add_argument("folder")
+    install.set_defaults(run=cmd_blind)
     schema = sub.add_parser("schema", help="print every tool schema and the report schema")
     schema.add_argument("--tags", choices=["on", "off"], help="with or without the tag inputs (default: SMALLS_TAGS)")
     schema.add_argument("--size", action="store_true", help="print the size of the cached prefix, tags on and off")
