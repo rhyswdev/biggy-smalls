@@ -6,7 +6,6 @@ import subprocess
 import sys
 
 import pytest
-import yaml
 
 import parity
 from smalls.tools import store
@@ -15,27 +14,38 @@ from smalls.tools.ingest.tagging import cache, measure, profiles, run, units
 from smalls_data import prompt_lint
 
 BUNDLE = parity.BUNDLE
-TAXONOMY = {   # ruling O5, in request order
+OPTIONS = {   # ruling O5 as amended, in request order
     "signal": ["latency", "errors", "saturation", "availability", "traffic", "change", "security", "routine", "other"],
-    "act": ["observation", "hypothesis", "action_taken", "action_proposed", "question", "status", "social", "other"],
+    "signal_metric": ["latency", "errors", "saturation", "availability", "traffic", "other"],
+    "act": ["observation", "hypothesis", "action_taken", "action_proposed", "question", "status", "social"],
     "change_kind": ["release", "rollback", "config", "infra", "network", "data", "job", "other"],
 }
 
 
 @pytest.fixture(scope="module")
-def records():
-    return store.read(BUNDLE)[1]
+def read():
+    return store.read(BUNDLE)
 
 
 @pytest.fixture(scope="module")
-def all_units(records):
-    return measure.units_of(records)
+def records(read):
+    return read[1]
 
 
-def fake_ask(choice_for=lambda state, options: options[0], p=0.97, calls=None):
+@pytest.fixture(scope="module")
+def all_units(read):
+    return measure.units_of(read[1], read[2])
+
+
+def fake_ask(choice_for=lambda state, options: options[0], p=0.97, yes=lambda state, qid: 0.0, calls=None):
+    """A classifier for tests: picks an option of a pick-one question at probability `p`, and answers each
+    yes/no question with `yes(state, question id)`."""
     def ask(state, questions):
         answers = {}
         for qid, question in questions.items():
+            if question["type"] == "noul":
+                answers[qid] = {"noul": yes(state, qid)}
+                continue
             options = list(question["criteria"])
             choice = choice_for(state, options)
             rest = round((1 - p) / (len(options) - 1), 4)
@@ -48,28 +58,40 @@ def fake_ask(choice_for=lambda state, options: options[0], p=0.97, calls=None):
 
 # -- profiles ---------------------------------------------------------------------------------------------
 
-def test_the_taxonomy_is_three_facets_with_other_last():
-    got = {facet: list(p.options) for facet, p in profiles.profiles().items()}
-    assert got == TAXONOMY
-    assert list(profiles.profiles()["signal"].options)[-2:] == ["routine", "other"]
-    for p in profiles.profiles().values():
-        question = p.question()
-        assert question["type"] == "choice" and list(question["criteria"]) == list(p.options)
+def test_the_taxonomy_is_three_facets_from_four_profiles():
+    known = profiles.profiles()
+    assert {name: list(p.options) for name, p in known.items()} == OPTIONS
+    assert profiles.facets() == {
+        "signal": ("latency", "errors", "saturation", "availability", "traffic", "change", "security", "routine"),
+        "act": ("observation", "hypothesis", "action_taken", "action_proposed", "question", "status", "social", "automated"),
+        "change_kind": ("release", "rollback", "config", "infra", "network", "data", "job")}
+    assert list(known["signal"].options)[-2:] == ["routine", "other"]          # `routine` just before `other`
+    assert profiles.multi_facets() == {"act"} and known["signal_metric"].facet == "signal"
+    for p in known.values():
         assert all(meaning and "\n" not in meaning for meaning in p.options.values())       # one line of meaning each
-        assert "other" not in p.vocabulary()
-    assert profiles.profiles()["act"].vocabulary()[-1] == "automated"
+        assert "other" not in p.values()
+        questions = p.questions()
+        if p.multi:      # one yes/no question per option, each carrying that option's meaning
+            assert list(questions) == list(p.options) and all(q["type"] == "noul" for q in questions.values())
+            assert all(p.options[name] in q["instructions"] and "{meaning}" not in q["instructions"] for name, q in questions.items())
+        else:
+            assert list(questions) == ["q"] and questions["q"]["type"] == "choice" and list(questions["q"]["criteria"]) == list(p.options)
+    kinds = profiles.kinds()
+    assert len(kinds) == len(set(kinds)) == 10 and all(profiles.for_kind(k).name in known for k in kinds)
 
 
-def test_a_shuffled_question_keeps_the_options_and_keeps_other_last():
+def test_a_shuffled_request_keeps_the_options_and_keeps_other_last():
     p = profiles.profiles()["signal"]
-    shuffled = list(p.question("seed-1")["criteria"])
+    shuffled = list(p.questions("seed-1")["q"]["criteria"])
     assert sorted(shuffled) == sorted(p.options) and shuffled[-1] == "other" and shuffled != list(p.options)
-    assert shuffled == list(p.question("seed-1")["criteria"])
+    assert shuffled == list(p.questions("seed-1")["q"]["criteria"])
+    act = profiles.profiles()["act"]
+    assert sorted(act.questions("seed-1")) == sorted(act.options) and list(act.questions("seed-1")) != list(act.options)
 
 
 def test_the_pinned_classifier_version_lives_only_in_the_tagging_config():
     version = profiles.classifier_version()
-    assert version and 0.8 <= profiles.floor() <= 1
+    assert version and 0.8 <= profiles.floor() <= 1 and 0 <= profiles.tolerance() <= 0.05
     config = profiles.HERE / "config.toml"
     holders = []
     for folder in ("smalls", "smalls_data", "tests", "docs", "eval/tags", "tags"):
@@ -79,13 +101,13 @@ def test_the_pinned_classifier_version_lives_only_in_the_tagging_config():
     for name in ("Makefile", "CLAUDE.md", "pyproject.toml", "Dockerfile", "compose.yaml"):
         if version in (parity.ROOT / name).read_text():
             holders.append(name)
-    # The cache and the repeats record the version that answered: that is data, not a second pin.
+    # The cache, the repeats and experiment answers record the version that answered: data, not a second pin.
     assert [h for h in holders if not h.endswith(".jsonl")] == [config.relative_to(parity.ROOT).as_posix()]
 
 
 def test_no_profile_contains_a_bundle_string():
     texts = prompt_lint.prompt_texts()
-    assert len(texts) >= 28 and prompt_lint.find(texts) == []
+    assert len(texts) >= 34 and prompt_lint.find(texts) == []
     strings = prompt_lint.bundle_strings()
     assert {"PayCore", "pay-db-01", "Elena Rossi", "Elena", "payments-gw", "Larkspur Retail", "HikariPool-1", "pgw_app"} <= set(strings)
     planted = [("profile x", "A pool such as HikariPool-1 is full."), ("profile y", "the gateway on PAY-DB-01"), ("profile z", "ask elena"),
@@ -96,15 +118,24 @@ def test_no_profile_contains_a_bundle_string():
     assert not any(h.startswith("profile ok") for h in hits)
 
 
+def test_candidate_facets_are_linted_like_profiles():
+    from smalls.tools.ingest.tagging import experiment
+
+    specs = sorted((parity.ROOT / "eval/tags/experiments").glob("*.toml"))
+    assert len(specs) == 2
+    for spec in specs:
+        candidates, _ = experiment.load(spec)
+        assert candidates and prompt_lint.find(experiment.prompt_texts(spec)) == []
+
+
 # -- units ------------------------------------------------------------------------------------------------
 
 def test_a_unit_is_the_records_own_text_and_nothing_else(records, all_units):
-    kinds = {(u.facet, u.kind) for u in all_units.values()}
-    assert kinds == {("signal", "log line"), ("signal", "alert"), ("signal", "alert definition"), ("signal", "incident ticket"),
-                     ("act", "chat message"), ("act", "work note"), ("change_kind", "change request"), ("change_kind", "pipeline run"),
-                     ("change_kind", "commit")}
-    assert {u.kind for u in all_units.values()} <= set(profiles.KINDS)
+    assert {u.kind for u in all_units.values()} == set(profiles.kinds())
     assert all(set(u.state) == {"kind", "text"} and u.text for u in all_units.values())
+    assert {(u.facet, u.kind) for u in all_units.values()} == {
+        ("signal", "log line"), ("signal", "alert"), ("signal", "alert definition"), ("signal", "incident ticket"), ("signal", "metric series"),
+        ("act", "chat message"), ("act", "work note"), ("change_kind", "change request"), ("change_kind", "pipeline run"), ("change_kind", "commit")}
     # A copy of a record with every other field changed gives the same unit: nothing but its text is read.
     r = next(r for r in records if r.kind == "change")
     twin = Record(handle="snow:CHG0000001", source="elsewhere", dataset="x", kind="change", path="p", locator="/9", native="{}", t_event=1, t_known=2,
@@ -113,24 +144,26 @@ def test_a_unit_is_the_records_own_text_and_nothing_else(records, all_units):
     assert units.tag_key(units.unit_for(twin)) == units.tag_key(units.unit_for(r))
 
 
-def test_records_share_units(records, all_units):
+def test_records_share_units(read, all_units):
+    _, records, points, _ = read
     logs = [r for r in records if r.kind == "log"]
     assert len({units.unit_for(r).id for r in logs}) == len({r.template for r in logs}) == 100
-    live = {units.unit_for(r).id for r in records if r.handle == "snow:INC0048811"}
-    assert len(live) < 15                                                    # 15 versions, fewer distinct texts
+    assert len({units.unit_for(r).id for r in records if r.handle == "snow:INC0048811"}) == 1      # 15 versions, one text
     events = [r for r in records if r.source == "datadog" and r.dataset == "events"]
     assert len({units.unit_for(r).id for r in events}) < len(events) / 2      # triggered and recovered are one alert
     assert not [r.title for r in events if units.unit_for(r).text.startswith(("[Triggered", "[Recovered", "[Warn"))]
     # The two versions of a build are one unit: the state leaves out what changes between them.
     builds = [r for r in records if r.kind == "build"]
     assert len({(r.handle, units.unit_for(r).id) for r in builds}) == len({r.handle for r in builds})
-    assert 290 <= len(all_units) <= 330
+    # Every bucket of a metric series is one unit: 1,407 points, 14 series.
+    assert len(points) == 1407 and len({units.unit_for_point(p).id for p in points}) == 14
+    assert len(all_units) == 325
 
 
 def test_bot_posts_are_automated_by_code_and_system_messages_are_untagged(records):
     messages = [r for r in records if r.kind == "message"]
     bots = [r for r in messages if r.attrs.get("subtype") == "bot_message"]
-    assert len(bots) == 28 and all(units.code_tags(r) == {"act": "automated"} and units.unit_for(r) is None for r in bots)
+    assert len(bots) == 28 and all(units.code_tags(r) == {"act": ["automated"]} and units.unit_for(r) is None for r in bots)
     joins = [r for r in messages if r.attrs.get("subtype") == "channel_join"]
     assert joins and all(units.unit_for(r) is None and units.code_tags(r) == {} for r in joins)
     assert len([r for r in messages if units.unit_for(r)]) == 81
@@ -140,8 +173,8 @@ def test_bot_posts_are_automated_by_code_and_system_messages_are_untagged(record
 
 def test_the_tag_key_changes_with_the_classifier_version_and_the_profile_version(all_units):
     unit = next(iter(all_units.values()))
-    p = profiles.profiles()[unit.facet]
-    bumped = profiles.Profile(p.facet, p.version + 1, p.instructions, p.options)
+    p = unit.profile
+    bumped = profiles.Profile(p.name, p.facet, p.version + 1, p.multi, p.kinds, p.instructions, p.options)
     keys = {units.tag_key(unit), units.tag_key(unit, version="another-version"), units.tag_key(unit, bumped)}
     assert len(keys) == 3 and all(len(k) == 64 for k in keys)
 
@@ -152,14 +185,25 @@ def test_a_tag_is_applied_only_at_high_confidence():
     p = profiles.profiles()["signal"]
     def answer(choice, prob):
         return {"choice": choice, "probabilities": {choice: prob}}
-    assert cache.decide(answer("errors", 0.93), p, 0.8) == "errors"
-    assert cache.decide(answer("errors", 0.80), p, 0.8) == "errors"
-    assert cache.decide(answer("errors", 0.79), p, 0.8) is None             # a doubtful answer stores nothing
-    assert cache.decide(answer("other", 0.99), p, 0.8) is None              # `other` is never a tag
-    assert cache.decide(answer("made_up", 0.99), p, 0.8) is None            # outside the closed vocabulary
-    assert cache.decide(answer("observation", 0.99), p, 0.8) is None        # another facet's option
-    assert cache.decide({"choice": "errors"}, p, 0.8) is None               # no probability, no tag
-    assert cache.decide(answer("errors", 0.93), p, 0.95) is None            # raising the floor needs no new call
+    assert cache.decide(answer("errors", 0.93), p, 0.8) == ["errors"]
+    assert cache.decide(answer("errors", 0.80), p, 0.8) == ["errors"]
+    assert cache.decide(answer("errors", 0.79), p, 0.8) == []               # a doubtful answer stores nothing
+    assert cache.decide(answer("other", 0.99), p, 0.8) == []                # `other` is never a tag
+    assert cache.decide(answer("made_up", 0.99), p, 0.8) == []              # outside the closed vocabulary
+    assert cache.decide(answer("observation", 0.99), p, 0.8) == []          # another facet's option
+    assert cache.decide({"choice": "errors"}, p, 0.8) == []                 # no probability, no tag
+    assert cache.decide(answer("errors", 0.93), p, 0.95) == []              # raising the floor needs no new call
+
+
+def test_a_yes_no_profile_stores_every_confident_yes_and_nothing_else():
+    act = profiles.profiles()["act"]
+    answer = {"nouls": {"observation": 0.95, "hypothesis": 0.90, "action_taken": 0.89, "question": 0.02, "made_up": 0.99}}
+    assert cache.decide(answer, act, 0.9) == ["observation", "hypothesis"]      # in the profile's order; a no stores nothing
+    assert cache.decide(answer, act, 0.96) == [] and cache.decide({"nouls": {}}, act, 0.9) == []
+    assert cache.as_tag(["observation", "hypothesis"], act) == ["observation", "hypothesis"]
+    assert cache.as_tag(["errors"], profiles.profiles()["signal"]) == "errors"
+    rows = cache.answer_rows("k", {"nouls": {"observation": 0.95, "question": 0.02}}, act)
+    assert rows == [("k", "act", "observation", 0.95, 1), ("k", "act", "question", 0.02, 0)]
 
 
 # -- the cache and the runner -----------------------------------------------------------------------------
@@ -173,12 +217,12 @@ def test_fill_asks_once_per_missing_unit_and_a_second_run_asks_nothing(all_units
     again = []
     second = run.fill(all_units, fake_ask(calls=again), path=path)
     assert second["requests"] == 0 and again == [] and second["cached"] == len(all_units)
-    lines = path.read_text().splitlines()
-    keys = [json.loads(x)["tag_key"] for x in lines]
+    entries = [json.loads(x) for x in path.read_text().splitlines()]
+    keys = [e["tag_key"] for e in entries]
     assert keys == sorted(keys) and len(keys) == len(all_units)
-    entry = json.loads(lines[0])
-    assert set(entry) == {"tag_key", "profile", "classifier", "answer", "usage", "request_id"}
-    assert set(entry["answer"]) == {"choice", "confidence", "probabilities"}
+    shapes = {e["profile"].split("@")[0]: set(e["answer"]) for e in entries}
+    assert all(set(e) == {"tag_key", "profile", "classifier", "answer", "usage", "request_id"} for e in entries)
+    assert shapes["act"] == {"nouls"} and shapes["signal"] == shapes["change_kind"] == shapes["signal_metric"] == {"choice", "confidence", "probabilities"}
     # No record text in the cache: no unit's text appears in it.
     body = path.read_text()
     assert not [u.id for u in all_units.values() if len(u.text) > 12 and u.text in body]
@@ -202,28 +246,33 @@ def test_ingest_applies_cached_tags_and_counts_misses(all_units, tmp_path, monke
     half = dict(list(sorted(all_units.items()))[::2])
     def choose(state, options):
         return "other" if state["kind"] == "commit" else options[0]
-    run.fill(half, fake_ask(choose, p=0.97), path=path)
+    def yes(state, qid):
+        return 0.97 if qid in ("observation", "question") else 0.1
+    run.fill(half, fake_ask(choose, p=0.97, yes=yes), path=path)
     monkeypatch.setenv("SMALLS_TAG_CACHE", str(path))
     built = store.build(BUNDLE, tags=True)
     t = built.report.tags
     assert t["mode"] == "on" and t["units"] == len(all_units) and t["hits"] == len(half) and t["misses"] == len(all_units) - len(half)
     assert t["applied"] + t["other"] + t["below_floor"] == t["hits"] and t["by_code"] == 28
-    vocab = {facet: p.vocabulary() for facet, p in profiles.profiles().items()}
+    vocabulary = profiles.facets()
     tagged = 0
-    for tag_key, tags in built.conn.execute("SELECT tag_key, tags FROM record"):
+    for (tags,) in built.conn.execute("SELECT tags FROM record UNION ALL SELECT tags FROM point"):
         for facet, value in json.loads(tags).items():
-            assert value in vocab[facet]
+            values = value if isinstance(value, list) else [value]
+            assert isinstance(value, list) == (facet in profiles.multi_facets()) and values and set(values) <= set(vocabulary[facet])
             tagged += 1
     assert tagged > 0
     assert built.conn.execute("SELECT count(DISTINCT tag_key) FROM tag_answer").fetchone()[0] == len(half)
-    assert built.conn.execute("SELECT count(*) FROM tag_answer WHERE chosen = 1").fetchone()[0] == len(half)
-    # A miss leaves the record untagged; `other` and a low probability store nothing.
+    # A yes/no unit stores both confident answers; a miss, `other` and a low probability store nothing.
+    assert built.conn.execute("SELECT count(*) FROM record WHERE json_extract(tags, '$.act') = json('[\"observation\",\"question\"]')").fetchone()[0] > 0
     assert built.conn.execute("SELECT count(*) FROM record WHERE kind = 'commit' AND tags != '{}'").fetchone()[0] == 0
-    run.fill(all_units, fake_ask(p=0.5), path=tmp_path / "low.jsonl")
+    assert built.conn.execute("SELECT count(*) FROM point WHERE json_extract(tags, '$.signal') IS NOT NULL").fetchone()[0] > 0
+    run.fill(all_units, fake_ask(p=0.5, yes=lambda s, q: 0.5), path=tmp_path / "low.jsonl")
     monkeypatch.setenv("SMALLS_TAG_CACHE", str(tmp_path / "low.jsonl"))
     low = store.build(BUNDLE, tags=True)
     assert low.report.tags["applied"] == 0 and low.report.tags["misses"] == 0
-    assert low.conn.execute("SELECT count(*) FROM record WHERE tags != '{}' AND tags != '{\"act\":\"automated\"}'").fetchone()[0] == 0
+    assert low.conn.execute("SELECT count(*) FROM record WHERE tags != '{}' AND tags != '{\"act\":[\"automated\"]}'").fetchone()[0] == 0
+    assert low.conn.execute("SELECT count(*) FROM point WHERE tags != '{}'").fetchone()[0] == 0
 
 
 def test_tags_are_off_by_default_and_the_store_is_as_it_was_before_tagging(monkeypatch):
@@ -231,6 +280,7 @@ def test_tags_are_off_by_default_and_the_store_is_as_it_was_before_tagging(monke
     built = store.build(BUNDLE)
     assert built.report.tags == {"mode": "off"}
     assert built.conn.execute("SELECT count(*) FROM record WHERE tags != '{}' OR tag_key IS NOT NULL").fetchone()[0] == 0
+    assert built.conn.execute("SELECT count(*) FROM point WHERE tags != '{}' OR tag_key IS NOT NULL").fetchone()[0] == 0
     assert built.conn.execute("SELECT count(*) FROM tag_answer").fetchone()[0] == 0
     assert parity.problems(built.conn, parity.manifest()) == []
     monkeypatch.setenv("SMALLS_TAGS", "on")
@@ -273,73 +323,107 @@ def test_the_sdk_path_runs_on_a_mock_transport(monkeypatch):
     def handler(request):
         body = json.loads(request.content)
         seen.append((request.headers.get("authorization"), body))
-        options = list(body["questions"]["q"]["criteria"])
+        answers = {}
+        for qid, question in body["questions"].items():
+            if question["type"] == "noul":
+                answers[qid] = {"type": "noul", "noul": 0.91 if qid == "hypothesis" else 0.03}
+            else:
+                options = list(question["criteria"])
+                answers[qid] = {"type": "choice", "choice": options[1], "confidence": 0.9, "probabilities": {o: (0.9 if o == options[1] else 0.0) for o in options}}
         return httpx2.Response(200, headers={"x-typesafe-request-id": "req_test"},
-                               json={"model": body["model"], "usage": {"input_tokens": 321, "output_tokens": 12},
-                                     "answers": {"q": {"type": "choice", "choice": options[1], "confidence": 0.9,
-                                                       "probabilities": {o: (0.9 if o == options[1] else 0.0) for o in options}}}})
+                               json={"model": body["model"], "usage": {"input_tokens": 321, "output_tokens": 12}, "answers": answers})
 
     real = sdk.TypeSafeClient
     monkeypatch.setattr(sdk, "TypeSafeClient", lambda **kw: real(transport=httpx2.MockTransport(handler), **kw))
     monkeypatch.setenv("JEV_API_KEY", "test-key-not-a-secret")
     ask = run.sdk_ask()
-    p = profiles.profiles()["act"]
-    got = ask({"kind": "chat message", "text": "is it the database?"}, {"q": p.question()})
-    assert got["answers"]["q"]["choice"] == "hypothesis" and got["usage"] == {"input_tokens": 321, "output_tokens": 12}
-    assert set(got["answers"]["q"]) == {"choice", "confidence", "probabilities"}
+    act, signal = profiles.profiles()["act"], profiles.profiles()["signal"]
+    got = ask({"kind": "chat message", "text": "is it the database?"}, act.questions())
+    assert got["answers"]["hypothesis"] == {"noul": 0.91} and set(got["answers"]) == set(act.options)
+    assert got["usage"] == {"input_tokens": 321, "output_tokens": 12}
+    picked = ask({"kind": "log line", "text": "request failed"}, signal.questions())
+    assert picked["answers"]["q"]["choice"] == "errors" and set(picked["answers"]["q"]) == {"choice", "confidence", "probabilities"}
     auth, body = seen[0]
     assert auth == "Bearer test-key-not-a-secret"                           # passed explicitly, from JEV_API_KEY
     assert body["model"] == profiles.classifier_version() and body["state"] == {"kind": "chat message", "text": "is it the database?"}
-    assert set(body["questions"]) == {"q"} and list(body["questions"]["q"]["criteria"]) == list(p.options)
+    assert list(seen[1][1]["questions"]["q"]["criteria"]) == list(signal.options)
 
 
 # -- the labelled sample and the measure ------------------------------------------------------------------
 
 def test_the_labels_are_the_fixed_sample_and_every_label_is_an_option(all_units):
-    labels = measure.load_labels()
+    labels = {lab["unit"]: lab for lab in measure.load_labels()}
     sample = measure.sample(all_units)
-    assert [lab["unit"] for lab in labels] == [u.id for u in sample] and 55 <= len(labels) <= 65
-    for lab, unit in zip(labels, sample):
+    assert set(labels) == {u.id for u in sample} and len(labels) == len(sample) == 89
+    for unit in sample:
+        lab = labels[unit.id]
         assert (lab["facet"], lab["kind"], lab["text"]) == (unit.facet, unit.kind, unit.text)
-        assert lab["label"] in profiles.profiles()[unit.facet].options
-    per_facet = {facet: sum(1 for lab in labels if lab["facet"] == facet) for facet in TAXONOMY}
-    assert all(18 <= n <= 22 for n in per_facet.values()), per_facet
+        if unit.profile.multi:
+            assert lab["labels"] and set(lab["labels"]) | set(lab["also_acceptable"]) <= set(unit.profile.options)
+        else:
+            assert lab["label"] in unit.profile.options
+    per_facet = {facet: sum(1 for lab in labels.values() if lab["facet"] == facet) for facet in profiles.facets()}
+    assert per_facet == {"signal": 35, "act": 34, "change_kind": 20}
+    # The units first labelled for the pick-one form of `act` are kept, and are not in the sample.
+    import yaml
+    archived = yaml.safe_load((parity.ROOT / "eval/tags/labels-act-pick-one.yaml").read_text())["units"]
+    assert len(archived) == 20 and not {a["unit"] for a in archived} & set(labels)
 
 
-def _row(facet, label, choice, p, repeats=()):
-    def a(c, prob):
-        return {"choice": c, "probabilities": {c: prob}}
-    return {"unit": f"{facet}-{label}-{choice}-{p}", "facet": facet, "kind": "x", "label": label, "answer": a(choice, p), "repeats": [a(c, q) for c, q in repeats]}
+def _row(name, want, answer, repeats=(), ok=()):
+    """One labelled unit for the measure: a pick-one answer is (choice, p); a yes/no answer is {option: p}."""
+    profile = profiles.profiles()[name]
+    def shape(a):
+        return {"nouls": a} if profile.multi else {"choice": a[0], "probabilities": {a[0]: a[1]}}
+    return {"unit": f"{name}-{want}-{answer}", "facet": profile.facet, "kind": "x", "profile": profile, "want": [w for w in want if w != "other"],
+            "ok": set(want) | set(ok), "answer": shape(answer), "repeats": [shape(a) for a in repeats]}
 
 
 def test_the_table_counts_precision_coverage_and_flips():
-    rows = [_row("signal", "errors", "errors", 0.95, [("errors", 0.93), ("errors", 0.96), ("errors", 0.9)]),
-            _row("signal", "latency", "errors", 0.85, [("errors", 0.85)] * 3),        # applied and wrong
-            _row("signal", "routine", "routine", 0.6, [("routine", 0.7)] * 3),        # too doubtful: no tag
-            _row("signal", "other", "other", 0.99, [("other", 0.99)] * 3),            # right to store nothing
-            _row("signal", "change", "change", 0.88, [("change", 0.9), ("change", 0.75), ("routine", 0.6)])]   # flips
-    t = measure.table(rows, 0.8)["signal"]
-    assert (t["labelled"], t["applied"], t["correct"], t["flips"], t["value_flips"], t["repeats"]) == (5, 3, 2, 1, 0, 3)
+    rows = [_row("signal", ["errors"], ("errors", 0.95), [("errors", 0.93), ("errors", 0.96), ("errors", 0.9)]),
+            _row("signal", ["latency"], ("errors", 0.85), [("errors", 0.85)] * 3),        # applied and wrong
+            _row("signal", ["routine"], ("routine", 0.6), [("routine", 0.7)] * 3),        # too doubtful: no tag
+            _row("signal", ["other"], ("other", 0.99), [("other", 0.99)] * 3),            # right to store nothing
+            _row("signal", ["change"], ("change", 0.88), [("change", 0.9), ("change", 0.75), ("routine", 0.6)])]   # flips
+    t = measure.table(rows, 0.8, tol=0.0)["signal"]
+    assert (t["labelled"], t["applied"], t["stored"], t["correct"], t["flips"], t["value_flips"], t["repeats"]) == (5, 3, 3, 2, 1, 0, 3)
     assert t["precision"] == pytest.approx(2 / 3) and t["coverage"] == pytest.approx(3 / 5)
     assert t["confused"] == {"latency tagged errors": 1}
     assert measure.table(rows, 0.8)["act"]["precision"] is None
-    assert "| `signal` | 5 | 3 | 2 | 2 of 3 (67%) | 60% | 1 over 3 repeats | 0 | latency tagged errors (1) |" in measure.render(rows, 0.8)
-    # A repeat that applies a different value is the flip that matters; a tag only a repeat would apply is not one.
-    swapped = [_row("signal", "errors", "errors", 0.9, [("saturation", 0.9), ("errors", 0.9), ("errors", 0.9)]),
-               _row("signal", "errors", "errors", 0.7, [("errors", 0.9)] * 3)]
+    assert "| `signal` | 5 | 3 | 3 | 2 | 2 of 3 (67%) | 60% | 1 over 3 repeats | 0 | latency tagged errors (1) |" in measure.render(rows, 0.8)
+    # A repeat that stores a different value is a change of value; a tag only a repeat would apply is not a flip.
+    swapped = [_row("signal", ["errors"], ("errors", 0.9), [("saturation", 0.9), ("errors", 0.9), ("errors", 0.9)]),
+               _row("signal", ["errors"], ("errors", 0.7), [("errors", 0.9)] * 3)]
     t = measure.table(swapped, 0.8)["signal"]
     assert (t["applied"], t["flips"], t["value_flips"]) == (1, 1, 1)
 
 
+def test_a_yes_no_unit_is_scored_per_stored_value():
+    rows = [_row("act", ["observation", "hypothesis"], {"observation": 0.95, "hypothesis": 0.91, "social": 0.1}, [{"observation": 0.94, "hypothesis": 0.93}] * 3),
+            _row("act", ["question"], {"question": 0.97, "action_taken": 0.92}, [{"question": 0.97, "action_taken": 0.93}] * 3, ok=["status"]),   # one right, one wrong
+            _row("act", ["status"], {"status": 0.5}, [{"status": 0.5}] * 3)]
+    t = measure.table(rows, 0.9)["act"]
+    assert (t["labelled"], t["applied"], t["stored"], t["correct"], t["flips"]) == (3, 2, 4, 3, 0)
+    assert t["precision"] == pytest.approx(3 / 4) and t["confused"] == {"question tagged action_taken": 1}
+
+
+def test_a_repeat_within_the_tolerance_reproduces_a_value():
+    wobble = [_row("signal", ["saturation"], ("saturation", 0.94), [("saturation", 0.96), ("saturation", 0.96), ("saturation", 0.92)])]
+    assert measure.table(wobble, 0.93, tol=0.0)["signal"]["flips"] == 1      # 0.92 is under 0.93
+    assert measure.table(wobble, 0.93, tol=0.02)["signal"]["flips"] == 0     # but within the classifier's wobble
+    real = [_row("signal", ["errors"], ("errors", 0.89), [("errors", 0.90), ("errors", 0.86), ("errors", 0.70)])]
+    assert measure.table(real, 0.85, tol=0.02)["signal"]["flips"] == 1       # 0.70 is a different answer
+
+
 def test_the_floor_rises_until_nothing_flips_and_precision_meets_the_bar():
-    steady = [_row("act", "question", "question", 0.99, [("question", 0.99)] * 3) for _ in range(9)]
+    steady = [_row("signal", ["errors"], ("errors", 0.99), [("errors", 0.99)] * 3) for _ in range(9)]
     assert measure.final_floor(steady) == (0.8, [])
-    wrong_low = steady + [_row("act", "status", "social", 0.86, [("social", 0.86)] * 3), _row("act", "status", "social", 0.84, [("social", 0.84)] * 3)]
+    wrong_low = steady + [_row("signal", ["latency"], ("errors", 0.86), [("errors", 0.86)] * 3), _row("signal", ["latency"], ("errors", 0.84), [("errors", 0.84)] * 3)]
     assert measure.final_floor(wrong_low) == (0.85, [])                       # 9 of 10 at 0.85; 9 of 11 below it
-    flipping = steady + [_row("act", "status", "status", 0.92, [("status", 0.92), ("status", 0.89), ("status", 0.91)])]
+    flipping = steady + [_row("signal", ["change"], ("change", 0.92), [("change", 0.92), ("change", 0.89), ("change", 0.91)])]
     assert measure.final_floor(flipping) == (0.8, [])                         # every repeat still applies it
-    flipping = steady + [_row("act", "status", "status", 0.92, [("status", 0.92), ("status", 0.78), ("status", 0.91)])]
-    assert measure.final_floor(flipping) == (0.93, [])                        # raised until no repeat applies it
-    hopeless = [_row("change_kind", "other", "release", 1.0, [("release", 1.0)] * 3)] * 3
+    flipping = steady + [_row("signal", ["change"], ("change", 0.92), [("change", 0.92), ("change", 0.70), ("change", 0.91)])]
+    assert measure.final_floor(flipping) == (0.93, [])                        # raised until the cached answer no longer applies it
+    hopeless = [_row("change_kind", ["other"], ("release", 1.0), [("release", 1.0)] * 3)] * 3
     floor, below = measure.final_floor(steady + hopeless)
     assert floor == 0.8 and below == ["change_kind"]                          # stored, not offered as a filter

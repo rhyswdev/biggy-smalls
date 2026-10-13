@@ -58,7 +58,7 @@ CREATE TABLE record (
   template_id  TEXT,                   -- logs only: h8 of sourcetype and masked first line
   keep_1_in    INTEGER, sample_per TEXT,   -- logs only, from the served sampling: block; the class name is never stored in a showable column
   tag_key      TEXT,                   -- content hash of what the tagger saw; many records share one
-  tags         TEXT NOT NULL DEFAULT '{}',   -- JSON {facet: value}, after thresholds
+  tags         TEXT NOT NULL DEFAULT '{}',   -- JSON {facet: value}, after thresholds; a list of values for a yes/no facet
   attrs        TEXT NOT NULL DEFAULT '{}',   -- JSON, parsed fields that are safe to show
   native       TEXT NOT NULL,          -- the exact served bytes of the record
   path         TEXT NOT NULL, locator TEXT NOT NULL,
@@ -66,7 +66,8 @@ CREATE TABLE record (
   UNIQUE (handle, valid_from, locator)
 );
 CREATE TABLE point (handle TEXT NOT NULL, series TEXT NOT NULL, t INTEGER NOT NULL, value REAL, interval_s INTEGER NOT NULL,
-                    t_known INTEGER NOT NULL, path TEXT NOT NULL, locator TEXT NOT NULL);
+                    t_known INTEGER NOT NULL, path TEXT NOT NULL, locator TEXT NOT NULL,
+                    tag_key TEXT, tags TEXT NOT NULL DEFAULT '{}');   -- a metric series is tagged like a record
 CREATE TABLE chunk (rid INTEGER NOT NULL REFERENCES record(rid), seq INTEGER NOT NULL, heading TEXT, text TEXT NOT NULL);
 CREATE VIRTUAL TABLE chunk_fts USING fts5(heading, text, content='chunk', tokenize='porter unicode61');
 CREATE TABLE tag_answer (tag_key TEXT NOT NULL, facet TEXT NOT NULL, value TEXT NOT NULL, p REAL NOT NULL, chosen INTEGER NOT NULL);
@@ -359,12 +360,12 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
     started = time.perf_counter()
     bundle, records, points, refs = read(bundle_root)
     report = bundle.report
-    tagged: list[dict] = [{"tag_key": None, "tags": {}}] * len(records)
-    answers: list[tuple] = []
+    untagged = {"tag_key": None, "tags": {}}
+    tagged, tagged_points, answers = [untagged] * len(records), [untagged] * len(points), []
     if tags_enabled() if tags is None else tags:
         from smalls.tools.ingest.tagging import cache as tag_cache
 
-        tagged, answers, stats = tag_cache.apply(records)
+        tagged, tagged_points, answers, stats = tag_cache.apply(records, points)
         report.tags = {"mode": "on", **stats}
     else:
         report.tags = {"mode": "off"}
@@ -379,8 +380,9 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
                          (rid, *(row[c] for c in _RECORD_COLUMNS)))
             conn.executemany("INSERT INTO chunk (rid, seq, heading, text) VALUES (?, ?, ?, ?)",
                              [(rid, seq, heading, text) for seq, (heading, text) in enumerate(r.chunks)])
-        conn.executemany("INSERT INTO point (handle, series, t, value, interval_s, t_known, path, locator) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                         [(p.handle, p.series, p.t, p.value, p.interval_s, p.t_known, p.path, p.locator) for p in points])
+        conn.executemany("INSERT INTO point (handle, series, t, value, interval_s, t_known, path, locator, tag_key, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                         [(p.handle, p.series, p.t, p.value, p.interval_s, p.t_known, p.path, p.locator, t["tag_key"], dumps(t["tags"]))
+                          for p, t in zip(points, tagged_points)])
         conn.executemany("INSERT INTO ref (source, name, native, flags) VALUES (?, ?, ?, ?)",
                          [(x.source, x.name, x.native, dumps(x.flags)) for x in refs])
         conn.executemany("INSERT INTO tag_answer (tag_key, facet, value, p, chosen) VALUES (?, ?, ?, ?, ?)", answers)

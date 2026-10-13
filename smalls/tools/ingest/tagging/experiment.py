@@ -50,16 +50,6 @@ def prompt_texts(path: Path) -> list[tuple[str, str]]:
     return [(str(path), Path(path).read_text(encoding="utf-8"))]
 
 
-def metric_units(points) -> dict[str, Unit]:
-    """A candidate may apply to metric series, which have no unit in the shipped taxonomy: one per series,
-    by its expression."""
-    out = {}
-    for series in sorted({p.series for p in points}):
-        unit = Unit("signal", "metric series", series)
-        out[unit.id] = unit
-    return out
-
-
 def answers_path(spec: Path) -> Path:
     return Path(spec).with_suffix(".answers.jsonl")
 

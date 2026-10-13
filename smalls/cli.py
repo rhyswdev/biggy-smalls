@@ -46,7 +46,8 @@ def cmd_tag(args: argparse.Namespace) -> int:
         from smalls.tools import store
         from smalls.tools.ingest.tagging import measure
 
-        print(measure.skeleton(measure.units_of(store.read(bundle)[1])), end="")
+        _, records, points, _ = store.read(bundle)
+        print(measure.skeleton(measure.units_of(records, points)), end="")
         return 0
     from smalls.tools.ingest.tagging import run
 

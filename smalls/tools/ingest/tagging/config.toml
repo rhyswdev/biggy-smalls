@@ -8,12 +8,16 @@ version = "jev-1.13.0"
 usd_per_million_input_tokens = 0.042
 
 [rules]
-# A tag is applied only when the chosen option is not `other` and its probability is at or above the
-# floor (rule T2). It started at 0.8 and was raised to the value measured on the hand-labelled sample:
-# the lowest floor at which no applied tag fails to reproduce over the repeats and at least 9 in 10
-# applied tags match the label (`smalls tag --report`; the table is in docs/DATA.md). The cache keeps raw
-# probabilities, so moving it needs no new calls. A test holds this value to the measured one.
-floor = 0.93
+# A tag is applied only when its probability is at or above the floor and, for a pick-one question, the
+# chosen option is not `other` (rule T2). The floor started at 0.8 and was raised to the value measured on
+# the hand-labelled sample: the lowest floor at which no stored value fails to reproduce over the repeats
+# and at least 9 in 10 stored values match the label (`smalls tag --report`; the table is in docs/DATA.md).
+# The cache keeps raw probabilities, so moving it needs no new calls. A test holds it to the measured one.
+floor = 0.90
+# A repeat reproduces a stored value when it comes back no more than this far under the floor. The
+# classifier rounds to 0.01 and moves by about that between identical requests, so without it the floor
+# is set by wobble around the threshold and not by answers that change.
+tolerance = 0.02
 
 [run]
 concurrency = 8

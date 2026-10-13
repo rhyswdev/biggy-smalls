@@ -17,8 +17,9 @@ from typing import Callable
 
 from smalls.tools import store
 from smalls.tools.ingest.tagging import cache, measure
-from smalls.tools.ingest.tagging.profiles import classifier_version, config, profiles
+from smalls.tools.ingest.tagging.profiles import Profile, classifier_version, config
 from smalls.tools.ingest.tagging.profiles import floor as profile_floor
+from smalls.tools.ingest.tagging.profiles import tolerance
 from smalls.tools.ingest.tagging.units import Unit, tag_key
 
 Ask = Callable[[dict, dict], dict]      # (state, {question id: question}) -> {classifier, answers, usage, request_id}
@@ -66,20 +67,21 @@ def _ask_all(jobs: list[tuple], ask: Ask, concurrency: int) -> tuple[list[tuple]
     return [(job, got) for job, got, err in results if got is not None], [err for _, _, err in results if err]
 
 
-def _one(got: dict) -> dict:
-    """A one-question request's result, as the cache and the repeats store it."""
-    return {"classifier": got["classifier"], "answer": got["answers"]["q"], "usage": got["usage"], "request_id": got.get("request_id")}
+def _one(got: dict, profile: Profile) -> dict:
+    """One unit's result as the cache and the repeats store it: the choice with every option's
+    probability, or the yes probability of each option."""
+    answer = {"nouls": {name: got["answers"][name]["noul"] for name in profile.options}} if profile.multi else got["answers"]["q"]
+    return {"classifier": got["classifier"], "answer": answer, "usage": got["usage"], "request_id": got.get("request_id")}
 
 
 def fill(units: dict[str, Unit], ask: Ask, path: Path | None = None, concurrency: int = 8) -> dict:
     """Ask the classifier for every unit whose key the cache lacks, and write the cache."""
-    known = profiles()
     entries = cache.read(path)
-    wanted = {tag_key(u, known[u.facet]): u for u in units.values()}
-    jobs = [(key, u.state, {"q": known[u.facet].question()}) for key, u in sorted(wanted.items()) if key not in entries]
+    wanted = {tag_key(u): u for u in units.values()}
+    jobs = [(key, u.state, u.profile.questions()) for key, u in sorted(wanted.items()) if key not in entries]
     done, failures = _ask_all(jobs, ask, concurrency)
     for (key, _, _), got in done:
-        entries[key] = {"tag_key": key, "profile": known[wanted[key].facet].id, **_one(got)}
+        entries[key] = {"tag_key": key, "profile": wanted[key].profile.id, **_one(got, wanted[key].profile)}
     if done:
         cache.write(entries, path)
     return {"units": len(wanted), "cached": len(wanted) - len(jobs), "requests": len(done), "failures": failures,
@@ -90,7 +92,6 @@ def fill(units: dict[str, Unit], ask: Ask, path: Path | None = None, concurrency
 def repeat(units: dict[str, Unit], ask: Ask, n: int, path: Path = measure.REPEATS, labels: Path = measure.LABELS, concurrency: int = 8) -> dict:
     """The cold repeats over the labelled sample: `n` fresh requests per labelled unit, the last with the
     options in a shuffled order. They never touch the cache; they are kept beside the labels."""
-    known = profiles()
     have = measure.load_repeats(path)
     version = classifier_version()
     seen = {(r["unit"], r["profile"], r["repeat"]) for r in have if r.get("pinned") == version}
@@ -99,14 +100,14 @@ def repeat(units: dict[str, Unit], ask: Ask, n: int, path: Path = measure.REPEAT
         unit = units.get(lab["unit"])
         if unit is None:
             continue
-        profile = known[unit.facet]
+        profile = unit.profile
         for i in range(1, n + 1):
             if (unit.id, profile.id, i) not in seen:
                 shuffled = i == n
-                jobs.append(((unit.id, profile.id, i, shuffled), unit.state, {"q": profile.question(f"{unit.id}:{i}" if shuffled else None)}))
+                jobs.append(((unit.id, profile, i, shuffled), unit.state, profile.questions(f"{unit.id}:{i}" if shuffled else None)))
     done, failures = _ask_all(jobs, ask, concurrency)
-    for ((unit_id, profile_id, i, shuffled), _, _), got in done:
-        have.append({"unit": unit_id, "profile": profile_id, "pinned": version, "repeat": i, "shuffled": shuffled, **_one(got)})
+    for ((unit_id, profile, i, shuffled), _, _), got in done:
+        have.append({"unit": unit_id, "profile": profile.id, "pinned": version, "repeat": i, "shuffled": shuffled, **_one(got, profile)})
     if done:
         have.sort(key=lambda r: (r["unit"], r["profile"], r["repeat"]))
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -127,13 +128,14 @@ def usage(path: Path | None = None, repeats: Path = measure.REPEATS) -> dict:
 
 def report(bundle_root: Path | str) -> str:
     """The precision, coverage and stability table and the floor it sets. Offline."""
-    _, records, _, _ = store.read(bundle_root)
-    units = measure.units_of(records)
+    _, records, points, _ = store.read(bundle_root)
+    units = measure.units_of(records, points)
     rows = measure.outcomes(measure.load_labels(), cache.read(), measure.load_repeats(), units)
     floor, hopeless = measure.final_floor(rows)
     configured = profile_floor()
     lines = [f"labelled units: {len(rows)}; answered: {sum(1 for r in rows if r['answer'])}",
-             f"configured floor {configured:.2f}; measured floor {floor if floor is None else format(floor, '.2f')} (search starts at {measure.START:.2f})"
+             f"configured floor {configured:.2f}; measured floor {floor if floor is None else format(floor, '.2f')} "
+             f"(search starts at {measure.START:.2f}; a repeat within {tolerance():.2f} under the floor reproduces a value)"
              + (f"; below the bar at any floor (stored, not offered as a filter): {', '.join(hopeless)}" if hopeless else ""),
              f"at the starting floor {measure.START:.2f}:", measure.render(rows, measure.START),
              f"at the configured floor {configured:.2f}:", measure.render(rows, configured)]
@@ -149,7 +151,7 @@ def experiment(bundle_root: Path | str, spec: Path | str, ask: Ask | None = None
 
     spec = Path(spec)
     _, records, points, _ = store.read(bundle_root)
-    units = {**measure.units_of(records), **exp.metric_units(points)}
+    units = measure.units_of(records, points)
     candidates, version = exp.load(spec)
     print(f"smalls tag: experiment {spec.name} ({version}), candidates: {', '.join(candidates)}")
     got = exp.run(spec, units, ask or sdk_ask(), _ask_all, concurrency=int(config()["run"]["concurrency"]))
@@ -160,8 +162,8 @@ def experiment(bundle_root: Path | str, spec: Path | str, ask: Ask | None = None
 
 
 def main(bundle_root: Path | str, ask: Ask | None = None, repeats: bool = True) -> int:
-    _, records, _, _ = store.read(bundle_root)
-    units = measure.units_of(records)
+    _, records, points, _ = store.read(bundle_root)
+    units = measure.units_of(records, points)
     run_cfg = config()["run"]
     need = len(units) - len({tag_key(u) for u in units.values()} & set(cache.read()))
     print(f"smalls tag: {len(units)} units in the bundle, {need} not in the cache")

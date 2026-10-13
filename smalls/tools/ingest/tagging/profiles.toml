@@ -1,13 +1,19 @@
-# Tag profiles: one closed-set question per facet (taxonomy v1, ruling O5). This file is prompt text: it
-# falls under the bundle-string lint and the held-out rule, and it is frozen with the agent. A request
-# sends one record's own text as `{"kind": ..., "text": ...}` and one of these questions, and nothing else.
+# Tag profiles: the questions the classifier is asked. This file is prompt text: it falls under the
+# bundle-string lint and the held-out rule, and it is frozen with the agent. A request sends one unit's own
+# text as `{"kind": ..., "text": ...}` and the questions of the one profile whose `kinds` list its kind.
 #
-# Options are listed in a fixed order with `other` last. `routine` sits just before `other` because the
-# classifier leans toward the first option, and a signal tagged `routine` is the costly error.
-# Any change to the instructions or the options bumps `version`, which changes every cache key of the profile.
+# A profile is pick-one by default: one question, one option from a closed set, `other` last. `routine`
+# sits just before `other` because the classifier leans toward the first option, and a signal tagged
+# `routine` is the costly error. A profile with `type = "multi"` asks one yes/no question per option
+# (`{meaning}` is replaced by the option's line), for texts that do two things at once; it has no `other`,
+# since no confident yes already stores nothing.
+#
+# `facet` is the tag a profile writes; it defaults to the profile's name. Any change to the instructions
+# or the options bumps `version`, which changes every cache key of the profile.
 
 [signal]
 version = 1
+kinds = ["log line", "alert", "alert definition", "incident ticket"]
 instructions = "`text` is one `kind` from an IT operations estate: a log line whose variable parts are replaced by `<*>`, an alert or the definition of an alert, or an incident ticket. Choose the one category that best describes what it reports. Choose `other` if none fits or you cannot tell."
 
 [signal.options]
@@ -21,9 +27,26 @@ security = "Authentication, authorisation, certificates, access or audit."
 routine = "Normal operation with nothing wrong: a request served, a heartbeat, a job finished."
 other = "None of the above, or cannot tell."
 
-[act]
+# The golden-signal options of `signal` on a metric series, which says what it measures in its query.
+[signal_metric]
+facet = "signal"
 version = 1
-instructions = "`text` is one `kind` written by a person while an IT incident is being worked: a chat message or a note on a ticket. Choose the one category that best describes what the writer is doing. Choose `other` if none fits or you cannot tell."
+kinds = ["metric series"]
+instructions = "`text` is the query of one metric time series from a monitoring system. Choose the one category that best describes what the series measures. Choose `other` if none fits or you cannot tell."
+
+[signal_metric.options]
+latency = "Something is slow: response times, durations, waits, slow queries."
+errors = "A request or operation failed: exceptions, error codes, rejected calls."
+saturation = "A finite resource is full or running out: pools, queues, connections, threads, memory, disk, quotas."
+availability = "Something is down, unreachable, unhealthy, restarting or failing over."
+traffic = "The amount of work arriving changed: request rate, volume, throughput."
+other = "None of the above, or cannot tell."
+
+[act]
+version = 2
+type = "multi"
+kinds = ["chat message", "work note"]
+instructions = "`text` is one `kind` written by a person while an IT incident is being worked: a chat message or a note on a ticket. Does the writer do this: {meaning}"
 
 [act.options]
 observation = "Reports something seen, with or without data: a number, a graph, a log line, a symptom."
@@ -33,10 +56,10 @@ action_proposed = "Suggests, requests or agrees what to do next."
 question = "Asks for information."
 status = "Sums up where things stand for others: impact, progress, handover."
 social = "Greetings, thanks, acknowledgements; nothing about the substance."
-other = "None of the above, or cannot tell."
 
 [change_kind]
 version = 1
+kinds = ["change request", "pipeline run", "commit"]
 instructions = "`text` is one `kind` from the change history of an IT estate: a change request, a run of a build or deploy pipeline, or a source commit. Choose the one category that best describes what kind of change it is. Choose `other` if none fits or you cannot tell."
 
 [change_kind.options]

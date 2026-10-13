@@ -14,35 +14,37 @@ HERE = Path(__file__).resolve().parent
 OTHER = "other"
 # Values code assigns with no request: a bot post is automated by its subtype, not by judgement.
 CODE_VALUES = {"act": ("automated",)}
-# The words a request uses for what a record is. They are prompt text too.
-KINDS = ("log line", "alert", "alert definition", "incident ticket", "chat message", "work note", "change request",
-         "pipeline run", "commit")
 
 
 @dataclass(frozen=True)
 class Profile:
-    facet: str
+    name: str
+    facet: str                   # the tag this profile writes
     version: int
+    multi: bool                  # one yes/no question per option, where pick-one asks a single question
+    kinds: tuple[str, ...]       # the kinds of unit it is asked about
     instructions: str
     options: dict[str, str]      # option -> its one line of meaning, in the order the request lists them
 
     @property
     def id(self) -> str:
-        return f"{self.facet}@{self.version}"
+        return f"{self.name}@{self.version}"
 
-    def question(self, shuffle_seed: str | None = None) -> dict:
-        """The request's one question. `shuffle_seed` reorders the options (the stability check's last
-        repeat); `other` stays last."""
+    def questions(self, shuffle_seed: str | None = None) -> dict[str, dict]:
+        """The request's questions by id: `q` for pick-one, the option's name for each yes/no. A
+        `shuffle_seed` reorders the options (the stability check's last repeat); `other` stays last."""
         names = list(self.options)
         if shuffle_seed is not None:
             head = [n for n in names if n != OTHER]
             random.Random(shuffle_seed).shuffle(head)
             names = head + [n for n in names if n == OTHER]
-        return {"type": "choice", "instructions": self.instructions, "criteria": {n: self.options[n] for n in names}}
+        if self.multi:
+            return {n: {"type": "noul", "instructions": self.instructions.replace("{meaning}", self.options[n])} for n in names}
+        return {"q": {"type": "choice", "instructions": self.instructions, "criteria": {n: self.options[n] for n in names}}}
 
-    def vocabulary(self) -> tuple[str, ...]:
-        """Every value a record's tag on this facet may hold."""
-        return tuple(n for n in self.options if n != OTHER) + CODE_VALUES.get(self.facet, ())
+    def values(self) -> tuple[str, ...]:
+        """The values this profile can store."""
+        return tuple(n for n in self.options if n != OTHER)
 
 
 @cache
@@ -54,12 +56,44 @@ def config() -> dict:
 def profiles() -> dict[str, Profile]:
     raw = tomllib.loads((HERE / "profiles.toml").read_text(encoding="utf-8"))
     out = {}
-    for facet, p in raw.items():
+    for name, p in raw.items():
         options = dict(p["options"])
-        if list(options)[-1] != OTHER:
-            raise ValueError(f"profile {facet}: `other` must be the last option")
-        out[facet] = Profile(facet=facet, version=int(p["version"]), instructions=p["instructions"], options=options)
+        multi = p.get("type", "choice") == "multi"
+        if multi and (OTHER in options or "{meaning}" not in p["instructions"]):
+            raise ValueError(f"profile {name}: a yes/no profile has no `other` and names {{meaning}} in its instructions")
+        if not multi and list(options)[-1] != OTHER:
+            raise ValueError(f"profile {name}: `other` must be the last option")
+        out[name] = Profile(name=name, facet=p.get("facet", name), version=int(p["version"]), multi=multi, kinds=tuple(p["kinds"]),
+                            instructions=p["instructions"], options=options)
+    kinds = [k for p in out.values() for k in p.kinds]
+    if len(kinds) != len(set(kinds)):
+        raise ValueError("a kind of unit belongs to one profile")
     return out
+
+
+def for_kind(kind: str) -> Profile:
+    """The one profile asked about a kind of unit."""
+    return next(p for p in profiles().values() if kind in p.kinds)
+
+
+def kinds() -> tuple[str, ...]:
+    """The words a request uses for what a unit is. They are prompt text too."""
+    return tuple(k for p in profiles().values() for k in p.kinds)
+
+
+def facets() -> dict[str, tuple[str, ...]]:
+    """Every facet with the closed set of values a tag on it may hold: its profiles' options, less
+    `other`, and the values code assigns."""
+    out: dict[str, list[str]] = {}
+    for p in profiles().values():
+        seen = out.setdefault(p.facet, [])
+        seen += [v for v in p.values() if v not in seen]
+    return {facet: tuple(values) + CODE_VALUES.get(facet, ()) for facet, values in out.items()}
+
+
+def multi_facets() -> set[str]:
+    """Facets whose tag is a list of values, because a yes/no profile writes them."""
+    return {p.facet for p in profiles().values() if p.multi}
 
 
 def classifier_version() -> str:
@@ -70,10 +104,14 @@ def floor() -> float:
     return float(config()["rules"]["floor"])
 
 
+def tolerance() -> float:
+    return float(config()["rules"]["tolerance"])
+
+
 def prompt_texts() -> list[tuple[str, str]]:
     """Every piece of text a request carries besides the record itself, as (where, text): what the
     bundle-string lint reads."""
-    out = [("tagging kinds", ", ".join(KINDS))]
+    out = [("tagging kinds", ", ".join(kinds()))]
     for p in profiles().values():
         out.append((f"profile {p.id} instructions", p.instructions))
         out += [(f"profile {p.id} option {name}", f"{name}: {meaning}") for name, meaning in p.options.items()]

@@ -1,9 +1,9 @@
 """The committed tag cache and the rule that turns a cached answer into a tag.
 
-`tags/cache.jsonl` holds one line per tag key: the classifier's raw answer (its choice and the probability
-of every option), the version that answered and the token usage, and no record text. Ingest only reads it.
-A cache miss leaves the record untagged and is counted in the ingest report; nothing here can reach the
-network or the classifier SDK.
+`tags/cache.jsonl` holds one line per tag key: the classifier's raw answer (a choice with the probability
+of every option, or a yes probability per option), the version that answered and the token usage, and no
+record text. Ingest only reads it. A cache miss leaves the record untagged and is counted in the ingest
+report; nothing here can reach the network or the classifier SDK.
 """
 
 from __future__ import annotations
@@ -12,9 +12,9 @@ import json
 import os
 from pathlib import Path
 
-from smalls.tools.ingest.base import Record
-from smalls.tools.ingest.tagging.profiles import OTHER, Profile, floor, profiles
-from smalls.tools.ingest.tagging.units import code_tags, tag_key, unit_for
+from smalls.tools.ingest.base import Point, Record
+from smalls.tools.ingest.tagging.profiles import OTHER, Profile, floor
+from smalls.tools.ingest.tagging.units import Unit, code_tags, tag_key, unit_for, unit_for_point
 
 DEFAULT_CACHE = Path(__file__).resolve().parents[4] / "tags" / "cache.jsonl"
 
@@ -40,49 +40,68 @@ def write(entries: dict[str, dict], path: Path | None = None) -> None:
     tmp.replace(path)
 
 
-def decide(answer: dict, profile: Profile, at: float | None = None) -> str | None:
-    """Rule T2, applied by code: the chosen option is one of the facet's own, is not `other`, and its
-    probability is at or above the floor. Anything else stores nothing."""
+def decide(answer: dict, profile: Profile, at: float | None = None) -> list[str]:
+    """Rule T2, applied by code. Pick-one: the chosen option is one of the profile's own, is not `other`,
+    and its probability is at or above the floor. Yes/no: every option whose yes is at or above the floor.
+    Anything else stores nothing."""
+    at = floor() if at is None else at
+    if profile.multi:
+        yes = answer.get("nouls") or {}
+        return [name for name in profile.options if yes.get(name) is not None and yes[name] >= at]
     choice = answer.get("choice")
     if choice not in profile.options or choice == OTHER:
-        return None
+        return []
     p = (answer.get("probabilities") or {}).get(choice)
-    return choice if p is not None and p >= (floor() if at is None else at) else None
+    return [choice] if p is not None and p >= at else []
 
 
-def apply(records: list[Record], path: Path | None = None) -> tuple[list[dict], list[tuple], dict]:
-    """Tag every record from the cache. Returns, in record order, each record's `{tag_key, tags}`; the
-    `tag_answer` rows; and the counts for the ingest report."""
+def answer_rows(key: str, answer: dict, profile: Profile) -> list[tuple]:
+    """The `tag_answer` rows of one answer: every option with its probability. `chosen` is the classifier's
+    own answer, whatever the floor: its choice, or a yes more likely than not."""
+    if profile.multi:
+        return [(key, profile.facet, name, float(p), int(p >= 0.5)) for name, p in (answer.get("nouls") or {}).items()]
+    return [(key, profile.facet, name, float(p), int(name == answer.get("choice"))) for name, p in (answer.get("probabilities") or {}).items()]
+
+
+def as_tag(values: list[str], profile: Profile):
+    """How a profile's stored values sit in `tags`: a list for a yes/no profile, the one value for pick-one."""
+    return list(values) if profile.multi else values[0]
+
+
+def apply(records: list[Record], points: list[Point] = (), path: Path | None = None) -> tuple[list[dict], list[dict], list[tuple], dict]:
+    """Tag every record and metric point from the cache. Returns each record's and each point's
+    `{tag_key, tags}` in order; the `tag_answer` rows; and the counts for the ingest report."""
     entries = read(path)
-    known = profiles()
-    per_record: list[dict] = []
-    answers: dict[tuple[str, str], list[tuple]] = {}
+    answers: dict[str, list[tuple]] = {}
     stats = {"units": 0, "hits": 0, "misses": 0, "applied": 0, "below_floor": 0, "other": 0, "by_code": 0}
-    seen: dict[str, str | None] = {}
+    seen: dict[str, list[str] | None] = {}
+
+    def tag(unit: Unit | None, tags: dict) -> dict:
+        if unit is None:
+            return {"tag_key": None, "tags": tags}
+        profile = unit.profile
+        key = tag_key(unit, profile)
+        if key not in seen:
+            stats["units"] += 1
+            entry = entries.get(key)
+            if entry is None:
+                stats["misses"] += 1
+                seen[key] = None
+            else:
+                stats["hits"] += 1
+                values = decide(entry["answer"], profile)
+                seen[key] = values
+                stats["applied" if values else "other" if entry["answer"].get("choice") == OTHER else "below_floor"] += 1
+                answers[key] = answer_rows(key, entry["answer"], profile)
+        if seen[key]:
+            tags[unit.facet] = as_tag(seen[key], profile)
+        return {"tag_key": key, "tags": tags}
+
+    per_record = []
     for r in records:
         tags = dict(code_tags(r))
         stats["by_code"] += len(tags)
-        unit = unit_for(r)
-        key = None
-        if unit is not None:
-            profile = known[unit.facet]
-            key = tag_key(unit, profile)
-            if key not in seen:
-                stats["units"] += 1
-                entry = entries.get(key)
-                if entry is None:
-                    stats["misses"] += 1
-                    seen[key] = None
-                else:
-                    stats["hits"] += 1
-                    answer = entry["answer"]
-                    value = decide(answer, profile)
-                    seen[key] = value
-                    stats["applied" if value else "other" if answer.get("choice") == OTHER else "below_floor"] += 1
-                    answers[(key, unit.facet)] = [(key, unit.facet, option, float(p), int(option == answer.get("choice")))
-                                                  for option, p in (answer.get("probabilities") or {}).items()]
-            if seen[key]:
-                tags[unit.facet] = seen[key]
-        per_record.append({"tag_key": key, "tags": tags})
+        per_record.append(tag(unit_for(r), tags))
+    per_point = [tag(unit_for_point(p), {}) for p in points]
     rows = [row for key in sorted(answers) for row in answers[key]]
-    return per_record, rows, stats
+    return per_record, per_point, rows, stats
