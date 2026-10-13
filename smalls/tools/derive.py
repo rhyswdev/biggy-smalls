@@ -149,6 +149,44 @@ def service_status(ctx: ToolContext, service_id: str) -> tuple[str, str]:
     return "active", "no open incident"
 
 
+def metric_queries(ctx: ToolContext) -> list[dict[str, Any]]:
+    """Every served metric query that has a visible point, with what its response says about it: the
+    aggregator and the metric name, the filter the query was scoped by, the tags it was grouped by, and its
+    series. A response file has no clock, so a query is listed only through its visible points (rule 10),
+    and nothing that says how far the data runs is read from it: those fields are withheld."""
+    out = []
+    visible = {}
+    for row in query(ctx, "SELECT handle, series, count(*) AS n, min(t) AS first, max(t) AS last, max(interval_s) AS interval_s, "
+                          "max(tags) AS tags FROM visible_point GROUP BY handle, series ORDER BY handle, series"):
+        visible.setdefault(row["handle"], {})[row["series"]] = row
+    for ref in query(ctx, "SELECT name, native, flags FROM ref ORDER BY name"):
+        try:
+            served = json.loads(render_native(ref["native"], ref["flags"]))
+        except ValueError:
+            continue
+        if not isinstance(served, dict) or "query" not in served or "series" not in served:
+            continue
+        handle = "metric:" + served["query"].replace(" ", "")
+        seen = visible.get(handle)
+        if not seen:
+            continue
+        series = []
+        for s in served["series"]:
+            name = s.get("expression")
+            if name in seen:
+                series.append({"expression": name, "scope": set((s.get("scope") or "").split(",")) - {""}, "tag_set": list(s.get("tag_set") or []),
+                               "points": seen[name]["n"], "first": seen[name]["first"], "last": seen[name]["last"],
+                               "interval_s": seen[name]["interval_s"], "tags": tags_of(seen[name])})
+        if not series:
+            continue
+        grouped = sorted({tag.split(":", 1)[0] for s in series for tag in s["tag_set"]})
+        scope = set.intersection(*(s["scope"] - set(s["tag_set"]) for s in series))
+        first = served["series"][0]
+        out.append({"handle": handle, "query": served["query"], "metric": f"{first.get('aggr')}:{first.get('metric')}", "aggr": first.get("aggr"),
+                    "name": first.get("metric"), "scope": scope, "by": grouped, "series": series, "path": ref["name"]})
+    return out
+
+
 def channels(ctx: ToolContext) -> list[str]:
     """The chat channels that have a visible message. The channel list file has no clock, so a channel
     created after `now` must not be listed from it."""

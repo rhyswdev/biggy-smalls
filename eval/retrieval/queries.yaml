@@ -1,0 +1,31 @@
+# The retrieval check (PLAN section 6.1, layer 2): does `search_knowledge` find the obvious document?
+# Each query is phrased as an incident commander would ask it, not as the document is titled, and names the
+# handle, or handles, of the record a person would expect on top. It is a sanity check, not a benchmark:
+# with a corpus this small any retriever scores well, and the number that matters is how often the obvious
+# document is not first, because the agent is told to read past the top hit.
+#
+# Run it with:  python -m eval.retrieval.run --bundle <bundle> --now <time>
+- query: how do I roll back a bad release that went out through the deploy job?
+  expect: [conf:KB0010233]
+- query: the load balancer certificate is about to expire, what are the steps to replace it?
+  expect: [conf:F5-CERT-ROTATION]
+- query: I cannot see my application logs in the log search tool, how do I get access?
+  expect: [conf:SPLUNK-ACCESS]
+- query: database sessions are sitting idle in a transaction and holding connections, how do I diagnose that?
+  expect: [conf:KB0010418]
+- query: checkout is slow for customers, where should I start looking?
+  expect: [conf:CHECKOUT-LATENCY, conf:KB0009871]
+- query: the payments service says it cannot get a database connection from its pool
+  expect: [conf:PGW-DB-CONN-TIMEOUT]
+- query: what changed in how we call the card payment provider when it is slow or failing?
+  expect: [conf:KB0010502]
+- query: has an expired TLS certificate on the CDN origin taken the storefront down before?
+  expect: [snow:INC0042984]
+- query: a nightly finance report failed because a drive was full
+  expect: [snow:INC0046117]
+- query: product search results were a day old after the indexer job was killed for memory
+  expect: [snow:INC0043978]
+- query: order confirmation emails went out hours late because of a mail queue backlog
+  expect: [snow:INC0043498]
+- query: pods were evicted from cluster nodes for disk pressure
+  expect: [snow:INC0044501]

@@ -50,7 +50,7 @@ class Parts:
     hidden_span: tuple[int, int] | None = None      # first and last known time of the rows the tool's own limit left out
     aggregate: bool = False                 # a count table: `total` is what it counted, and no row is ever cut from it
     what: str = "rows"
-    keep: str = "oldest"                    # which end survives a cut: "oldest" or "newest"
+    keep: str = "oldest"                    # which end survives a cut: "oldest", "newest", or "best" for a ranked result
     narrow: str = "Narrow the window or add a filter."
     empty_hint: str = "Widen the window or drop a filter."
     sampled: bool = False
@@ -80,9 +80,9 @@ def _assemble(parts: Parts, rows: list[Line], total: int, cut: str | None) -> st
 def _cut_range(parts: Parts, dropped: list[Line], hidden: int) -> str:
     """What a truncated result leaves out, in words the model can narrow on."""
     n = len(dropped) + hidden
-    which = "the newest" if parts.keep == "oldest" else "the oldest"
+    which = {"oldest": "the newest", "newest": "the oldest", "best": "the lower-ranked"}[parts.keep]
     times = [row.t_known for row in dropped if row.t_known is not None] + list(parts.hidden_span or ())
-    span = f", from {iso(min(times))} to {iso(max(times))}" if times and (parts.hidden_span or not hidden) else ""
+    span = f", from {iso(min(times))} to {iso(max(times))}" if times and (parts.hidden_span or not hidden) and parts.keep != "best" else ""
     return f"{which} {n}{span}"
 
 
@@ -102,7 +102,7 @@ def render(parts: Parts, *, cap_tokens: int, cap_rows: int | None = None) -> Env
                               "clamped": bool(parts.window and parts.window.clamped)})
 
     def drop_one() -> None:
-        dropped.append(rows.pop() if parts.keep == "oldest" else rows.pop(0))
+        dropped.append(rows.pop(0) if parts.keep == "newest" else rows.pop())
 
     if parts.aggregate:
         text = _assemble(Parts(header=parts.header, footer=parts.footer, window=parts.window, now=parts.now,

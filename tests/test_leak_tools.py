@@ -24,6 +24,7 @@ import pytest
 import golden
 import parity
 import test_leak
+from eval.retrieval import run as retrieval
 from smalls.contracts.envelope import Envelope
 from smalls.tools import inventory, registry, windows
 
@@ -41,6 +42,7 @@ def list_calls(ctx) -> dict[str, list[dict]]:
         "list_alerts": [{"since": WIDEST}, {"since": WIDEST, "state": "active"}],
         "list_changes": [{"since": WIDEST}, {"since": WIDEST, "until": "now"}],
         "read_chat": [{"since": WIDEST}, *({"since": WIDEST, "channel": c} for c in channels(ctx))],
+        "search_knowledge": [{"query": q["query"]} for q in retrieval.load_queries()],     # the retrieval-check queries
         "get_record": [],       # every handle in the store, below
     }
     if ctx.tags:
@@ -158,8 +160,6 @@ NOT_LISTED_YET = {
     ("dynatrace", "entities"): "get_topology, row D7",
     ("pagerduty", "services"): "get_oncall, row D7", ("pagerduty", "escalation_policies"): "get_oncall, row D7",
     ("pagerduty", "oncalls"): "get_oncall, row D7",
-    ("confluence", None): "search_knowledge and the inventory, row D2",
-    ("splunk/saved_searches.json", "saved_searches"): "the inventory lists every saved search, row D2; one that fired is already referenced",
     (None, "status"): "check_status_page, row D3",
 }
 

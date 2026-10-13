@@ -5,7 +5,7 @@ BUNDLE ?= bundles/larkspur-checkout-2026-10-13
 # The replay clock for the targets that need one: the second checkpoint.
 NOW ?= 14:52
 
-.PHONY: data lint ingest tag docker-test leak-test tools-smoke score demo run heldout test schemas
+.PHONY: data lint ingest tag docker-test leak-test tools-smoke retrieval score demo run heldout test schemas
 
 data:
 	$(PY) -m smalls_data.build
@@ -42,6 +42,10 @@ leak-test:
 # Call every built tool once at NOW and print one line per tool. No key, no network.
 tools-smoke:
 	$(UV) run --python 3.12 smalls tools smoke --bundle $(BUNDLE) --now $(NOW)
+
+# The retrieval check for search_knowledge: recall@1 and mean reciprocal rank over a dozen questions. A sanity check.
+retrieval:
+	$(PY) -m eval.retrieval.run --bundle $(BUNDLE) --now $(NOW)
 
 score:
 	@echo "score: stub until step 7 (scorer)"

@@ -83,7 +83,10 @@ def test_a_withheld_field_never_appears_and_members_are_never_shown(checkpoint, 
     for env in (everything(ctx), golden.run("read_chat", ctx, since="-2h"), inventory.build(ctx)):
         text = json.dumps(env.as_dict(), ensure_ascii=False)
         assert not [name for name in WITHHELD if name in text]
-        assert not [m for m in members if m in text] and "member" not in text.lower()
+        assert not [m for m in members if m in text]
+        # The inventory names other sources too, and one of their names may hold the word: its chat line is what counts.
+        chat = text if env.rows else next(line for line in env.text.splitlines() if line.startswith("Chat channels:"))
+        assert "member" not in chat.lower()
 
 
 def test_a_channel_with_no_visible_message_is_not_listed():

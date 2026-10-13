@@ -35,5 +35,5 @@ packages = ["smalls", "smalls_data"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# tests/agent and tests/tools import the helpers that sit in tests/ (parity.py).
-pythonpath = ["tests"]
+# tests/agent and tests/tools import the helpers that sit in tests/ (parity.py), and the eval harness under eval/.
+pythonpath = ["tests", "."]

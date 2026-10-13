@@ -72,4 +72,5 @@ def test_a_scripted_run_over_the_real_registry_writes_a_complete_record(tmp_path
     assert {e["handle"] for e in evidence} == {h for c in calls for h in c["shown"]}
     assert all(e["t_known"] is None or e["t_known"] < run["now"] for e in evidence)
     first_turn = state["messages"][0].content
-    assert "Logs, by sourcetype:" in first_turn and "Chat channels:" in first_turn and run["now"] in first_turn
+    assert "Logs, by sourcetype (" in first_turn and "Chat channels:" in first_turn and run["now"] in first_turn
+    assert "Knowledge documents (" in first_turn and "Metric series (" in first_turn and "Tags, a search aid" in first_turn     # the full inventory

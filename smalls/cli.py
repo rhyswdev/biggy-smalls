@@ -89,7 +89,7 @@ def tool_arguments(spec, pairs: list[str]) -> dict:
 # One plain call per tool for `smalls tools smoke`. A tool that needs a handle or a name takes it from an
 # earlier result, so nothing here names anything in a bundle.
 SMOKE_ARGUMENTS = {"list_alerts": {"since": "-2h"}, "search_logs": {"since": "-30m"}, "list_changes": {"since": "-24h"},
-                   "read_chat": {"since": "-2h"}}
+                   "read_chat": {"since": "-2h"}, "search_knowledge": {"query": "what to check first when requests are slow"}}
 
 
 def smoke(built: dict, ctx) -> int:
