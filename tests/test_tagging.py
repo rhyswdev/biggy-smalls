@@ -316,11 +316,16 @@ def test_the_table_counts_precision_coverage_and_flips():
             _row("signal", "other", "other", 0.99, [("other", 0.99)] * 3),            # right to store nothing
             _row("signal", "change", "change", 0.88, [("change", 0.9), ("change", 0.75), ("routine", 0.6)])]   # flips
     t = measure.table(rows, 0.8)["signal"]
-    assert (t["labelled"], t["applied"], t["correct"], t["flips"], t["repeats"]) == (5, 3, 2, 1, 3)
+    assert (t["labelled"], t["applied"], t["correct"], t["flips"], t["value_flips"], t["repeats"]) == (5, 3, 2, 1, 0, 3)
     assert t["precision"] == pytest.approx(2 / 3) and t["coverage"] == pytest.approx(3 / 5)
     assert t["confused"] == {"latency tagged errors": 1}
     assert measure.table(rows, 0.8)["act"]["precision"] is None
-    assert "| `signal` | 5 | 3 | 2 | 2 of 3 (67%) | 60% | 1 over 3 | latency tagged errors (1) |" in measure.render(rows, 0.8)
+    assert "| `signal` | 5 | 3 | 2 | 2 of 3 (67%) | 60% | 1 over 3 repeats | 0 | latency tagged errors (1) |" in measure.render(rows, 0.8)
+    # A repeat that applies a different value is the flip that matters; a tag only a repeat would apply is not one.
+    swapped = [_row("signal", "errors", "errors", 0.9, [("saturation", 0.9), ("errors", 0.9), ("errors", 0.9)]),
+               _row("signal", "errors", "errors", 0.7, [("errors", 0.9)] * 3)]
+    t = measure.table(swapped, 0.8)["signal"]
+    assert (t["applied"], t["flips"], t["value_flips"]) == (1, 1, 1)
 
 
 def test_the_floor_rises_until_nothing_flips_and_precision_meets_the_bar():

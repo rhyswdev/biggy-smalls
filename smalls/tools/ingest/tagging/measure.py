@@ -4,8 +4,11 @@ it reads the labels, the committed cache and the committed repeats.
 
 - Precision: of the tags applied to labelled units, how many match the hand label. The bar is 9 in 10.
 - Coverage: how many labelled units got a tag at all. Reported, no bar.
-- Stability: a labelled unit flips when its outcome (a value, or nothing) differs between the cached answer
-  and any cold repeat, one of which lists the options in a shuffled order.
+- Stability: an applied tag flips when a cold repeat does not reproduce it, by answering with another
+  value or with too little confidence to apply anything. The applied tag is the cached answer's, since the
+  cache is the only answer ingest ever uses; the last repeat lists the options in a shuffled order. A flip
+  that changes the value (one tag in the cache, a different tag in a repeat) is counted separately: it is
+  the kind a higher floor is meant to remove, where a tag that is merely absent in a repeat is doubt.
 - The floor is the lowest value at or above the starting floor at which no applied tag flips and every
   facet that can reach the bar reaches it.
 """
@@ -19,7 +22,7 @@ from pathlib import Path
 import yaml
 
 from smalls.tools.ingest.tagging.cache import decide
-from smalls.tools.ingest.tagging.profiles import config, profiles
+from smalls.tools.ingest.tagging.profiles import profiles
 from smalls.tools.ingest.tagging.units import Unit, tag_key, unit_for
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -98,15 +101,16 @@ def table(rows: list[dict], floor: float) -> dict[str, dict]:
         applied = [(r, decide(r["answer"], profile, floor)) for r in answered]
         applied = [(r, v) for r, v in applied if v]
         correct = [r for r, v in applied if v == r["label"]]
-        flips = 0
-        for r in answered:
-            seen = {decide(a, profile, floor) for a in [r["answer"], *r["repeats"]]}
-            flips += len(seen) > 1
+        flips = value_flips = 0
+        for r, v in applied:
+            again = [decide(a, profile, floor) for a in r["repeats"]]
+            flips += any(x != v for x in again)
+            value_flips += any(x not in (None, v) for x in again)
         confused = Counter(f"{r['label']} tagged {v}" for r, v in applied if v != r["label"])
         out[facet] = {"labelled": len(mine), "answered": len(answered), "applied": len(applied), "correct": len(correct),
                       "precision": len(correct) / len(applied) if applied else None,
                       "coverage": len(applied) / len(mine) if mine else None,
-                      "repeats": min((len(r["repeats"]) for r in answered), default=0), "flips": flips,
+                      "repeats": min((len(r["repeats"]) for r in answered), default=0), "flips": flips, "value_flips": value_flips,
                       "confused": dict(sorted(confused.items()))}
     return out
 
@@ -131,20 +135,16 @@ def final_floor(rows: list[dict]) -> tuple[float | None, list[str]]:
 def render(rows: list[dict], floor: float) -> str:
     """The table as markdown, as docs/DATA.md records it."""
     t = table(rows, floor)
-    lines = ["| Facet | Labelled | Tagged | Match the label | Precision | Coverage | Flips over repeats | Confused pairs |",
-             "|---|---|---|---|---|---|---|---|"]
+    lines = ["| Facet | Labelled | Tagged | Match the label | Precision | Coverage | Tags a repeat did not reproduce | Of those, changed value | Confused pairs |",
+             "|---|---|---|---|---|---|---|---|---|"]
     for facet, r in t.items():
         precision = "n/a" if r["precision"] is None else f"{r['correct']} of {r['applied']} ({r['precision']:.0%})"
         confused = "; ".join(f"{k} ({v})" for k, v in r["confused"].items()) or "none"
         coverage = "n/a" if r["coverage"] is None else f"{r['coverage']:.0%}"
         lines.append(f"| `{facet}` | {r['labelled']} | {r['applied']} | {r['correct']} | {precision} | {coverage} | "
-                     f"{r['flips']} over {r['repeats']} | {confused} |")
-    total = {k: sum(r[k] for r in t.values()) for k in ("labelled", "applied", "correct", "flips")}
+                     f"{r['flips']} over {r['repeats']} repeats | {r['value_flips']} | {confused} |")
+    total = {k: sum(r[k] for r in t.values()) for k in ("labelled", "applied", "correct", "flips", "value_flips")}
     precision = f"{total['correct']} of {total['applied']} ({total['correct'] / total['applied']:.0%})" if total["applied"] else "n/a"
     coverage = f"{total['applied'] / total['labelled']:.0%}" if total["labelled"] else "n/a"
-    lines.append(f"| all | {total['labelled']} | {total['applied']} | {total['correct']} | {precision} | {coverage} | {total['flips']} | |")
+    lines.append(f"| all | {total['labelled']} | {total['applied']} | {total['correct']} | {precision} | {coverage} | {total['flips']} | {total['value_flips']} | |")
     return "\n".join(lines)
-
-
-def starting_floor() -> float:
-    return float(config()["rules"]["floor"])

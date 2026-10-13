@@ -18,6 +18,7 @@ from typing import Callable
 from smalls.tools import store
 from smalls.tools.ingest.tagging import cache, measure
 from smalls.tools.ingest.tagging.profiles import classifier_version, config, profiles
+from smalls.tools.ingest.tagging.profiles import floor as profile_floor
 from smalls.tools.ingest.tagging.units import Unit, tag_key
 
 Ask = Callable[[dict, dict], dict]
@@ -119,11 +120,12 @@ def report(bundle_root: Path | str) -> str:
     units = measure.units_of(records)
     rows = measure.outcomes(measure.load_labels(), cache.read(), measure.load_repeats(), units)
     floor, hopeless = measure.final_floor(rows)
-    configured = measure.starting_floor()
+    configured = profile_floor()
     lines = [f"labelled units: {len(rows)}; answered: {sum(1 for r in rows if r['answer'])}",
-             f"configured floor {configured:.2f}; measured floor {floor if floor is None else format(floor, '.2f')}"
+             f"configured floor {configured:.2f}; measured floor {floor if floor is None else format(floor, '.2f')} (search starts at {measure.START:.2f})"
              + (f"; below the bar at any floor (stored, not offered as a filter): {', '.join(hopeless)}" if hopeless else ""),
-             measure.render(rows, configured)]
+             f"at the starting floor {measure.START:.2f}:", measure.render(rows, measure.START),
+             f"at the configured floor {configured:.2f}:", measure.render(rows, configured)]
     u = usage()
     lines.append(f"classifier requests on record: {u['requests']} ({u['input_tokens']} input tokens, {u['output_tokens']} output tokens, ${u['usd']:.4f} at list price)")
     return "\n".join(lines)
