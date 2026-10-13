@@ -1,0 +1,300 @@
+# Hand labels for one question: should `signal` also be asked as yes/no per option (open point O6)?
+# 28 more units, sharing none with eval/tags/labels.yaml or facets-1.labels.yaml, and none of the 34 largest
+# log templates, whose yes/no answers we had already looked at. Within each kind, the next units by unit id.
+# Labelled by hand from the text and the option lines, and committed before they were scored.
+#
+# `labels` is every option that applies, the main one first; `also_acceptable` lists readings we would not
+# count as wrong; a stored value outside both is an error.
+#
+# Six units carry `seen`: we had come across one of their answers while reading earlier results. They are
+# scored, and the result is also given without them.
+units:
+- unit: 381288c6f90c
+  kind: log line
+  text: 'Normal SuccessfulCreate CronJob/search-indexer: Created job <*>'
+  labels:
+    signal_any:
+    - change
+  also_acceptable:
+    signal_any:
+    - routine
+- unit: 39d8790e0e12
+  kind: log line
+  text: <*> WARN  [<*> housekeeper] c.z.h.pool.ProxyLeakTask - Connection leak detection triggered for org.postgresql.jdbc.PgConnection@<*> on thread <*>, stack trace follows
+  labels:
+    signal_any:
+    - saturation
+  also_acceptable:
+    signal_any:
+    - errors
+    - latency
+- unit: 3bcefa97d3dd
+  kind: log line
+  text: '<*> UTC [<*>] datadog@postgres LOG:  connection authorized: user=datadog database=postgres application_name=datadog-agent'
+  labels:
+    signal_any:
+    - routine
+  also_acceptable:
+    signal_any:
+    - security
+  seen: the yes/no security answer under the reworded option
+- unit: 4d02f5af0709
+  kind: log line
+  text: <*> INFO  [<*>] c.l.p.s.PaymentService - authorize ok txn=<*> amount=<*> EUR psp_ms=<*> attempts=<*>
+  labels:
+    signal_any:
+    - routine
+  also_acceptable: {}
+  seen: the yes/no security answer under the first wording
+- unit: 5a979afdffb7
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /.env 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  labels:
+    signal_any:
+    - errors
+  also_acceptable:
+    signal_any:
+    - security
+  seen: the pick-one answer under the reworded option
+- unit: 608eb97614ff
+  kind: log line
+  text: <*> INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+  labels:
+    signal_any:
+    - change
+  also_acceptable:
+    signal_any:
+    - availability
+  seen: the pick-one answer
+- unit: 66a13b257ad8
+  kind: log line
+  text: 'Normal Started Pod/<*>: Started container checkout-api'
+  labels:
+    signal_any:
+    - change
+  also_acceptable:
+    signal_any:
+    - routine
+- unit: 681b31e4c1d1
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /xmlrpc.php 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  labels:
+    signal_any:
+    - errors
+  also_acceptable:
+    signal_any:
+    - security
+- unit: 791657480f4d
+  kind: log line
+  text: <*> INFO  [main] c.z.h.pool.HikariPool - <*> - Added connection org.postgresql.jdbc.PgConnection@<*>
+  labels:
+    signal_any:
+    - routine
+  also_acceptable:
+    signal_any:
+    - change
+- unit: 7d736b1a1d4e
+  kind: log line
+  text: 'Normal SuccessfulRescale HorizontalPodAutoscaler/storefront-web: New size: <*>; reason: All metrics below target'
+  labels:
+    signal_any:
+    - change
+  also_acceptable:
+    signal_any:
+    - routine
+    - traffic
+- unit: 828a9f7d911d
+  kind: log line
+  text: INFO com.larkspur.checkout.CheckoutApiApplication - Starting CheckoutApiApplication <*> using Java <*> with PID <*> (/app/checkout-api.jar started by app in /app)
+  labels:
+    signal_any:
+    - change
+  also_acceptable:
+    signal_any:
+    - routine
+- unit: 856f2da70bd6
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /wp-login.php 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  labels:
+    signal_any:
+    - errors
+  also_acceptable:
+    signal_any:
+    - security
+  seen: the pick-one answer under the reworded option
+- unit: 319fa7f3a6e9
+  kind: alert definition
+  text: 'F5 pool member down
+
+    A member of the payments gateway pool failed its health monitor.'
+  labels:
+    signal_any:
+    - availability
+  also_acceptable:
+    signal_any:
+    - errors
+- unit: 4bc24eabbc0b
+  kind: alert definition
+  text: '[Synthetics] checkout flow
+
+    {{#is_alert}}Synthetic checkout flow is failing from {{locations}}.{{/is_alert}}
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    {{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}'
+  labels:
+    signal_any:
+    - availability
+  also_acceptable:
+    signal_any:
+    - errors
+- unit: 5560892985a8
+  kind: alert definition
+  text: 'Payment authorization success rate low
+
+    {{#is_alert}}Payment authorization success rate is {{value}}% over the last 5 minutes (threshold {{threshold}}%).{{/is_alert}}
+
+    {{#is_warning}}Payment authorization success rate is {{value}}%.{{/is_warning}}
+
+    {{#is_recovery}}Payment authorization success rate back above threshold.{{/is_recovery}}
+
+    @slack-payments'
+  labels:
+    signal_any:
+    - errors
+  also_acceptable:
+    signal_any:
+    - availability
+- unit: 5e40bcfee484
+  kind: alert definition
+  text: 'search-indexer cron job failed
+
+    {{#is_alert}}search-indexer cron job failed (BackoffLimitExceeded). Product search results stop updating until the next successful run.{{/is_alert}}
+
+    {{#is_alert}}@pagerduty-Platform{{/is_alert}}'
+  labels:
+    signal_any:
+    - errors
+  also_acceptable:
+    signal_any:
+    - availability
+- unit: 69f4031b0735
+  kind: alert definition
+  text: '[Synthetics] marketing site homepage
+
+    {{#is_alert}}Marketing homepage check failing from {{locations}}.{{/is_alert}}
+
+    {{#is_recovery}}Marketing homepage check passing again.{{/is_recovery}}
+
+    @slack-web-platform'
+  labels:
+    signal_any:
+    - availability
+  also_acceptable:
+    signal_any:
+    - errors
+- unit: 54c21201f3ef
+  kind: alert
+  text: Application Component down
+  labels:
+    signal_any:
+    - availability
+  also_acceptable: {}
+- unit: 6720ea7f2c24
+  kind: alert
+  text: F5 pool member down
+  labels:
+    signal_any:
+    - availability
+  also_acceptable: {}
+- unit: 6ad16120abdd
+  kind: alert
+  text: CPU saturation on node-east-14
+  labels:
+    signal_any:
+    - saturation
+  also_acceptable: {}
+- unit: 6da931760c94
+  kind: alert
+  text: 'Availability: synthetic monitor failing'
+  labels:
+    signal_any:
+    - availability
+  also_acceptable:
+    signal_any:
+    - errors
+- unit: 6f9b32ee05f0
+  kind: alert
+  text: Volume almost full
+  labels:
+    signal_any:
+    - saturation
+  also_acceptable: {}
+- unit: 58c2ce21ca5c
+  kind: incident ticket
+  text: 'Payment spinner never finishes at checkout
+
+    Customer called: pressed pay on order 7794287, the spinner ran for a long time and then the page said something went wrong. No confirmation email. Wants to know if the order went through.'
+  labels:
+    signal_any:
+    - errors
+    - latency
+  also_acceptable:
+    signal_any:
+    - availability
+- unit: 5958886083f4
+  kind: incident ticket
+  text: 'Customer charged twice at checkout
+
+    Customer called to say they were charged twice: their first attempt, order 7828258, showed an error, they paid again and can see both charges on their bank app. They want one of them refunded today. Agent logged the case and told the customer a payments team will look at it.'
+  labels:
+    signal_any:
+    - errors
+  also_acceptable: {}
+- unit: 5d267ec2d45a
+  kind: incident ticket
+  text: 'Nightly finance report failed on win-rpt-06, C: drive full
+
+    The nightly finance report on win-rpt-06 failed at 02:10 ET with a disk write error. The C: drive has no free space left.'
+  labels:
+    signal_any:
+    - saturation
+    - errors
+  also_acceptable: {}
+  seen: the pick-one answer under the reworded option
+- unit: 6c34199a6d33
+  kind: incident ticket
+  text: 'Checkout spinner, no confirmation shown
+
+    Customer typed in chat that the spinner kept going after they tapped pay on order 7828211 and no confirmation appeared. They refreshed the page and were not sure whether the purchase had gone through. Agent said the team is looking into checkout and asked them to wait for a follow-up.'
+  labels:
+    signal_any:
+    - latency
+  also_acceptable:
+    signal_any:
+    - errors
+    - availability
+- unit: 745e69723cbc
+  kind: incident ticket
+  text: 'Checkout spinner, payment never completes
+
+    Customer emailed to say the payment spinner kept going for several minutes after they pressed pay on order 7829438. They were not sure whether the payment went through and did not get a confirmation. Agent asked for a screenshot and replied that the case is open.'
+  labels:
+    signal_any:
+    - latency
+  also_acceptable:
+    signal_any:
+    - errors
+    - availability
+- unit: 78f4d2153844
+  kind: incident ticket
+  text: 'Address validation fell back to local rules after provider HTTP 429
+
+    Checkout address validation calls to the external provider have returned HTTP 429 since 14:50 ET, and the Checkout API has switched to local rules. Orders are completing, but address suggestions and standardization are not being applied.'
+  labels:
+    signal_any:
+    - errors
+  also_acceptable:
+    signal_any:
+    - saturation
+    - availability
