@@ -114,8 +114,9 @@ def test_nothing_under_smalls_imports_the_generator():
 
 
 def test_no_tool_reads_the_base_tables():
-    """Tools read the `visible` views. Only the store and the adapters may name `record`, `point` or `chunk`."""
-    base_table = re.compile(r"\b(?:FROM|JOIN|INTO|UPDATE)\s+(?:record|point|chunk)\b", re.I)
+    """Tools read the `visible` views. Only the store and the adapters may name `record`, `point` or `chunk`,
+    and only the store may name `clock`: no tool sets the time it is asked about."""
+    base_table = re.compile(r"\b(?:FROM|JOIN|INTO|UPDATE)\s+(?:record|point|chunk|clock)\b", re.I)
     exempt = {ROOT / "smalls/tools/store.py"}
     offenders = [p.relative_to(ROOT) for p in _python_files("smalls") if p not in exempt and base_table.search(p.read_text())]
     assert not offenders

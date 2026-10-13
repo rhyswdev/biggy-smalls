@@ -555,7 +555,7 @@ Live runs spend money. None starts without our go-ahead, and the matrix is sized
 
 | # | Build | Accepted when |
 |---|---|---|
-| B1 | Tool plumbing: `call`, the renderer and caps, windows, the error module, `derive.py`, the golden test harness | Each error case of K8 has a test; a result over its cap fails `call` |
+| B1 | **Done on 2026-10-13.** Tool plumbing: `call`, the renderer and caps, windows, the error module, `derive.py`, the golden test harness | Each error case of K8 has a test; a result over its cap fails `call`. Evidence: `tests/tools/test_plumbing.py`, 37 tests, with one `test_k8_...` test per error case and `test_a_result_over_its_cap_fails_call`; `make test` gave 240 passed and 1 skipped |
 | B2 | `search_logs`, rows and stats, with its tag input | Its row in 6.4. The agent runs over the real registry and writes a record: the done condition of agent-design row 1 |
 | B3 | `list_alerts`, then `list_changes`, with their tag inputs | Their rows in 6.4 |
 | B4 | `read_chat`, `get_record`, `smalls tools call` | Their rows in 6.4 |
@@ -768,3 +768,10 @@ Calls beyond sections 6.5 and 7.3, recorded in the row that made them. Each is o
 | A2 | The model-name test reads `smalls/`, `tests/`, `docs/`, `smalls_data/`, the Python files directly under `eval/` and the root build files. It does not walk `eval/` or `bundles/`. | The held-out rule: a test in this track must not list the held-out folders. |
 | A2 | `tests/test_cli.py` no longer asserts that `compose.yaml` has no `environment:` block. It asserts that the block names only `SMALLS_` settings, names no key, and sets one value, `SMALLS_RUNNER=compose`. | Section 10.2 adds the block. The test's purpose, that no secret is written into compose, is kept. |
 | A2 | Profiles are `scripted`, `anthropic` (the default investigator), `anthropic-small` (claim support) and `openai` (the cross-provider verifier, whose client is not installed yet). | Section 7.2 names the keys, not the profiles. |
+| B1 | A tool returns its parts (`smalls/tools/parts.py`), and `call` renders them, so the renderer is not something a tool can forget. A tool may also raise a refusal that carries a finished error. | Section 5 wants one renderer and one calling path. Rendering inside `call` is where the two meet. |
+| B1 | The footer of a truncated result has one form: `[showing <n> of <total> <what>: the newest <k>, from <t> to <t> not shown. <how to narrow>]`, with "the oldest" for a tool that keeps the newest. A result that was not cut ends its rows with `[<total> <what>]`. The native query echo is `[<label>] <query>`, last. | Rule 4 says what the footer holds and not how it reads. |
+| B1 | One row that is larger than its tool's cap cannot be cut to fit, so `call` fails it as a fault in the tool. | The renderer drops whole rows. A row that large is a tool that should have shortened it and said so (G7). |
+| B1 | An error envelope names its case in `meta.error`, and a time window that cannot be made is an argument error that names `since` or `until`. | The tools node has to tell a call that never ran, which is not charged (J5), from one that ran and failed. |
+| B1 | No error sentence holds an example time. | The leak test reads every time in a tool's output, and an example date is a time. |
+| B1 | The test that keeps tools off the base tables also names `clock` now. This settles item 3 of section 9. | No tool sets the time it is asked about. |
+| B1 | The golden harness builds one store per checkpoint and tag setting. | The clock is one row in the store, so two contexts on one store would share it. |

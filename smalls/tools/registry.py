@@ -19,7 +19,7 @@ from pydantic import BaseModel, ValidationError
 
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.report import Rationale, strip_keys
-from smalls.tools import descriptions, errors, schemas
+from smalls.tools import descriptions, errors, parts, schemas, windows
 
 if TYPE_CHECKING:
     from smalls.tools.store import Store
@@ -42,7 +42,7 @@ class ToolSpec:
     name: str
     kind: Kind
     args: type[BaseModel]           # the source of the model-facing schema
-    fn: Callable[[BaseModel, ToolContext], Envelope]
+    fn: Callable[[BaseModel, ToolContext], Any]     # returns the tool's parts, or a finished envelope; `call` renders
     cap_tokens: int                 # PLAN's token figure, or 6,000 where PLAN gives only a row count
     cap_rows: int | None = None     # PLAN's row, message, edge or cell limit
     mock: bool = False              # true for every action tool in v1
@@ -84,15 +84,26 @@ def registry(*, tags: bool) -> dict[str, ToolSpec]:
 
 def call(spec: ToolSpec, raw_args: dict[str, Any], ctx: ToolContext) -> Envelope:
     """The one path every caller uses: the agent, the sweep, the CLI and the leak test. It validates the
-    arguments, runs the tool and turns any exception into the error text of ruling A2, so it never raises."""
+    arguments, runs the tool, renders its parts into an envelope, checks the result against the tool's
+    caps and turns any exception into the error text of ruling A2. It never raises."""
     try:
         args = spec.args.model_validate(raw_args or {})
     except ValidationError as problem:
         return errors.bad_arguments(spec.name, problem)
     try:
-        return spec.fn(args, ctx)
+        out = spec.fn(args, ctx)
+        env = out if isinstance(out, Envelope) else parts.render(out, cap_tokens=spec.cap_tokens, cap_rows=spec.cap_rows)
+    except errors.Refusal as refusal:       # a tool's own answer to a call it cannot serve
+        return refusal.envelope
+    except windows.WindowError as problem:
+        return errors.bad_arguments(spec.name, str(problem))
     except Exception as exc:
         return errors.internal(spec.name, exc)
+    if parts.tokens(env.text) > spec.cap_tokens:
+        return errors.over_cap(spec.name, f"{parts.tokens(env.text)} tokens", f"{spec.cap_tokens}")
+    if spec.cap_rows is not None and len(env.rows) > spec.cap_rows:
+        return errors.over_cap(spec.name, f"{len(env.rows)} rows", f"{spec.cap_rows}")
+    return env
 
 
 # -- the model-facing schema -------------------------------------------------------------------------------
