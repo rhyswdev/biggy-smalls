@@ -16,6 +16,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from smalls.agent.events import Event
+from smalls.agent.gate import NOTE_KEY
 
 MARK = {"approved": "[green]✓[/]", "rejected": "[red]✗[/]", "deferred": "[yellow]…[/]"}
 COLOUR = {"ok": "green", "error": "red", "rejected": "red", "deferred": "yellow", "repeat": "dim"}
@@ -82,12 +83,16 @@ class Renderer:
             self.c.print(f"  [bold]board[/] {esc(d['id'])} {esc(str(d.get('role')))} {d['status']} {d['confidence']:.2f}: {esc(d['statement'])}")
         elif t == "board_status":
             self.c.print(f"  [dim]{esc(d['line'])}[/]")
+        elif t == "stuck":
+            self.c.print(f"  [yellow]stuck[/] the last {d['empty_reads']} reads returned nothing; a note may help")
+        elif t == "cache_ratio_low":
+            self.c.print(f"  [yellow]cache[/] only {d['ratio']:.0%} of the input was read from cache (floor {d['floor']:.0%}): cost is climbing")
         elif t == "validation":
             self.c.print(f"  [{'green' if d.get('ok') else 'red'}]validator[/] {esc(json.dumps(d, ensure_ascii=False))}")
         elif t == "report":
             self._report(d["report"], d.get("status"))
         elif t == "run_paused":
-            self.c.rule("paused at a gate")
+            self.c.rule("paused" + (f": {esc(d['reason'])}" if d.get("reason") else " at a gate"))
             self.c.print(f"resume with: {esc(d['resume'])}")
         elif t == "run_finished":
             self.c.rule(esc(str(d["status"])))
@@ -131,7 +136,10 @@ def interactive_decider(console: Console | None = None):
             c.print(Panel(f"[bold]{esc(card['tool'])}[/] ({esc(card['kind'])})\n{esc(json.dumps(card['args'], indent=1, ensure_ascii=False))}\n\n"
                           f"tests: {esc(str(rationale.get('tests', '(none given)')))}\nexpects: {esc(str(rationale.get('expect', '(none given)')))}",
                           title="approve this call?"))
-            answer = Prompt.ask(esc("[a]pprove, [r]eject or [d]efer"), choices=["a", "r", "d"], default="a", console=c)
+            answer = Prompt.ask(esc("[a]pprove, [r]eject, [d]efer, or add a [n]ote first"), choices=["a", "r", "d", "n"], default="a", console=c)
+            if answer == "n":       # a note does not answer the card: it rides along, and the agent sees it next round
+                out[NOTE_KEY] = Prompt.ask("note for the agent", console=c)
+                answer = Prompt.ask(esc("[a]pprove, [r]eject or [d]efer"), choices=["a", "r", "d"], default="a", console=c)
             if answer == "a":
                 out[card["call_id"]] = {"approve": True}
             elif answer == "d":

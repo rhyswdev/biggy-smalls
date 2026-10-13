@@ -34,12 +34,12 @@ from langgraph.types import RetryPolicy, interrupt
 
 from smalls.agent import board, gate, prompts, validator
 from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, toolset
-from smalls.agent.models import provider_tools, retryable
+from smalls.agent.models import as_model_call_error, provider_tools, retryable
 from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext, merge_hypotheses
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.handles import ic_note_handle
 from smalls.contracts.report import Rationale, Report
-from smalls.tools import errors, registry
+from smalls.tools import errors, registry, windows
 from smalls.tools.registry import ToolContext, ToolSpec
 
 Inventory = Callable[[ToolContext], Envelope]
@@ -53,6 +53,11 @@ NOTE_ROW = "{handle}  incident commander, {at}: {text}"
 SWEEP_HEAD = "Opening sweep, run by the harness before your first turn. Each block is one tool call and its result."
 SWEEP_BLOCK = "== {tool} {args}\n{text}"
 SWEEP_RATIONALE = {"tests": "the opening sweep", "expect": "what is alerting, what changed and what people are saying"}
+REPEAT = ("Already run in round {round} with the same arguments (call {call_id}): its result is above and would be the same now. "
+          "Nothing was run and nothing was charged.")
+STUCK = "[stuck: the last {n} reads returned nothing. What exists, from the inventory: {inventory}]"
+REFUSED = "the model declined to continue"
+OUT_OF_TOKENS = "the model ran out of output tokens before it finished a turn"
 NO_VERDICT = "These alert streams from the opening sweep have no verdict: {handles}. Give each one this_incident, other_incident or noise."
 
 
@@ -92,10 +97,13 @@ def partial_report(state: dict[str, Any], why: str) -> dict[str, Any]:
 
 
 def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory: Inventory, *, provider: str = "scripted",
-                bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None, strict: bool = True):
+                bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None, strict: bool = True,
+                fallback: tuple[BaseChatModel, str, dict[str, Any]] | None = None):
     tools = toolset(read_tools)
     definitions = [registry.definition(spec, texts) for spec in tools.values()]
     bound = model.bind_tools(provider_tools(definitions, provider, strict=strict), **(bind_kwargs or {}))
+    # A fallback profile, used once when the model declines to continue: (model, provider, bind kwargs).
+    second = fallback[0].bind_tools(provider_tools(definitions, fallback[1], strict=strict), **fallback[2]) if fallback else None
     system = prompts.load("investigator")
 
     def orient(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
@@ -130,19 +138,38 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         ctx = runtime.context
         writer = get_stream_writer()
         started = time.perf_counter()
-        ai = bound.invoke([SystemMessage(system), *state["messages"]])
+        try:
+            ai = bound.invoke([SystemMessage(system), *state["messages"]])
+        except Exception as error:      # recorded without any key value it may quote; the retry policy still sees its kind
+            raise as_model_call_error(error) from None
         usage = ai.usage_metadata or {}
         row = {"node": "agent", "round": rounds(state) + 1, "attempt": getattr(runtime.execution_info, "node_attempt", 1),
                "latency_ms": round((time.perf_counter() - started) * 1000, 1), "usage": usage,
                "stop_reason": ai.response_metadata.get("stop_reason"), "model": ai.response_metadata.get("model_name")}
         writer({"type": "model_call", **row})
+        rows = [row]
+        fell_back = state.get("fallback_used", False)
+        if row["stop_reason"] == "refusal" and second is not None and not fell_back:
+            # The provider declined. Its own fallback, when the request carries one, has already been tried,
+            # so the turn is asked once more of the fallback profile. Once per run.
+            started, fell_back = time.perf_counter(), True
+            ai = second.invoke([SystemMessage(system), *state["messages"]])
+            usage = ai.usage_metadata or {}
+            row = {**row, "node": "fallback", "latency_ms": round((time.perf_counter() - started) * 1000, 1), "usage": usage,
+                   "stop_reason": ai.response_metadata.get("stop_reason"), "model": ai.response_metadata.get("model_name")}
+            writer({"type": "model_call", **row})
+            rows.append(row)
         # An input sent as null means "left out": a provider whose strict mode wants every property present sends it so.
         proposed: list[Call] = [{"call_id": c["id"], "tool": c["name"], "by": "agent", "invalid": None,
                                  "args": {k: v for k, v in c["args"].items() if k != "rationale" and v is not None},
                                  "rationale": c["args"].get("rationale")} for c in ai.tool_calls]
         proposed += [{"call_id": c["id"], "tool": c.get("name") or "unknown", "by": "agent", "args": {}, "rationale": None,
                       "invalid": str(c.get("error") or "invalid JSON")} for c in ai.invalid_tool_calls]
-        update: dict[str, Any] = {"messages": [ai], "usage": [row], "proposed": proposed}
+        update: dict[str, Any] = {"messages": [ai], "usage": rows, "proposed": proposed, "fallback_used": fell_back}
+        if row["stop_reason"] == "refusal":
+            update.update(stop_reason=REFUSED, proposed=[])
+        elif row["stop_reason"] == "max_tokens" and not ai.tool_calls:
+            update.update(stop_reason=OUT_OF_TOKENS, proposed=[])
         # The context guard is measured, not estimated: this call's real input plus the room the next
         # answer needs, against the model's input limit.
         if ctx.max_input_tokens and (usage.get("input_tokens") or 0) + ctx.max_tokens >= ctx.context_fraction * ctx.max_input_tokens:
@@ -201,6 +228,11 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             d = gate.decision(card, verdict, who, via, handle or reason, reason)
             decisions[card["call_id"]] = d
             new.append(d)
+        said = (answers or {}).get(gate.NOTE_KEY)
+        if said:        # a note the commander added at the card: it does not block, and the model sees it next round
+            at = decided_at.isoformat(timespec="milliseconds")
+            notes.append({"handle": ic_note_handle(runtime.context.run_id, at, said), "text": said, "submitted_at": at,
+                          "by": "incident commander", "call_id": None})
         return {"decisions": decisions, "gate_log": new, "pending": None, "ic_notes": notes,
                 "gate_waits": [{"round": pend["round"], "asked_at": pend["asked_at"], "decided_at": decided_at.isoformat(),
                                 "wait_ms": wait_ms, "calls": len(new)}]}
@@ -232,7 +264,8 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                                   "identity": None}
             started = time.perf_counter()
             if call.get("invalid"):
-                env = errors.error(UNPARSEABLE.format(tool=call["tool"], error=call["invalid"]))
+                env = errors.error(UNPARSEABLE.format(tool=call["tool"], error=call["invalid"]), "arguments")
+                entry["status"] = "error"
             elif d["decision"] == "rejected":
                 text = gate.REJECTED.format(who=d["by"]["who"], reason=(d.get("reason_text") or d.get("reason") or "").rstrip("."))
                 note = notes.get(call["call_id"])
@@ -266,12 +299,19 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                             update.setdefault("hypotheses", {}).update(result["merged"])
                             current = merge_hypotheses(current, result["merged"])
                 else:
-                    env = _run(spec, call, ctx)
-                    if entry["by"] == "agent" and env.meta.get("error") != "arguments":     # a call counts when it runs; the sweep is free (J5)
-                        used += 1
-                    if env.status == "ok" and ctx.evidence:
-                        ctx.evidence(call["call_id"], env.rows)
-                entry.update(status=env.status, shown=list(env.shown), referenced=list(env.referenced),
+                    entry["identity"] = _identity(spec, call, ctx)
+                    earlier = next((e for e in [*state.get("ledger", []), *ledger] if entry["identity"] and e.get("identity") == entry["identity"]
+                                    and e["status"] == "ok" and e["round"] >= state.get("restart_round", 0)), None)
+                    if earlier is not None:     # a repeated identical call returns a pointer and costs nothing (J4)
+                        env = Envelope(REPEAT.format(round=earlier["round"], call_id=earlier["call_id"]), meta={"repeat": True})
+                        entry["repeat_of"] = earlier["call_id"]
+                    else:
+                        env = _run(spec, call, ctx)
+                        if entry["by"] == "agent" and env.meta.get("error") != "arguments":     # a call counts when it runs; the sweep is free (J5)
+                            used += 1
+                        if env.status == "ok" and ctx.evidence:
+                            ctx.evidence(call["call_id"], env.rows)
+                entry.update(status="repeat" if env.meta.get("repeat") else env.status, shown=list(env.shown), referenced=list(env.referenced),
                              t_known={r.handle: r.t_known for r in env.rows}, native_query=env.native_query,
                              window=list(env.window) if env.window else None, used_tag_input=bool(env.meta.get("tag")),
                              empty=bool(env.meta.get("empty")))
@@ -296,6 +336,18 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         if blocks:
             messages.append(HumanMessage("\n\n".join([SWEEP_HEAD, *blocks])))
             update["swept"] = swept
+        all_notes = state.get("ic_notes", [])
+        fresh = [n for n in all_notes[state.get("notes_shown", 0):] if not n.get("call_id")]      # a rejection's reason is already in its result
+        if accepted is None and messages and fresh:     # a note steers; it reaches the model as a citable row
+            rows = "\n".join(NOTE_ROW.format(handle=n["handle"], at=n["submitted_at"], text=n["text"]) for n in fresh)
+            messages[-1].content = f"{messages[-1].content}\n{rows}"
+            update["notes_shown"] = len(all_notes)
+        reads = [e for e in [*state.get("ledger", []), *ledger] if e["by"] == "agent" and e["kind"] == "read" and e["status"] == "ok"]
+        empty_run = next((n for n, e in enumerate(reversed(reads)) if not e["empty"]), len(reads))
+        if accepted is None and messages and empty_run >= ctx.stuck_empty and any(e["kind"] == "read" and e["status"] == "ok" for e in ledger):
+            hint = " ".join(inventory(ctx.tool_ctx).text.split())[:600]      # nothing is refused: this is a hint, and an event
+            messages[-1].content = f"{messages[-1].content}\n{STUCK.format(n=empty_run, inventory=hint)}"
+            writer({"type": "stuck", "empty_reads": empty_run, "round": round_now})
         if accepted is None and messages:   # appended once, when the message is created: the history is append-only
             line = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left)
             messages[-1].content = f"{messages[-1].content}\n{line}"
@@ -306,6 +358,18 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         if accepted is not None:
             update["report"] = accepted
         return update
+
+    def _identity(spec: ToolSpec, call: Call, ctx: RunContext) -> str | None:
+        """What makes two calls the same call: the tool and its validated arguments, with defaults filled
+        and relative times resolved, without the rationale (J4). None when the arguments do not validate."""
+        try:
+            data = spec.args.model_validate(call["args"]).model_dump()
+            if data.get("since"):
+                window = windows.resolve(data["since"], data.get("until"), ctx.now)
+                data["since"], data["until"] = window.iso
+        except Exception:
+            return None
+        return json.dumps({"tool": spec.name, **data}, sort_keys=True, default=str)
 
     def _run(spec: ToolSpec, call: Call, ctx: RunContext) -> Envelope:
         if call.get("by", "agent") == "agent":      # the model owes a reason for every gated call

@@ -15,6 +15,8 @@ context_fraction = 0.85     # restart (or stop) when a call's input reaches this
 headless = "defer"          # what an unattended run that is not an eval run answers a gate with
 auto_approve = true         # reads run without asking; --interactive turns this off. Actions always ask.
 timeout_s = 600             # per model call; set explicitly because the client library's default is none
+fallback_profile = ""       # a profile to ask once when the model declines to continue; none by default
+cache_ratio_floor = 0.5     # from the second model call, a cached share of the input below this raises an event
 runs_dir = "eval/runs"
 
 [sweep]                     # the opening sweep's windows, relative to now
@@ -41,6 +43,9 @@ effort = "medium"           # fixed for the run: changing it invalidates the pro
 thinking = { type = "adaptive", display = "summarized" }
 cache = true
 strict_tools = true         # every tool schema is strict, so a call's arguments always fit it
+# A request the provider declines is re-run by the provider on its own fallback, inside the same call.
+betas = ["server-side-fallback-2026-07-01"]
+model_kwargs = { fallbacks = "default" }
 
 [profiles.anthropic-small]
 provider = "anthropic"

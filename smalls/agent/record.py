@@ -84,6 +84,46 @@ def versions() -> dict[str, str]:
     return out
 
 
+def scrub(text: str) -> str:
+    """A text with the value of every key-like variable taken out, so an error message can be recorded."""
+    for name, value in os.environ.items():
+        if KEY_NAME.search(name) and value and len(value) >= 8:
+            text = text.replace(value, f"<{name}>")
+    return text
+
+
+class RunsIndex:
+    """`eval/runs/index.sqlite`: one row per run, kept current at start, pause, finish and failure. It is
+    rebuilt from the run folders if lost, and it is git-ignored."""
+
+    COLUMNS = ("run_id", "status", "created", "last_event_at", "checkpoint", "arm", "now", "profile", "prompt_sha", "tools_sha",
+               "commit_sha", "tags", "cost_usd", "stop_reason")
+
+    def __init__(self, runs_dir: Path):
+        self.path = Path(runs_dir) / "index.sqlite"
+
+    def upsert(self, **row: Any) -> None:
+        import sqlite3
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(self.path, timeout=5)
+        with conn:
+            conn.execute(f"CREATE TABLE IF NOT EXISTS runs ({', '.join(c + (' TEXT PRIMARY KEY' if c == 'run_id' else '') for c in self.COLUMNS)})")
+            conn.execute(f"INSERT OR REPLACE INTO runs ({', '.join(self.COLUMNS)}) VALUES ({', '.join('?' * len(self.COLUMNS))})",
+                         tuple(row.get(c) for c in self.COLUMNS))
+        conn.close()
+
+    def rows(self, where: str = "1 = 1", params: tuple = ()) -> list[dict[str, Any]]:
+        import sqlite3
+
+        if not self.path.exists():
+            return []
+        conn = sqlite3.connect(self.path)
+        found = [dict(zip(self.COLUMNS, r)) for r in conn.execute(f"SELECT {', '.join(self.COLUMNS)} FROM runs WHERE {where} ORDER BY created", params)]
+        conn.close()
+        return found
+
+
 def cost(call: dict[str, Any], price: dict[str, float]) -> float:
     """One model call priced by the model that served it. The input count includes cached tokens, and the
     plain cache-write count is zeroed when the per-lifetime split is present, so each token is priced once."""

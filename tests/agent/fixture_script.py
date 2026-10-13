@@ -128,3 +128,11 @@ def turn(messages: list[BaseMessage], tools: list[dict[str, Any]], bad_handle: b
 
 def turn_bad_handle(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
     return turn(messages, tools, bad_handle=True)
+
+
+def slow_turn(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
+    """The plain run, taking two seconds a turn, so a run lasts long enough to be interrupted by hand."""
+    import time
+
+    time.sleep(2)
+    return turn(messages, tools)

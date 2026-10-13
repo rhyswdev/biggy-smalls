@@ -44,6 +44,8 @@ class Config:
     stuck_empty: int
     context_fraction: float
     headless: str
+    fallback_profile: str
+    cache_ratio_floor: float
     timeout_s: float
     sweep: dict[str, str]
     verifier: dict[str, Any]
@@ -98,6 +100,7 @@ def load_config(path: Path | None = None, *, profile: str | None = None, interac
         call_budget=int(raw["call_budget"]), revision_calls=int(raw["revision_calls"]), extra_turns=int(raw["extra_turns"]),
         stale_rounds=int(raw["stale_rounds"]), stuck_empty=int(raw["stuck_empty"]),
         context_fraction=float(raw["context_fraction"]), headless=headless, timeout_s=float(raw["timeout_s"]),
+        fallback_profile=str(raw.get("fallback_profile", "")), cache_ratio_floor=float(raw.get("cache_ratio_floor", 0.5)),
         sweep=dict(raw.get("sweep", {})), verifier=dict(raw.get("verifier", {})),
         runs_dir=Path(runs_dir or os.environ.get("SMALLS_RUNS_DIR") or ROOT / raw["runs_dir"]), pricing=raw.get("pricing", {}))
     return replace(cfg, **overrides) if overrides else cfg

@@ -93,10 +93,10 @@ class Bus:
         self.counts: dict[str, int] = {}
         self.dropped: list[str] = []         # sinks removed after they raised
 
-    def emit(self, type: str, **data: Any) -> Event:
+    def emit(self, event_type: str, /, **data: Any) -> Event:       # positional only: an event's data may hold any key
         self.seq += 1
-        ev = Event(type=type, data=data, run_id=self.run_id, seq=self.seq)
-        self.counts[type] = self.counts.get(type, 0) + 1
+        ev = Event(type=event_type, data=data, run_id=self.run_id, seq=self.seq)
+        self.counts[event_type] = self.counts.get(event_type, 0) + 1
         for sink in list(self.sinks):
             try:
                 sink.emit(ev)

@@ -33,14 +33,16 @@ from smalls.agent.config import SCRIPTED, Config
 from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
 from smalls.agent.graph import build_graph, iso, partial_report
 from smalls.agent.internal_tools import toolset
-from smalls.agent.models import import_local, input_limit, make_model, reasoning_text
-from smalls.agent.record import RunRecord, commit, cost, key_names, new_run_id, sha, usage_totals, versions
+from smalls.agent.models import ModelCallError, import_local, input_limit, make_model, reasoning_text
+from smalls.agent.record import RunRecord, RunsIndex, commit, cost, key_names, new_run_id, scrub, sha, usage_totals, versions
+from smalls.contracts.handles import ic_note_handle
 from smalls.agent.state import RunContext
 from smalls.contracts.envelope import Envelope
 from smalls.tools import registry
 from smalls.tools.registry import ToolContext, ToolSpec
 
 Decider = Callable[[list[dict[str, Any]]], dict[str, dict[str, Any]]]
+THINKING_FLUSH_S = 0.2      # reasoning deltas are coalesced: one event at most this often, and the whole text once per call
 
 
 @dataclass
@@ -86,7 +88,7 @@ def resume_hint(run_id: str) -> str:
 class Runner:
     def __init__(self, cfg: Config, toolbox: Toolbox, run_id: str | None = None, *, sinks: list[Sink] | None = None,
                  decider: Decider | None = None, stop_at_gate: bool = False, attended: bool = False, eval_run: bool = False,
-                 script: Any = None, durability: str | None = None):
+                 script: Any = None, durability: str | None = None, fallback_script: Any = None):
         self.cfg = cfg
         self.toolbox = toolbox
         self.record = RunRecord(cfg.runs_dir, run_id or new_run_id())
@@ -109,9 +111,20 @@ class Runner:
             spec = spec.with_params(script=self.script)
         self.spec = spec
         self.model, bind = make_model(spec, timeout_s=cfg.timeout_s, cache_ttl="1h" if attended else None)
+        self.cached = "cache_control" in bind
+        fallback = None
+        if cfg.fallback_profile and cfg.fallback_profile != spec.profile:        # used once, when the model declines to continue
+            other = cfg.profiles[cfg.fallback_profile]
+            other = other.with_params(script=fallback_script or self.script) if other.provider == SCRIPTED else other
+            other_model, other_bind = make_model(other, timeout_s=cfg.timeout_s)
+            fallback = (other_model, other.provider, other_bind)
         self.conn = sqlite3.connect(self.record.checkpoints(), check_same_thread=False)
         self.graph = build_graph(self.model, toolbox.read_tools, toolbox.inventory, provider=spec.provider, bind_kwargs=bind,
-                                 checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)))
+                                 checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)), fallback=fallback)
+        self.index = RunsIndex(cfg.runs_dir)
+        self._thinking: list[str] = []          # this model call's reasoning, whole
+        self._unsent: list[str] = []            # the part not yet emitted as a delta
+        self._last_flush = 0.0
         self.config = {"configurable": {"thread_id": self.run_id}, "recursion_limit": 6 * (cfg.call_budget + cfg.extra_turns) + 40}
         self._ctx: RunContext | None = None
         self._investigating = False
@@ -138,20 +151,38 @@ class Runner:
         self.bus.emit("run_started", now=iso(now), trigger=trigger, checkpoint=checkpoint, profile=self.spec.profile,
                       auto_approve=self._ctx.auto_approve, attended=self.attended, tags=self.toolbox.describe.get("tags"))
         self.bus.emit("phase", name="orient")
+        self._meta = {"checkpoint": checkpoint, "arm": arm, "now": iso(now)}
+        self._index("running")
         return self._drive({"trigger": trigger})
 
-    def resume(self, answers: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
-        """Resume a run paused at a gate, from a new process: the checkpointer has the state, and
-        `run.json` has the context."""
-        saved = self.record.read_json("run.json")["context"]
+    def resume(self, answers: dict[str, dict[str, Any]] | None = None, note: str | None = None) -> dict[str, Any]:
+        """Resume a paused run from a new process: the checkpointer has the state, and `run.json` has the
+        context. A run pauses at a gate, or where a provider failure or an interrupt stopped it; either
+        way it goes on from its last checkpoint. `note` is a note from the incident commander: it does
+        not block, and the model sees it at its next round as a citable row."""
+        run = self.record.read_json("run.json")
+        saved = run["context"]
+        self._meta = {"checkpoint": run.get("checkpoint"), "arm": run.get("arm"), "now": run.get("now")}
         self._ctx = self._context(datetime.fromisoformat(saved["now"]), saved=saved)
         state = self.graph.get_state(self.config)
-        if not state.interrupts:
-            raise SystemExit(f"run {self.run_id} is not waiting at a gate")
-        pending = state.interrupts[0]
-        answers = answers or self.decider(pending.value["calls"])
-        self.bus.emit("phase", name="resumed", interrupt_id=pending.id)
-        return self._drive(Command(resume={pending.id: answers}))
+        notes = []
+        if note:
+            at = gate.now_iso()
+            notes = [{"handle": ic_note_handle(self.run_id, at, note), "text": note, "submitted_at": at, "by": "incident commander", "call_id": None}]
+            self.bus.emit("ic_note", **notes[0])
+        if state.interrupts:
+            pending = state.interrupts[0]
+            answers = answers or self.decider(pending.value["calls"])
+            self.bus.emit("phase", name="resumed", interrupt_id=pending.id)
+            self._index("running")
+            return self._drive(Command(resume={pending.id: answers}, update={"ic_notes": notes} if notes else None))
+        if not (state.next or state.tasks):
+            raise SystemExit(f"run {self.run_id} is not waiting at a gate and has nothing left to run")
+        if notes:
+            self.graph.update_state(self.config, {"ic_notes": notes})
+        self.bus.emit("phase", name="resumed", after=list(state.next) or [task.name for task in state.tasks])
+        self._index("running")
+        return self._drive(None)
 
     def _context(self, now: datetime, *, checkpoint: str | None = None, channel: str | None = None, saved: dict[str, Any] | None = None) -> RunContext:
         cfg, saved = self.cfg, saved or {}
@@ -177,7 +208,9 @@ class Runner:
                 for part in self.graph.stream(inp, self.config, context=self._ctx, stream_mode=["messages", "updates", "custom"],
                                               version="v2", **extra):
                     self._map(part["type"], part["data"])
-            except GraphRecursionError:
+            except (Exception, KeyboardInterrupt) as failure:
+                if not isinstance(failure, GraphRecursionError):
+                    return self._stopped(failure, time.perf_counter() - started)
                 # The graph cannot route to finalize once this is raised, so the runner renders the partial.
                 values = dict(self.graph.get_state(self.config).values)
                 values.update(status="incomplete", stop_reason="the recursion limit was reached",
@@ -185,6 +218,8 @@ class Runner:
                 self.bus.emit("error", where="graph", message="recursion limit reached", next="partial report")
                 self.bus.emit("report", report=values["report"], status="incomplete")
                 return self._finish(values, time.perf_counter() - started)
+            finally:
+                self._flush_thinking()
             state = self.graph.get_state(self.config)
             if not state.interrupts:
                 break
@@ -193,26 +228,90 @@ class Runner:
                 values = dict(state.values)
                 values["status"] = "paused"
                 self._write_derived(values, time.perf_counter() - started)
+                self._index("paused", values)
                 self.bus.emit("run_paused", interrupt_id=pending.id, resume=resume_hint(self.run_id))
                 return {"status": "paused", "run_id": self.run_id}
             inp = Command(resume={pending.id: self.decider(pending.value["calls"])})
         return self._finish(dict(state.values), time.perf_counter() - started)
+
+    def _stopped(self, failure: BaseException, wall_s: float) -> dict[str, Any]:
+        """A run that stopped on a failure: a provider error after its retries, an interrupt, a fault. The
+        checkpoint is intact, so this is a pause when anything is left to run: the record is written in
+        full, with the partial report rendered from the board, and the reader gets a resume line."""
+        model_error = isinstance(failure, ModelCallError)
+        kind = failure.kind if model_error else type(failure).__name__
+        where = "interrupt" if isinstance(failure, KeyboardInterrupt) else "model" if model_error else "run"
+        message = str(failure) if model_error else scrub(f"{kind}: {failure}")[:300]
+        try:
+            state = self.graph.get_state(self.config)
+            # A node that was running when an interrupt arrived may still have finished: then nothing is
+            # "next", but its task holds writes that a resume applies. Either way there is something to resume.
+            values, resumable = dict(state.values), bool(state.next or state.tasks)
+        except Exception:
+            values, resumable = {}, False
+        why = "the run was interrupted" if where == "interrupt" else f"the {where} failed ({kind})"
+        values.update(status="paused" if resumable else "failed", stop_reason=why)
+        values.setdefault("as_of", iso(self._ctx.now))
+        if not values.get("report"):
+            values["report"] = partial_report(values, why)
+        self.bus.emit("error", where=where, kind=kind, message=message, next="resume" if resumable else "nothing: no checkpoint to resume from")
+        self.bus.emit("report", report=values["report"], status=values["status"])
+        summary = self._write_derived(values, wall_s)
+        self._index(values["status"], values)
+        if resumable:
+            self.bus.emit("run_paused", resume=resume_hint(self.run_id), reason=why)
+        else:
+            self.bus.emit("run_finished", status="failed", stop_reason=why, tool_calls=summary["tool_calls"], model_calls=summary["model_calls"],
+                          tokens=summary["tokens"], wall_s=summary["wall_s_total"])
+        return {"status": values["status"], "run_id": self.run_id, "report": values["report"], "summary": summary, "error": message}
+
+    def _flush_thinking(self, whole: bool = False) -> None:
+        if self._unsent:
+            self.bus.emit("thinking_delta", text="".join(self._unsent))
+            self._unsent, self._last_flush = [], time.perf_counter()
+        if whole and self._thinking:
+            self.bus.emit("thinking", text="".join(self._thinking))
+            self._thinking = []
+
+    def _index(self, status: str, values: dict[str, Any] | None = None) -> None:
+        """Keep the runs index current, so "what is stuck" is a query. The index is never worth a run."""
+        try:
+            run = self.record.read_json("run.json")
+            usage = self._usage_calls(values or {})
+            self.index.upsert(run_id=self.run_id, status=status, last_event_at=gate.now_iso(), created=run.get("created"),
+                              checkpoint=run.get("checkpoint"), arm=run.get("arm"), now=run.get("now"), profile=run.get("profile"),
+                              prompt_sha=run.get("prompt_sha"), tools_sha=run.get("tools_sha"), commit_sha=run.get("commit"),
+                              tags=run.get("tags"), cost_usd=round(sum(c["cost_usd"] for c in usage), 6),
+                              stop_reason=(values or {}).get("stop_reason"))
+        except Exception as problem:
+            self.bus.dropped.append(f"runs index: {type(problem).__name__}")
 
     def _map(self, mode: str, data: Any) -> None:
         if mode == "messages":
             message, meta = data
             if meta.get("langgraph_node") == "agent":
                 reasoning, text = reasoning_text(message)
-                if reasoning:
-                    self.bus.emit("thinking_delta", text=reasoning)
+                if reasoning:       # coalesced: a delta per token inflates the log many times over
+                    self._thinking.append(reasoning)
+                    self._unsent.append(reasoning)
+                    if time.perf_counter() - self._last_flush >= THINKING_FLUSH_S:
+                        self._flush_thinking()
                 if text:
                     self.bus.emit("text_delta", text=text)
             return
-        if mode == "custom":    # model_call, tool_started, tool_result, hypothesis_update, board_status, budget
+        if mode == "custom":    # model_call, tool_started, tool_result, hypothesis_update, board_status, budget, stuck
             data = dict(data)
             kind = data.pop("type")
             if kind == "model_call":
+                self._flush_thinking(whole=True)        # the whole reasoning of the call, once
                 data["cost_usd"] = cost(data, self.cfg.price(data.get("model") or self.spec.model))
+                self.bus.emit(kind, **data)
+                usage = data.get("usage") or {}
+                read = (usage.get("input_token_details") or {}).get("cache_read", 0) or 0
+                ratio = read / usage["input_tokens"] if usage.get("input_tokens") else 0.0
+                if self.cached and data.get("round", 0) >= 2 and ratio < self.cfg.cache_ratio_floor:
+                    self.bus.emit("cache_ratio_low", round=data.get("round"), ratio=round(ratio, 3), floor=self.cfg.cache_ratio_floor)
+                return
             self.bus.emit(kind, **data)
             return
         for node, update in data.items():
@@ -283,6 +382,7 @@ class Runner:
     def _finish(self, values: dict[str, Any], wall_s: float) -> dict[str, Any]:
         self.bus.emit("phase", name="done")
         summary = self._write_derived(values, wall_s)
+        self._index(values.get("status") or "unknown", values)
         self.bus.emit("run_finished", status=values.get("status"), stop_reason=values.get("stop_reason"),
                       tool_calls=summary["tool_calls"], model_calls=summary["model_calls"], tokens=summary["tokens"],
                       wall_s=summary["wall_s_total"])

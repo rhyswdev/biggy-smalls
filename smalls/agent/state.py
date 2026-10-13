@@ -144,6 +144,9 @@ class InvestigationState(TypedDict, total=False):
     gate_waits: Annotated[list[dict[str, Any]], operator.add]           # asked_at, decided_at, wait, once per round
     usage: Annotated[list[dict[str, Any]], operator.add]                # per model call; survives pauses and crashes
     calls_used: int                                                     # reads and actions that ran (J5)
+    notes_shown: int                                                    # how many notes the model has been given
+    fallback_used: bool                                                 # the fallback profile is tried once per run
+    restart_round: int                                                  # a restart clears the repeat index from here (J4)
     swept: list[str]                                                    # the alert streams the sweep showed (J7)
     report: dict[str, Any] | None
     report_attempts: int                                                # per submission cycle

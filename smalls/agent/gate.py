@@ -30,6 +30,7 @@ REJECTED = "REJECTED by {who}: {reason}. The call was not run. Re-plan; do not r
 DEFERRED = ("DEFERRED: the incident commander has not decided. The call was not run. Continue without "
             "assuming it happened.")
 SUBMIT_NOW = "submit now"
+NOTE_KEY = "__note__"       # in a resume payload: a note from the incident commander, beside the decisions
 OVER_BUDGET = f"the call budget is spent; {SUBMIT_NOW}: call {SUBMIT_REPORT} as the only call in your turn"
 NOT_ALONE = f"{SUBMIT_REPORT} must be the only call in its turn; read the other results first, then submit"
 

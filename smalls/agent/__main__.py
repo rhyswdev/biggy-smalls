@@ -2,7 +2,7 @@
 
     python -m smalls.agent run --now <time> --trigger <text> [--bundle <folder>] [--interactive] [--stop-at-gate]
                                [--headless approve|defer|reject] [--profile <name>] [--run-id <id>]
-    python -m smalls.agent resume <run_id> [--reject <reason>] [--interactive]
+    python -m smalls.agent resume <run_id> [--reject <reason> | --approve] [--note <text>]
     python -m smalls.agent replay <run_id|folder>          re-render a run record; no model, no key
     python -m smalls.agent schema [--tags on|off] [--size] [--write] [--skeleton]
     python -m smalls.agent blind-room <folder>             write the prompt author's folder, outside the repository
@@ -140,7 +140,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                        arm=args.arm, channel=args.channel)
     run.close()
     console.print(f"[dim]run record: {run.dir}[/]")
-    return 0 if result["status"] in ("completed", "paused") else 1
+    return 0 if result["status"] in ("completed", "paused") and not result.get("error") else 1
 
 
 def cmd_resume(args: argparse.Namespace) -> int:
@@ -166,9 +166,9 @@ def cmd_resume(args: argparse.Namespace) -> int:
         decider = None
     run = Runner(cfg, _toolbox(args, saved), args.run_id, sinks=[Renderer(console)], decider=decider, attended=attended,
                  eval_run=saved.get("eval_run", False), script=saved.get("script"))
-    result = run.resume()
+    result = run.resume(note=args.note)
     run.close()
-    return 0 if result["status"] in ("completed", "paused") else 1
+    return 0 if result["status"] in ("completed", "paused") and not result.get("error") else 1
 
 
 def cmd_replay(args: argparse.Namespace) -> int:
@@ -261,6 +261,7 @@ def add_run_commands(sub) -> None:
     resume.add_argument("--profile")
     resume.add_argument("--reject", metavar="REASON", help="reject the pending calls with this reason")
     resume.add_argument("--approve", action="store_true", help="approve the pending calls")
+    resume.add_argument("--note", metavar="TEXT", help="a note for the agent: it does not block, and the agent sees it at its next round")
     resume.set_defaults(run=cmd_resume)
 
     replay = sub.add_parser("replay", help="re-render a run record; no model, no key")
