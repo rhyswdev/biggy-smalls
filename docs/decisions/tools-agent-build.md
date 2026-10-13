@@ -210,6 +210,42 @@ Rules T1 to T10 stand. These are the consequences for tools and for the agent.
 
 ## 7. The agent
 
+### 7.0 Framework
+
+The framework is settled in agent-design sections 1.1 and 2, and this plan builds on it unchanged: a custom LangGraph `StateGraph` with explicit nodes, and models reached through LangChain so the provider is a config value. Not the Claude Agent SDK, which works with one provider and whose state is a transcript; not a hand-written loop, which lacks a resume in another process, crash recovery, typed reducers and one multiplexed stream.
+
+Pins, carried from the spike, with minor-version caps because the event stream and delta channels are still moving:
+
+| Package | Pin | Resolved in the worktree | Used for |
+|---|---|---|---|
+| `langgraph` | `>=1.2,<1.3` | 1.2.15 | The graph, reducers, interrupts, streaming |
+| `langgraph-checkpoint-sqlite` | `>=3.1,<3.2` | 3.1.2 | `SqliteSaver`, one checkpoint database per run |
+| `langchain` | `>=1.4,<1.5` | 1.4.5 | `init_chat_model` |
+| `langchain-core` | `>=1.6,<1.7` | 1.6.10 | Messages, `content_blocks`, the scripted chat model |
+| `langchain-anthropic` | `>=1.7,<1.8` | 1.7.6 | The default provider |
+| `langchain-openai` | `>=1.7,<1.8`, optional group | not installed | The cross-provider verifier profile |
+| `rich` | `>=13` | 15.0.0 | The terminal |
+
+Where each piece is used:
+
+| Framework feature | Where | Note from the design |
+|---|---|---|
+| `StateGraph(InvestigationState, context_schema=RunContext)` with plain-function nodes | `graph.py`: orient, sweep, agent, gate, ask, tools, verify, finalize | Axis 1, option (b) |
+| Reducers: `add_messages`, a field-wise board merge, `operator.add` | `state.py` | `messages` is append-only; a custom reducer must be an inspectable callable |
+| Runtime context (`Runtime[RunContext]`) for `now`, run id, policy flags and budgets | every node | LangGraph does not checkpoint it, so `run.json` keeps it and a resume passes it again |
+| `interrupt()` and `Command(resume={interrupt_id: {call_id: decision}})` | the `ask` node and the runner | The policy lives in `gate`, which never re-runs; `ask` only interrupts. Resume by id: a bare value fails when several interrupts are pending |
+| `SqliteSaver` | `runner.py` | Default durability for attended runs; `durability="exit"` for matrix runs |
+| `stream(..., stream_mode=["messages", "updates", "custom"], version="v2")` and `get_stream_writer()` | `runner.py` only | The one module that knows stream modes; everything downstream sees our events |
+| `RetryPolicy` and an explicit `timeout=` | model nodes | LangGraph retries nothing and LangChain sets no timeout by default |
+| `GraphRecursionError` | caught in `runner.py` | The runner renders the partial report from state |
+| `init_chat_model` behind our adapter | `models.py` | Per-provider kwargs, not `configurable_fields`, which leaks one provider's defaults into another's request |
+| `bind_tools` with our per-provider schema adapter | `models.py` | `bind_tools` drops `strict=True` for dict schemas |
+| `content_blocks` | `models.py` | Maps each provider's reasoning to one block type |
+| `ToolMessage(status="error")` | the `tools` node | Rejections and tool errors, in the same user message as the batch's other results |
+| `usage_metadata` | the `agent` node, into state | Usage survives a pause or a crash |
+
+Deliberately not used: `create_agent` with `HumanInTheLoopMiddleware` and `ToolStrategy`; `with_structured_output` or a forced tool call for the report; `SummarizationMiddleware` and provider-side context editing; `astream_events`; the beta v3 event stream; `DeltaChannel`, which is the production path for checkpoint size but still beta. LangSmith stays off unless its environment variable is set.
+
 ### 7.1 Layout
 
 ```
@@ -290,7 +326,7 @@ Live runs spend money. None starts without our go-ahead, and the matrix is sized
 | # | Build | Accepted when |
 |---|---|---|
 | 1.1 | Contracts: the envelope, the registry types, the argument models for all eleven tools, `handle_class()`, the report model with G3 and its generated JSON Schema | A full example report validates; the schema file matches the model; `python -m smalls.agent schema` prints every tool and report schema; the scorer session can start |
-| 1.2 | Port the spike to `smalls/agent/` (agent-design row 1): config, models, state, graph, gate, events, runner, record, with the registry injected. With it: the stable `stream(version="v2")` parts, caching on by default, the runtime context guard, headless approve-and-record with the mock guard, the validator checking shown handles, `ic:note` handles, `evidence.jsonl` written at call time | The spike's 19 tests pass against the port, the bundle-string and model-name tests among them; a scripted run over the fixture registry writes a complete run record; a replay renders it with no key |
+| 1.2 | Port the LangGraph spike to `smalls/agent/` (agent-design row 1), on the pins in section 7.0: config, models, state, graph, gate, events, runner, record, with the registry injected. With it: the stable `stream(version="v2")` parts, caching on by default, the runtime context guard, headless approve-and-record with the mock guard, the validator checking shown handles, `ic:note` handles, `evidence.jsonl` written at call time | The spike's 19 tests pass against the port, the bundle-string and model-name tests among them; a scripted run over the fixture registry writes a complete run record; a replay renders it with no key |
 | 1.3 | Live plumbing shakedown on the fixture registry with prompt v0 (the first half of row 2) | Section 7.3 is ticked off; latency, cost and cache-read ratio per call replace "not measured" for the plumbing |
 | 1.4 | The method in code (rows 3 and 4): `board.py`, the sweep node (it runs whichever of its three tools the registry holds), `update_board`, `submit_report` with the full schema, `proposed_actions` from the ledger, `do_not`, `stakeholder_update`, the provider schema adapter, `propose_action` | A unit test per cap and per status-line flag; zero unknown or referenced-only citations survive the validator; a report with a missing alert verdict gets one retry |
 | 1.5 | Failure handling (row 5 and section 8.4): one row of agent-design axis 8 at a time; records written in `finally`; `error` and `run_finished` on every exit; tolerant reader; isolated sinks; coalesced reasoning deltas; server-minted run ids; the runs index; `deferred`; `ic_note` | One scripted test per row of axis 8; an injected provider timeout leaves a full record and a resumable checkpoint; no file in a run directory contains a key value |
@@ -370,7 +406,7 @@ We built against the ingestion record as written. Each line is checked against t
 
 No service is added. These are the edits to shared files, made in row 2.0.
 
-- `pyproject.toml`: the agent framework and terminal libraries join `dependencies`, with the minor-version caps from the spike. A second provider's client goes in an optional group, since only the cross-provider verifier profile needs it.
+- `pyproject.toml`: `langgraph`, `langgraph-checkpoint-sqlite`, `langchain`, `langchain-core`, `langchain-anthropic` and `rich` join `dependencies` at the pins in section 7.0. `langchain-openai` goes in an optional group, since only the cross-provider verifier profile needs it.
 - `Dockerfile`: sync that optional group too.
 - `compose.yaml`: pass `SMALLS_TAGS`, `SMALLS_PROFILE`, `SMALLS_MODEL` and `SMALLS_COMMIT` through by name. Take the image tag from an environment variable, so two checkouts never overwrite each other's image.
 - `.dockerignore` and `.gitignore`: `.claude/`, checkpoint databases and the runs index.
