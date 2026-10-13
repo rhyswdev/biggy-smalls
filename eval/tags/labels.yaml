@@ -1,0 +1,409 @@
+# Hand labels for the tag precision check (docs/decisions/ingestion-decisions.md section 4.6).
+#
+# 61 units, about 20 per facet. The sample is fixed by code before any label exists: within each kind of
+# unit, the first units by unit id, which is a hash of the text (`smalls tag --sample` prints it). Each unit
+# was labelled by hand from its own text and the one-line option meanings in the tag profiles, and this file
+# was committed before the first `make tag` run, so git shows the labels came before any classifier answer.
+#
+# How we labelled:
+# - only the text below, never what we know about the incident: a deploy run is a release even when a
+#   later record shows it was the rollback, because nothing in its own text says so;
+# - a text that does two things takes the label of what it leads with ("rollback done, still seeing 504s"
+#   is action_taken);
+# - the meanings are read as written: a commit that changes application code is not "a new version built
+#   or deployed", so it is `other` unless it is the release commit or the release merge itself;
+# - `other` is a label like any other: for such a unit the right outcome is no tag.
+#
+# `unit` is the unit id; `text` is what the classifier is sent, kept here so the labels can be reviewed.
+units:
+- unit: 0b3dff9b671e
+  facet: signal
+  kind: log line
+  text: '<*> ERROR [<*>] c.l.p.w.ApiExceptionHandler - authorize failed txn=<*>: Could not open JPA EntityManager for transaction (<*> - Connection is not available, request timed out after <*>)'
+  label: errors
+- unit: 0b7fc85d47c3
+  facet: signal
+  kind: log line
+  text: 'DEBUG com.larkspur.checkout.address.AddressFormVariantResolver - flag <*> evaluated: variant=A rollout=<*>'
+  label: routine
+- unit: 0bb85e03e97e
+  facet: signal
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /admin/config.php 404 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  label: errors
+- unit: 0bc0378e859e
+  facet: signal
+  kind: log line
+  text: WARN com.larkspur.checkout.web.RequestLogFilter - POST /api/checkout/submit 502 <*>
+  label: errors
+- unit: 0cf0e039dd99
+  facet: signal
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] POST /api/checkout/submit 200 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  label: routine
+- unit: 0d398c595b1d
+  facet: signal
+  kind: log line
+  text: INFO org.springframework.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+  label: change
+- unit: 0db371ef79eb
+  facet: signal
+  kind: log line
+  text: <*> INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port <*> (https)
+  label: change
+- unit: 0dc65934c0d2
+  facet: signal
+  kind: log line
+  text: 'Normal SuccessfulRescale HorizontalPodAutoscaler/storefront-web: New size: <*>; reason: cpu resource utilization (percentage of request) above target'
+  label: change
+- unit: 15e9798c7075
+  facet: signal
+  kind: log line
+  text: DEBUG com.larkspur.checkout.address.AddressFormVariantResolver - resolved address form variant=B for session=<*> (flag <*>)
+  label: routine
+- unit: 1cfb9730aba2
+  facet: signal
+  kind: log line
+  text: <*> - - [<*>/Oct/<*>] GET /api/checkout/summary 200 <*> "<*>" "<*>" rt=<*> uct="<*>" uht="<*>" urt="<*>" upstream="<*>"
+  label: routine
+- unit: 0bb0bce4e434
+  facet: signal
+  kind: alert definition
+  text: 'Payments pool exhaustion
+
+    Gateway requests timing out waiting for a pooled DB connection. Runbook: https://confluence.larkspur.internal/display/PAY/PGW-DB-CONN-TIMEOUT'
+  label: saturation
+- unit: 0ef4360b4c1e
+  facet: signal
+  kind: alert definition
+  text: 'p90 latency high on payments-gw
+
+    {{#is_alert}}p90 latency from checkout-api to payments-gw is {{value}}s (threshold {{threshold}}s). Checkout payments are slow for customers.{{/is_alert}}
+
+    {{#is_warning}}p90 latency to payments-gw is {{value}}s and rising.{{/is_warning}}
+
+    {{#is_recovery}}p90 latency to payments-gw back under threshold.{{/is_recovery}}
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    {{#is_alert}}@pagerduty-Payments-Prod{{/is_alert}} @slack-sre-oncall'
+  label: latency
+- unit: 0f20a573a4f6
+  facet: signal
+  kind: alert definition
+  text: 'Disk space low on {{host.name}}
+
+    {{#is_alert}}Disk {{device.name}} on {{host.name}} is {{value}} full.{{/is_alert}}
+
+    {{#is_recovery}}Disk on {{host.name}} back under threshold.{{/is_recovery}}
+
+    {{#is_alert}}@pagerduty-Platform{{/is_alert}}'
+  label: saturation
+- unit: 18ce4a5ca763
+  facet: signal
+  kind: alert definition
+  text: 'Edge scanner hits
+
+    Vulnerability scanner noise at the edge.'
+  label: security
+- unit: 00146c113f9b
+  facet: signal
+  kind: alert
+  text: Payment authorization success rate low
+  label: errors
+- unit: 014db6334474
+  facet: signal
+  kind: alert
+  text: Response time degradation
+  label: latency
+- unit: 1015e6bf95dd
+  facet: signal
+  kind: alert
+  text: Postgres connection refusals
+  label: errors
+- unit: 0b0610b30678
+  facet: signal
+  kind: incident ticket
+  text: 'Storefront 502s for about 25 min after CDN origin TLS certificate expired
+
+    Synthetic checks against the storefront have returned HTTP 502 from the edge in every region since about 09:05 ET. The CDN origin certificate appears to have expired.'
+  label: availability
+- unit: 162f08f65bde
+  facet: signal
+  kind: incident ticket
+  text: 'Node disk pressure evicted storefront pods on two k8s-prod-east nodes
+
+    Two k8s-prod-east nodes reported DiskPressure at about 22:05 ET and storefront pods were evicted from both. Remaining replicas are serving traffic but the deployment is below its desired count.'
+  label: saturation
+- unit: 241119b7d224
+  facet: signal
+  kind: incident ticket
+  text: 'Customer charged twice at checkout
+
+    Customer on the phone says they were charged twice: the page showed a spinner for a long time on order 7826038, so they pressed pay again and that one went through. Agent added a note to the case.'
+  label: errors
+- unit: 24818a9f1a83
+  facet: signal
+  kind: incident ticket
+  text: 'Customer can''t pay, checkout keeps failing
+
+    Customer on chat says they tried to pay three times, the last one order 7803921, each time the spinner goes and then an error. Cart and address pages are fine. Asked them to wait while we check.'
+  label: errors
+- unit: 01a5866b1c5e
+  facet: act
+  kind: chat message
+  text: next update at 14:55 UTC. one line updates pls, theories go in the thread
+  label: action_proposed
+- unit: 039995aac69c
+  facet: act
+  kind: chat message
+  text: checkout-api is back on the old version, watching the error graph
+  label: action_taken
+- unit: 04df7ee99668
+  facet: act
+  kind: chat message
+  text: who's IC here? sorry, lost track
+  label: question
+- unit: 06f2287cfa88
+  facet: act
+  kind: chat message
+  text: we had a release at 6:20 this morning but it ran clean for hours, doubt it's that
+  label: hypothesis
+- unit: 0a144659f789
+  facet: act
+  kind: chat message
+  text: killed 30 idle-in-txn sessions from pgw_app
+  label: action_taken
+- unit: 17af5bbac246
+  facet: act
+  kind: chat message
+  text: support says 40+ tickets, payment spinner
+  label: observation
+- unit: 1d6f939a905f
+  facet: act
+  kind: chat message
+  text: PayCore status page is all green btw
+  label: observation
+- unit: 1dd36c6811a9
+  facet: act
+  kind: chat message
+  text: wait for <@U0XEFKXZ4W1> and <@U01GG60ZVQK>, they're both on it
+  label: action_proposed
+- unit: 1e0c112be743
+  facet: act
+  kind: chat message
+  text: is it redis again? the runbook says check redis
+  label: hypothesis
+- unit: 1ec95b298459
+  facet: act
+  kind: chat message
+  text: success rate is stuck around 73%. EU auths failing fast at 3s on 3.7.9
+  label: observation
+- unit: 1f3bc2ce42c4
+  facet: act
+  kind: chat message
+  text: paged at 10:42 my time, on my laptop now. reading logs
+  label: status
+- unit: 1f910ee0bb43
+  facet: act
+  kind: chat message
+  text: thanks. signing off, it's 11:22 my time and i'm done. ping me if anything
+  label: social
+- unit: 201406fbd7db
+  facet: act
+  kind: chat message
+  text: rollback done, still seeing 504s
+  label: action_taken
+- unit: 20c15eb729d1
+  facet: act
+  kind: chat message
+  text: could be traffic, people hammering the pay button. rps is up a bit
+  label: hypothesis
+- unit: 00c8ad803698
+  facet: act
+  kind: work note
+  text: Refund settlement recon has not started. Parser rejected the acquirer file for the previous business day.
+  label: observation
+- unit: 10f770cace01
+  facet: act
+  kind: work note
+  text: Taking this. Campaign email went out at 19:00 UTC, traffic on submit ~3x. Checking checkout-api first.
+  label: action_taken
+- unit: 2866b9b19679
+  facet: act
+  kind: work note
+  text: Back to 1.34. Closing as benign; will look at the threshold.
+  label: observation
+- unit: 28a180595d44
+  facet: act
+  kind: work note
+  text: Order Service emails are queued on the relay, not failing. Checking queue depth.
+  label: observation
+- unit: 3be1fbd7ab35
+  facet: act
+  kind: work note
+  text: Checkout smoke tests re-run at 10:58 ET. Results are in the bridge channel.
+  label: action_taken
+- unit: 3d8e9871bd17
+  facet: act
+  kind: work note
+  text: Origin cert on the CDN shows expired at 09:04 ET. Renewal job did not fire, checking why.
+  label: observation
+- unit: 0b22f55fda6e
+  facet: change_kind
+  kind: change request
+  text: 'EMERGENCY: roll back payments-gateway to 3.7.9 (INC0048811)
+
+    Retroactive emergency change for the rollback performed during INC0048811 with payments-gateway-deploy #413 (VERSION=3.7.9).'
+  label: rollback
+- unit: 0be8879a7912
+  facet: change_kind
+  kind: change request
+  text: 'payments-gateway 3.8.0 release (PAY-2198, PAY-2231, PAY-2240)
+
+    Release payments-gateway 3.8.0 to production.
+
+    PAY-2198 bump jackson-databind to 2.17.2
+
+    PAY-2231 PSP client resilience
+
+    PAY-2240 refunds: emit settlement metrics
+
+    Deployed to staging 12 Oct (payments-gateway-deploy #411), no issues.'
+  label: release
+- unit: 27ca8d4a72d5
+  facet: change_kind
+  kind: change request
+  text: 'Monthly Windows patching: reporting servers win-rpt-05 to win-rpt-08
+
+    Standard change: apply October cumulative updates to the reporting servers and reboot in sequence.'
+  label: infra
+- unit: 3de00ad92c4c
+  facet: change_kind
+  kind: change request
+  text: 'checkout-api 2.14.1 release (CO-1162 promo code validation messages)
+
+    Release checkout-api 2.14.1. CO-1162 changes the message shown when a promo code fails validation. No change to the validation logic.'
+  label: release
+- unit: 586045d46a31
+  facet: change_kind
+  kind: change request
+  text: 'Upgrade Splunk universal forwarder on win-rpt-05 to win-rpt-08
+
+    Upgrade the Splunk universal forwarder on the four reporting servers so their agent version matches the rest of the Windows fleet. Existing inputs and deployment server settings are kept.'
+  label: infra
+- unit: 590262ffe6c3
+  facet: change_kind
+  kind: change request
+  text: 'Increase Splunk retention for index=k8s from 14 to 30 days
+
+    Raise retention on the k8s index from 14 to 30 days so the October incident review has two full weeks of pod logs. Storage growth is within the current license.'
+  label: config
+- unit: 6e0d2f0b8415
+  facet: change_kind
+  kind: change request
+  text: 'Firewall rule for vendor SFTP (payroll provider) on fw-dc-edge-02
+
+    Allow outbound SFTP from 10.20.8.0/24 to the payroll provider''s new endpoint. One rule, no change to existing rules.'
+  label: network
+- unit: 966fbd9b46b0
+  facet: change_kind
+  kind: change request
+  text: 'Update storefront promo banner content for the autumn sale
+
+    Replace the homepage promo banner copy and image with the autumn sale creative. Content only, no template or code changes.'
+  label: other
+- unit: 0393473b5ec5
+  facet: change_kind
+  kind: pipeline run
+  text: 'payments-gateway-deploy
+
+    parameters: VERSION=3.7.9, TARGET_ENV=prod
+
+    Started by user Priya Raman'
+  label: release
+- unit: 12bf7726cd3d
+  facet: change_kind
+  kind: pipeline run
+  text: 'checkout-api-deploy
+
+    parameters: VERSION=2.14.1, TARGET_ENV=prod, CHANGE_TICKET=CHG0031744
+
+    Started by user Ben Kowalski'
+  label: release
+- unit: 184c92a5719c
+  facet: change_kind
+  kind: pipeline run
+  text: 'storefront-web-deploy
+
+    parameters: VERSION=5.32.0, TARGET_ENV=prod, CHANGE_TICKET=CHG0031835
+
+    Started by user Kofi Mensah'
+  label: release
+- unit: 2cf9d4258c41
+  facet: change_kind
+  kind: pipeline run
+  text: 'payments-gateway-deploy
+
+    parameters: VERSION=3.8.0, TARGET_ENV=prod, CHANGE_TICKET=CHG0031877
+
+    Started by user Jordan Pike'
+  label: release
+- unit: 403761a770da
+  facet: change_kind
+  kind: pipeline run
+  text: 'checkout-api-deploy
+
+    parameters: VERSION=2.14.3, TARGET_ENV=prod, CHANGE_TICKET=CHG0031902
+
+    Started by user Ben Kowalski'
+  label: release
+- unit: 6eb5d81bd879
+  facet: change_kind
+  kind: pipeline run
+  text: 'payments-gateway-deploy
+
+    parameters: VERSION=3.7.9, TARGET_ENV=prod, CHANGE_TICKET=CHG0031702
+
+    Started by user Priya Raman'
+  label: release
+- unit: 12a38249a53f
+  facet: change_kind
+  kind: commit
+  text: 'PAY-2240 refunds: emit settlement metrics
+
+    files: src/main/java/com/larkspur/payments/refund/RefundService.java, src/main/java/com/larkspur/payments/settlement/SettlementMetrics.java'
+  label: other
+- unit: 1ea34aee58b2
+  facet: change_kind
+  kind: commit
+  text: 'release 2.14.3
+
+    files: pom.xml, CHANGELOG.md'
+  label: release
+- unit: 395ad9bf0d56
+  facet: change_kind
+  kind: commit
+  text: 'CO-1187 address form v2 behind flag checkout.address-form-v2
+
+    files: src/main/java/com/larkspur/checkout/address/AddressFormVariantResolver.java, src/main/resources/application.yml'
+  label: other
+- unit: 4953590aadae
+  facet: change_kind
+  kind: commit
+  text: 'PAY-2198 bump jackson-databind to 2.17.2
+
+    files: pom.xml'
+  label: other
+- unit: 5c5bbfe9a038
+  facet: change_kind
+  kind: commit
+  text: 'PAY-2231 PSP client resilience
+
+    files: src/main/java/com/larkspur/payments/psp/PayCoreClient.java, src/main/java/com/larkspur/payments/psp/RetryPolicy.java, src/main/resources/application-prod.yml, src/test/java/com/larkspur/payments/psp/RetryPolicyTest.java'
+  label: other
+- unit: 8245a2d5984e
+  facet: change_kind
+  kind: commit
+  text: Merge branch 'release/3.8.0'
+  label: release
