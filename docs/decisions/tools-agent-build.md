@@ -15,8 +15,10 @@ A fresh session should be able to build from this file plus `docs/research/agent
 | G3 | Report schema | Adopt both open review points: `subject` on every hypothesis, and an `alerts[]` list with a verdict per alert stream. | `subject` makes "what it blames" one checkable field. The alert verdicts are the signal-versus-noise answer the brief asks for, and give the UI a table. | "Identify meaningful signals from noisy evidence" |
 | G4 | Prompt authoring | Blind first prompt. Prompt v1 and every tool description are written by a session that cannot see the incident (section 3). | The method in agent-design section 2.0 was written without sight of the incident. The first prompt should be provably the same, so git shows a clean starting point before any tuning. | "Grounded reasoning based on evidence" |
 | G5 | Tags | Every tool is built and tested with tags present as a first-class path. A missing tag carries no meaning: the classifier applies a tag only at high confidence, so untagged is the normal outcome of doubt and may be a model miss. | Fewer than half the taggable units carry a tag at the measured floor. A facet that silently hid unlabelled rows would turn a classifier gap into missing evidence. | "Good handling of ambiguity and uncertainty" |
+| G6 | Tags default | `SMALLS_TAGS` defaults to `on`, for now. This replaces ruling O2, ahead of the ablation numbers O2 was waiting for. The ablation still runs both arms, and turning the default off again would be a ruling made on those numbers. | Tags are built, measured at a floor where every applied tag on the sample matched its label, and guarded by G5, so the agent should be developed with the surface it will ship with. | "Make intentional decisions and be prepared to explain them" |
+| G7 | No text is lost | Nothing a record holds is unreachable. A list view may shorten a row, but it says so and names the call that returns the whole record. `get_record` returns every character of a record, in parts when the record is larger than the cap. This replaces PLAN section 4's "long text clipped at 2k chars". | A clip with no way to read past it can drop the one sentence that mattered, and no tool would show that anything was missing. Paging keeps the per-call cap, which protects the context, and loses nothing. | "Explain its reasoning using evidence from the provided inputs" |
 
-G5 does not change ruling O2: `SMALLS_TAGS` still defaults to `off`. See open point P1.
+G6 has two consequences outside this track. The default lives in `store.tags_enabled()`, and the ingestion tests and four documents state the old one, so the flip is coordinated with the ingestion session (section 9, item 8). And ruling O4 deferred the tagging of held-out bundles on the grounds that held-out runs would use the default, off. With the default on, O4 has to be settled before a held-out run (open point P8).
 
 ## 2. In and out
 
@@ -205,6 +207,7 @@ PLAN section 4 fixes the surface, the inputs and the caps. These are the build r
 8. Tools run one at a time. They are in-memory queries that take microseconds, and one SQLite connection is not shared across threads.
 9. Nothing semantic happens in a tool: no causal link, no ranking of changes, no parsing of pasted tables. A link between two records is printed only when a served field states it, never from a matching title or time.
 10. Because `ref` rows have no clock, anything listed from one is filtered through visible rows first: the channel list is the channels with visible messages, and a metric is listed only when it has a visible point. A channel's member list or count is never printed.
+11. Nothing a record holds is unreachable (G7). A list view may shorten a row: a log line to 300 characters, a trace to 3 frames, a knowledge hit to a snippet. Each shortened row is marked, and `get_record` on its handle returns the whole record. The only things a tool leaves out for good are empty fields, which it counts, and fields ingestion withheld because they are not true at `now`.
 
 ### 6.3 Tags (G5)
 
@@ -223,7 +226,7 @@ Rules T1 to T10 stand. These are the consequences for tools and for the agent.
 - The source inventory gives counts per facet over visible rows, with the untagged count beside them.
 - The prompt author's brief carries the rule in plain words: a tag is a search aid, a missing tag says nothing about relevance, and a tag-filtered search is followed by a look at what it left out before anything is called absent.
 - `calls.jsonl` records whether a call used a tag input, so the ablation can report how often tags were used and what followed.
-- Live agent runs keep tags off, the default, until row D9 is accepted.
+- Agent runs use tags on, the default (G6), from the first live run. The regression set runs at the default, and the ablation in row E5 compares it with tags off.
 
 ### 6.4 Per tool
 
@@ -233,7 +236,7 @@ Rules T1 to T10 stand. These are the consequences for tools and for the agent.
 | `list_alerts` | One row per `stream_key` with first seen, last change, state at `now` and a transition count, all computed over the stream's whole visible history. Flaps collapse to one row. Duplicate deliveries collapse by `sid`. The row's handle and each source's state rule are in K2. | The stream's earliest record / its later records, its definition record, a linked paging incident, its saved search | `signal` | A flapping stream is one row; a duplicate delivery is one row with `deliveries: 2` and both handles resolving; a stream's handle is the same at both checkpoints |
 | `list_changes` | Builds and change requests side by side, ordered by start, never joined or ranked. Listed when its span overlaps the window; a change that has not started is marked `planned` (K6). A change request shows its served state; there is no rewind. | Changes and builds / commits | `change_kind` | Golden on the set in a window; a building version shows no result or duration; a planned change is listed, not lost |
 | `read_chat` | Mentions resolved from the users `ref` file. Reply count and repliers recomputed from visible replies through `parent`. | Messages / unexpanded replies | `act` | Reply count at each checkpoint equals the visible replies; a withheld field never appears; a channel with no visible message is not listed |
-| `get_record` | The version valid at `now`. Empty fields hidden and counted. Fields clipped at 2k characters, with the count cut; the record's main text is printed whole up to the token cap (open point P7). Children come from `parent`: an incident's journal entries and audit rows, a build's commits, a thread's replies. A saved search returns its definition and the visible alerts it fired, and is never run. | The record / its children | none | Each versioned source returns the version the manifest says is valid at each checkpoint; no visible record has main text that no call returns whole |
+| `get_record` | The version valid at `now`. Empty fields hidden and counted. No field is clipped (G7): a record that renders larger than the cap is split at line ends into parts, the result says "part 1 of n", and `part` asks for another. Children come from `parent`: an incident's journal entries and audit rows, a build's commits, a thread's replies. A saved search returns its definition and the visible alerts it fired, and is never run. | The record, in every part / its children | none | Each versioned source returns the version the manifest says is valid at each checkpoint; for every visible record, its parts joined hold every non-empty field it may show, in full |
 | `search_knowledge` | FTS5 `bm25()` over `chunk_fts` joined to `visible_chunk`; every token quoted; tokens joined with OR. We re-measure the finding that an AND join returned nothing for 9 of 12 queries and record the result in DATA. A closed incident returns its whole close note. | Hits; two hits on one page are two rows with one handle / none | none | No query text can raise a syntax error; a close note is found by a word that appears only in it; the retrieval check runs |
 | `query_metrics` | At most 4 series and 45 points, nulls kept. How `metric` and `scope` select a served query, what `rollup` does and how first breach is found are in K3. Summary with min, max, first breach and null runs. The handle comes from `metric_handle()` with the served query string and the clamped window (A3). | The windowed metric handle, one row per call / a monitor whose threshold was used | none | No point at or after `now`; the envelope's end is the last visible point; two served queries that differ only in aggregator are told apart |
 | `check_status_page` | The latest snapshot published before `now`. With no provider, it lists the known pages. | The snapshot / in listing mode, every page | none | Each checkpoint returns the snapshot valid then |
@@ -260,6 +263,7 @@ These are the calls made to turn the surface into argument models and behaviour.
 - `search_knowledge`: `query` is 1 to 300 characters; `k` is 1 to 5, default 5.
 - `get_oncall`: `service` and `policy` are optional strings (a name, an id or a handle). Exactly one is given; with neither, the tool lists the visible services and policies.
 - `get_topology`: `hops` is 1 or 2, default 1.
+- `get_record`: `part` is an optional integer from 1, default 1. A part past the last answers with how many parts there are.
 - `read_chat`: `channel` omitted means every channel with a visible message; `thread_ts` is the `ts` as printed; `text` also matches replies, and a matching reply is its own row.
 
 **K2. An alert stream's handle and state.** A stream row's handle is the handle of the stream's earliest visible record. The visible set only grows, so the handle is the same at every checkpoint, and it is the handle `alerts[]` uses. That record's title and time are printed, so it is in `rows`; the stream's other records are listed on the row and go in `referenced`. A stream is listed when one of its records falls in the window or it is active at any point in it. State: a monitor stream takes its last visible transition; a versioned problem or paging incident takes the version valid at `now`; a network-monitor alert is active from its trigger until its `t_end`; a search alert has no state and is shown as `fired` under both `state` values. A monitor with no visible transition is not a row, and the footer counts them. A paging incident is linked to a stream only when a served field of the incident names the stream's source record.
@@ -299,7 +303,7 @@ It extends `tests/test_leak.py`, which already holds the scanner, the checkpoint
 - **What is exempt.** The store half's scheduled times, by field, and each is printed with the word `planned`: a change request's planned start and end, an on-call shift's end. Actual work, close and update times are never exempt.
 - **The call set.** The widest window with no filter for the five windowed tools; every `table` for `itsm_query`; `get_record` for every handle in the store, where a handle not yet visible must return byte for byte what an unknown handle returns; every service and policy for `get_oncall`; every CI at 2 hops for `get_topology`; each provider and none for `check_status_page`; the retrieval-check queries for `search_knowledge`; every served query for `query_metrics`; the inventory.
 - **Derived-state assertions.** A monitor's state and a paging service's status are derived, never the served values. A versioned record is the version valid at `now`: problems, builds, paging incidents, the live incident, status-page snapshots. A closed problem or a finished build does not exist before its `valid_from`. Thread counts, repliers and latest reply come from visible replies. Channel members never appear. A metric envelope's end and length come from visible points.
-- **Coverage.** Every visible record's handle appears in `rows` or `referenced` of some call in the set, so no record is ingested and then unreachable. A record kind that no call lists must be on a short allow-list with its reason. To make that hold, an incident's audit rows are among its children, and a synthetic test is `referenced` from its monitor's row.
+- **Coverage.** Every visible record's handle appears in `rows` or `referenced` of some call in the set, so no record is ingested and then unreachable. A record kind that no call lists must be on a short allow-list with its reason. To make that hold, an incident's audit rows are among its children, and a synthetic test is `referenced` from its monitor's row. And for every visible record, the parts of `get_record` joined hold every non-empty field it may show, in full (G7).
 - **Defects and caps.** The duplicate delivery is one row with two resolving handles; the truncated log line is flagged; the alert that fires and resolves keeps both transitions; hidden empty fields are counted. Every tool stays under its caps, and every truncated result carries its footer.
 
 One limit carries over from the store: a versioned record is invisible for the instant `now` equals one of its save times. No checkpoint sits on one. A tool that is given an arbitrary `now` behaves the same way, and we do not work around it.
@@ -311,7 +315,7 @@ What each tool reads and returns, without any name from the dataset. Parameter n
 | Tool | Reads | Returns | Cap |
 |---|---|---|---|
 | `list_alerts` | Monitor events and definitions, APM problems, log-search alert deliveries, network-monitor alerts, paging incidents | One row per alert stream: handle, source, native id, title, the raw entity string as the source wrote it, first seen, last change, state at now, how many times it changed state, and any linked paging incident and saved search. A flapping stream is one row with a count | 40 rows |
-| `get_record` | Any handle | The native record as it stood at now; empty fields hidden and counted; long fields clipped; children listed as handles | 3k tokens |
+| `get_record` | Any handle | The whole native record as it stood at now; empty fields hidden and counted; children listed as handles. A record larger than the cap comes in parts, and nothing is dropped. This is the call that returns in full whatever another tool showed shortened | 3k tokens per part |
 | `search_logs` | Raw logs | Rows: the total, then handle, UTC time, host, sourcetype and the raw line, with stack traces folded. Or a count table by minute, host, level or template. A count from a sampled source carries its sampling rate and an estimate. The equivalent native search is echoed | 4k tokens |
 | `query_metrics` | Metric series | Up to 4 series rolled to at most 45 points, gaps kept; minimum, maximum, first breach of a monitor threshold and runs of missing data; a handle for the series over the window | 2k tokens |
 | `list_changes` | Pipeline builds and change requests | Rows side by side, never joined or ranked: handle, kind, id, CI or job, summary, version, change ticket, start, end, state at now, requester | 30 rows |
@@ -322,7 +326,7 @@ What each tool reads and returns, without any name from the dataset. Parameter n
 | `read_chat` | Chat channels | Messages: handle, UTC time, display name, text with mentions resolved, reply count at now; the replies when a thread is given | 60 messages |
 | `check_status_page` | External providers' status pages | Indicator, incidents and updates as of now; with no provider, the known pages | 0.5k tokens |
 
-Common to all: `now` is injected and never a parameter; every row starts with a handle, and only a handle whose content was shown can be cited; times are UTC with the native value beside it where it differs; a result that was cut says what was cut and how to narrow; an error comes back as text to act on.
+Common to all: `now` is injected and never a parameter; every row starts with a handle, and only a handle whose content was shown can be cited; times are UTC with the native value beside it where it differs; a result that was cut says what was cut and how to narrow, and a row that was shortened says so; an error comes back as text to act on.
 
 ## 7. The agent
 
@@ -550,6 +554,7 @@ Section 6.1 was read from the ingestion branch, not from a rebased tree. Row A0 
 5. How `prompt_texts()` is extended to our five files and to string literals under `smalls/agent/` and `smalls/tools/`.
 6. The CLI's bundle-path helper, which `smalls tools call` and the run commands reuse.
 7. Whether the existing base-table test also needs `clock` added to its list, since no tool may set the clock.
+8. The tags default (G6). It is one default in `store.tags_enabled()`, the ingestion tests that assert the old one, and the lines that state it in CLAUDE.md, PLAN (decision 12, section 4 and section 6.1), `ingestion-decisions.md` (O2 and T6) and HANDOFF. If the ingestion session is still running, it makes the change on its branch and this track picks it up by rebasing; otherwise row A0 makes it.
 
 ## 10. Compose and running (G2)
 
@@ -572,19 +577,21 @@ Things that differ inside the container:
 
 | # | Point | Default the build uses |
 |---|---|---|
-| P1 | Should `SMALLS_TAGS` default to `on`? Ruling O2 says off, with `on` to be ruled from the ablation numbers. | Off. Both modes are built and tested, so the switch is one config value. |
 | P2 | The action surface: one `propose_action` with a closed `kind` list, or several typed tools. | One tool. Its `kind` list and wording are written in the blind room from standard incident-response vocabulary, so the list is not shaped by this incident. |
 | P3 | Accept `untagged` as a value of each tag input. PLAN lists the inputs but not this value. | Accept it. It adds a way to reach rows and removes none. |
 | P4 | Are human-written journal entries and paging notes classed with chat? PLAN names only `ic:note` beside chat. | No: only `slack:` and `ic:note/`. The scorer session owns the final answer, through `handle_class()`. |
 | P5 | Which run records are committed. | The first complete run, which `make demo` replays, and the runs the write-up cites, without their checkpoint databases. |
 | P6 | A mechanical guard for the held-out rule in this worktree: a sparse checkout that leaves the three paths off disk, or deny rules in the session settings. | None yet; the rule is kept by discipline. The blind room already guards the prompt author. |
-| P7 | PLAN says long text is clipped at 2k characters, and there is no tail tool. Some knowledge pages, notes and messages are longer than that, so their ends would be unreachable. | The 2k clip applies per field; a record's main text is printed whole up to the tool's token cap, and a clip states how much was cut. |
+| P8 | How held-out bundles get tags (ruling O4, deferred). With tags on by default (G6), a held-out run at the default would find no cached tags and every record would read as untagged. | Not ours to settle on this track, and nothing waits on it until a held-out run. Two ways out: the held-out authoring session runs the tagging pass on its bundle, or held-out runs set the flag off and the write-up says so. |
+
+P1 (the tags default) and P7 (the 2k clip) were ruled on 2026-10-13: G6 and G7.
 
 ## 12. Edits to other documents, applied in row E6
 
 - **PLAN 3.1**: `subject`, `alerts[]` and `source`; which fields code writes; the per-checkpoint shape of `history`; "inconclusive" defined as no leading hypothesis.
 - **PLAN 3.2**: `handle_class()` as the one definition of the chat class.
-- **PLAN 4**: the envelope with `rows[]` and `t_known`; the argument conventions of K1; tag-dependent aggregates are not citable; the `untagged` bucket and value, if P3 is ruled in; the clip rule, if P7 is ruled in.
+- **PLAN 0, 4 and 6.1, CLAUDE.md, `ingestion-decisions.md`, HANDOFF**: tags are on by default (G6), with O2 marked as replaced and O4 as needing an answer before a held-out run.
+- **PLAN 4**: the envelope with `rows[]` and `t_known`; the argument conventions of K1; tag-dependent aggregates are not citable; the `untagged` bucket and value, if P3 is ruled in; `get_record` pages and nothing is clipped (G7).
 - **PLAN 6**: the status line; this record as the order for 6a-tools through step 7.
 - **PLAN 13**: a pointer to this record.
 - **`docs/decisions/step6-decisions.md`**: a pointer at ruling A1 to the envelope here.
