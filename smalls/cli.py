@@ -25,8 +25,19 @@ def _bundle(arg: str | None) -> Path:
 
 
 def cmd_ingest(args: argparse.Namespace) -> int:
-    _bundle(args.bundle)
-    raise SystemExit("smalls ingest: the store arrives with build row 2 of docs/decisions/ingestion-decisions.md")
+    from smalls.tools import store
+
+    built = store.build(_bundle(args.bundle))
+    print(built.report.text())
+    if args.now:
+        now = built.set_now(args.now)
+        counts = built.visible_counts()
+        print(f"  visible at {args.now} ({now} ms): " + ", ".join(f"{v} {k}" for k, v in counts.items()))
+    print(f"  dump sha256: {built.dump_hash()}")
+    if args.dump:
+        built.dump(args.dump)
+        print(f"  wrote {args.dump}")
+    return 0
 
 
 def cmd_tag(args: argparse.Namespace) -> int:
