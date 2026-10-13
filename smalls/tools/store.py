@@ -333,7 +333,7 @@ def build(bundle_root: Path | str, tags: bool | None = None) -> Store:
         except PathRefused as refusal:
             report.refused.append(str(refusal))
             continue
-        adapter = adapter_for(source, bundle.integration.sources[source])
+        adapter = adapter_for(bundle, source)
         if adapter is None:
             report.unhandled.append(source)
             continue

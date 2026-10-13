@@ -30,7 +30,7 @@ def count(conn, table):
 
 def test_an_empty_clock_shows_nothing(built):
     built.clear_now()
-    assert count(built.conn, "record") > 0
+    assert count(built.conn, "record") > 0 and count(built.conn, "point") > 0 and count(built.conn, "chunk") > 0
     assert built.now is None
     assert [count(built.conn, v) for v in VIEWS] == [0, 0, 0]
 
@@ -38,7 +38,7 @@ def test_an_empty_clock_shows_nothing(built):
 def test_the_clock_holds_one_row_and_clearing_it_hides_everything(built):
     built.set_now("14:40")
     assert built.now == built.resolve_time("2026-10-13T14:40:00Z")
-    assert count(built.conn, "visible") > 0
+    assert all(count(built.conn, v) > 0 for v in VIEWS)
     with pytest.raises(sqlite3.IntegrityError, match="at most one row"):
         built.conn.execute("INSERT INTO clock (now) VALUES (0)")
     built.set_now("14:52")
@@ -50,7 +50,10 @@ def test_the_clock_holds_one_row_and_clearing_it_hides_everything(built):
 def test_the_views_show_only_what_is_known_before_now(built):
     now = built.set_now("14:40")
     assert built.conn.execute("SELECT max(t_known) FROM visible").fetchone()[0] < now
+    assert built.conn.execute("SELECT max(t_known) FROM visible_point").fetchone()[0] < now
     assert count(built.conn, "visible") < count(built.conn, "record")
+    hidden = built.conn.execute("SELECT count(*) FROM chunk ch WHERE ch.rid NOT IN (SELECT rid FROM visible)").fetchone()[0]
+    assert hidden > 0 and count(built.conn, "visible_chunk") == count(built.conn, "chunk") - hidden
     built.clear_now()
 
 
@@ -89,11 +92,12 @@ def test_the_loader_reads_only_listed_sources(tmp_path):
     copy = tmp_path / BUNDLE.name
     shutil.copytree(BUNDLE, copy)
     integ = yaml.safe_load((copy / "integration.yaml").read_text())
-    del integ["sources"]["splunk/raw/nginx"]
+    del integ["sources"]["slack"]
     (copy / "integration.yaml").write_text(yaml.safe_dump(integ, sort_keys=False))
     built = store.build(copy)
     assert count(built.conn, "record") > 0
-    assert built.conn.execute("SELECT count(*) FROM record WHERE path LIKE 'splunk/raw/nginx/%'").fetchone()[0] == 0
+    assert built.conn.execute("SELECT count(*) FROM record WHERE path LIKE 'slack/%'").fetchone()[0] == 0
+    assert built.conn.execute("SELECT count(*) FROM ref WHERE source = 'slack'").fetchone()[0] == 0
 
 
 def _python_files(*parts):
