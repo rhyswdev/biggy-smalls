@@ -2,7 +2,9 @@
 one store row with the same handle, path, locator, event time, known time and validity window; the store
 has no other row; and `native` is the bytes as served."""
 import json
+import re
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -93,6 +95,42 @@ def test_native_is_the_served_bytes(built, rows):
             checked["lines"] += 1
     assert checked["file"] and checked["element"] and checked["lines"]
     assert sum(checked.values()) == one(built.conn, "SELECT count(*) FROM record")
+
+
+def _reread(integ, source: str, text: str) -> int:
+    """Read a time as written back into epoch ms, without the adapters: by its shape, then by the source's format."""
+    def at(dt):
+        return parity.ms(dt.astimezone(timezone.utc).isoformat())
+    if re.fullmatch(r"\d{8}T\d{6}\.\d+Z", text):                       # a receipt stamp in a file name
+        return at(datetime.strptime(text, "%Y%m%dT%H%M%S.%fZ").replace(tzinfo=timezone.utc))
+    if re.fullmatch(r"\d{13}", text):                                    # epoch milliseconds
+        return int(text)
+    if re.fullmatch(r"\d{10}", text):                                    # epoch seconds
+        return int(text) * 1000
+    if re.fullmatch(r"\d{10}\.\d{6}", text):                            # epoch seconds and a sequence
+        return int(text[:10]) * 1000 + int(text[11:14])
+    if re.fullmatch(r"\d{1,2} \w{3} \d{4}", text):                      # a date only, read as 12:00 UTC
+        return at(datetime.strptime(text, "%d %b %Y").replace(hour=12, tzinfo=timezone.utc))
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}", text):  # a wall clock with a seven-digit fraction
+        return integ.local(source, datetime.strptime(text[:26], "%Y-%m-%dT%H:%M:%S.%f"))[0]
+    if integ.sources[source].get("format"):
+        return integ.parse(source, text)[0]
+    return at(datetime.fromisoformat(text))
+
+
+def test_every_native_time_is_the_known_time_as_written(built):
+    """One rule for every source: `t_native` is the text `t_known` was read from, and `tz_rule` says how."""
+    rows = built.conn.execute("SELECT handle, source, t_native, tz_rule, t_known FROM record").fetchall()
+    assert len(rows) == 4454
+    for handle, source, t_native, tz_rule, t_known in rows:
+        if t_known == 0:
+            assert t_native is None and tz_rule is None, handle        # no time in its bytes
+            continue
+        assert t_native and tz_rule, handle
+        assert _reread(built.integration, source, t_native) == t_known, (handle, t_native)
+    # Where the event time differs from the known time, the native text is still the known time's.
+    differ = built.conn.execute("SELECT count(*), count(DISTINCT source) FROM record WHERE t_event != t_known").fetchone()
+    assert differ == (73, 6)
 
 
 def test_reference_files_are_served_bytes_too(built):

@@ -2,8 +2,11 @@
 every adapter shares (clocks, JSON spans, severity). Adapters parse one source each from its vendor-native
 shape; nothing here knows any vendor.
 
-Times are epoch milliseconds UTC, floored, as integers. `t_native` keeps the time as the vendor wrote it
-and `tz_rule` names the zone and format it was read with, both from the served integration.yaml.
+Times are epoch milliseconds UTC, floored, as integers. Every adapter keeps the same pair beside them:
+`t_native` is the text `t_known` was read from, exactly as written, and `tz_rule` names the zone and format
+it was read with, from the served integration.yaml. Where a record also has an earlier event time (a
+version of a ticket, a webhook delivery, an aggregated event), that time's own text stays in `attrs` or
+`native`; `t_native` is always the known time's.
 """
 
 from __future__ import annotations

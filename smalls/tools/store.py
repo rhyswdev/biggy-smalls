@@ -51,8 +51,8 @@ CREATE TABLE record (
   t_known      INTEGER NOT NULL,       -- epoch ms UTC; 0 for the records with no time in their bytes
   valid_from   INTEGER,
   valid_to     INTEGER,
-  t_native     TEXT,                   -- the time as the vendor wrote it
-  tz_rule      TEXT,                   -- zone and format used, from integration.yaml
+  t_native     TEXT,                   -- the time t_known was read from, as written; null only where t_known is 0
+  tz_rule      TEXT,                   -- the zone and format t_native was read with, from integration.yaml
   sev          INTEGER, sev_text TEXT, status TEXT,
   title        TEXT, body TEXT, parent TEXT,
   template_id  TEXT,                   -- logs only: h8 of sourcetype and masked first line
