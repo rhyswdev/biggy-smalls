@@ -1,0 +1,533 @@
+# Hand labels for the candidate-facet experiment (facets-1.toml), a second sample that shares no unit with
+# eval/tags/labels.yaml: within each kind, the next units by unit id after that sample, plus every metric
+# series. Labelled by hand from the text and the option lines in facets-1.toml, and committed before the
+# experiment was run.
+#
+# `labels` is what should be stored: for a yes/no facet, every option that applies, the main one first;
+# an empty list means no tag is the right outcome, as does `other`. `also_acceptable` lists readings we
+# would not count as wrong; a stored value outside both is an error.
+#
+# One unit was not labelled blind for `signal`: we had already seen the shipped profile's answer for the
+# template "binding parameter" while looking at untagged log volume. It is marked `seen: true`.
+units:
+- unit: 2046d6ad1f45
+  kind: log line
+  text: WARN com.larkspur.checkout.tax.TaxRateClient - tax rate lookup slow (<*>), using cached rates
+  labels:
+    signal_any:
+    - latency
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - application
+  also_acceptable:
+    fault:
+    - timeout
+    layer:
+    - external
+- unit: 23b8d064ca95
+  kind: log line
+  text: '<*> UTC [<*>] @ LOG:  checkpoint complete: wrote <*> buffers (<*>); <*> WAL file(s) added, <*> removed, <*> recycled; write=<*> s, sync=<*> s, total=<*> s; sync files=<*>, longest=<*> s, average=<*> s; distance=<*> kB, estimate=<*> kB'
+  labels:
+    signal_any:
+    - routine
+    resource:
+    - disk
+    fault:
+    - other
+    layer:
+    - database
+  also_acceptable:
+    resource:
+    - other
+- unit: 249c5e0b2c94
+  kind: log line
+  text: <*> DEBUG [<*> connection adder] c.z.h.pool.HikariPool - <*> - Cannot acquire connection from data source
+  labels:
+    signal_any:
+    - errors
+    - availability
+    resource:
+    - pool
+    fault:
+    - unavailable
+    layer:
+    - database
+  also_acceptable:
+    signal_any:
+    - saturation
+    fault:
+    - exhausted
+    layer:
+    - application
+- unit: 2f4d0b8ed9a3
+  kind: log line
+  text: 'Oct <*> notice mcpd[<*>]: <*>: Pool /Common/pool_pay_gw member /Common/<*> monitor status down. [ /Common/mon_pay_gw_health: down; last error: /Common/mon_pay_gw_health: Response Code: <*> (Service Unavailable) @<*> ]  [ was up for <*> ]'
+  labels:
+    signal_any:
+    - availability
+    resource:
+    - network
+    fault:
+    - unavailable
+    layer:
+    - network
+  also_acceptable:
+    signal_any:
+    - errors
+    resource:
+    - other
+- unit: 32f09a423192
+  kind: log line
+  text: 'Normal ScalingReplicaSet Deployment/checkout-api: Scaled down replica set <*> to <*>'
+  labels:
+    signal_any:
+    - change
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - platform
+  also_acceptable: {}
+- unit: 362f7c16a49a
+  kind: log line
+  text: DEBUG org.hibernate.orm.jdbc.bind - binding parameter (<*>:BIGINT) <- [<*>]
+  labels:
+    signal_any:
+    - routine
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - database
+  also_acceptable:
+    layer:
+    - application
+  seen: true
+- unit: 37c7682161a3
+  kind: log line
+  text: <*> INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Graceful shutdown complete
+  labels:
+    signal_any:
+    - change
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - application
+  also_acceptable:
+    signal_any:
+    - routine
+- unit: 37ebca8db86e
+  kind: log line
+  text: INFO com.larkspur.checkout.CheckoutApiApplication - Started CheckoutApiApplication in <*> seconds (process running for <*>)
+  labels:
+    signal_any:
+    - change
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - application
+  also_acceptable:
+    signal_any:
+    - routine
+- unit: 2419988c1b08
+  kind: alert definition
+  text: 'redis-sessions memory fragmentation high
+
+    {{#is_alert}}redis-sessions memory fragmentation ratio is {{value}}. Sessions may be evicted; checkout logins can fail.{{/is_alert}}
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    @slack-sre-oncall'
+  labels:
+    signal_any:
+    - saturation
+    resource:
+    - memory
+    fault:
+    - other
+    layer:
+    - database
+  also_acceptable:
+    fault:
+    - exhausted
+- unit: 28a2e93595c8
+  kind: alert definition
+  text: 'checkout-api error rate > 5%
+
+    {{#is_alert}}checkout-api 5xx rate is {{value}}% over the last 5 minutes. Customers cannot complete checkout.{{/is_alert}}
+
+    {{#is_warning}}checkout-api 5xx rate is {{value}}%.{{/is_warning}}
+
+    Check recent checkout-api deploys first.
+
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+
+    {{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}'
+  labels:
+    signal_any:
+    - errors
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - application
+  also_acceptable:
+    signal_any:
+    - availability
+- unit: 314f002ad5da
+  kind: alert definition
+  text: 'CPU saturation on {{host.name}}
+
+    {{#is_alert}}CPU on {{host.name}} above 90% for 10 minutes.{{/is_alert}}
+
+    @slack-sre-oncall'
+  labels:
+    signal_any:
+    - saturation
+    resource:
+    - cpu
+    fault:
+    - other
+    layer:
+    - platform
+  also_acceptable:
+    fault:
+    - exhausted
+- unit: 1b02becc6a2b
+  kind: alert
+  text: redis-sessions memory fragmentation high
+  labels:
+    signal_any:
+    - saturation
+    resource:
+    - memory
+    fault:
+    - other
+    layer:
+    - database
+  also_acceptable:
+    fault:
+    - exhausted
+- unit: 247f7d7fdaaf
+  kind: alert
+  text: '[Synthetics] marketing site homepage'
+  labels:
+    signal_any: []
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - other
+  also_acceptable:
+    signal_any:
+    - availability
+    fault:
+    - unavailable
+    layer:
+    - application
+    - network
+- unit: 2888c2a50070
+  kind: alert
+  text: CPU saturation
+  labels:
+    signal_any:
+    - saturation
+    resource:
+    - cpu
+    fault:
+    - other
+    layer:
+    - platform
+  also_acceptable:
+    fault:
+    - exhausted
+- unit: 25398e91066d
+  kind: incident ticket
+  text: 'Card payments failing - PayCore outage
+
+    Payment authorizations failing for all card payments. payments-gateway logs show PSP timeouts on every call to api.paycore.example. PayCore status page shows major outage.'
+  labels:
+    signal_any:
+    - errors
+    - availability
+    resource:
+    - other
+    fault:
+    - timeout
+    layer:
+    - external
+  also_acceptable:
+    resource:
+    - network
+    fault:
+    - unavailable
+- unit: 2cc082ffe706
+  kind: incident ticket
+  text: 'Product pages slow (p90 3 s), image resizer pods CPU throttled
+
+    Product page p90 response time on the storefront has risen to about 3 s since 16:20 ET. The image resizer pods show sustained CPU throttling and product images are slow to load.'
+  labels:
+    signal_any:
+    - latency
+    - saturation
+    resource:
+    - cpu
+    fault:
+    - other
+    layer:
+    - platform
+  also_acceptable:
+    layer:
+    - application
+- unit: 4d40dbc42e16
+  kind: incident ticket
+  text: 'Customer card declined on the website
+
+    Customer emailed that their card declined on the website for order 7849362 and they then paid with a different card that worked. They want to know whether the first card was charged anyway. Agent said they would check the account and reply by email.'
+  labels:
+    signal_any:
+    - errors
+    resource:
+    - other
+    fault:
+    - other
+    layer:
+    - application
+  also_acceptable:
+    layer:
+    - external
+    - other
+- unit: 21554cee65ea
+  kind: chat message
+  text: pay-03 dropped out of the F5 pool. hardware?
+  labels:
+    act_any:
+    - observation
+    - hypothesis
+  also_acceptable:
+    act_any:
+    - question
+- unit: 267c3f364eee
+  kind: chat message
+  text: heads up, CDN DNS TTL change on the marketing site this afternoon. low risk, will post when done
+  labels:
+    act_any:
+    - action_proposed
+  also_acceptable:
+    act_any:
+    - status
+- unit: 2cd8d99f7729
+  kind: chat message
+  text: is anyone checking the network side properly? kofi might be right
+  labels:
+    act_any:
+    - question
+    - hypothesis
+  also_acceptable:
+    act_any:
+    - action_proposed
+- unit: 2d6465a08f8d
+  kind: chat message
+  text: no. read the above
+  labels:
+    act_any:
+    - action_proposed
+  also_acceptable: {}
+- unit: 30105a3d76e3
+  kind: chat message
+  text: solarwinds is also firing on pay-03, so it's not only the f5 view
+  labels:
+    act_any:
+    - observation
+  also_acceptable:
+    act_any:
+    - hypothesis
+- unit: 38b45238386d
+  kind: chat message
+  text: still looking
+  labels:
+    act_any:
+    - status
+  also_acceptable: {}
+- unit: 3e6462cdd6dc
+  kind: chat message
+  text: marketing site synthetic just went red. checking my side, prob separate
+  labels:
+    act_any:
+    - observation
+    - hypothesis
+  also_acceptable:
+    act_any:
+    - action_taken
+    - status
+- unit: 40d1113c4258
+  kind: chat message
+  text: 5xx back to baseline. thanks all
+  labels:
+    act_any:
+    - observation
+    - social
+  also_acceptable:
+    act_any:
+    - status
+- unit: 440b8985da0f
+  kind: chat message
+  text: muted the redis-sessions frag monitor for an hour. it's the usual flap, INC0047003 says it's benign
+  labels:
+    act_any:
+    - action_taken
+    - hypothesis
+  also_acceptable:
+    act_any:
+    - observation
+- unit: 476451dadcec
+  kind: chat message
+  text: db is at 197 of 200 usable, mostly pgw_app, plus 40 from recon_app
+  labels:
+    act_any:
+    - observation
+  also_acceptable: {}
+- unit: 3e5c39213804
+  kind: work note
+  text: 'C: is full on win-rpt-06. Staging file for the finance report cannot be written. Looking at the largest folders.'
+  labels:
+    act_any:
+    - observation
+  also_acceptable:
+    act_any:
+    - action_taken
+    - status
+- unit: 4157e8c6a4c2
+  kind: work note
+  text: 'Rolled payments-gateway back to 3.7.9 (Jenkins #413, 11:01-11:06 ET). Emergency change CHG0031910 raised. 5xx back to baseline; EU card auths now failing fast, watching the provider.'
+  labels:
+    act_any:
+    - action_taken
+    - observation
+  also_acceptable:
+    act_any:
+    - status
+- unit: 45146244731a
+  kind: work note
+  text: "pg_stat_activity on pay-db-01, grouped:\npayments=# select usename, application_name, state, count(*), max(now() - xact_start) as oldest_xact\npayments-#   from pg_stat_activity where backend_type = 'client backend' group by 1, 2, 3 order by 4 desc;\n usename    | application_name    | state               | count | oldest_xact\n------------+---------------------+---------------------+-------+-------------\n pgw_app    | payments-gateway    | idle in transaction |   133 | 00:00:38\n recon_app  | payments-reconciler | active              |    40 | 00:17:12\n orders_app | order-service       | idle                |    20 | \n pgw_app    | payments-gateway    | active              |     4 | 00:00:36\n postgres   | psql                | active              |     1 | 00:00:00\n(5 rows)\noldest ones:\npayments=# select pid, usename, application_name, client_addr, state, xact_start::time, wait_event, query\npayments-#   from pg_stat_activity where state = 'idle in transaction' order by xact_start limit 5;\n pid   | usename | application_name | client_addr | state               | xact_start   | wait_event | query                                                                                             "
+  labels:
+    act_any:
+    - observation
+  also_acceptable: {}
+- unit: 45c0e7bd9b52
+  kind: work note
+  text: Next update 15:20 UTC. Support macro updated for payment spinner tickets.
+  labels:
+    act_any:
+    - status
+    - action_taken
+  also_acceptable: {}
+- unit: 09e4f994cf64
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:get_/api/cart,service:checkout-api}
+  labels:
+    signal_metric:
+    - traffic
+  also_acceptable: {}
+- unit: 0b8856590bfc
+  kind: metric series
+  text: avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}
+  labels:
+    signal_metric:
+    - saturation
+  also_acceptable: {}
+- unit: 0f1345c99e52
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:post_/api/checkout/address,service:checkout-api}
+  labels:
+    signal_metric:
+    - traffic
+  also_acceptable: {}
+- unit: 14614ae2e926
+  kind: metric series
+  text: sum:trace.servlet.request.errors{env:prod,service:checkout-api,version:2.14.2}
+  labels:
+    signal_metric:
+    - errors
+  also_acceptable: {}
+- unit: 1bb6d0118dc5
+  kind: metric series
+  text: sum:postgresql.connections{db:orders,host:pay-db-01}
+  labels:
+    signal_metric:
+    - saturation
+  also_acceptable: {}
+- unit: 28e7884c3519
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,service:storefront-web}
+  labels:
+    signal_metric:
+    - traffic
+  also_acceptable: {}
+- unit: 3273199b7eca
+  kind: metric series
+  text: sum:trace.servlet.request.errors{env:prod,service:checkout-api,version:2.14.3}
+  labels:
+    signal_metric:
+    - errors
+  also_acceptable: {}
+- unit: 3bc00d8f2e7c
+  kind: metric series
+  text: sum:postgresql.connections{db:payments,host:pay-db-01}
+  labels:
+    signal_metric:
+    - saturation
+  also_acceptable: {}
+- unit: 4fa8de158dc1
+  kind: metric series
+  text: sum:postgresql.connections{db:postgres,host:pay-db-01}
+  labels:
+    signal_metric:
+    - saturation
+  also_acceptable: {}
+- unit: 71c6dc5ec726
+  kind: metric series
+  text: p99:trace.http.request.duration{env:prod,peer.service:payments-gw,service:checkout-api}
+  labels:
+    signal_metric:
+    - latency
+  also_acceptable: {}
+- unit: 8b95a0765d45
+  kind: metric series
+  text: p90:trace.http.request.duration{env:prod,peer.service:payments-gw,service:checkout-api}
+  labels:
+    signal_metric:
+    - latency
+  also_acceptable: {}
+- unit: d616b3bde4a8
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:get_/api/checkout/summary,service:checkout-api}
+  labels:
+    signal_metric:
+    - traffic
+  also_acceptable: {}
+- unit: d9f100b74f5d
+  kind: metric series
+  text: sum:trace.servlet.request.hits{env:prod,resource_name:post_/api/checkout/submit,service:checkout-api}
+  labels:
+    signal_metric:
+    - traffic
+  also_acceptable: {}
+- unit: febd80256087
+  kind: metric series
+  text: avg:payments.authorize.success_rate{env:prod}
+  labels:
+    signal_metric:
+    - errors
+  also_acceptable: {}

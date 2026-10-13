@@ -33,14 +33,16 @@ def all_units(records):
 
 
 def fake_ask(choice_for=lambda state, options: options[0], p=0.97, calls=None):
-    def ask(state, question):
-        options = list(question["criteria"])
-        choice = choice_for(state, options)
-        rest = round((1 - p) / (len(options) - 1), 4)
+    def ask(state, questions):
+        answers = {}
+        for qid, question in questions.items():
+            options = list(question["criteria"])
+            choice = choice_for(state, options)
+            rest = round((1 - p) / (len(options) - 1), 4)
+            answers[qid] = {"choice": choice, "confidence": p, "probabilities": {o: (p if o == choice else rest) for o in options}}
         if calls is not None:
             calls.append(state)
-        return {"classifier": "test-version", "answer": {"choice": choice, "confidence": p, "probabilities": {o: (p if o == choice else rest) for o in options}},
-                "usage": {"input_tokens": 400, "output_tokens": 30}, "request_id": "req"}
+        return {"classifier": "test-version", "answers": answers, "usage": {"input_tokens": 400, "output_tokens": 30}, "request_id": "req"}
     return ask
 
 
@@ -185,10 +187,10 @@ def test_fill_asks_once_per_missing_unit_and_a_second_run_asks_nothing(all_units
 def test_a_failed_request_is_reported_and_asked_again_next_time(all_units, tmp_path):
     path = tmp_path / "cache.jsonl"
     some = dict(list(all_units.items())[:12])
-    def flaky(state, question):
+    def flaky(state, questions):
         if "<*>" in state["text"] or len(state["text"]) % 2:
             raise RuntimeError("503 overloaded")
-        return fake_ask()(state, question)
+        return fake_ask()(state, questions)
     first = run.fill(some, flaky, path=path)
     assert first["failures"] and first["requests"] + len(first["failures"]) == 12
     second = run.fill(some, fake_ask(), path=path)
@@ -282,8 +284,9 @@ def test_the_sdk_path_runs_on_a_mock_transport(monkeypatch):
     monkeypatch.setenv("JEV_API_KEY", "test-key-not-a-secret")
     ask = run.sdk_ask()
     p = profiles.profiles()["act"]
-    got = ask({"kind": "chat message", "text": "is it the database?"}, p.question())
-    assert got["answer"]["choice"] == "hypothesis" and got["usage"] == {"input_tokens": 321, "output_tokens": 12}
+    got = ask({"kind": "chat message", "text": "is it the database?"}, {"q": p.question()})
+    assert got["answers"]["q"]["choice"] == "hypothesis" and got["usage"] == {"input_tokens": 321, "output_tokens": 12}
+    assert set(got["answers"]["q"]) == {"choice", "confidence", "probabilities"}
     auth, body = seen[0]
     assert auth == "Bearer test-key-not-a-secret"                           # passed explicitly, from JEV_API_KEY
     assert body["model"] == profiles.classifier_version() and body["state"] == {"kind": "chat message", "text": "is it the database?"}

@@ -53,6 +53,8 @@ def cmd_tag(args: argparse.Namespace) -> int:
     if args.report:
         print(run.report(bundle))
         return 0
+    if args.experiment:
+        return run.experiment(bundle, args.experiment)
     return run.main(bundle, repeats=not args.no_repeats)
 
 
@@ -71,6 +73,7 @@ def parser() -> argparse.ArgumentParser:
     tag.add_argument("--no-repeats", action="store_true", help="fill the cache only; skip the stability repeats")
     tag.add_argument("--report", action="store_true", help="offline: print the precision, coverage and stability table")
     tag.add_argument("--sample", action="store_true", help="offline: print the sample to label by hand, as YAML")
+    tag.add_argument("--experiment", metavar="spec.toml", help="ask a file of candidate facets instead; answers go beside it, not in the cache")
     tag.set_defaults(run=cmd_tag)
     return p
 

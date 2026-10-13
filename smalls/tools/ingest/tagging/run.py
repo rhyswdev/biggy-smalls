@@ -21,11 +21,18 @@ from smalls.tools.ingest.tagging.profiles import classifier_version, config, pro
 from smalls.tools.ingest.tagging.profiles import floor as profile_floor
 from smalls.tools.ingest.tagging.units import Unit, tag_key
 
-Ask = Callable[[dict, dict], dict]
+Ask = Callable[[dict, dict], dict]      # (state, {question id: question}) -> {classifier, answers, usage, request_id}
+
+
+def _raw(answer: dict) -> dict:
+    """The part of an answer worth keeping: a choice with every option's probability, or a yes probability."""
+    if answer.get("type") == "noul" or "noul" in answer:
+        return {"noul": answer["noul"]}
+    return {"choice": answer["choice"], "confidence": answer.get("confidence"), "probabilities": answer["probabilities"]}
 
 
 def sdk_ask() -> Ask:
-    """One request to the pinned classifier version: a state and one question in, the raw answer out."""
+    """One request to the pinned classifier version: a state and its questions in, the raw answers out."""
     key = (os.environ.get("JEV_API_KEY") or "").strip()
     if not key:
         raise SystemExit("smalls tag: JEV_API_KEY is not set. Copy .env.example to .env and fill it in; only `make tag` needs it.")
@@ -35,11 +42,10 @@ def sdk_ask() -> Ask:
         raise SystemExit("smalls tag: the classifier SDK is not installed. Run it through `make tag` (uv run --group tagging).") from None
     client = TypeSafeClient(api_key=key, model=classifier_version())
 
-    def ask(state: dict, question: dict) -> dict:
-        response = client.system_one(state, {"q": question})
+    def ask(state: dict, questions: dict) -> dict:
+        response = client.system_one(state, questions)
         d = response.model_dump(mode="json")
-        a = d["answers"]["q"]
-        return {"classifier": d["model"], "answer": {"choice": a["choice"], "confidence": a.get("confidence"), "probabilities": a["probabilities"]},
+        return {"classifier": d["model"], "answers": {qid: _raw(a) for qid, a in d["answers"].items()},
                 "usage": {k: (d.get("usage") or {}).get(k) for k in ("input_tokens", "output_tokens")},
                 "request_id": getattr(response, "request_id", None)}
 
@@ -47,7 +53,7 @@ def sdk_ask() -> Ask:
 
 
 def _ask_all(jobs: list[tuple], ask: Ask, concurrency: int) -> tuple[list[tuple], list[str]]:
-    """Run (label, state, question) jobs, `concurrency` at a time, order kept. Returns the answered jobs
+    """Run (label, state, questions) jobs, `concurrency` at a time, order kept. Returns the answered jobs
     and one line per failure. A failure never stops the others: a re-run asks only for what is missing."""
     def one(job):
         try:
@@ -60,15 +66,20 @@ def _ask_all(jobs: list[tuple], ask: Ask, concurrency: int) -> tuple[list[tuple]
     return [(job, got) for job, got, err in results if got is not None], [err for _, _, err in results if err]
 
 
+def _one(got: dict) -> dict:
+    """A one-question request's result, as the cache and the repeats store it."""
+    return {"classifier": got["classifier"], "answer": got["answers"]["q"], "usage": got["usage"], "request_id": got.get("request_id")}
+
+
 def fill(units: dict[str, Unit], ask: Ask, path: Path | None = None, concurrency: int = 8) -> dict:
     """Ask the classifier for every unit whose key the cache lacks, and write the cache."""
     known = profiles()
     entries = cache.read(path)
     wanted = {tag_key(u, known[u.facet]): u for u in units.values()}
-    jobs = [(key, u.state, known[u.facet].question()) for key, u in sorted(wanted.items()) if key not in entries]
+    jobs = [(key, u.state, {"q": known[u.facet].question()}) for key, u in sorted(wanted.items()) if key not in entries]
     done, failures = _ask_all(jobs, ask, concurrency)
     for (key, _, _), got in done:
-        entries[key] = {"tag_key": key, "profile": known[wanted[key].facet].id, **got}
+        entries[key] = {"tag_key": key, "profile": known[wanted[key].facet].id, **_one(got)}
     if done:
         cache.write(entries, path)
     return {"units": len(wanted), "cached": len(wanted) - len(jobs), "requests": len(done), "failures": failures,
@@ -92,10 +103,10 @@ def repeat(units: dict[str, Unit], ask: Ask, n: int, path: Path = measure.REPEAT
         for i in range(1, n + 1):
             if (unit.id, profile.id, i) not in seen:
                 shuffled = i == n
-                jobs.append(((unit.id, profile.id, i, shuffled), unit.state, profile.question(f"{unit.id}:{i}" if shuffled else None)))
+                jobs.append(((unit.id, profile.id, i, shuffled), unit.state, {"q": profile.question(f"{unit.id}:{i}" if shuffled else None)}))
     done, failures = _ask_all(jobs, ask, concurrency)
     for ((unit_id, profile_id, i, shuffled), _, _), got in done:
-        have.append({"unit": unit_id, "profile": profile_id, "pinned": version, "repeat": i, "shuffled": shuffled, **got})
+        have.append({"unit": unit_id, "profile": profile_id, "pinned": version, "repeat": i, "shuffled": shuffled, **_one(got)})
     if done:
         have.sort(key=lambda r: (r["unit"], r["profile"], r["repeat"]))
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -129,6 +140,23 @@ def report(bundle_root: Path | str) -> str:
     u = usage()
     lines.append(f"classifier requests on record: {u['requests']} ({u['input_tokens']} input tokens, {u['output_tokens']} output tokens, ${u['usd']:.4f} at list price)")
     return "\n".join(lines)
+
+
+def experiment(bundle_root: Path | str, spec: Path | str, ask: Ask | None = None) -> int:
+    """Ask a file of candidate facets of the bundle's units (`smalls tag --experiment`). Writes the answers
+    beside the spec; the committed cache and the shipped profiles are not touched."""
+    from smalls.tools.ingest.tagging import experiment as exp
+
+    spec = Path(spec)
+    _, records, points, _ = store.read(bundle_root)
+    units = {**measure.units_of(records), **exp.metric_units(points)}
+    candidates, version = exp.load(spec)
+    print(f"smalls tag: experiment {spec.name} ({version}), candidates: {', '.join(candidates)}")
+    got = exp.run(spec, units, ask or sdk_ask(), _ask_all, concurrency=int(config()["run"]["concurrency"]))
+    print(f"  {got['requests']} requests, {got['input_tokens']} input tokens, {got['output_tokens']} output tokens; answers for {got['units']} units")
+    for line in got["failures"][:10]:
+        print(f"  ! request failed: {line}")
+    return 1 if got["failures"] else 0
 
 
 def main(bundle_root: Path | str, ask: Ask | None = None, repeats: bool = True) -> int:
