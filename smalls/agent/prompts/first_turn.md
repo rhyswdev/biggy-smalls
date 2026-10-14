@@ -13,7 +13,7 @@ This lists what exists; it is not evidence. Pass names exactly as listed: a metr
 ## Trigger
 {trigger}
 
-Answer what it asks. A cause it names, or asks you to confirm, is a stated hypothesis to test like any other.
+Answer what it asks, plainly and from what your checks show: a question with its answer; a step or plan it asks for with what it would involve and what the evidence says it would and would not fix; a cause it names with whether the evidence supports it, and why. A cause it names, or asks you to confirm, is a stated hypothesis to test like any other.
 
 ## Budget
 {budget}

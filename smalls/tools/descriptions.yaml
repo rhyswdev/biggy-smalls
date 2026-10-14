@@ -353,8 +353,10 @@ tools:
       to run.
     params:
       summary: >-
-        What is happening, what most likely caused it and how sure you are,
-        in a few sentences, with handles inline exactly as printed.
+        First, the plain answer to what the trigger asks, even when your
+        recommendation differs; then what is happening, what most likely
+        caused it and how sure you are, in a few sentences, with handles
+        inline exactly as printed.
       impact: >-
         Who and what is affected and who owns it, from the service desk,
         topology and on-call records.

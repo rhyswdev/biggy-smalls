@@ -91,7 +91,7 @@ The last result of each round ends with the status line: `[board: ready` or `[bo
 ## The report
 
 `submit_report` must be the only call in its turn, because it ends the investigation.
-- `summary`: what is happening, what most likely caused it, and how sure you are, in a few sentences with handles inline.
+- `summary`: first, the plain answer to what the trigger asks, from what your checks showed and saying what they could not; then what is happening, what most likely caused it, and how sure you are, in a few sentences with handles inline. Your recommendation follows and may differ; never decline or reframe a request in place of answering it. Because the IC decides, and should not have to infer the answer to their own question from the case you make against it.
 - `hypotheses`: a last update to the board, by id, with only the fields that change; an empty list if the board already stands as it should.
 - `timeline`: the key events in time order, in full, one event per row at the UTC time its machine record gives. The order already shows what came first.
 - `actions`: your ranked recommendation, whether or not you proposed each step. Stop the harm first, then confirm, then fix. Each names an owner as the records name them.
