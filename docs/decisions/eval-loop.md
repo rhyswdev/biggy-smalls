@@ -382,6 +382,8 @@ While the scorer session builds S1 to S7, three sets of live runs can be made no
 - A run that fails for a reason in the code is reported, not fixed in this session, unless it blocks every run; a fix then follows U15 (overfit review) in its own commit.
 - Budget: $7 of live calls, kept as a running total in 13.4, one line per batch. Stop and ask before a call that would cross it.
 
+**Ruled (2026-10-15): tags stay on unless the ablation shows harm.** R4's comparison is a check for harm, not a contest: tags stay on by default (G6) unless the tags-on side scores worse on outcome or falls for more traps than the tags-off side. Why: enrichment is not expected to help much on one small incident, and a larger corpus, the knowledge pages and runbooks above all, is where it would; so a flat result keeps them on.
+
 ### 13.2 Rows
 
 | # | Build | Accepted when |
