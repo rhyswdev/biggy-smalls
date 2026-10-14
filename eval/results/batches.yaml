@@ -1,6 +1,7 @@
 # What each batch of live runs was for (docs/decisions/eval-loop.md, ruling V7). `python -m eval.results add`
 # refuses a batch that is not described here, and the tuning log prints these words above each batch's table.
 # `pass` is the iteration pass whose prompt files the runs used: 0 is the first blind pass's files (row C2b).
+# `moved` says, in a sentence, what the batch showed or what its pass changed; the log and the page lead with it.
 batches:
   - name: c3
     phase: build
@@ -20,6 +21,7 @@ batches:
     finding: F-01
     result: reverted
     what: Pass 1, board updates sent in turns of their own. The target did not move.
+    moved: Board-only turns did not move (5 in each of 3 runs, against 4 to 6 before), and nothing else changed.
   - name: eff-low
     phase: 1
     pass: 0
@@ -30,6 +32,7 @@ batches:
     finding: F-02
     result: kept
     what: Pass 2, claims that say more than the rows they cite.
+    moved: Partial claims fell from 76 of 129 over five runs to 26 of 80 over three, with the same conclusions.
   - name: p02-low
     phase: 1
     pass: 2
@@ -40,6 +43,7 @@ batches:
     finding: F-03
     result: kept
     what: Pass 3, a hypothesis left open with no support and nothing said.
+    moved: An open rival with no support of its own now names the check that would decide it; before, half the runs left it with nothing said.
   - name: frame
     phase: 1
     pass: 3
@@ -58,10 +62,12 @@ batches:
     finding: F-04
     result: kept
     what: Pass 4, the commander's request argued against but not answered. Two framing triggers and the standard one.
+    moved: 'Requests are answered as asked: a stated cause gets a plain no with the reason first, and a requested plan is given in full beside the evidence against it.'
   - name: cli-claude
     phase: between
     pass: 4
     what: Two runs by hand on the first provider, one at each checkpoint, with the opening sweep. Each had four reads refused for a quiet board, which led to plan row P1.
+    moved: Each run had four reads refused for a quiet board, which plan row P1 turned into a nudge on the status line.
   - name: p3-sol
     phase: 2
     pass: 6
@@ -74,17 +80,27 @@ batches:
     phase: 2
     pass: 6
     what: P4's baseline on sol at medium, five runs at the second checkpoint and two at the first.
+    moved: Sol at medium led with the cause in 7 of 7 runs and stays the loop's model. The trigger was on the board in only 1 of 7, the gap pass 7 closed.
   - name: p4-luna
     phase: 2
     pass: 6
     what: P4's baseline on luna at high, five runs at the second checkpoint and two at the first.
+    moved: Luna at high led with the cause in 2 of 7 runs, four times with the database instead, at a tenth of sol's cost; it is not picked.
   - name: p07
     phase: 2
     pass: 7
     finding: F-07
     result: kept
     what: Pass 7, the summary naming a link of its account (what set the fault off) that the board did not hold. Three runs at the second checkpoint on sol at medium.
+    moved: The trigger is on the board in 5 of 5 runs, against 1 of 7, with the leading cause unchanged; neither wrong-cause trigger steered it.
   - name: p07-guard
     phase: 2
     pass: 7
     what: Pass 7's guard set, the two wrong-cause triggers (eval/framing/), one run each.
+  - name: p08
+    phase: 2
+    pass: 8
+    finding: F-09
+    result: reverted
+    what: Pass 8, the leading statement chaining links that its rows do not each show. Five runs at the second checkpoint on sol at medium (three, then two more, since the first three sat inside the spread).
+    moved: The leading statement was judged supported in 1 of 5 runs, short of the target, and an effect came back as an open cause in 3 of 5.

@@ -421,10 +421,7 @@ objects:
       A short, stable id such as h1, kept across updates and later looks, and
       never reused for a different claim.
     statement: >-
-      One link in one sentence: what the subject did and what that led to.
-      Other links, such as what set it off or made it worse, are hypotheses
-      of their own, not chained in here, because the reviewer checks a
-      statement against its own support alone.
+      The claim in one sentence: what the subject did and what it led to.
     role: >-
       What the claim says the subject is in this incident, fixed when the
       hypothesis is created: cause (its fault is why the incident happens),
@@ -451,7 +448,7 @@ objects:
       Clamped to 0.5 without support that is not chat.
     support: >-
       Handles of shown rows that support the claim, as the list should now
-      stand. By the report, it should hold a row for each part the statement
+      stand. By the report, it should hold a row for each link the statement
       names, the effect included, and the discriminating rows, which the
       report does not carry.
     against: >-

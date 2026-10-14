@@ -58,3 +58,11 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 
 **Result: kept.** Afterwards every run recorded what set the fault off as a `trigger` hypothesis with non-chat support, against about one run in seven before. The leading cause was unchanged. The account is now split across more hypotheses: the change that made the cause possible appears as its own `contributing` link, and a component that only looked faulty appears as a `symptom`. The share of claims judged partial was a little higher, within the earlier spread, and cost per run rose by about a tenth. Neither wrong-cause trigger steered the conclusion.
 
+## Pass 8: the leading statement chained links its rows did not each show (reverted)
+
+**Finding.** The leading hypothesis's statement was usually judged `partial`: it chained several causal links in one sentence, and its own rows showed some links and not others.
+
+**Change.** A statement said one link: what its subject did and what that led to. Other links went in hypotheses of their own, joined by the summary; support held a row for each part. The matching field descriptions said the same.
+
+**Result: reverted.** The leading statement was still judged `partial` in four of five runs, so the target did not move. The share of all claims judged partial fell, but in three of five runs an effect of the leading cause came back as a separate open `cause`, which pass 7's runs did not do: splitting the account into one-link statements made an effect read like a cause of its own. A new pass should not restate the one-link rule. The pass's author noted that the claim-support pass counts a link marked as inference as `partial` by definition, so wording alone cannot make a statement with an unshown link `supported`; whether marked reasoning should count is a question about the verifier, not the investigator.
+

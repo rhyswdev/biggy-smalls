@@ -116,12 +116,16 @@ phase2_modes:
     runs:
       seen: {p4-sol-C-1452-tags-r3: database exhaustion open as cause at 0.6, p4-sol-e-C-1440-tags-r1: a statement calling the exhaustion "a downstream mechanism ... rather than the initiating fault" with role cause, open at 0.6}
       luna: in 4 of 7 P4 luna runs the database's exhaustion led at 0.8 or 0.9 (the guilty-database trap)
-    review: the first draft was flagged as reproducing the guilty-database trap; the generic rewrite passed. A pass on it is ranked after F-07, and its overfit review of the installed diff decides whether it is kept
+    review: the first draft was flagged as reproducing the guilty-database trap; the generic rewrite passed
+    status: set aside after pass 7. On the pass 7 files the database was rejected as an independent cause in 5 of 5 runs and no effect was kept as an open cause, so a pass would have no target to move; and a rule aimed at this mode sits close to a trap
   - rank: 3
     mode: the leading statement chains several links and is judged partial
     kind: prompt
     layer: grounding
     finding: F-09
+    pass: 8
+    status: reverted (installed 6d661a8, reverted eb3da31)
+    after: {leading_statement_supported: 1 of 5, partial_claims: 52 of 151, effect_kept_as_open_cause: [p08-b-C-1452-tags-r1, p08-c-C-1452-tags-r1, p08-e-C-1452-tags-r1]}
     runs:
       seen: [p4-sol-C-1452-tags-r1, p4-sol-C-1452-tags-r2, p4-sol-C-1452-tags-r3, p4-sol-C-1452-tags-r4, p4-sol-C-1452-tags-r5, p4-sol-e-C-1440-tags-r2]
       totals: {claims: 179, partial: 75, unsupported: 7, contradicted: 1, by_kind_partial: {hypothesis: 23 of 33, timeline: 21 of 78, action: 16 of 38, do_not: 15 of 30}}

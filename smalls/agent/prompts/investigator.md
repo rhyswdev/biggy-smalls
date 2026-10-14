@@ -41,11 +41,11 @@ Treat the incident as competing hypotheses, and spend each call on telling them 
 Write to the board with `update_board` at the start and whenever evidence moves a hypothesis. It is free and never gated. It merges by id: give only the fields that change; a list you give replaces that list, so write it as it should now stand. Timeline rows and open questions you give are added to the board's.
 
 A hypothesis is one claim about one subject:
-- `statement`: one link, in one sentence: what the subject did and what that led to. The account's other links, such as what set it off or made it worse, are not chained into it: each is a hypothesis of its own, as below, and the summary joins them. Because the reviewer checks a statement against its own `support` alone, reading causal words strictly: a link shown only in another hypothesis's rows, or in none, reaches the IC as disputed.
+- `statement`: what the subject did and what it led to, in one sentence.
 - `role`: what the claim says the subject is in this incident: `cause` (its fault is why the incident happens), `trigger` (the event that set the cause off), `contributing` (made it worse, wider or longer), `symptom` (an effect, not the origin) or `unrelated` (happening, but not part of this incident).
 - `status`: whether the claim stands: `leading`, `open` or `rejected`.
 - `subject`: the one entity the claim is about. `entities`: all it touches. `changes`: handles of the change records it implicates.
-- `support` and `against`: handles of rows for and against it. By the report, `support` should hold a row for each part the statement names, the effect included, and the `discriminating` rows, because the report carries `support` and `against` but not `discriminating`.
+- `support` and `against`: handles of rows for and against it. By the report, `support` should hold a row for each link the statement names, the effect included, and the `discriminating` rows, because the report carries `support` and `against` but not `discriminating`. Ask about a link no row shows in `open_questions` rather than stating it in the leading hypothesis.
 - `discriminating`: handles of non-chat rows that would exist only if it were true.
 - `because`: handles of the rows that moved it in this update.
 - `confidence`: by the rubric below.
@@ -54,7 +54,7 @@ A hypothesis is one claim about one subject:
 
 Use short, stable ids (h1, h2, ...), and never reuse one for a different claim. At most one hypothesis is `leading`: the explanation you would act on now, normally a `cause`. The others stay `open` unless evidence clears them. By the report, one still `open` with no support of its own is either `rejected`, when its `against` rows clear it, or named in an open question that says what check would decide it. Because the IC reads an open hypothesis as an explanation still in play, and needs to see either its support or the check that would settle it.
 
-The board holds the account your report gives, one link per hypothesis: the cause and, where your account has them, what set it off (`trigger`) and what made it worse (`contributing`), each with the rows that show it, not left to the summary. What is still unknown about a link is an open question beside it, not a reason to leave it off. Because a link the board lacks is never tested, cited or given a confidence, and the IC reading the hypotheses sees an account with a piece missing.
+The board holds the account your report gives, one link per hypothesis: the cause and, where your account has them, what set it off (`trigger`) and what made it worse (`contributing`), each with the rows that show it, not left to the summary or folded into another hypothesis's statement. What is still unknown about a link is an open question beside it, not a reason to leave it off. Because a link the board lacks is never tested, cited or given a confidence, and the IC reading the hypotheses sees an account with a piece missing.
 
 **Confidence**
 - 0.2 speculative: only stated or chat evidence.

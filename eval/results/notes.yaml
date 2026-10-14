@@ -1,0 +1,41 @@
+# What each chart on the published tuning-log page shows, read from the ledger at the close of the eval loop's
+# phase 2 (2026-10-14). `python -m eval.results export` writes them to notes.json for the page. Update a reading
+# when new batches change what its chart shows, and change the date in `as_of`.
+as_of: 2026-10-14, after pass 8
+notes:
+  - chart: lead
+    reading: >-
+      Every sol run led with the payments gateway, the plan's cause, in both phases: each batch is solid gateway.
+      The exception is luna's baseline, where 2 of 7 runs led with the gateway, 4 with the database (the trap) and
+      1 with the payment provider (the trigger). That is why the loop stayed on sol.
+  - chart: trigger
+    reading: >-
+      Through pass 3 every standard run recorded what set the fault off as a hypothesis. From pass 4 it dropped to 0
+      of 3 and stayed low (1 of 7 in sol's phase 2 baseline). Pass 7 brought it back to 5 of 5, and it held through
+      pass 8. The framing runs on the pass 3 files had none either, so pass 4 is not the whole explanation.
+  - chart: partial
+    reading: >-
+      Before pass 2 more than half of each report's claims were only partly shown by their rows (median 0.58). Pass 2
+      cut that to about 0.32, and it has drifted between 0.4 and 0.5 since. Low effort runs looser (0.5 to 0.7).
+      Pass 7 sits near 0.5 because it adds hypotheses; the reverted pass 8 reached 0.32 but missed its own target.
+  - chart: hyps
+    reading: >-
+      A steady 5 to 6 hypotheses per report until pass 7, which puts each link of the account on the board: a median
+      of 9, with the trigger, the release and a symptom as their own hypotheses. Luna's reports hold fewer (median 4).
+  - chart: cost
+    reading: >-
+      The first provider costs about $1.06 a run, sol about $0.34 to $0.42, luna $0.03 to $0.05. Within sol, pass 7
+      moved the median from $0.36 to $0.41: more hypotheses mean more to write and to verify.
+  - chart: wall
+    reading: >-
+      Sol takes 180 to 250 s at medium effort and 150 to 170 s at low. Luna is the slow one, 290 to 490 s, because it
+      reasons at length at high effort. Running several runs side by side in phase 2 did not visibly slow sol.
+  - chart: turns
+    reading: >-
+      Sol is flat at 11 to 14 turns throughout: the 30-call budget binds before the turns do. Luna uses 7 to 10 and
+      the first provider 8 to 12, because both put more reads in each turn.
+  - chart: boardonly
+    reading: >-
+      Sol spends 4 to 6 turns of every run on board writes alone, in every batch, and pass 1's prompt change did not
+      move it. The first provider does it 0 to 2 times and luna 2 to 4, so it is a habit of the model, not of the
+      prompt, and it is classed as a model limit.
