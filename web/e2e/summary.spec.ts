@@ -69,3 +69,14 @@ test("saving puts it in the knowledge base, any edit unsaves it, and Regenerate 
   await expect(page.locator(".label", { hasText: "draft 2" })).toBeVisible();
   await expect(page.getByText(/Draft 2, regenerated/)).toBeVisible();
 });
+
+test("the summary never scrolls sideways, however long a record's text", async ({ page, request }) => {
+  const id = await finishedChat(page, request);
+  await request.put(`${API}/chats/${id}/resolution`, { data: { path: "own", note: "Ran the job again; it finished.", resolved_at: "02:40", resolved_by: "Commander" } });
+  for (const width of [1440, 900, 420]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(`/chats/${id}/summary`);
+    await expect(page.getByRole("button", { name: "Save to knowledge base" })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `at ${width}px`).toBeLessThanOrEqual(0);
+  }
+});

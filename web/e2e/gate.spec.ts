@@ -98,6 +98,32 @@ test("Shift+A approves all the waiting reads, and the run goes on to the next ga
   await expect(target(page)).toBeFocused();
 });
 
+test("turning auto-approve on keeps the decisions already made on the waiting gate", async ({ page, request }) => {
+  const id = await waitingChat(page, request);
+  const first = await rows(page).first().getAttribute("data-call");
+  await page.keyboard.press("r");
+  await page.getByLabel("Reason for rejecting").fill("Already known from the ticket");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(`.rcpt[data-call="${first}"]`)).toContainText("Rejected by you");
+  await page.getByRole("switch", { name: "Auto-approve reads" }).click();
+  // The rejection stands; the reads nobody had decided are approved, and the run goes on.
+  await expect.poll(async () => {
+    const view = await (await request.get(`${API}/chats/${id}`)).json();
+    return view.events
+      .filter((e: { type: string; data: { call_id?: string } }) => e.type === "gate_decision" && e.data.call_id?.startsWith("sweep_"))
+      .map((e: { data: { call_id?: string; decision?: string } }) => `${e.data.call_id === first ? "first" : "other"}:${e.data.decision}`)
+      .sort();
+  }, { timeout: 20_000 }).toEqual(["first:rejected", "other:approved", "other:approved"]);
+});
+
+test("an action left waiting is named as one in the composer's hint", async ({ page, request }) => {
+  const id = await newChat(request, { origin: "chat", auto_approve: true });
+  await until(request, id, ["waiting"]);
+  await page.goto(`/chats/${id}`);
+  await expect(page.locator("#pending .gg-title")).toHaveText("◆ 1 action needs your approval");
+  await expect(page.locator(".wait-link")).toHaveText(/1 action is waiting for you above/);
+});
+
 test("Shift+S skips all the waiting reads", async ({ page, request }) => {
   await waitingChat(page, request);
   await page.keyboard.press("Shift+S");

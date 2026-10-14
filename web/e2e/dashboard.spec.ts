@@ -36,3 +36,13 @@ test("a chat waiting on reads is amber, with Resume as the primary button", asyn
   await expect(resume).toHaveClass(/primary/);
   await expect(page.locator(".chat-row .lbtn.primary")).toHaveCount(await page.locator(".chat-row .sm-tag-attention").count());
 });
+
+test("the dashboard loads with nothing missing: no failed request and no console error", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  page.on("response", (r) => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Smalls dashboard" })).toBeVisible();
+  await page.waitForLoadState("networkidle");
+  expect(errors).toEqual([]);
+});

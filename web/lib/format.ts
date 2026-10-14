@@ -37,6 +37,14 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
+/** What a waiting gate holds, as the composer's hint names it: reads, actions or both, with the verb to match. */
+export function waitingText(cards: { kind: string }[]): string {
+  const actions = cards.filter((c) => c.kind === "action").length;
+  const reads = cards.length - actions;
+  const what = [reads ? plural(reads, "read") : "", actions ? plural(actions, "action") : ""].filter(Boolean).join(" and ");
+  return `${what} ${cards.length === 1 ? "is" : "are"}`;
+}
+
 /** "P1 · Critical" from "1 - Critical". */
 export function priority(value: string | null | undefined): { code: string; label: string; text: string } | null {
   const m = /^(\d)\s*-\s*(.+)$/.exec(value ?? "");

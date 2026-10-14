@@ -33,6 +33,17 @@ export interface Writeup {
 
 /** Every handle a report cites, in the order it first cites them: the summary, the hypotheses, the timeline, the
  * actions, the do-not list and the alert verdicts. */
+// The knowledge base takes an entry's title up to this length (the API's `WriteupSave`); a hypothesis statement has
+// no such limit, so a long one is cut at a word and marked.
+export const TITLE_MAX = 300;
+
+export function clip(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const space = cut.lastIndexOf(" ");
+  return `${(space > max / 2 ? cut.slice(0, space) : cut).trimEnd()}…`;
+}
+
 export function citations(report: Report | null): string[] {
   if (!report) return [];
   const out: string[] = [];
@@ -74,7 +85,8 @@ export function render(data: WriteupData, kept: ReadonlySet<string>, note: strin
   const all = data.cited ?? order;
   const listed = [...order.filter((h) => all.includes(h)), ...all.filter((h) => !order.includes(h))];
   const evidence = listed.map((h) => ({ handle: h, text: data.rows[h] ?? h, source: source(h), kept: kept.has(h) }));
-  const title = own ? (note.trim().split("\n")[0] ?? "").slice(0, 120) || "Resolved another way" : cause?.statement ?? report?.summary.split(/(?<=[.!?])\s/)[0] ?? "Write-up";
+  const title = own ? (note.trim().split("\n")[0] ?? "").slice(0, 120) || "Resolved another way"
+    : clip(cause?.statement ?? report?.summary.split(/(?<=[.!?])\s/)[0] ?? "Write-up", TITLE_MAX);
   const pathLine = res ? `${own ? "Resolved another way" : "Smalls’ conclusion was right"} · resolved ${res.resolved_at} UTC by ${res.resolved_by}` : "";
   const chainTitle = own ? "Smalls’ last picture, not what fixed it" : "Cause → Trigger → Contributing → Impact";
   const terms = [...new Set([lead?.subject, ...(lead?.entities ?? []), report?.impact?.business_service,

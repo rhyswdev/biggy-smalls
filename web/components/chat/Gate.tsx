@@ -27,6 +27,27 @@ type Local = { state: "approved" | "edited" | "skipped" | "rejected"; reason?: s
 // Generic reasons a commander gives for not running a read; a reason is still required, and these only fill it.
 const QUICK = ["Already known; not needed", "Too broad; narrow it first", "Not relevant to this incident"];
 
+// The auto-approve switch, turned on while a gate waits, approves the reads nobody has decided yet. Decisions the
+// commander already made on that gate stand: the gate sends them first, with the undecided reads approved, and only
+// then does the switch reach the API, whose standing answer would otherwise approve every card on the gate.
+const standing = new Map<string, () => Promise<void>>();
+
+export async function answerRestFirst(chatId: string): Promise<void> {
+  await standing.get(chatId)?.();
+}
+
+type Answers = Parameters<typeof answerGate>[2];
+
+function answersOf(asked: Row[], local: Record<string, Local>): Answers {
+  return Object.fromEntries(asked.map((r) => {
+    const d = local[r.call_id]!;
+    if (d.state === "approved") return [r.call_id, { approve: true }];
+    if (d.state === "edited") return [r.call_id, { approve: true, args: d.args }];
+    if (d.state === "skipped") return [r.call_id, { defer: true }];
+    return [r.call_id, { approve: false, reason: d.reason }];
+  }));
+}
+
 const typing = (e: React.KeyboardEvent) => {
   const t = (e.target as HTMLElement)?.tagName;
   return t === "INPUT" || t === "TEXTAREA" || t === "SELECT";
@@ -213,29 +234,44 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
   const schemaOf = (tool: string) => schemas.find((s) => s.name === tool);
   const editable = (r: Row) => r.kind === "read" && Boolean(schemaOf(r.tool));
 
+  const latest = useRef({ asked, local });
+  useEffect(() => { latest.current = { asked, local }; });
+
+  const send = useCallback(async (answers: Answers) => {
+    const result = await answerGate(chatId, pending.interrupt_id, answers);
+    if (!result.ok) {
+      const message = result.status === 409 ? "This gate was already answered, in another tab or by the switch. The run went on with that answer."
+        : result.error ?? "The answer was not taken.";
+      setError(message);
+      onRefused?.(message);           // shown by the chat too: the gate settles as the first answer lands
+      if (result.status !== 409) { sent.current = false; setLocal({}); }
+    }
+    onDecided?.();
+  }, [chatId, pending.interrupt_id, onDecided, onRefused]);
+
   // Every card has an answer: send them all at once. The API takes the first answer and refuses any other.
   useEffect(() => {
     if (sent.current || !asked.length || asked.some((r) => !local[r.call_id])) return;
     sent.current = true;
-    const answers = Object.fromEntries(asked.map((r) => {
-      const d = local[r.call_id]!;
-      if (d.state === "approved") return [r.call_id, { approve: true }];
-      if (d.state === "edited") return [r.call_id, { approve: true, args: d.args }];
-      if (d.state === "skipped") return [r.call_id, { defer: true }];
-      return [r.call_id, { approve: false, reason: d.reason }];
-    }));
-    start(async () => {
-      const result = await answerGate(chatId, pending.interrupt_id, answers);
-      if (!result.ok) {
-        const message = result.status === 409 ? "This gate was already answered, in another tab or by the switch. The run went on with that answer."
-          : result.error ?? "The answer was not taken.";
-        setError(message);
-        onRefused?.(message);           // shown by the chat too: the gate settles as the first answer lands
-        if (result.status !== 409) { sent.current = false; setLocal({}); }
-      }
-      onDecided?.();
-    });
-  }, [local, asked, chatId, pending.interrupt_id, onDecided, onRefused]);
+    const answers = answersOf(asked, local);
+    start(async () => { await send(answers); });
+  }, [local, asked, send]);
+
+  // The switch turned on: approve the reads still undecided and send them with the decisions already made. With
+  // nothing decided yet, the switch's own answer covers the gate; with an action undecided, the gate keeps waiting.
+  useEffect(() => {
+    const flush = async () => {
+      const { asked, local } = latest.current;
+      const rest = asked.filter((r) => !local[r.call_id]);
+      if (sent.current || rest.length === asked.length || rest.some((r) => r.kind !== "read")) return;
+      const all: Record<string, Local> = { ...local, ...Object.fromEntries(rest.map((r) => [r.call_id, { state: "approved" as const }])) };
+      sent.current = true;
+      setLocal(all);
+      await send(answersOf(asked, all));
+    };
+    standing.set(chatId, flush);
+    return () => { if (standing.get(chatId) === flush) standing.delete(chatId); };
+  }, [chatId, send]);
 
   useEffect(() => { refocus(); }, []);
 

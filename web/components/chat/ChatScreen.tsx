@@ -10,12 +10,12 @@ import { draftMessages } from "@/lib/actions/messages";
 import { suggestions, type CodeAnswer, type Suggestion } from "@/lib/chat/answers";
 import { startedAt, type ChatState, type Turn } from "@/lib/chat/reduce";
 import { useChatEvents } from "@/lib/events";
-import { clock, day, plural, seconds, stamp } from "@/lib/format";
+import { clock, day, plural, seconds, stamp, waitingText } from "@/lib/format";
 import type { ChatSummary, IncidentCard, MessageRow } from "@/lib/types";
 import { specs } from "@/lib/writeup/messages";
 import { DraftAnswer } from "@/components/messages/DraftAnswer";
 import { AnswerCard } from "./AnswerCard";
-import { GroupView, refocus, type ToolSchema } from "./Gate";
+import { answerRestFirst, GroupView, refocus, type ToolSchema } from "./Gate";
 import { Linked } from "./Linked";
 import { ResolveDialog } from "./ResolveDialog";
 import { WorkingPicture } from "./WorkingPicture";
@@ -97,7 +97,11 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   }
   function switchAuto(on: boolean) {
     setAuto(on);
-    start(async () => { const r = await setAutoApprove(chat.id, on); if (!r.ok) { setAuto(!on); setError(r.error ?? "The switch did not change."); } });
+    start(async () => {
+      if (on) await answerRestFirst(chat.id);         // the decisions already made on a waiting gate stand
+      const r = await setAutoApprove(chat.id, on);
+      if (!r.ok) { setAuto(!on); setError(r.error ?? "The switch did not change."); }
+    });
   }
 
   const summary = state.finished;
@@ -118,7 +122,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
                     {summary ? <> · finished in <span className="time">{seconds(summary.wall_s)}</span> · {plural(reads.length, "read")}, {asked ? `${asked} needed approval` : "none needed approval"}</> : running ? " · running" : null}
                   </span>
                   <span className="small muted">
-                    {past ? "A live run, kept as it was recorded. Nothing here calls a model; " : "Started from the incident commander's note, unattended: reads ran without asking and any action was left for you. "}
+                    {past ? "A live run, kept as it was recorded. Nothing here calls a model. " : "Started from the incident commander's note, unattended: reads ran without asking and any action was left for you. "}
                     Below is exactly what Smalls did.{past ? " It is read-only." : " Ask a follow-up to keep going."}
                   </span>
                 </div>
@@ -166,7 +170,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
                     <span className="grow" />
                     {waiting ? (
                       <a className="wait-link" href="#pending" onClick={(e) => { e.preventDefault(); document.getElementById("pending")?.scrollIntoView({ block: "center" }); refocus(); }}>
-                        <span aria-hidden="true">◆ </span>{waiting === 1 ? "1 read is" : `${waiting} reads are`} waiting for you above
+                        <span aria-hidden="true">◆ </span>{waitingText(state.pending?.cards ?? [])} waiting for you above
                       </a>
                     ) : <span className="small muted">{auto ? "Reads run without asking" : "Smalls asks before every read"}</span>}
                     {running ? <Button variant="quiet" onClick={() => start(async () => { await stopRun(chat.id); })}>Stop</Button> : null}
