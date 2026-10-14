@@ -1,31 +1,61 @@
 # Build plan: the web UI and its API
 
-Ruling record and build plan, written on 2026-10-14 on branch `ui-build` (worktree `.claude/worktrees/ui-build`, cut from `agent-build` at `f3bb336`). It covers the work that section 2 of `docs/decisions/tools-agent-build.md` leaves to "the UI step": the API service with server-sent events, the web UI, and the resume compare-and-set that a web client needs. The screens are the approved v2 designs (section 4).
+Ruling record and build plan, written on 2026-10-14 on branch `ui-build` (worktree `.claude/worktrees/ui-build`, cut from `agent-build` at `f3bb336`, with `main` merged in at `904c686`). It covers the work that section 2 of `docs/decisions/tools-agent-build.md` leaves to "the UI step": the API service with server-sent events, the web UI, and the resume compare-and-set that a web client needs. The screens are the approved v2 designs (section 4).
 
-The agent track is still building on `agent-build` while this step runs. The two tracks share a commit history and a few files, and nothing else: section 3 says who edits what, and section 8 lists what the UI needs from the agent track, with what the UI does until each piece lands.
+The agent track has finished for now and is merged into `main`, with its first live run committed (section 1.1). The UI needs eight small additions to the agent code (section 8). A UI session reads the designs, whose sample data is the answer, so it never edits the agent; the additions are built by a separate seams session on branch `agent-seams` that never reads the designs, at the same time as the UI build (section 3).
 
-A fresh session builds from this file plus `docs/requirements.md`, PLAN sections 0, 3.1, 3.2 and 13, agent-design section 3 and axes 3, 4 and 8, and tools-agent-build sections 2, 5, 7.2 and 7.3. This record holds no incident content and no held-out content, so the agent track and the prompt author may read it.
+A fresh session builds from this file plus `docs/requirements.md`, PLAN sections 0, 3.1, 3.2 and 13, agent-design section 3 and axes 3, 4 and 8, and tools-agent-build sections 2, 5, 7.2 and 7.3. This record holds no incident content and no held-out content, so the seams session and the prompt author may read it.
 
 ## 1. Rulings (proposed 2026-10-14)
 
-Each is ours to overrule. The build uses them as written until one is changed here. Amended the same day after review: U2 (run records and checkpoints move into the database), U8 (a model drafts the stakeholder messages), U9 (a follow-up continues the same run), and Q1 and Q2 ruled.
+Each is ours to overrule. The build uses them as written until one is changed here. Amended the same day after review: U2 (run records and checkpoints move into the database), U8 (a model drafts the stakeholder messages), U9 (a follow-up continues the same run), and Q1 and Q2 ruled. Amended again after merging `main`: U4 records why webhooks and LangGraph's own server were not taken, U6 says what "Run agent" does with an action, U12 has a committed run to replay, and Q4 and Q5 are settled (section 1.1).
 
 | # | Point | Ruling | Why | Requirement served |
 |---|---|---|---|---|
 | U1 | Shape | Two processes. A FastAPI service, `smalls/api/`, imports the agent and the tools in process. A Next.js app, `web/`, renders every screen and talks only to that service. | The agent, its runner, its events and its gates are Python and were designed to be served this way (agent-design section 3, "Serving it later with FastAPI"). FastAPI gives typed request models and an OpenAPI document the web app generates its types from. | "A lightweight full-stack application" |
 | U2 | State | Everything lives in one in-memory SQLite database, rebuilt at every start: the app's own state (chats, gate answers, notes, resolutions, write-ups, messages, knowledge-base entries, the event log), the agent's run records and LangGraph's checkpoints. The database is SQLite's in-memory VFS, `file:/smalls?vfs=memdb`, so the app and the checkpointer each keep their own connection to one database with ordinary locking. Run records reach it through seam S8; until S8 lands they go to a temporary folder deleted at exit. Committed run records stay files: the API loads them into the database at start, and an export writes a run back out in the file layout when one is to be committed. | Asked for in review: one store, nothing on disk, nothing that survives a restart. It keeps decision 11 of PLAN section 0. We checked that two connections to one `memdb` database share it, that LangGraph's `SqliteSaver` creates its tables on one, and that two threads writing at once lose nothing with a busy timeout, on the host (SQLite 3.53.1) and in the project image (3.40.1; `memdb` needs 3.36). The file layout stays the format the CLI, the eval and the scorer read, so the agent track's contract does not change, it gains a second backend. | "Memory / state management" |
 | U3 | Concurrency | The API stays synchronous where it touches the agent. Runs execute on a small worker pool. A gate is a stop (`stop_at_gate`), never a blocked thread; the `Runner` for an active run is kept in memory and resumed from any worker under a per-run lock. Each run gets its own toolbox, because one store holds one clock. | The sync checkpointer fails under `ainvoke`, and a stopped run holds nothing while a person reads. The store's clock is per connection, so two runs at different `now` cannot share one. | "Failure handling" |
-| U4 | One event stream | The browser receives the agent's events unchanged (`Event.to_sse`), numbered per chat, resumable with `Last-Event-ID`. One pure reducer in TypeScript folds events into what a chat shows; the server runs it for the first paint and the browser runs it live. | One vocabulary already feeds the terminal, the run record and replay. Folding it once, in one place, means a replayed chat and a live one render the same way. | "Practical UX" |
+| U4 | One event stream | The browser receives the agent's events unchanged (`Event.to_sse`), numbered per chat, resumable with `Last-Event-ID`. One pure reducer in TypeScript folds events into what a chat shows; the server runs it for the first paint and the browser runs it live. The events are LangGraph's own stream (`graph.stream` with the `messages`, `updates` and `custom` modes), which the runner maps to our vocabulary; the API adds only the transport. Not taken: webhooks, and LangGraph's hosted Agent Server with its `useStream` React hook (below). | One vocabulary already feeds the terminal, the run record and replay. Folding it once, in one place, means a replayed chat and a live one render the same way. | "Practical UX" |
 | U5 | Gate answers | The first answer wins: a decision names the interrupt it answers, and the API applies it only if that interrupt is still pending (compare-and-set in the app database); a second answer gets 409. A rejection needs a reason, which the agent already turns into an `ic:note` handle. | A double click, two tabs or a key held down must never resume a run twice. | "Agent orchestration" |
-| U6 | Auto-approve | The switch is read when a run starts and becomes the run's policy (`by: auto`). Turned on while a run waits on reads, the API answers those read cards as the commander's standing choice. Actions always ask a person, whatever the switch says. Turning it off mid-run needs seam S6. | It matches the gate policy as built, and keeps the agent design's injection boundary: no text inside evidence can trigger an action without a person. | "Tool use" |
+| U6 | Auto-approve and actions | The switch is read when a run starts and becomes the run's policy (`by: auto`). Turned on while a run waits on reads, the API answers those read cards as the commander's standing choice. Turning it off mid-run needs seam S6. An action is never approved by the switch. In a chat ("Investigate in chat"), an action card waits for the commander like any gate. "Run agent" is an unattended run, so it answers an action card the way J15 makes every unattended run do: deferred and recorded as policy's, which is what the committed live run did. Its banner and the dashboard say "1 action proposed, not approved", and the commander can take it up with a follow-up. | It matches the gate policy as built and keeps the injection boundary: no text inside evidence can trigger an action without a person. "Run agent" promises a finished result you can leave the page for; pausing it on an action would break that, and approving one would need a person. | "Tool use" |
 | U7 | Client and server boundary | Every `page.tsx` and `layout.tsx` is a server component with no client logic. Interactive parts are client components under `web/components/`, given serialisable props. Mutations go through server actions that validate their input. There is no `app/api/` route: route handlers are for external callers, and we have none. The event stream reaches the browser through a `rewrites` proxy to the API. The API's address and every key are server-only. | It keeps secrets and the backend out of the browser, keeps pages cheap to render, and keeps each interactive island small enough to test. | "Clean enough code to understand and extend" |
 | U8 | Write-ups | A model drafts the stakeholder messages: one call per audience, from the report, the commander's resolution and the evidence they kept, through the agent's model adapter, with the model named by a config profile (the cheaper tier by default). The checks stay code and run on whatever the model wrote. Without a key (scripted or replay mode), code renders the drafts from the report's stakeholder update. The summary stays code-rendered. | Ruled in review: a model writes better prose for four audiences than templates do. The checks keep it honest, because every draft is checked against rules filled from the report before anyone copies it. The summary is a record of the evidence kept, so code keeps it exact. | "Suggested stakeholder update" |
 | U9 | Follow-ups | The suggested questions after an answer ("Why not …?", "Who should own it?") are answered by code from the report, the verifier's verdict and the board, and say so: "From the report. No new reads." "Draft the exec update" uses the U8 drafter. Free text while a run is live is an incident-commander note. Free text after a run has finished continues the same run where it stopped (seam S3): same conversation, same board, a few more gated calls. | Most suggested questions ask what the report already holds; answering them with a model call would be agent theatre. A real follow-up needs the agent's context, so it continues the run rather than starting a new one. | "Maintain some form of evolving investigation state" |
 | U10 | Nothing incident-specific in the UI | Every incident fact the UI shows comes from served data at `now` or from a run. The designs' sample data never enters code, fixtures or tests. The bundle-string lint extends to `smalls/api/` and `web/`. | The sample data in the designs is the incident's answer. Hard-coding any of it would fake the product and leak the answer into code the agent track reads. | "Grounded reasoning based on evidence" |
 | U11 | Knowledge base | Saved entries live in the app database and are searchable in the UI. They are not served to the agent. | Serving them means changing the tool layer, which is the agent track's and falls under the held-out rule. A write-up of an incident, visible to a later run of the same incident, is a leak. | "RAG or retrieval" |
-| U12 | A demo without a key | At start the API seeds every committed run record as a read-only chat. In replay mode it re-streams a committed run with its recorded timing and starts no run. Until the agent track commits a run (its row C3), development uses the scripted model. | PLAN 13: the quickstart a reviewer runs first is the replay of the hard investigation, with no key. | "Instructions to run the system locally" |
+| U12 | A demo without a key | At start the API loads every committed run record as a read-only chat. In replay mode it re-streams a committed run with its recorded timing and starts no run; `make app-demo` replays the Makefile's `DEMO_RUN`, the first live run (section 1.1), the same run `make demo` replays in the terminal. Development uses the scripted model for live behaviour and that run for real content. | PLAN 13: the quickstart a reviewer runs first is the replay of the hard investigation, with no key. | "Instructions to run the system locally" |
 | U13 | Compose | `api` and `web` join `compose.yaml`, as ruling G2 foresaw. Only `web` publishes a port. The `web` service gets no `env_file`. `uv` and `pnpm` on the host stay the primary path. | The key never reaches the Node process, and the API is not reachable from outside the compose network. | "Instructions to run the system locally" |
 | U14 | Design system | `tokens.css` and `bundle.css` are copied as they are. The components in `bundle.js` are rewritten as typed React with the same class names and props. No CSS framework is added. | The design system is already tokens and plain classes; a framework on top would be a second system to keep in step. | "An eye for design (UI)" |
+
+### 1.1 What merging `main` changed
+
+`main` gained two commits after this branch was cut: the first live run (row C3) and a runner fix it found. Both merged cleanly. What they mean here:
+
+| Found on `main` | Effect on this plan |
+|---|---|
+| A complete live run is committed, `eval/runs/20261014T090933Z-5d5522`, and the Makefile names it `DEMO_RUN` | U12 has a real run to replay. `make app-demo` replays it. The UI session can see real content without a key from row R5 on; committed test fixtures stay synthetic (row R9), and the lint keeps the run's text out of code. |
+| The run took 213 s, 8 model turns, 19 of 30 gated calls and $1.06, with 12 heartbeats while the model worked | The prototype's "about five reads", "well under a minute" and "41 s" are design numbers and are not used. The agent panel shows elapsed time, a heartbeat line while the model works ("model working, 23 s"), the reads as they happen, and the last committed run's measured time, reads and cost beside "Run agent". Q4's answer (progress by phase, no denominator) is confirmed. |
+| Its one proposed action was deferred, because an unattended run defers (J15) | U6: "Run agent" does the same, and says so. |
+| The events carry what section 7.5 assumed: `tool_result` has `first_line`, `native_query`, `window`, `shown` and `referenced`; `thinking` comes once per model call; `hypothesis_update` has `history`; `summary.json` has `wall_s_total`, `tool_calls` and the gate counts; `verdict.json` has the claims and the contrarian pass | No change. The receipt's first row is `first_line`; the native query is on the receipt after the read runs (S7 is still needed before it). |
+| Strict tool schemas are off for the investigator (the provider allows 24 optional inputs and the tools have 38); the agent still validates every call | No change. S2's edited arguments go through the same validation. |
+| `summary.json` now takes the report's final validation; the cache warning watches only the investigator | No change. |
+| The agent track is done for now, and its worktree is gone | The seams go to a separate seams session on `agent-seams` (section 3), not to the agent session. |
+| `main` is pushed | Q5: `ui-build` no longer carries unpushed commits from another branch, so it is pushed after each row, as the project instructions ask. |
+
+### 1.2 Why not webhooks, or LangGraph's own server
+
+**Webhooks.** In LangGraph, a webhook is a feature of the hosted Agent Server: give a run a URL and the server sends one POST to it when the run finishes. It does not stream, and a browser cannot receive a webhook; it is a call from one server to another. It would tell us a run had ended, which the event stream already does, and would not show a gate, a read or a hypothesis as it happens.
+
+**The Agent Server and `useStream`.** LangGraph's hosted server streams runs over server-sent events or WebSocket, with reconnect and replay, and its React hook `useStream` consumes that. It is the nearest off-the-shelf alternative to our API. We did not take it, because:
+
+- it runs the graph itself, so it bypasses our `Runner`, which writes the run record, maps the stream to our events, sends heartbeats, restarts from the board, renders a partial report when a limit is reached and prices each call; all of that would have to move into the server's hooks or be lost;
+- it keeps its own threads and checkpoints in its own store, which is a second store beside U2's database and against decision 11 of PLAN section 0;
+- `useStream` is shaped around messages and thread state, while the UI draws gates, receipts and a board from our event vocabulary; we would write an adapter to get back what we already have;
+- it adds a server to run and configure for something a small FastAPI layer over the existing `Runner` does in a few hundred lines.
+
+What we use is LangGraph's streaming all the same: the runner's `graph.stream` with three stream modes, mapped once into our events and served as server-sent events.
+
+**Where a webhook does belong.** The dashboard says the incident is "pushed from ServiceNow when a work note is added". In production that is an inbound webhook: a ServiceNow business rule posts the work note to the API, which starts an unattended run. In v1 the bundle is fixed and the card reads served data, so the webhook is the production path, named in the write-up and not built.
 
 ## 2. In and out
 
@@ -35,8 +65,9 @@ Each is ours to overrule. The build uses them as written until one is changed he
 
 | Work | Owner | Starts when |
 |---|---|---|
-| The seams in section 8: changes to `smalls/agent/` and `smalls/tools/` | The agent track | Between its rows; each is small and independent |
-| Live model runs, and committing the run the demo replays | The agent track (rows C3, C4), with a go-ahead | As that track schedules them |
+| The seams in section 8: changes to `smalls/agent/` and `smalls/tools/` | A seams session on branch `agent-seams`, which never reads the designs | Now, beside the UI build |
+| Further live runs, the shakedown (row C4) | The agent track, with a go-ahead | When that track resumes |
+| An inbound webhook from ServiceNow that starts a run (section 1.2) | The production path in the write-up | Not in v1 |
 | Saved knowledge-base entries feeding `search_knowledge` | A later step, with a ruling (U11) | After the held-out runs |
 | Sign-in, several users, persistence across restarts | Not in v1: one person on their own machine | The production path in the write-up |
 | Writing to ServiceNow, Slack or a status page | Not in v1: the UI copies text, it sends nothing | Never in this take-home |
@@ -50,7 +81,9 @@ Each is ours to overrule. The build uses them as written until one is changed he
 - a new lint module beside `smalls_data/prompt_lint.py` (section 7.6);
 - shared files, in small blocks of their own: `pyproject.toml` and `uv.lock` (a dependency group `api`), `Makefile` (a block of new targets at the end), `compose.yaml` (two new services), `.gitignore`, `.dockerignore`.
 
-It never edits `smalls/agent/`, `smalls/tools/`, `smalls/contracts/`, `eval/`, the five blind files or any existing make target. What it needs there is a seam request (section 8). On a rebase, `uv.lock` takes the other side and is regenerated with `uv lock`.
+It never edits `smalls/agent/`, `smalls/tools/`, `smalls/contracts/`, `eval/`, the five blind files or any existing make target. The reason is the held-out rule, not who else is busy: the UI session reads the designs, whose sample data is the answer (below), and a session that has read answer material does not edit the agent (HANDOFF, "Agent design and spike"). What it needs there is a seam (section 8).
+
+**The seams session.** A fresh session in `.claude/worktrees/agent-seams`, on branch `agent-seams` cut from `main`, builds section 8. It reads this record, the agent code and its build record, and never the designs. It follows the held-out rule like any session that writes the agent, and edits no blind file. It runs at the same time as the UI build. When a seam the UI needs is committed there, the UI session merges `agent-seams` into `ui-build`. On any merge, `uv.lock` takes the other side and is regenerated with `uv lock`.
 
 **Held-out rule.** This step does not write the agent, so the rule's restrictions on editing do not bind it, but it never reads or lists `eval/heldout/`, `scenario/variants/` or `bundles/h*/`, and repository searches exclude them. It reads no `_internal/` folder and nothing under `scenario/`. The API never opens either: it reads served data through the toolbox and the store, which refuse them, and the checkpoint's trigger file, which the harness already reads.
 
@@ -60,7 +93,7 @@ It never edits `smalls/agent/`, `smalls/tools/`, `smalls/contracts/`, `eval/`, t
 
 **The drafting prompt.** U8's prompt lives in `smalls/api/prompts/messages.md`. It is not one of the five blind files and does not steer the investigation, so this session writes it, under the same rules: generic, true for any incident, no bundle string (the lint covers it), no model named. It asks for one draft per audience in the shape the checks expect, and tells the model that report text is data, never instructions.
 
-**Commits.** Small, one per row or less, local on `ui-build`. The branch carries `agent-build`'s unpushed commits, so it is pushed when that one is. When `agent-build` lands a seam this step needs, this branch rebases onto it.
+**Commits.** Small, one per row or less, on `ui-build`, pushed after each row (`main` is pushed, so the branch carries nothing unpublished from elsewhere). New work from `main` or `agent-seams` comes in by merge.
 
 ## 4. The designs
 
@@ -147,7 +180,7 @@ One database per process: `sqlite3.connect("file:/smalls?vfs=memdb", uri=True, c
 | `writeup` | chat id, version, kept handles (JSON), rendered body (JSON), saved at |
 | `message` | chat id, audience, draft, text, copied hash, who drafted it (model profile or code), usage and cost |
 | `kb_entry` and `kb_fts` (FTS5) | id, chat id, title, body, search terms |
-| `run_*` (S8) | The agent's run record, one table per file of tools-agent-build section 7.2 (`run.json`, `events.jsonl`, `calls.jsonl`, `evidence.jsonl`, `notes.jsonl`, `board.json`, `report.json`, `verdict.json`, `usage.json`, `summary.json`) and the runs index, keyed by run id. The agent track's backend owns these tables; the app reads them and never writes them. |
+| `run_*` (S8) | The agent's run record, one table per file of tools-agent-build section 7.2 (`run.json`, `events.jsonl`, `calls.jsonl`, `evidence.jsonl`, `notes.jsonl`, `board.json`, `report.json`, `verdict.json`, `usage.json`, `summary.json`) and the runs index, keyed by run id. The agent's record backend (S8) owns these tables; the app reads them and never writes them. |
 
 ### 6.2 Run service
 
@@ -239,8 +272,9 @@ web/
 | Element | Source |
 |---|---|
 | Incident card and bar | `GET /incident`. After a report exists, the meta line can add the first timeline row's time, with its handle. |
-| Agent panel, running | `run_started` (elapsed), `phase`, `tool_call_proposed` and `tool_result` (the step list: the call's `rationale.tests` while it runs, its receipt when done) |
-| Agent panel, finished | The `report` event (summary, hypotheses with status and confidence) and the run's `summary.json` (wall time, reads, gates) |
+| Agent panel, idle | Beside "Run agent": the last committed run's measured time, reads and cost, from its `summary.json`, and the profile a live run would use. No prototype numbers. |
+| Agent panel, running | `run_started` (elapsed), `phase`, `heartbeat` (a "model working, N s" line while nothing else arrives), `tool_call_proposed` and `tool_result` (the step list: the call's `rationale.tests` while it runs, its `first_line` when done) |
+| Agent panel, finished | The `report` event (summary, hypotheses with status and confidence) and the run's `summary.json` (`wall_s_total`, `tool_calls`, the gate counts); a deferred action shows as "1 action proposed, not approved" (U6) |
 | Chats list | `GET /chats`: waiting (paused, with the count of pending cards), running, finished, resolved |
 | Narrative between gates | The round's `thinking` event: the first paragraph, expandable to the whole. Visible `text_delta` when a provider sends it. |
 | Gate row | The `gate_pending` card: tool, `rationale.tests` and `expect` as the reason, arguments as chips. "Show query": the native query when the card carries it (S7), else the arguments. |
@@ -260,9 +294,9 @@ web/
 
 `smalls_data/ui_lint.py` takes `bundle_strings()` from `smalls_data/prompt_lint.py` and scans every source file under `smalls/api/` and `web/` (not `node_modules`, `.next` or generated types) for those strings. It runs in `make lint`. Test fixtures are synthetic (section 9, row R9), so they pass it too.
 
-## 8. What the UI needs from the agent track
+## 8. What the UI needs from the agent code
 
-Each seam is mechanical code. None changes a blind file: wording the model sees in a seam is mechanical output, which the build session writes (tools-agent-build section 3). Until a seam lands, the UI uses the fallback and `/capabilities` says which is in force.
+Each seam is mechanical code, built by the seams session (section 3). None changes a blind file: wording the model sees in a seam is mechanical output, which the session writing the agent code writes (tools-agent-build section 3). Until a seam lands, the UI uses the fallback and `/capabilities` says which is in force.
 
 | # | Seam | Shape | Until it lands |
 |---|---|---|---|
@@ -277,7 +311,7 @@ Each seam is mechanical code. None changes a blind file: wording the model sees 
 
 Why it is not already there: since the finalize node ends at `END`, invoking the graph again on a finished thread starts from `START` and re-runs `orient` and the sweep, and `Runner.resume` refuses a run with nothing left to run. The conversation and board are all in the checkpointer, so S3 is routing and budget, not new state.
 
-The seams prompt asks the agent track for them in this order: S3, S8, S1, S5, S4, S2, S6, S7.
+The seams session builds them in this order: S3, S8, S1, S5, S4, S2, S6, S7.
 
 ## 9. Build order and acceptance
 
@@ -285,7 +319,7 @@ One sequence. Each row is committed when its acceptance passes; evidence goes in
 
 | # | Build | Accepted when |
 |---|---|---|
-| R0 | Baseline in the worktree | `make test` and `make lint` pass at the cut commit; the numbers are recorded here |
+| R0 | Baseline in the worktree | `make test` and `make lint` pass at the merge of `main` (`7176b65`); the numbers are recorded here |
 | R1 | API skeleton: dependency group `api` (FastAPI, uvicorn), the app factory, settings, the `memdb` database (6.1) with the checkpointer's connection beside the app's, `/health`, `/capabilities`, problem responses, `make api` | Pytest with the test client; two starts give identical empty databases; `SqliteSaver` sets up on the shared database; nothing is written to disk |
 | R2 | Run service (6.2) with gates, compare-and-set, notes, auto-approve (U6) and the scripted dev script; the S8 backend when present, the temporary folder until then | A scripted run over the agent track's fixture registry pauses at a gate and resumes on an answer; a second answer gets 409; no code path answers a gate nobody answered (a test moves the clock forward an hour and the gate is still pending); a rejection's reason is in the run's notes; an action card is never answered by the switch; with S8, a whole run writes no file; without it, the temporary folder is gone after shutdown |
 | R3 | The event stream (6.3) | A client that disconnects mid-run and reconnects with `Last-Event-ID` receives every `seq` exactly once and in order |
@@ -320,16 +354,16 @@ If time runs short, cut in this order: the knowledge-base preview, Regenerate, t
 
 ## 11. Open points
 
-Each has the answer the build uses meanwhile. Q1 and Q2 were ruled in review.
+Each has the answer the build uses meanwhile. Q1 and Q2 were ruled in review; Q4 and Q5 were settled by what merging `main` brought. Q3 and Q6 stay open.
 
 | # | Point | Answer | Why |
 |---|---|---|---|
 | Q1 | Gate expiry. Agent-design axis 3 says a UI gate times out to `deferred` after about 90 s; the v2 dashboard shows chats waiting on reads until the commander resumes them. | **Ruled: no expiry.** A waiting gate waits until the commander answers. | A gate is a stop and holds nothing, and the design treats a waiting chat as normal. The 90 s figure assumed a blocked thread. |
 | Q2 | Free-text follow-up after a run has finished. | **Ruled: it continues the same run where it stopped** (U9, seam S3). No new run. Until S3 lands, the chips work and free text after a finished run is held. | The conversation and board are in the checkpointer; starting over would throw them away and pay for the sweep again. |
 | Q3 | PLAN 13 asks for a timeline and the 14:40 to 14:52 difference; the v2 boards show neither as such. | The report's timeline as an expandable list under the answer card and in the summary's "What happened"; the difference as the Confidence ticks and the "Findings updated" strip; receipts show per-call board changes. | It meets PLAN 13 without a screen the designs did not ask for. |
-| Q4 | "Read N of 5" assumes a fixed number of reads; a real run has a budget and stops when ready. | Progress by phase (orient, sweep, investigate, report, verify) and the reads listed as they happen, with no denominator. | A bar that fills to the budget would be wrong on every run that stops early. |
-| Q5 | Pushing `ui-build`. | Local until `agent-build` is pushed. | Pushing would publish the agent track's commits from here. |
-| Q6 | The chain's "Mechanism" step: the report has no mechanism role. | Cause, Trigger and Impact from their sources; the third step shows contributing hypotheses under the label "Contributing". | Adding a role is a report-schema change on the agent track. |
+| Q4 | "Read N of 5" assumes a fixed number of reads; a real run has a budget and stops when ready. | **Settled by the first live run:** progress by phase (orient, sweep, investigate, report, verify) and the reads listed as they happen, with no denominator. | That run used 19 of 30 calls in 213 s against the prototype's five reads in 41 s. A bar that fills to the budget would be wrong on every run that stops early. |
+| Q5 | Pushing `ui-build`. | **Settled:** pushed after each row. | `main` is pushed, so the branch no longer carries another track's unpublished commits, and the project instructions say push often. |
+| Q6 | The chain's "Mechanism" step: the report has no mechanism role. | Cause, Trigger and Impact from their sources; the third step shows contributing hypotheses under the label "Contributing". | Adding a role is a report-schema change, which would also need a new blind pass for the field's description. |
 
 ## 12. Judgment calls made while building
 
