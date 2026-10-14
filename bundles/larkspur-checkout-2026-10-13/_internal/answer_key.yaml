@@ -2,6 +2,7 @@
 # Never served: rendered into _internal/ with a header.
 # Facts reference sig_ids and generated classes, never handles. Entities use facts.yaml entity keys.
 # Lint invariant 6 checks every sig_id and class a checkpoint uses resolves to a manifest row visible there.
+# The schema, and what each field means to the scorer, is eval/key.py (rows S1 and S2 of docs/decisions/eval-loop.md).
 
 facts:
   F.retry_change:    {any_of: [sig.jk412_changeset, sig.jk412_yml_path, sig.startup_timeout_8000, sig.kb_psp_retry_design]}
@@ -14,6 +15,10 @@ facts:
   F.owner_oncall:    {any_of: [sig.pd8812_escalated, sig.pd8812_ack_priya, sig.pd_oncall_priya, sig.pd_policy_payments]}
   F.owner_inactive:  {any_of: [sig.cmdb_owner_marcus]}
 
+# A trap is fallen for when a hypothesis whose subject matches it stands in a way the trap does not allow.
+# A role is what a hypothesis claims (tools-agent-build.md 11.2, ruling 4), so a rejected hypothesis never
+# falls for a trap, and a leading one always does. An open one passes when its role or its status is allowed.
+# absent_ok: the report may leave the subject out; otherwise it has to address it.
 checkpoints:
   "14:52":
     leading: {entity: payments-gateway, change_any: [CHG0031877, "payments-gateway-deploy#412", "3.8.0"]}
@@ -22,26 +27,68 @@ checkpoints:
     supporting_facts: [F.reconciler, F.prior_timeout, F.owner_oncall, F.owner_inactive]
     non_chat_required: true
     traps:
-      checkout-deploy: {match: {entity: checkout-api}, allowed: {status: [rejected]}}
+      checkout-deploy: {match: {entity: checkout-api}, allowed: {role: [symptom, unrelated]}}
       db-capacity:     {match: {entity: pay-db-01}, allowed: {role: [symptom, contributing]}}
-      redis:           {match: {entity: redis-sessions}, allowed: {status: [rejected]}, absent_ok: true}
+      redis:           {match: {entity: redis-sessions}, allowed: {role: [unrelated]}, absent_ok: true}
       pay03-hardware:  {match: {entity: pay-03}, allowed: {role: [symptom, contributing]}, absent_ok: true}
       marketing:       {match: {entity: marketing-site}, allowed: {role: [unrelated]}, absent_ok: true}
     contributing_any: [payments-reconciler]
     owner: {any: ["Priya Raman", "Payments Engineering"], never: ["Marcus Okafor"]}
     confidence: {wrong_leading_max: 0.6, right_leading_min: 0.6}
     judge:
-      mechanism: [retry_or_timeout_increase, txn_held_across_psp_call, pool_exhaustion, caller_timeouts]
-      actions:   [gateway_rollback_or_disable_retry_in_top2, reconciler_pause_as_headroom, duplicate_auth_audit, customer_update]
-      harmful_top3: [rollback_checkout_again, raise_pool_or_scale_pods, restart_redis, kill_idle_sessions, page_infra_for_pay03, traffic_named_as_cause]
+      mechanism:
+        retry_or_timeout_increase: "The report says the payments-gateway release added retries around the payment provider call and/or raised that call's timeout (from 3 s to 8 s)."
+        txn_held_across_psp_call: "The report says a database transaction or connection is held open while the gateway waits on the payment provider call, so slow calls hold connections."
+        pool_exhaustion: "The report says the gateway's connection pools (or the database's connection limit) are exhausted as a result of the held connections."
+        caller_timeouts: "The report says callers (checkout-api) time out waiting on the gateway, which is where the customer-facing 504s come from."
+      actions:
+        gateway_rollback_or_disable_retry_in_top2: "One of the two top-ranked actions rolls the payments-gateway back to the version before the release, or disables or shortens its retries or timeout."
+        reconciler_pause_as_headroom: "An action pauses or defers the payments-reconciler batch job to free database connections, framed as relief rather than the fix."
+        duplicate_auth_audit: "An action checks for duplicate or double payment authorizations caused by retries or customer resubmits."
+        customer_update: "An action or the stakeholder update covers telling customers or support what is happening."
+      harmful_top3:
+        rollback_checkout_again: "Roll back checkout-api again, or treat the checkout-api deploy as the thing to undo."
+        raise_pool_or_scale_pods: "Raise connection pool sizes or the database connection limit, or scale out pods or gateway instances."
+        restart_redis: "Restart, flush or fail over redis."
+        kill_idle_sessions: "Kill or terminate the idle-in-transaction database sessions as the fix."
+        page_infra_for_pay03: "Page infrastructure or replace hardware for pay-03 because it drops out of the load balancer pool."
+        traffic_named_as_cause: "Name the rise in traffic as the cause, or block or rate-limit traffic as the fix."
   "14:40":
     leading_any: [payments-gateway]
     trigger_optional: true
     required_facts: [F.psp_slow, F.pool_exhausted]
     supporting_facts: [F.retry_change, F.reconciler, F.prior_timeout]
     traps:
-      checkout-deploy: {match: {entity: checkout-api}, allowed: {status: [rejected, open]}}
+      checkout-deploy: {match: {entity: checkout-api}, allowed: {role: [symptom, unrelated], status: [open]}}
       db-capacity:     {match: {entity: pay-db-01}, allowed: {role: [symptom, contributing]}}
-      redis:           {match: {entity: redis-sessions}, allowed: {status: [rejected]}, absent_ok: true}
+      redis:           {match: {entity: redis-sessions}, allowed: {role: [unrelated]}, absent_ok: true}
       pay03-hardware:  {match: {entity: pay-03}, allowed: {role: [symptom, contributing]}, absent_ok: true}
     confidence: {wrong_leading_max: 0.6}
+
+# The verdict on each alert stream (ruling G3), the same at every checkpoint. A stream is matched through the
+# manifest row of the record the report names it by: by sig_id first, then by class. `accept` lists every right
+# verdict. A stream no entry matches takes `default`. The main measure is whether a stream is placed in or out of
+# this incident; `accept` also separates another incident from noise where the key is sure.
+alerts:
+  default: [noise, other_incident]
+  streams:
+    - {class: dd.event.p99_gw, accept: [this_incident]}
+    - {class: dd.event.p90_gw, accept: [this_incident]}
+    - {class: dd.event.co_errors, accept: [this_incident]}
+    - {class: dd.event.success_rate, accept: [this_incident]}
+    - {class: dd.event.pg_can_connect, accept: [this_incident]}
+    - {class: dd.event.syn_checkout, accept: [this_incident]}
+    - {class: dd.event.co_log_volume, accept: [noise, other_incident]}
+    - {class: dd.event.redis_frag, accept: [noise, other_incident]}
+    - {class: dd.event.syn_marketing, accept: [other_incident]}
+    - {sig: sig.dt_p26101350, accept: [this_incident]}
+    - {sig: sig.dt_p26101362, accept: [this_incident]}
+    - {sig: sig.dt_p26101377, accept: [other_incident]}
+    - {sig: sig.splunk_alert_pool, accept: [this_incident]}
+    - {sig: sig.splunk_alert_53300, accept: [this_incident]}
+    - {sig: sig.splunk_alert_f5, accept: [this_incident]}
+    - {sig: sig.sw_pay03, accept: [this_incident]}
+    - {sig: sig.pd8812, accept: [this_incident]}
+    - {sig: sig.pd8813, accept: [this_incident]}
+    - {sig: sig.pd8814, accept: [this_incident]}
+    - {sig: sig.pd8815_merged, accept: [this_incident]}
