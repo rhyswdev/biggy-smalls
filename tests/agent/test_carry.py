@@ -16,7 +16,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 import fixture_registry as fx
 import fixture_script
 from smalls.agent import __main__ as cli
-from smalls.agent import carry
+from smalls.agent import carry, prompts
 from smalls.agent.config import load_config
 from smalls.agent.models import scripted_call as call
 from smalls.agent.runner import Runner, module_toolbox
@@ -33,6 +33,15 @@ UPDATE = {"status": "Cause identified.", "customer_impact": "Reports were not de
 @pytest.fixture
 def cfg(tmp_path: Path):
     return load_config(runs_dir=tmp_path)
+
+
+def prior_board(first_turn: str, starts: str) -> str:
+    """The `{prior_board}` slot's value in a rendered first turn, found by the code's own opening words and
+    ended where the template's text after the slot begins. It reads none of the author's wording."""
+    tail = prompts.load("first_turn").split("{prior_board}", 1)[1].rstrip()
+    value = first_turn.rstrip()[first_turn.index(starts):]
+    assert value.endswith(tail)
+    return value[: len(value) - len(tail)]
 
 
 def start(cfg, run_id: str, script, now=fx.NOW, **kwargs):
@@ -91,12 +100,12 @@ def test_a_second_checkpoint_run_seeds_from_the_first(cfg):
     assert result["status"] == "completed" and read("run.json")["carried_from"] == {"run_id": "first", "as_of": EARLY_ISO}
     # The earlier board is in the first turn, each hypothesis under its id and marked re-test, with the rows it cites served again.
     first_turn = str(state["messages"][0].content)
-    assert f"The board as it stood at {EARLY_ISO}, from run first." in first_turn and "<earlier_board>\nnone" not in first_turn
+    prior = prior_board(first_turn, f"The board as it stood at {EARLY_ISO}, from run first.")
     earlier = {h["id"]: h for h in first_read("board.json")["hypotheses"]}
     for hid, h in earlier.items():
         assert f"{hid}  [{h['status']} {h['role']}, confidence {h['confidence']:.2f}, blames {h['subject']}, source {h['source']}] re-test  {h['statement']}" in first_turn
         assert state["hypotheses"][hid]["carried"] is True and state["hypotheses"][hid]["statement"] == h["statement"]
-    served = first_turn.split("Rows served again for this run, one line each")[1].split("</earlier_board>")[0]
+    served = prior.split("Rows served again for this run, one line each")[1]
     assert all(f"    {h}  " in served for h in earlier["h-release"]["support"])
     # Every handle the earlier board cites was fetched again by this run, as carry_forward, and is citable.
     cited = {x for h in earlier.values() for name in carry.LISTS for x in h.get(name) or []} | {x for row in first_read("board.json")["timeline"] for x in row["evidence"]}
@@ -213,7 +222,7 @@ def test_a_scripted_run_with_a_low_input_limit_restarts_once_and_keeps_its_ledge
     first = str(state["messages"][0].content)
     assert isinstance(state["messages"][0], HumanMessage) and "The board of this run as it stands. The conversation was restarted from it to free context" in first
     assert "h-full  [leading cause, confidence 0.60, blames worker-01, source derived]  The run failed because its spool volume filled up." in first
-    board_text = first.split("<earlier_board>")[1]
+    board_text = prior_board(first, "The board of this run as it stands.")
     assert "re-test" not in board_text and "Rows served again for this run" in board_text and "No space left on device" in board_text
     assert f"{small.call_budget - 4} tool calls, {small.call_budget + small.extra_turns - 3} model turns" in first      # what is left, not what it began with
     assert sum(isinstance(m, AIMessage) for m in state["messages"]) == 2 and "Opening sweep, run by the harness" in str(state["messages"][1].content)
