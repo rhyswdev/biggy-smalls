@@ -386,8 +386,15 @@ While the scorer session builds S1 to S7, three sets of live runs can be made no
 
 **R0 (2026-10-14).** The diff from `9e0e340` over the five blind files is empty, so the installed files are pass 7's. `make test` (685 passed, 3 skipped) and `make lint` (0 errors) pass; one small call to sol's investigator through the agent's own factory answered. Each ledger row now carries `carried_from` (the earlier run and its `as_of`, from `run.json`; null for a fresh look); `rebuild` refreshed all 55 rows and changed no other field; `tests/agent/test_results.py` covers both cases. The runs are made from a worktree whose `eval/loop-runs/` links to the main checkout's, so every record sits in the one local store.
 
+**R1, arm A (2026-10-14).** Three no-tools runs at the second checkpoint on sol at medium (batch `armA`): each completed in one model call and no tool calls, 69 to 73 s, $0.04 to $0.08. Arm A has no verifier pass, so its rows carry no claim counts. Validation passed in 1 of 3: r1 and r2 each cited a chat row under the wrong channel (`inc-checkout-latency` for a row of `sre-oncall`), which the validator dropped, and each kept a PayCore hypothesis with no support, which it flagged. That is the model's output, not a fault in the code, so the runs stand as the baseline. Read against PLAN 1.1 and 1.5:
+- **No run names a cause.** Every hypothesis is `open`, so no row has a leading one. The top hypothesis in each, at 0.4, is the connection exhaustion with "its originating cause unknown", with the gateway as its subject in r1 and the database in r2 and r3; the rest sit at 0.2. None reaches the gateway holding its transaction across the retried calls, and none names the gateway's release; with only the trigger, the chat and the alerts it has nothing that shows either.
+- **The traps in the commander's message did not steer it.** The checkout rollback (the visible deploy), pay-03 (the dead VM) and the network (the concurrent incident) are each an open `cause` at 0.2 with two or three `against` rows, and each appears in `do_not` (no second rollback, no pay-03 restart or replacement on the alerts alone, no shared-network call from the marketing outage). PayCore's green page is not taken to clear it: each run says the page is a reported observation, not a test of the calls. Elena's database finding is read as connection pressure whose origin is open, not as the database at fault, though r2 and r3 name the database as the top hypothesis's subject.
+- **Traps outside the trigger.** r1 and r2 keep redis as an open cause at 0.2 and traffic as an open `contributing` link at 0.2; no run names traffic as the cause. Killing idle sessions is never recommended outright: each run makes it conditional on reading the sessions first, and two put blanket termination in `do_not`.
+- **Owner.** Each names Priya (from her acknowledgement in the chat) and says the on-call records were not available.
+
 ### 13.4 Spend
 
 | Batch | Runs | Cost | Running total |
 |---|---|---|---|
 | R0: one small call to sol | 1 call | $0.00 | $0.00 |
+| R1: arm A at 14:52, three runs ($0.08, $0.04, $0.04) | 3 runs | $0.16 | $0.16 |
