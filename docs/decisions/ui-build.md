@@ -361,7 +361,7 @@ If time runs short, cut in this order: the knowledge-base preview, Regenerate, t
 
 ## 11. Open points
 
-Each has the answer the build uses meanwhile. Q1 and Q2 were ruled in review; Q4 and Q5 were settled by what merging `main` brought. Q3 and Q6 stay open.
+Each has the answer the build uses meanwhile. Q1 and Q2 were ruled in review; Q4 and Q5 were settled by what merging `main` brought. Q3, Q6 and Q7 stay open.
 
 | # | Point | Answer | Why |
 |---|---|---|---|
@@ -371,6 +371,7 @@ Each has the answer the build uses meanwhile. Q1 and Q2 were ruled in review; Q4
 | Q4 | "Read N of 5" assumes a fixed number of reads; a real run has a budget and stops when ready. | **Settled by the first live run:** progress by phase (orient, sweep, investigate, report, verify) and the reads listed as they happen, with no denominator. | That run used 19 of 30 calls in 213 s against the prototype's five reads in 41 s. A bar that fills to the budget would be wrong on every run that stops early. |
 | Q5 | Pushing `ui-build`. | **Settled:** pushed after each row. | `main` is pushed, so the branch no longer carries another track's unpublished commits, and the project instructions say push often. |
 | Q6 | The chain's "Mechanism" step: the report has no mechanism role. | Cause, Trigger and Impact from their sources; the third step shows contributing hypotheses under the label "Contributing". | Adding a role is a report-schema change, which would also need a new blind pass for the field's description. |
+| Q7 | Markdown in the model's prose. The investigator writes bullets and bold (`- **…:**`) into report summaries and follow-up answers; the chat and the summary show them as literal characters, run together into one paragraph. Found in the end-to-end pass (12.4). | Open. Meanwhile prose is rendered as text, as `Linked` says it must be: never parsed as HTML or Markdown. | The two ways out are a ruling each: render a small safe subset in the UI (line breaks, bullets, bold, still no HTML), or ask the model for plain prose, which is a blind-prompt change and a new blind pass. |
 
 ## 12. Judgment calls made while building
 
@@ -500,3 +501,29 @@ Budget $10 (section 3). One line per live call, its cost from its own record or 
 | 19 | R17 | Drafter through the API, support team (profile `anthropic-mid`) | 0.0213 | 1.7362 |
 | 20 | R17 | Drafter through the API, status page (profile `anthropic-mid`) | 0.0209 | 1.7571 |
 | 21 | R17 | Drafter through the API, engineering (profile `anthropic-mid`) | 0.0233 | 1.7804 |
+
+### 12.4 End-to-end pass, 2026-10-14
+
+A pass from the data to the browser on fresh data: `make data` (byte-identical to the commit), lint, ingest, a fresh tag cache and fresh stability repeats into a scratch path (`SMALLS_TAG_CACHE`; 490 of 490 decided tags equal the committed cache), live CLI runs at both checkpoints, and the app in live mode on the `claude` set driven in a browser through every origin: Investigate in chat, Run agent, a new chat, a recorded run, Stop, follow-ups, resolve, summary, knowledge base and messages. The second provider's account had no credits, so the default set paused at its first model call with `APIError`; the failure path held (paused, partial report, resume command).
+
+Found and fixed, each with a test that fails without the fix:
+
+| # | What | Fix | Test |
+|---|---|---|---|
+| E1 | Turning auto-approve on while a gate waited made the API approve every card, throwing away the decisions already made on that gate but not yet sent (the gate sends once every card is decided). A read the commander had rejected with a reason ran. | The gate sends its decisions first, with the undecided reads approved, before the switch reaches the API; with nothing decided, or an action undecided, the switch behaves as before (U6). | `e2e/gate.spec.ts`: the rejection stands after the switch |
+| E2 | "Save to knowledge base" failed with "The write-up is incomplete." when the leading cause's statement passed 300 characters (the knowledge base's title limit); a live run wrote one of 345. | The agent path's title is cut at a word to `TITLE_MAX` and marked with an ellipsis. | `tests/writeup.test.ts` |
+| E3 | The summary scrolled sideways: unbroken Splunk saved-search names in the evidence rail ran past the page (73 px at 1440 px wide). | `.v-sum .evtext` wraps anywhere. | `e2e/summary.spec.ts`: no sideways scroll at 1440, 900 and 420 px |
+| E4 | Every page logged a console 404 for `/favicon.ico`. | `app/icon.svg`. | `e2e/dashboard.spec.ts`: no failed request and no console error |
+| E5 | With an action waiting, the composer's hint said "1 read is waiting for you above". | The hint names reads, actions or both (`waitingText`). | `e2e/gate.spec.ts`, `tests/writeup.test.ts` |
+| E6 | The recorded-run banner read "Nothing here calls a model; Below is…". | A full stop. | none |
+
+Seen and left as they are, each working as designed or waiting on a ruling:
+
+- Markdown shows as literal characters in prose (Q7).
+- The working picture's Reads tally counts the reads the agent proposed, not the opening sweep, so it reads 0 while the sweep's three reads wait; the agent run's banner counts every proposed read (25), the chats list the reads that ran (17).
+- A recorded run that paused on a provider error is listed as Stopped, the label a live paused chat needs for "Go on".
+- A plain question in a new chat is answered first and well, then investigated as an incident: 14 reads and about two minutes for "who is on call".
+- The support message's "names no internal system" check flags a customer-facing site the draft mentions, because it is a CMDB item one of the report's hypotheses names.
+- With strict tool schemas off for the first provider, 3 of 18 calls in one run sent `terms` as a string and were refused by validation; the model fixed them on its next call.
+- `make tag` takes the stability repeats from the committed `eval/tags/repeats.jsonl`, which has no override; a fresh run of them found 2 `signal` values that did not reproduce at the 0.90 floor, where the committed repeats found none.
+

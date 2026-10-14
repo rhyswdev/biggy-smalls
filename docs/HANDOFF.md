@@ -89,6 +89,8 @@ Run it:
 ## Next
 Everything that can be built without a live model or a fresh session is built. What is next needs one or the other.
 
+**The second provider's account is out of credits (2026-10-14).** The default set, `sol`, pauses at its first model call with `APIError` until it is topped up; `SMALLS_SET=claude` runs everything on the first provider. The end-to-end pass of that day ran on `claude` (section 12.4 of `docs/decisions/ui-build.md`).
+
 **Model calls stay on each provider's own API.** On 2026-10-14 we tried moving every call to Amazon Bedrock and dropped it: the account reached no Claude model (Anthropic's use-case form had not taken effect, and the current models and the second provider's answered "not available for this account"), and Bedrock serves the second provider's model on Chat Completions only, not the Responses API our profile uses.
 
 **The eval loop** (`docs/decisions/eval-loop.md`, planned 2026-10-14) is the next stage after the UI step. The scorer session (rows S1 to S7) starts now, alongside the UI. Once the UI and the scorer are both on `main`, the loop session runs the second provider's profiles and shakedown, a scored baseline, and then passes through the iteration room (V1) until the stop rule; then the retest on the current provider and the freeze. Its rulings V1 to V5 (V4: one model on the second provider, with effort varied by role; V5: models chosen per agent role by named sets in config, so benchmarks can change them later) and its proposed rulings Q1 to Q7 are in sections 2 and 10.
