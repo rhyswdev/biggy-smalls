@@ -151,6 +151,7 @@ class Runner:
         self._asking = False                    # a person is being asked at a gate
         self._stop = threading.Event()          # set from another thread to stop at the next stream part (S5)
         self._inbox: list[dict[str, Any]] = []  # notes added while the run runs, until a round takes them (S4)
+        self._auto: bool | None = None          # the auto-approve switch when set during the run (S6)
         self._inbox_lock = threading.Lock()
 
     def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
@@ -319,7 +320,7 @@ class Runner:
             checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
             sweep=saved.get("sweep", dict(cfg.sweep)), verifier=bool(self.verify) and saved.get("verifier", True),
             single_call=saved.get("single_call", self.single_call), carry=self._carry, evidence=self.record.evidence,
-            read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"), inbox=self.pending_notes)
+            read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"), inbox=self.pending_notes, auto_approve_now=self._auto_now)
 
     def add_note(self, text: str) -> dict[str, Any]:
         """A note from the incident commander while the run is running (seam S4). It does not block: the next
@@ -344,6 +345,16 @@ class Runner:
     def _delivered(self, handles: set[str]) -> None:
         with self._inbox_lock:
             self._inbox = [n for n in self._inbox if n["handle"] not in handles]
+
+    def set_auto_approve(self, on: bool) -> None:
+        """Turn auto-approval of reads on or off while the run is running or paused (seam S6). The gate reads
+        the switch once per round, so it applies from the next round, never to a card already asked.
+        Actions always ask. Safe to call from any thread."""
+        self._auto = bool(on)
+        self.bus.emit("auto_approve", on=self._auto)
+
+    def _auto_now(self) -> bool:
+        return self._auto if self._auto is not None else bool(self._ctx and self._ctx.auto_approve)
 
     def request_stop(self) -> None:
         """Ask a running run to stop (seam S5). It is checked between stream parts, so the run stops within a

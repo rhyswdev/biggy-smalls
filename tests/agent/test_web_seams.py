@@ -243,3 +243,36 @@ def test_s2_an_action_cannot_be_approved_with_edits(cfg):
     card = {"call_id": "c1", "tool": "propose_action", "kind": "action", "args": {}}
     assert gate.edited(card, {"approve": True, "args": {"target": "x"}}, None) == (None, gate.NOT_EDITABLE)
     assert gate.edited(card, {"approve": True}, None) == (None, None)
+
+
+# -- S6: the auto-approve switch mid-run -------------------------------------------------------------------------
+
+def test_s6_the_switch_applies_from_the_next_round_and_never_to_an_action(cfg):
+    from langchain_core.messages import AIMessage
+
+    holder: dict[str, Runner] = {}
+
+    def turns_it_off_at_turn_three(messages, tools):
+        if sum(isinstance(m, AIMessage) for m in messages) == 2:
+            holder["r"].set_auto_approve(False)
+        return fixture_script.turn(messages, tools)
+
+    from dataclasses import replace
+    r = runner(replace(cfg, auto_approve=False), "switch", script=turns_it_off_at_turn_three, stop_at_gate=True, attended=True, via="web")
+    holder["r"] = r
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "paused"                          # off at start: the sweep asks
+    r.set_auto_approve(True)                                                           # on while it waits: the asked card still waits
+    assert [c["call_id"] for c in r.state()["pending"]["calls"]][0].startswith("sweep_")
+    assert r.resume({c["call_id"]: {"approve": True} for c in r.state()["pending"]["calls"]})["status"] == "paused"
+    state = r.state()
+    by_call = {g["call_id"]: g["by"]["who"] for g in state["gate_log"]}
+    assert by_call["call_01_search_logs"] == by_call["call_04_search_logs"] == "auto"   # rounds one and two ran on the switch
+    assert [c["tool"] for c in state["pending"]["calls"]] == ["get_record", "get_record", "search_logs", "search_logs"]   # off: round three asks
+    while r.state().get("pending"):
+        cards = r.state()["pending"]["calls"]
+        r.resume({c["call_id"]: {"approve": True} for c in cards})
+    state = r.state()
+    events = r.record.events()
+    r.close()
+    assert next(g for g in state["gate_log"] if g["tool"] == "propose_action")["by"]["who"] == "human"     # an action always asks
+    assert [e.data["on"] for e in events if e.type == "auto_approve"] == [True, False]

@@ -248,8 +248,11 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         if not any(c["tool"] == UPDATE_BOARD for c in calls):
             since = (state.get("followup") or {}).get("round", 0)
             refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds, since=since)
+        # The switch is read once per round, here: a change made while the run waits at a gate applies from
+        # the next round, and never to a card already asked (S6).
+        auto = ctx.auto_approve_now() if ctx.auto_approve_now else ctx.auto_approve
         decisions, ask = gate.apply(calls, tools, used=state.get("calls_used", 0), budget=call_limit(state, ctx),
-                                    auto_approve=ctx.auto_approve, via=ctx.via, refuse_gated=refuse)
+                                    auto_approve=auto, via=ctx.via, refuse_gated=refuse)
         # An action never reaches a person with evidence no tool showed.
         for card in list(ask):
             if card["kind"] != "action":

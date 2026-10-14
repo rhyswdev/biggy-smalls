@@ -38,6 +38,7 @@ EventType = Literal[
     "stuck",                # nothing is coming back; the commander may want to steer
     "restart",              # the conversation was restarted from the board, on a new thread
     "ic_note",              # a note from the incident commander
+    "auto_approve",         # the auto-approve switch was turned on or off; it applies from the next round
     "budget",               # calls used and left
     "draft_report",         # a submitted report, before the verifier
     "verifier_verdict",

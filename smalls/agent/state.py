@@ -202,6 +202,7 @@ class RunContext:
     evidence: Callable[[str, Any], None] | None = None      # (call_id, envelope rows) -> the evidence file
     read_evidence: Callable[[], list[dict[str, Any]]] | None = None     # the evidence file so far, for the verifier's packets
     inbox: Callable[[], list[Note]] | None = None       # notes the commander added while the run was running (S4)
+    auto_approve_now: Callable[[], bool] | None = None  # the auto-approve switch as it stands, read by the gate each round (S6)
 
     def turn_cap(self, revisions: int = 0) -> int:
         """Model turns are capped at the budget plus `extra_turns`; a revision adds 7 (J5)."""
