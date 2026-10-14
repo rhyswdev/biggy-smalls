@@ -156,6 +156,7 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
           ? <Button variant="quiet" disabled={pending} onClick={() => start(async () => { await moreRun(chatId, true); router.refresh(); })}>Go on</Button>
           : null}
         <Button variant="quiet" disabled={pending} onClick={() => start(async () => { await runAgent(); router.refresh(); })}>Run again</Button>
+        <Link className="lbtn" href="/chats/new?from=incident">Investigate in chat</Link>
       </div>
     </>
   );
