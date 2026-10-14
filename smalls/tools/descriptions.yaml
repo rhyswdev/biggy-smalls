@@ -356,7 +356,9 @@ tools:
         First, the plain answer to what the trigger asks, even when your
         recommendation differs; then what is happening, what most likely
         caused it and how sure you are, in a few sentences, with handles
-        inline exactly as printed.
+        inline exactly as printed. It tells the board's account in prose:
+        each link it rests on, such as what set the fault off or made it
+        worse, is a hypothesis on the board with that role and its rows.
       impact: >-
         Who and what is affected and who owns it, from the service desk,
         topology and on-call records.
