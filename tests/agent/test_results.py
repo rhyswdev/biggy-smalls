@@ -52,6 +52,14 @@ def test_a_row_is_built_from_a_run_record_by_code(record):
     assert row["quiet_board"] == summary["process"]["quiet_board"] and row["board_refusals"] == 0
     assert row["malformed_retries"] == 0 and row["scores"] == {}
     assert set(row["cost_by_role"]) <= {"investigator", "claims", "contrarian"}
+    assert row["carried_from"] is None                                                       # a fresh look carries nothing
+
+
+def test_a_carried_runs_row_names_the_run_it_started_from(record):
+    run = json.loads((record / "run.json").read_text(encoding="utf-8"))
+    earlier = {"run_id": "fixture-C-1440-tags-r1", "as_of": "2026-10-13T14:40:00Z"}
+    (record / "run.json").write_text(json.dumps({**run, "carried_from": earlier}), encoding="utf-8")
+    assert results.row(record, batch="base", pass_=6, phase=2)["carried_from"] == earlier
 
 
 def test_add_replaces_a_runs_row_and_refuses_a_batch_nobody_described(record, described, tmp_path):

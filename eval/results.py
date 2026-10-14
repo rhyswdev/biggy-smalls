@@ -120,6 +120,7 @@ def row(folder: Path | str, *, batch: str, pass_: str | int | None, phase: str |
         "commit": run.get("commit"), "prompt_sha": run.get("prompt_sha"), "tools_sha": run.get("tools_sha"),
         "set": (run.get("config") or {}).get("set"), "roles": _roles(run, "model"), "profiles": _roles(run, "profile"),
         "arm": run.get("arm"), "checkpoint": run.get("checkpoint"), "tags": run.get("tags"), "trigger": trigger_kind(run, bundles),
+        "carried_from": run.get("carried_from"),
         "status": summary.get("status"), "stop_reason": summary.get("stop_reason"),
         "wall_s": summary.get("wall_s_total"), "model_turns": process.get("model_turns"), "tool_calls": process.get("tool_calls"),
         "policy_refusals": sum(1 for d in decisions if (d.get("by") or {}).get("who") == "policy" and d.get("decision") == "rejected"),

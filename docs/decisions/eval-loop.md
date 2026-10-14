@@ -384,11 +384,10 @@ While the scorer session builds S1 to S7, three sets of live runs can be made no
 
 ### 13.3 What the runs showed
 
-(Filled in by R1 to R4.)
+**R0 (2026-10-14).** The diff from `9e0e340` over the five blind files is empty, so the installed files are pass 7's. `make test` (685 passed, 3 skipped) and `make lint` (0 errors) pass; one small call to sol's investigator through the agent's own factory answered. Each ledger row now carries `carried_from` (the earlier run and its `as_of`, from `run.json`; null for a fresh look); `rebuild` refreshed all 55 rows and changed no other field; `tests/agent/test_results.py` covers both cases. The runs are made from a worktree whose `eval/loop-runs/` links to the main checkout's, so every record sits in the one local store.
 
 ### 13.4 Spend
 
 | Batch | Runs | Cost | Running total |
 |---|---|---|---|
-
-Spend so far: none.
+| R0: one small call to sol | 1 call | $0.00 | $0.00 |
