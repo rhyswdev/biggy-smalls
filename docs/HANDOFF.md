@@ -91,6 +91,8 @@ Run it:
 **Roadmap from 2026-10-14**, one session each; the plan page holds a prompt for each.
 1. ~~**The eval loop, phase 2**~~: done 2026-10-14, $7.37 of $20; see "The eval loop, phase 2: done" below.
 2. **The scorer** (section 5, rows S1 to S7), which may run beside phase 2 in its own worktree; when it lands, it scores every ledger row.
+2b. **Runs to score later** (`docs/decisions/eval-loop.md` section 13, rows R0 to R5, $7), beside the scorer: arm A, live carry-forward (E4) and the tags ablation (E5) on the pass 7 files, recorded in the ledger and graded when the scorer lands.
+2c. **Gate B**, run now from the prepared folder (see item 3); this session grades it.
 3. **Gate B** (row D5 of `tools-agent-build.md`): a fresh session with only the CLI tries to find the cause at 14:52. This repo's CLAUDE.md names bundle strings, so it works from a folder holding only the bundle's served files and the CLI. Before the freeze, ideally before P4.
 4. **Scored baseline and freeze**: phase 2's keeps re-checked on scores; E3 (the verifier's keep-or-kill), E4 (live carry-forward), E5 (the tags ablation); Q7 of `ui-build.md` (markdown in prose) ruled; L7's retest on the first provider is optional, since the second provider's model ships; the tag `agent-v1`; PLAN step 10's controls; O4 and P8, then the held-out run h1 (PLAN 12). Its budget is asked for then.
 5. **Tidy and write-up**: the four deliverables of `requirements.md` (repository, instructions to run locally, the write-up, a sample output), the tuning log as the evidence of how the agent evolved, the open minor items of `ui-build.md` 12.4, stale worktrees and branches, and a last `make test`, `make lint`, `make web-test` and `make docker-test`.
