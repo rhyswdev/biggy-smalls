@@ -93,10 +93,12 @@ class Runner:
                  decider: Decider | None = None, stop_at_gate: bool = False, attended: bool = False, eval_run: bool = False,
                  script: Any = None, durability: str | None = None, fallback_script: Any = None, offered: tuple[str, ...] | None = None,
                  single_call: bool = False, verifier_scripts: dict[str, Any] | None = None,
-                 backend: FileBackend | SqliteBackend | None = None, checkpointer: sqlite3.Connection | None = None):
+                 backend: FileBackend | SqliteBackend | None = None, checkpointer: sqlite3.Connection | None = None,
+                 via: str | None = None):
         """`backend` holds the run record: files under `cfg.runs_dir` by default, or a SQLite database
         (seam S8). `checkpointer` is a connection for the checkpointer, which the caller owns; without one
-        the backend opens the run's own."""
+        the backend opens the run's own. `via` says where a person answers this run's gates (`cli` or
+        `web`, seam S1); by default the terminal when the run is attended."""
         self.cfg = cfg
         self.toolbox = toolbox
         self.backend = backend or FileBackend(cfg.runs_dir)
@@ -106,6 +108,7 @@ class Runner:
         self.events_sink = self.record.events_sink()
         self.bus = Bus(self.run_id, [self.events_sink, *(sinks or [])], start_seq=self.record.last_seq())
         self.attended = attended
+        self.via = via or ("cli" if attended else "headless")
         self.eval_run = eval_run
         self.stop_at_gate = stop_at_gate
         self.durability = durability
@@ -300,7 +303,7 @@ class Runner:
             stuck_empty=saved.get("stuck_empty", cfg.stuck_empty), context_fraction=saved.get("context_fraction", cfg.context_fraction),
             max_input_tokens=saved.get("max_input_tokens", input_limit(self.spec, self.model)),
             max_tokens=saved.get("max_tokens", int(self.spec.params.get("max_tokens") or 0)),
-            auto_approve=saved.get("auto_approve", cfg.auto_approve), via="cli" if self.attended else "headless",
+            auto_approve=saved.get("auto_approve", cfg.auto_approve), via=self.via,
             checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
             sweep=saved.get("sweep", dict(cfg.sweep)), verifier=bool(self.verify) and saved.get("verifier", True),
             single_call=saved.get("single_call", self.single_call), carry=self._carry, evidence=self.record.evidence,

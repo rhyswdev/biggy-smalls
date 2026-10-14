@@ -273,10 +273,13 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         wait_ms = round((decided_at - datetime.fromisoformat(pend["asked_at"])).total_seconds() * 1000, 1)
         decisions = dict(state["decisions"])
         new, notes = [], []
+        # A person answers where the caller says the run is attended (the terminal or the web); the runner's
+        # own headless answers are policy's.
+        person_via = runtime.context.via if runtime.context.via != "headless" else "cli"
         for card in pend["calls"]:
             reply = (answers or {}).get(card["call_id"])
             verdict, who, reason = gate.answer(card, reply)
-            via = "headless" if who == "policy" else "cli"
+            via = "headless" if who == "policy" else person_via
             handle = None
             if who == "human" and reason and verdict == "rejected":     # a person's reason is a citable note
                 at = decided_at.isoformat(timespec="milliseconds")

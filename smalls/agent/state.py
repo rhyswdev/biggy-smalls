@@ -80,7 +80,7 @@ class LedgerEntry(TypedDict, total=False):
 
 class GateBy(TypedDict):
     who: Literal["policy", "auto", "human"]
-    via: Literal["cli", "headless"]
+    via: Literal["cli", "web", "headless"]
 
 
 class GateDecision(TypedDict, total=False):
@@ -188,7 +188,7 @@ class RunContext:
     max_input_tokens: int | None = None         # the profile's, else the model's own
     max_tokens: int = 0
     auto_approve: bool = True                   # reads; actions always ask
-    via: Literal["cli", "headless"] = "headless"
+    via: Literal["cli", "web", "headless"] = "headless"     # where a person answers this run's gates; set by the caller
     checkpoint: str | None = None
     channel: str | None = None
     sweep: dict[str, str] = field(default_factory=dict)
