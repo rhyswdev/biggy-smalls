@@ -1,0 +1,2599 @@
+[
+ {
+  "seq": 1,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 1,
+  "type": "run_started",
+  "data": {
+   "now": "2026-03-02T02:20:00Z",
+   "trigger": "The nightly report-export job failed at 02:10 UTC. Someone in the channel thinks the disk is dying. What happened, and what should we do before tonight's run?",
+   "checkpoint": "1452",
+   "profile": "scripted",
+   "auto_approve": true,
+   "attended": false,
+   "tags": false
+  },
+  "t_wall": "2026-10-14T11:52:37.603+00:00"
+ },
+ {
+  "seq": 2,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 2,
+  "type": "phase",
+  "data": {
+   "name": "orient"
+  },
+  "t_wall": "2026-10-14T11:52:37.603+00:00"
+ },
+ {
+  "seq": 3,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 3,
+  "type": "phase",
+  "data": {
+   "name": "sweep"
+  },
+  "t_wall": "2026-10-14T11:52:37.605+00:00"
+ },
+ {
+  "seq": 4,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 4,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "sweep_01_list_alerts",
+   "tool": "list_alerts",
+   "by": "harness",
+   "kind": "read",
+   "rationale": {
+    "tests": "the opening sweep",
+    "expect": "what is alerting, what changed and what people are saying"
+   },
+   "args": {
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.606+00:00"
+ },
+ {
+  "seq": 5,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 5,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "sweep_02_list_changes",
+   "tool": "list_changes",
+   "by": "harness",
+   "kind": "read",
+   "rationale": {
+    "tests": "the opening sweep",
+    "expect": "what is alerting, what changed and what people are saying"
+   },
+   "args": {
+    "since": "-24h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.606+00:00"
+ },
+ {
+  "seq": 6,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 6,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "sweep_03_read_chat",
+   "tool": "read_chat",
+   "by": "harness",
+   "kind": "read",
+   "rationale": {
+    "tests": "the opening sweep",
+    "expect": "what is alerting, what changed and what people are saying"
+   },
+   "args": {
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.606+00:00"
+ },
+ {
+  "seq": 7,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 7,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "sweep_01_list_alerts",
+   "tool": "list_alerts",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.606+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.606+00:00"
+ },
+ {
+  "seq": 8,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 8,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "sweep_02_list_changes",
+   "tool": "list_changes",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.606+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.608+00:00"
+ },
+ {
+  "seq": 9,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 9,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "sweep_03_read_chat",
+   "tool": "read_chat",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.606+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.608+00:00"
+ },
+ {
+  "seq": 10,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 10,
+  "type": "tool_started",
+  "data": {
+   "call_id": "sweep_01_list_alerts",
+   "tool": "list_alerts"
+  },
+  "t_wall": "2026-10-14T11:52:37.608+00:00"
+ },
+ {
+  "seq": 11,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 11,
+  "type": "tool_result",
+  "data": {
+   "call_id": "sweep_01_list_alerts",
+   "tool": "list_alerts",
+   "kind": "read",
+   "by": "harness",
+   "status": "ok",
+   "shown": [
+    "dd:ev1000000001",
+    "dd:ev1000000002",
+    "dd:ev1000000004"
+   ],
+   "referenced": [
+    "dd:ev1000000003"
+   ],
+   "native_query": "alerts",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 511,
+   "latency_ms": 0.17,
+   "edited_args": null,
+   "first_line": "dd:ev1000000001  2026-03-02T02:06:45Z  datadog  mon101  [Warn] Disk usage high on /var/spool  host:worker-01  first 02:06:45Z  last 02:08:57Z  state alert  transitions 2"
+  },
+  "t_wall": "2026-10-14T11:52:37.608+00:00"
+ },
+ {
+  "seq": 12,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 12,
+  "type": "tool_started",
+  "data": {
+   "call_id": "sweep_02_list_changes",
+   "tool": "list_changes"
+  },
+  "t_wall": "2026-10-14T11:52:37.608+00:00"
+ },
+ {
+  "seq": 13,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 13,
+  "type": "tool_result",
+  "data": {
+   "call_id": "sweep_02_list_changes",
+   "tool": "list_changes",
+   "kind": "read",
+   "by": "harness",
+   "status": "ok",
+   "shown": [
+    "jk:report-exporter-deploy#12",
+    "jk:report-export#57"
+   ],
+   "referenced": [
+    "jk:report-export#57/0a1b2c3d"
+   ],
+   "native_query": "changes",
+   "window": [
+    "2026-03-01T02:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 267,
+   "latency_ms": 0.14,
+   "edited_args": null,
+   "first_line": "jk:report-exporter-deploy#12  2026-03-02T01:00:04Z  build  report-exporter-deploy#12  VERSION 2.4.1  SUCCESS  start 2026-03-02T01:00:00Z"
+  },
+  "t_wall": "2026-10-14T11:52:37.610+00:00"
+ },
+ {
+  "seq": 14,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 14,
+  "type": "tool_started",
+  "data": {
+   "call_id": "sweep_03_read_chat",
+   "tool": "read_chat"
+  },
+  "t_wall": "2026-10-14T11:52:37.610+00:00"
+ },
+ {
+  "seq": 15,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 15,
+  "type": "tool_result",
+  "data": {
+   "call_id": "sweep_03_read_chat",
+   "tool": "read_chat",
+   "kind": "read",
+   "by": "harness",
+   "status": "ok",
+   "shown": [
+    "slack:ops/38be245b",
+    "slack:ops/c3c3e1bd",
+    "slack:ops/684ed931"
+   ],
+   "referenced": [],
+   "native_query": "in:#ops",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 292,
+   "latency_ms": 0.11,
+   "edited_args": null,
+   "first_line": "slack:ops/38be245b  2026-03-02T02:11:00Z  someone: report-export just failed again, is the disk on worker-01 dying?"
+  },
+  "t_wall": "2026-10-14T11:52:37.610+00:00"
+ },
+ {
+  "seq": 16,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 16,
+  "type": "board_status",
+  "data": {
+   "line": "[board: not ready: no leading hypothesis; budget 0/30, 36 turns left]",
+   "ready": false,
+   "stale": []
+  },
+  "t_wall": "2026-10-14T11:52:37.610+00:00"
+ },
+ {
+  "seq": 17,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 17,
+  "type": "budget",
+  "data": {
+   "used": 0,
+   "limit": 30,
+   "turns_left": 36,
+   "round": 0,
+   "board": {
+    "leading": null,
+    "open": 0,
+    "rejected": 0
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.610+00:00"
+ },
+ {
+  "seq": 18,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 18,
+  "type": "thinking_delta",
+  "data": {
+   "text": "The "
+  },
+  "t_wall": "2026-10-14T11:52:37.611+00:00"
+ },
+ {
+  "seq": 19,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 19,
+  "type": "thinking_delta",
+  "data": {
+   "text": "job failed at 02:10. Start with the job's own log lines and any errors in the last hour, in parallel."
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 20,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 20,
+  "type": "thinking",
+  "data": {
+   "text": "The job failed at 02:10. Start with the job's own log lines and any errors in the last hour, in parallel."
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 21,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 21,
+  "type": "model_call",
+  "data": {
+   "node": "agent",
+   "round": 1,
+   "attempt": 1,
+   "latency_ms": 0.7,
+   "usage": {
+    "input_tokens": 12764,
+    "output_tokens": 82,
+    "total_tokens": 12846,
+    "input_token_details": {
+     "cache_creation": 0,
+     "cache_read": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "scripted",
+   "cost_usd": 0.0
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 22,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 22,
+  "type": "phase",
+  "data": {
+   "name": "investigate"
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 23,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 23,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_01_search_logs",
+   "tool": "search_logs",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-full",
+    "expect": "a start line and an exit code"
+   },
+   "args": {
+    "terms": [
+     "report-export"
+    ],
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 24,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 24,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_02_search_logs",
+   "tool": "search_logs",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-full",
+    "expect": "the proximate error"
+   },
+   "args": {
+    "terms": [
+     "ERROR"
+    ],
+    "since": "-60m"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 25,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 25,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_01_search_logs",
+   "tool": "search_logs",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.613+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.613+00:00"
+ },
+ {
+  "seq": 26,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 26,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_02_search_logs",
+   "tool": "search_logs",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.613+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.614+00:00"
+ },
+ {
+  "seq": 27,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 27,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_01_search_logs",
+   "tool": "search_logs"
+  },
+  "t_wall": "2026-10-14T11:52:37.615+00:00"
+ },
+ {
+  "seq": 28,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 28,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_01_search_logs",
+   "tool": "search_logs",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "log:worker-01/98e857e0",
+    "log:worker-01/10b3c7d0",
+    "log:worker-01/2a794708",
+    "log:worker-01/810f681e",
+    "log:worker-01/2930b3b1",
+    "log:worker-01/66e57ad2"
+   ],
+   "referenced": [],
+   "native_query": "search index=app \"report-export\" earliest=\"2026-03-02T00:20:00Z\" latest=\"2026-03-02T02:20:00Z\"",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 992,
+   "latency_ms": 1.43,
+   "edited_args": null,
+   "first_line": "log:worker-01/98e857e0  2026-03-02T01:00:04Z  worker-01  2026-03-02T01:00:04.101Z INFO  [deploy] report-exporter version=2.4.1 installed (was 2.4.0)"
+  },
+  "t_wall": "2026-10-14T11:52:37.616+00:00"
+ },
+ {
+  "seq": 29,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 29,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_02_search_logs",
+   "tool": "search_logs"
+  },
+  "t_wall": "2026-10-14T11:52:37.618+00:00"
+ },
+ {
+  "seq": 30,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 30,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_02_search_logs",
+   "tool": "search_logs",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "log:worker-01/810f681e",
+    "log:worker-01/2930b3b1",
+    "log:worker-01/66e57ad2"
+   ],
+   "referenced": [],
+   "native_query": "search index=app \"ERROR\" earliest=\"2026-03-02T01:20:00Z\" latest=\"2026-03-02T02:20:00Z\"",
+   "window": [
+    "2026-03-02T01:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 558,
+   "latency_ms": 0.15,
+   "edited_args": null,
+   "first_line": "log:worker-01/810f681e  2026-03-02T02:09:31Z  worker-01  2026-03-02T02:09:31.004Z ERROR [exporter] write failed: [Errno 28] No space left on device: '/var/spool/report-exporter/tmp/part-0412.csv'"
+  },
+  "t_wall": "2026-10-14T11:52:37.618+00:00"
+ },
+ {
+  "seq": 31,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 31,
+  "type": "board_status",
+  "data": {
+   "line": "[board: not ready: no leading hypothesis; budget 2/30, 35 turns left]",
+   "ready": false,
+   "stale": []
+  },
+  "t_wall": "2026-10-14T11:52:37.618+00:00"
+ },
+ {
+  "seq": 32,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 32,
+  "type": "budget",
+  "data": {
+   "used": 2,
+   "limit": 30,
+   "turns_left": 35,
+   "round": 1,
+   "board": {
+    "leading": null,
+    "open": 0,
+    "rejected": 0
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.618+00:00"
+ },
+ {
+  "seq": 33,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 33,
+  "type": "thinking_delta",
+  "data": {
+   "text": "The exporter ran out of space at 02:09 and the run exited 1 a few seconds later. The channel's theory is a dying disk; record both, then check the disk trend and the runbook."
+  },
+  "t_wall": "2026-10-14T11:52:37.619+00:00"
+ },
+ {
+  "seq": 34,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 34,
+  "type": "thinking",
+  "data": {
+   "text": "The exporter ran out of space at 02:09 and the run exited 1 a few seconds later. The channel's theory is a dying disk; record both, then check the disk trend and the runbook."
+  },
+  "t_wall": "2026-10-14T11:52:37.620+00:00"
+ },
+ {
+  "seq": 35,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 35,
+  "type": "model_call",
+  "data": {
+   "node": "agent",
+   "round": 2,
+   "attempt": 1,
+   "latency_ms": 0.7,
+   "usage": {
+    "input_tokens": 13217,
+    "output_tokens": 244,
+    "total_tokens": 13461,
+    "input_token_details": {
+     "cache_creation": 0,
+     "cache_read": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "scripted",
+   "cost_usd": 0.0
+  },
+  "t_wall": "2026-10-14T11:52:37.620+00:00"
+ },
+ {
+  "seq": 36,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 36,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_03_update_board",
+   "tool": "update_board",
+   "by": "agent",
+   "kind": "internal",
+   "rationale": null,
+   "args": {
+    "hypotheses": [
+     {
+      "id": "h-full",
+      "statement": "The run failed because its spool volume filled up.",
+      "role": "cause",
+      "status": "leading",
+      "subject": "worker-01",
+      "entities": [
+       "worker-01"
+      ],
+      "confidence": 0.6,
+      "source": "derived",
+      "support": [
+       "log:worker-01/810f681e",
+       "log:worker-01/2930b3b1",
+       "log:worker-01/66e57ad2"
+      ],
+      "because": [
+       "log:worker-01/810f681e",
+       "log:worker-01/2930b3b1"
+      ]
+     },
+     {
+      "id": "h-dying",
+      "statement": "The disk on worker-01 is failing.",
+      "role": "cause",
+      "status": "open",
+      "subject": "worker-01",
+      "entities": [
+       "worker-01"
+      ],
+      "confidence": 0.2,
+      "source": "stated"
+     }
+    ]
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.621+00:00"
+ },
+ {
+  "seq": 37,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 37,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_04_search_logs",
+   "tool": "search_logs",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-dying",
+    "expect": "usage rising only during the run"
+   },
+   "args": {
+    "terms": [
+     "[disk]"
+    ],
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.621+00:00"
+ },
+ {
+  "seq": 38,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 38,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_05_get_record",
+   "tool": "get_record",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-full",
+    "expect": "what the runbook says to do"
+   },
+   "args": {
+    "handle": "conf:RB-DISK-SPACE"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.621+00:00"
+ },
+ {
+  "seq": 39,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 39,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_03_update_board",
+   "tool": "update_board",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.621+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.621+00:00"
+ },
+ {
+  "seq": 40,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 40,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_04_search_logs",
+   "tool": "search_logs",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.621+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.622+00:00"
+ },
+ {
+  "seq": 41,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 41,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_05_get_record",
+   "tool": "get_record",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.621+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.622+00:00"
+ },
+ {
+  "seq": 42,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 42,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_03_update_board",
+   "tool": "update_board"
+  },
+  "t_wall": "2026-10-14T11:52:37.623+00:00"
+ },
+ {
+  "seq": 43,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 43,
+  "type": "hypothesis_update",
+  "data": {
+   "entities": [
+    "worker-01"
+   ],
+   "changes": [],
+   "support": [
+    "log:worker-01/810f681e",
+    "log:worker-01/2930b3b1",
+    "log:worker-01/66e57ad2"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 2,
+     "call_id": "call_03_update_board",
+     "from": null,
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:worker-01/810f681e",
+      "log:worker-01/2930b3b1"
+     ]
+    }
+   ],
+   "statement": "The run failed because its spool volume filled up.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "worker-01",
+   "confidence": 0.6,
+   "source": "derived",
+   "id": "h-full"
+  },
+  "t_wall": "2026-10-14T11:52:37.624+00:00"
+ },
+ {
+  "seq": 44,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 44,
+  "type": "hypothesis_update",
+  "data": {
+   "entities": [
+    "worker-01"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 2,
+     "call_id": "call_03_update_board",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "The disk on worker-01 is failing.",
+   "role": "cause",
+   "status": "open",
+   "subject": "worker-01",
+   "confidence": 0.2,
+   "source": "stated",
+   "id": "h-dying"
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 45,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 45,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_03_update_board",
+   "tool": "update_board",
+   "kind": "internal",
+   "by": "agent",
+   "status": "ok",
+   "shown": [],
+   "referenced": [],
+   "native_query": null,
+   "window": null,
+   "chars": 49,
+   "latency_ms": 0.06,
+   "edited_args": null,
+   "first_line": "Recorded: h-full leading 0.60; h-dying open 0.20."
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 46,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 46,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_04_search_logs",
+   "tool": "search_logs"
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 47,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 47,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_04_search_logs",
+   "tool": "search_logs",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "log:worker-01/afb4c3b3",
+    "log:worker-01/36fc1c00",
+    "log:worker-01/395991ff"
+   ],
+   "referenced": [],
+   "native_query": "search index=app \"[disk]\" earliest=\"2026-03-02T00:20:00Z\" latest=\"2026-03-02T02:20:00Z\"",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 400,
+   "latency_ms": 1.4,
+   "edited_args": null,
+   "first_line": "log:worker-01/afb4c3b3  2026-03-02T02:03:12Z  worker-01  2026-03-02T02:03:12.870Z WARN  [disk] /var/spool usage=88% free=5.9GiB"
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 48,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 48,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_05_get_record",
+   "tool": "get_record"
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 49,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 49,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_05_get_record",
+   "tool": "get_record",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "conf:RB-DISK-SPACE"
+   ],
+   "referenced": [],
+   "native_query": null,
+   "window": null,
+   "chars": 367,
+   "latency_ms": 1.37,
+   "edited_args": null,
+   "first_line": "conf:RB-DISK-SPACE  (as of 2026-03-02T02:20:00Z)"
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 50,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 50,
+  "type": "board_status",
+  "data": {
+   "line": "[board: not ready: leading h-full has no discriminating evidence, rival h-dying has no against; budget 4/30, 34 turns left]",
+   "ready": false,
+   "stale": []
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 51,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 51,
+  "type": "budget",
+  "data": {
+   "used": 4,
+   "limit": 30,
+   "turns_left": 34,
+   "round": 2,
+   "board": {
+    "leading": {
+     "id": "h-full",
+     "confidence": 0.6
+    },
+    "open": 1,
+    "rejected": 0
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.627+00:00"
+ },
+ {
+  "seq": 52,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 52,
+  "type": "thinking_delta",
+  "data": {
+   "text": "Usage climbed from 88% to 99% inside the run. Did something change? Compare this build with the last good one, and look for a deploy."
+  },
+  "t_wall": "2026-10-14T11:52:37.628+00:00"
+ },
+ {
+  "seq": 53,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 53,
+  "type": "thinking",
+  "data": {
+   "text": "Usage climbed from 88% to 99% inside the run. Did something change? Compare this build with the last good one, and look for a deploy."
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 54,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 54,
+  "type": "model_call",
+  "data": {
+   "node": "agent",
+   "round": 3,
+   "attempt": 1,
+   "latency_ms": 0.6,
+   "usage": {
+    "input_tokens": 13517,
+    "output_tokens": 152,
+    "total_tokens": 13669,
+    "input_token_details": {
+     "cache_creation": 0,
+     "cache_read": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "scripted",
+   "cost_usd": 0.0
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 55,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 55,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_06_get_record",
+   "tool": "get_record",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-release",
+    "expect": "the failed build's version"
+   },
+   "args": {
+    "handle": "jk:report-export#57"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 56,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 56,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_07_get_record",
+   "tool": "get_record",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-release",
+    "expect": "a different version on the last good build"
+   },
+   "args": {
+    "handle": "jk:report-export#56"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 57,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 57,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_08_search_logs",
+   "tool": "search_logs",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-release",
+    "expect": "a deploy before the run"
+   },
+   "args": {
+    "terms": [
+     "deploy"
+    ],
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 58,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 58,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_09_search_logs",
+   "tool": "search_logs",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-release",
+    "expect": "whether the run cleaned up its temp files"
+   },
+   "args": {
+    "terms": [
+     "cleanup"
+    ],
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 59,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 59,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_06_get_record",
+   "tool": "get_record",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.630+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.630+00:00"
+ },
+ {
+  "seq": 60,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 60,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_07_get_record",
+   "tool": "get_record",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.630+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.632+00:00"
+ },
+ {
+  "seq": 61,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 61,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_08_search_logs",
+   "tool": "search_logs",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.630+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.632+00:00"
+ },
+ {
+  "seq": 62,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 62,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_09_search_logs",
+   "tool": "search_logs",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.630+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.632+00:00"
+ },
+ {
+  "seq": 63,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 63,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_06_get_record",
+   "tool": "get_record"
+  },
+  "t_wall": "2026-10-14T11:52:37.632+00:00"
+ },
+ {
+  "seq": 64,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 64,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_06_get_record",
+   "tool": "get_record",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "jk:report-export#57"
+   ],
+   "referenced": [
+    "jk:report-export#57/0a1b2c3d"
+   ],
+   "native_query": null,
+   "window": null,
+   "chars": 239,
+   "latency_ms": 0.07,
+   "edited_args": null,
+   "first_line": "jk:report-export#57  (as of 2026-03-02T02:20:00Z)"
+  },
+  "t_wall": "2026-10-14T11:52:37.632+00:00"
+ },
+ {
+  "seq": 65,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 65,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_07_get_record",
+   "tool": "get_record"
+  },
+  "t_wall": "2026-10-14T11:52:37.632+00:00"
+ },
+ {
+  "seq": 66,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 66,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_07_get_record",
+   "tool": "get_record",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "jk:report-export#56"
+   ],
+   "referenced": [],
+   "native_query": null,
+   "window": null,
+   "chars": 156,
+   "latency_ms": 0.08,
+   "edited_args": null,
+   "first_line": "jk:report-export#56  (as of 2026-03-02T02:20:00Z)"
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 67,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 67,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_08_search_logs",
+   "tool": "search_logs"
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 68,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 68,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_08_search_logs",
+   "tool": "search_logs",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "log:worker-01/98e857e0"
+   ],
+   "referenced": [],
+   "native_query": "search index=app \"deploy\" earliest=\"2026-03-02T00:20:00Z\" latest=\"2026-03-02T02:20:00Z\"",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 165,
+   "latency_ms": 0.13,
+   "edited_args": null,
+   "first_line": "log:worker-01/98e857e0  2026-03-02T01:00:04Z  worker-01  2026-03-02T01:00:04.101Z INFO  [deploy] report-exporter version=2.4.1 installed (was 2.4.0)"
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 69,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 69,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_09_search_logs",
+   "tool": "search_logs"
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 70,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 70,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_09_search_logs",
+   "tool": "search_logs",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "log:worker-01/0948a873"
+   ],
+   "referenced": [],
+   "native_query": "search index=app \"cleanup\" earliest=\"2026-03-02T00:20:00Z\" latest=\"2026-03-02T02:20:00Z\"",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 159,
+   "latency_ms": 0.11,
+   "edited_args": null,
+   "first_line": "log:worker-01/0948a873  2026-03-02T02:10:02Z  worker-01  2026-03-02T02:10:02.560Z WARN  [exporter] temp cleanup skipped: cleanup_on_exit=false"
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 71,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 71,
+  "type": "board_status",
+  "data": {
+   "line": "[board: not ready: leading h-full has no discriminating evidence, rival h-dying has no against; budget 8/30, 33 turns left]",
+   "ready": false,
+   "stale": []
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 72,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 72,
+  "type": "budget",
+  "data": {
+   "used": 8,
+   "limit": 30,
+   "turns_left": 33,
+   "round": 3,
+   "board": {
+    "leading": {
+     "id": "h-full",
+     "confidence": 0.6
+    },
+    "open": 1,
+    "rejected": 0
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.634+00:00"
+ },
+ {
+  "seq": 73,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 73,
+  "type": "thinking_delta",
+  "data": {
+   "text": "2.4.1 replaced 2.4.0 at 01:00 and this run skipped temp cleanup; the good run was on 2.4.0. The release is the cause and the full volume is how it showed. Propose a rollback for the commander."
+  },
+  "t_wall": "2026-10-14T11:52:37.635+00:00"
+ },
+ {
+  "seq": 74,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 74,
+  "type": "thinking",
+  "data": {
+   "text": "2.4.1 replaced 2.4.0 at 01:00 and this run skipped temp cleanup; the good run was on 2.4.0. The release is the cause and the full volume is how it showed. Propose a rollback for the commander."
+  },
+  "t_wall": "2026-10-14T11:52:37.637+00:00"
+ },
+ {
+  "seq": 75,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 75,
+  "type": "model_call",
+  "data": {
+   "node": "agent",
+   "round": 4,
+   "attempt": 1,
+   "latency_ms": 0.7,
+   "usage": {
+    "input_tokens": 13782,
+    "output_tokens": 345,
+    "total_tokens": 14127,
+    "input_token_details": {
+     "cache_creation": 0,
+     "cache_read": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "scripted",
+   "cost_usd": 0.0
+  },
+  "t_wall": "2026-10-14T11:52:37.637+00:00"
+ },
+ {
+  "seq": 76,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 76,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_10_update_board",
+   "tool": "update_board",
+   "by": "agent",
+   "kind": "internal",
+   "rationale": null,
+   "args": {
+    "hypotheses": [
+     {
+      "id": "h-release",
+      "statement": "Release 2.4.1 stopped cleaning temporary files, so the run filled its spool volume.",
+      "role": "cause",
+      "status": "leading",
+      "subject": "report-exporter",
+      "entities": [
+       "report-exporter",
+       "worker-01"
+      ],
+      "changes": [
+       "jk:report-export#57"
+      ],
+      "confidence": 0.65,
+      "source": "derived",
+      "support": [
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873",
+       "jk:report-export#57",
+       "jk:report-export#56"
+      ],
+      "discriminating": [
+       "log:worker-01/0948a873"
+      ],
+      "because": [
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873"
+      ]
+     },
+     {
+      "id": "h-full",
+      "status": "rejected",
+      "confidence": 0.3,
+      "against": [
+       "log:worker-01/0948a873"
+      ],
+      "because": [
+       "log:worker-01/0948a873"
+      ]
+     },
+     {
+      "id": "h-dying",
+      "status": "rejected",
+      "confidence": 0.1,
+      "against": [
+       "log:worker-01/afb4c3b3",
+       "log:worker-01/36fc1c00",
+       "log:worker-01/395991ff"
+      ],
+      "because": [
+       "log:worker-01/afb4c3b3",
+       "log:worker-01/36fc1c00",
+       "log:worker-01/395991ff"
+      ]
+     }
+    ]
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.637+00:00"
+ },
+ {
+  "seq": 77,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 77,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_11_propose_action",
+   "tool": "propose_action",
+   "by": "agent",
+   "kind": "action",
+   "rationale": {
+    "tests": "h-release",
+    "expect": "tonight's run cleans up after itself"
+   },
+   "args": {
+    "kind": "halt_change",
+    "target": "report-exporter",
+    "params": [
+     {
+      "name": "to_version",
+      "value": "2.4.0"
+     }
+    ],
+    "evidence": [
+     "log:worker-01/98e857e0",
+     "log:worker-01/0948a873"
+    ]
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.637+00:00"
+ },
+ {
+  "seq": 78,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 78,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_10_update_board",
+   "tool": "update_board",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.637+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.637+00:00"
+ },
+ {
+  "seq": 79,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 79,
+  "type": "gate_pending",
+  "data": {
+   "interrupt_id": "5837cf53881b2bc64e88d0f866bb04f8",
+   "round": 4,
+   "asked_at": "2026-10-14T11:52:37.637+00:00",
+   "calls": [
+    {
+     "call_id": "call_11_propose_action",
+     "tool": "propose_action",
+     "kind": "action",
+     "by": "agent",
+     "args": {
+      "kind": "halt_change",
+      "target": "report-exporter",
+      "params": [
+       {
+        "name": "to_version",
+        "value": "2.4.0"
+       }
+      ],
+      "evidence": [
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873"
+      ]
+     },
+     "rationale": {
+      "tests": "h-release",
+      "expect": "tonight's run cleans up after itself"
+     }
+    }
+   ]
+  },
+  "t_wall": "2026-10-14T11:52:37.639+00:00"
+ },
+ {
+  "seq": 80,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 80,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_11_propose_action",
+   "tool": "propose_action",
+   "decision": "deferred",
+   "reason": "unattended run",
+   "reason_text": "unattended run",
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.640+00:00",
+   "wait_ms": 3.7
+  },
+  "t_wall": "2026-10-14T11:52:37.640+00:00"
+ },
+ {
+  "seq": 81,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 81,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_10_update_board",
+   "tool": "update_board"
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 82,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 82,
+  "type": "hypothesis_update",
+  "data": {
+   "entities": [
+    "report-exporter",
+    "worker-01"
+   ],
+   "changes": [
+    "jk:report-export#57"
+   ],
+   "support": [
+    "log:worker-01/98e857e0",
+    "log:worker-01/0948a873",
+    "jk:report-export#57",
+    "jk:report-export#56"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:worker-01/0948a873"
+   ],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_10_update_board",
+     "from": null,
+     "to": {
+      "status": "leading",
+      "confidence": 0.65
+     },
+     "because": [
+      "log:worker-01/98e857e0",
+      "log:worker-01/0948a873"
+     ]
+    }
+   ],
+   "statement": "Release 2.4.1 stopped cleaning temporary files, so the run filled its spool volume.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "report-exporter",
+   "confidence": 0.65,
+   "source": "derived",
+   "id": "h-release"
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 83,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 83,
+  "type": "hypothesis_update",
+  "data": {
+   "entities": [
+    "worker-01"
+   ],
+   "changes": [],
+   "support": [
+    "log:worker-01/810f681e",
+    "log:worker-01/2930b3b1",
+    "log:worker-01/66e57ad2"
+   ],
+   "against": [
+    "log:worker-01/0948a873"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 2,
+     "call_id": "call_03_update_board",
+     "from": null,
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:worker-01/810f681e",
+      "log:worker-01/2930b3b1"
+     ]
+    },
+    {
+     "round": 4,
+     "call_id": "call_10_update_board",
+     "from": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.3
+     },
+     "because": [
+      "log:worker-01/0948a873"
+     ]
+    }
+   ],
+   "statement": "The run failed because its spool volume filled up.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "worker-01",
+   "confidence": 0.3,
+   "source": "derived",
+   "id": "h-full"
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 84,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 84,
+  "type": "hypothesis_update",
+  "data": {
+   "entities": [
+    "worker-01"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "log:worker-01/afb4c3b3",
+    "log:worker-01/36fc1c00",
+    "log:worker-01/395991ff"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 2,
+     "call_id": "call_03_update_board",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_10_update_board",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "log:worker-01/afb4c3b3",
+      "log:worker-01/36fc1c00",
+      "log:worker-01/395991ff"
+     ]
+    }
+   ],
+   "statement": "The disk on worker-01 is failing.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "worker-01",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h-dying"
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 85,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 85,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_10_update_board",
+   "tool": "update_board",
+   "kind": "internal",
+   "by": "agent",
+   "status": "ok",
+   "shown": [],
+   "referenced": [],
+   "native_query": null,
+   "window": null,
+   "chars": 78,
+   "latency_ms": 0.06,
+   "edited_args": null,
+   "first_line": "Recorded: h-release leading 0.65; h-full rejected 0.30; h-dying rejected 0.10."
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 86,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 86,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_11_propose_action",
+   "tool": "propose_action",
+   "kind": "action",
+   "by": "agent",
+   "status": "deferred",
+   "shown": [],
+   "referenced": [],
+   "native_query": null,
+   "window": null,
+   "chars": 110,
+   "latency_ms": 0.0,
+   "edited_args": null,
+   "first_line": "DEFERRED: the incident commander has not decided. The call was not run. Continue without assuming it happened."
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 87,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 87,
+  "type": "board_status",
+  "data": {
+   "line": "[board: ready; budget 8/30, 32 turns left]",
+   "ready": true,
+   "stale": []
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 88,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 88,
+  "type": "budget",
+  "data": {
+   "used": 8,
+   "limit": 30,
+   "turns_left": 32,
+   "round": 4,
+   "board": {
+    "leading": {
+     "id": "h-release",
+     "confidence": 0.65
+    },
+    "open": 0,
+    "rejected": 2
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.641+00:00"
+ },
+ {
+  "seq": 89,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 89,
+  "type": "thinking_delta",
+  "data": {
+   "text": "Enough evidence. Submit the report."
+  },
+  "t_wall": "2026-10-14T11:52:37.642+00:00"
+ },
+ {
+  "seq": 90,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 90,
+  "type": "thinking",
+  "data": {
+   "text": "Enough evidence. Submit the report."
+  },
+  "t_wall": "2026-10-14T11:52:37.643+00:00"
+ },
+ {
+  "seq": 91,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 91,
+  "type": "model_call",
+  "data": {
+   "node": "agent",
+   "round": 5,
+   "attempt": 1,
+   "latency_ms": 0.5,
+   "usage": {
+    "input_tokens": 13909,
+    "output_tokens": 497,
+    "total_tokens": 14406,
+    "input_token_details": {
+     "cache_creation": 0,
+     "cache_read": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "scripted",
+   "cost_usd": 0.0
+  },
+  "t_wall": "2026-10-14T11:52:37.643+00:00"
+ },
+ {
+  "seq": 92,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 92,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_12_submit_report",
+   "tool": "submit_report",
+   "by": "agent",
+   "kind": "internal",
+   "rationale": null,
+   "args": {
+    "summary": "Run 57 failed with no space left on its spool volume (log:worker-01/810f681e) after release 2.4.1 (log:worker-01/98e857e0) skipped temp cleanup (log:worker-01/0948a873); run 56 on 2.4.0 succeeded (jk:report-export#56).",
+    "impact": {
+     "business_service": "Reporting",
+     "cis": [
+      "report-exporter",
+      "worker-01"
+     ],
+     "priority": {
+      "suggested": "P3",
+      "impact": "medium",
+      "urgency": "low"
+     },
+     "assignment_group": "Reporting",
+     "oncall": "unknown",
+     "customer": "Last night's reports were not delivered."
+    },
+    "hypotheses": [
+     {
+      "id": "h-release",
+      "support": [
+       "log:worker-01/810f681e",
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873",
+       "jk:report-export#57",
+       "jk:report-export#56"
+      ]
+     }
+    ],
+    "timeline": [
+     {
+      "t_utc": "2026-03-02T01:00:04Z",
+      "event": "Release 2.4.1 was installed.",
+      "evidence": [
+       "log:worker-01/98e857e0"
+      ]
+     },
+     {
+      "t_utc": "2026-03-02T02:09:31Z",
+      "event": "Writes failed: no space left on the device.",
+      "evidence": [
+       "log:worker-01/810f681e"
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "rank": 1,
+      "action": "Roll back report-exporter to 2.4.0.",
+      "owner": "Reporting",
+      "evidence": [
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873"
+      ]
+     },
+     {
+      "action": "Purge the exporter's temp folder per conf:RB-DISK-SPACE while no job runs.",
+      "owner": "Reporting",
+      "evidence": [
+       "conf:RB-DISK-SPACE"
+      ],
+      "rank": 2
+     }
+    ],
+    "do_not": [
+     {
+      "action": "Do not purge the temp folder while a job is running.",
+      "why": "The runbook forbids it.",
+      "evidence": [
+       "conf:RB-DISK-SPACE"
+      ]
+     }
+    ],
+    "alerts": [
+     {
+      "handle": "dd:ev1000000001",
+      "verdict": "this_incident"
+     },
+     {
+      "handle": "dd:ev1000000002",
+      "verdict": "noise"
+     },
+     {
+      "handle": "dd:ev1000000004",
+      "verdict": "noise"
+     }
+    ],
+    "open_questions": [
+     "Did other jobs on worker-01 fail after 02:09?"
+    ],
+    "stakeholder_update": {
+     "status": "Cause identified; fix pending.",
+     "customer_impact": "Last night's reports were not delivered.",
+     "scope": "The nightly export only.",
+     "changed_since_last": "First update.",
+     "next_steps": "Remove the trigger before tonight's run.",
+     "next_update_at": "2026-03-02T02:50:00Z"
+    }
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.644+00:00"
+ },
+ {
+  "seq": 93,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 93,
+  "type": "phase",
+  "data": {
+   "name": "report"
+  },
+  "t_wall": "2026-10-14T11:52:37.644+00:00"
+ },
+ {
+  "seq": 94,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 94,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_12_submit_report",
+   "tool": "submit_report",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T11:52:37.644+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T11:52:37.644+00:00"
+ },
+ {
+  "seq": 95,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 95,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_12_submit_report",
+   "tool": "submit_report"
+  },
+  "t_wall": "2026-10-14T11:52:37.645+00:00"
+ },
+ {
+  "seq": 96,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 96,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_12_submit_report",
+   "tool": "submit_report",
+   "kind": "internal",
+   "by": "agent",
+   "status": "ok",
+   "shown": [],
+   "referenced": [],
+   "native_query": null,
+   "window": null,
+   "chars": 16,
+   "latency_ms": 0.11,
+   "edited_args": null,
+   "first_line": "Report accepted."
+  },
+  "t_wall": "2026-10-14T11:52:37.646+00:00"
+ },
+ {
+  "seq": 97,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 97,
+  "type": "budget",
+  "data": {
+   "used": 8,
+   "limit": 30,
+   "turns_left": 31,
+   "round": 5,
+   "board": {
+    "leading": {
+     "id": "h-release",
+     "confidence": 0.65
+    },
+    "open": 0,
+    "rejected": 2
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.646+00:00"
+ },
+ {
+  "seq": 98,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 98,
+  "type": "validation",
+  "data": {
+   "ok": true,
+   "attempts": 1,
+   "dropped": [],
+   "flagged": [],
+   "continuity": null,
+   "verifier": null,
+   "disputed": []
+  },
+  "t_wall": "2026-10-14T11:52:37.646+00:00"
+ },
+ {
+  "seq": 99,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 99,
+  "type": "draft_report",
+  "data": {
+   "report": {
+    "summary": "Run 57 failed with no space left on its spool volume (log:worker-01/810f681e) after release 2.4.1 (log:worker-01/98e857e0) skipped temp cleanup (log:worker-01/0948a873); run 56 on 2.4.0 succeeded (jk:report-export#56).",
+    "impact": {
+     "business_service": "Reporting",
+     "cis": [
+      "report-exporter",
+      "worker-01"
+     ],
+     "priority": {
+      "suggested": "P3",
+      "impact": "medium",
+      "urgency": "low"
+     },
+     "assignment_group": "Reporting",
+     "oncall": "unknown",
+     "customer": "Last night's reports were not delivered."
+    },
+    "timeline": [
+     {
+      "t_utc": "2026-03-02T01:00:04Z",
+      "event": "Release 2.4.1 was installed.",
+      "evidence": [
+       "log:worker-01/98e857e0"
+      ]
+     },
+     {
+      "t_utc": "2026-03-02T02:09:31Z",
+      "event": "Writes failed: no space left on the device.",
+      "evidence": [
+       "log:worker-01/810f681e"
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "rank": 1,
+      "action": "Roll back report-exporter to 2.4.0.",
+      "owner": "Reporting",
+      "evidence": [
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873"
+      ]
+     },
+     {
+      "rank": 2,
+      "action": "Purge the exporter's temp folder per conf:RB-DISK-SPACE while no job runs.",
+      "owner": "Reporting",
+      "evidence": [
+       "conf:RB-DISK-SPACE"
+      ]
+     }
+    ],
+    "do_not": [
+     {
+      "action": "Do not purge the temp folder while a job is running.",
+      "why": "The runbook forbids it.",
+      "evidence": [
+       "conf:RB-DISK-SPACE"
+      ]
+     }
+    ],
+    "alerts": [
+     {
+      "handle": "dd:ev1000000001",
+      "verdict": "this_incident"
+     },
+     {
+      "handle": "dd:ev1000000002",
+      "verdict": "noise"
+     },
+     {
+      "handle": "dd:ev1000000004",
+      "verdict": "noise"
+     }
+    ],
+    "open_questions": [
+     "Did other jobs on worker-01 fail after 02:09?"
+    ],
+    "stakeholder_update": {
+     "status": "Cause identified; fix pending.",
+     "customer_impact": "Last night's reports were not delivered.",
+     "scope": "The nightly export only.",
+     "changed_since_last": "First update.",
+     "next_steps": "Remove the trigger before tonight's run.",
+     "next_update_at": "2026-03-02T02:50:00Z"
+    },
+    "as_of": "2026-03-02T02:20:00Z",
+    "hypotheses": [
+     {
+      "id": "h-full",
+      "statement": "The run failed because its spool volume filled up.",
+      "role": "cause",
+      "status": "rejected",
+      "subject": "worker-01",
+      "entities": [
+       "worker-01"
+      ],
+      "changes": [],
+      "confidence": 0.3,
+      "support": [
+       "log:worker-01/810f681e",
+       "log:worker-01/2930b3b1",
+       "log:worker-01/66e57ad2"
+      ],
+      "against": [
+       "log:worker-01/0948a873"
+      ],
+      "source": "derived",
+      "history": [
+       {
+        "as_of": "2026-03-02T02:20:00Z",
+        "status": "rejected",
+        "confidence": 0.3,
+        "because": [
+         "log:worker-01/810f681e",
+         "log:worker-01/2930b3b1",
+         "log:worker-01/0948a873"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "h-dying",
+      "statement": "The disk on worker-01 is failing.",
+      "role": "cause",
+      "status": "rejected",
+      "subject": "worker-01",
+      "entities": [
+       "worker-01"
+      ],
+      "changes": [],
+      "confidence": 0.1,
+      "support": [],
+      "against": [
+       "log:worker-01/afb4c3b3",
+       "log:worker-01/36fc1c00",
+       "log:worker-01/395991ff"
+      ],
+      "source": "stated",
+      "history": [
+       {
+        "as_of": "2026-03-02T02:20:00Z",
+        "status": "rejected",
+        "confidence": 0.1,
+        "because": [
+         "log:worker-01/afb4c3b3",
+         "log:worker-01/36fc1c00",
+         "log:worker-01/395991ff"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "h-release",
+      "statement": "Release 2.4.1 stopped cleaning temporary files, so the run filled its spool volume.",
+      "role": "cause",
+      "status": "leading",
+      "subject": "report-exporter",
+      "entities": [
+       "report-exporter",
+       "worker-01"
+      ],
+      "changes": [
+       "jk:report-export#57"
+      ],
+      "confidence": 0.65,
+      "support": [
+       "log:worker-01/810f681e",
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873",
+       "jk:report-export#57",
+       "jk:report-export#56"
+      ],
+      "against": [],
+      "source": "derived",
+      "history": [
+       {
+        "as_of": "2026-03-02T02:20:00Z",
+        "status": "leading",
+        "confidence": 0.65,
+        "because": [
+         "log:worker-01/98e857e0",
+         "log:worker-01/0948a873"
+        ]
+       }
+      ]
+     }
+    ],
+    "validation": {
+     "ok": true,
+     "attempts": 1,
+     "dropped": [],
+     "flagged": [],
+     "continuity": null,
+     "verifier": null,
+     "disputed": []
+    }
+   }
+  },
+  "t_wall": "2026-10-14T11:52:37.646+00:00"
+ },
+ {
+  "seq": 100,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 100,
+  "type": "report",
+  "data": {
+   "report": {
+    "summary": "Run 57 failed with no space left on its spool volume (log:worker-01/810f681e) after release 2.4.1 (log:worker-01/98e857e0) skipped temp cleanup (log:worker-01/0948a873); run 56 on 2.4.0 succeeded (jk:report-export#56).",
+    "impact": {
+     "business_service": "Reporting",
+     "cis": [
+      "report-exporter",
+      "worker-01"
+     ],
+     "priority": {
+      "suggested": "P3",
+      "impact": "medium",
+      "urgency": "low"
+     },
+     "assignment_group": "Reporting",
+     "oncall": "unknown",
+     "customer": "Last night's reports were not delivered."
+    },
+    "timeline": [
+     {
+      "t_utc": "2026-03-02T01:00:04Z",
+      "event": "Release 2.4.1 was installed.",
+      "evidence": [
+       "log:worker-01/98e857e0"
+      ]
+     },
+     {
+      "t_utc": "2026-03-02T02:09:31Z",
+      "event": "Writes failed: no space left on the device.",
+      "evidence": [
+       "log:worker-01/810f681e"
+      ]
+     }
+    ],
+    "actions": [
+     {
+      "rank": 1,
+      "action": "Roll back report-exporter to 2.4.0.",
+      "owner": "Reporting",
+      "evidence": [
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873"
+      ]
+     },
+     {
+      "rank": 2,
+      "action": "Purge the exporter's temp folder per conf:RB-DISK-SPACE while no job runs.",
+      "owner": "Reporting",
+      "evidence": [
+       "conf:RB-DISK-SPACE"
+      ]
+     }
+    ],
+    "do_not": [
+     {
+      "action": "Do not purge the temp folder while a job is running.",
+      "why": "The runbook forbids it.",
+      "evidence": [
+       "conf:RB-DISK-SPACE"
+      ]
+     }
+    ],
+    "alerts": [
+     {
+      "handle": "dd:ev1000000001",
+      "verdict": "this_incident"
+     },
+     {
+      "handle": "dd:ev1000000002",
+      "verdict": "noise"
+     },
+     {
+      "handle": "dd:ev1000000004",
+      "verdict": "noise"
+     }
+    ],
+    "open_questions": [
+     "Did other jobs on worker-01 fail after 02:09?"
+    ],
+    "stakeholder_update": {
+     "status": "Cause identified; fix pending.",
+     "customer_impact": "Last night's reports were not delivered.",
+     "scope": "The nightly export only.",
+     "changed_since_last": "First update.",
+     "next_steps": "Remove the trigger before tonight's run.",
+     "next_update_at": "2026-03-02T02:50:00Z"
+    },
+    "as_of": "2026-03-02T02:20:00Z",
+    "hypotheses": [
+     {
+      "id": "h-full",
+      "statement": "The run failed because its spool volume filled up.",
+      "role": "cause",
+      "status": "rejected",
+      "subject": "worker-01",
+      "entities": [
+       "worker-01"
+      ],
+      "changes": [],
+      "confidence": 0.3,
+      "support": [
+       "log:worker-01/810f681e",
+       "log:worker-01/2930b3b1",
+       "log:worker-01/66e57ad2"
+      ],
+      "against": [
+       "log:worker-01/0948a873"
+      ],
+      "source": "derived",
+      "history": [
+       {
+        "as_of": "2026-03-02T02:20:00Z",
+        "status": "rejected",
+        "confidence": 0.3,
+        "because": [
+         "log:worker-01/810f681e",
+         "log:worker-01/2930b3b1",
+         "log:worker-01/0948a873"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "h-dying",
+      "statement": "The disk on worker-01 is failing.",
+      "role": "cause",
+      "status": "rejected",
+      "subject": "worker-01",
+      "entities": [
+       "worker-01"
+      ],
+      "changes": [],
+      "confidence": 0.1,
+      "support": [],
+      "against": [
+       "log:worker-01/afb4c3b3",
+       "log:worker-01/36fc1c00",
+       "log:worker-01/395991ff"
+      ],
+      "source": "stated",
+      "history": [
+       {
+        "as_of": "2026-03-02T02:20:00Z",
+        "status": "rejected",
+        "confidence": 0.1,
+        "because": [
+         "log:worker-01/afb4c3b3",
+         "log:worker-01/36fc1c00",
+         "log:worker-01/395991ff"
+        ]
+       }
+      ]
+     },
+     {
+      "id": "h-release",
+      "statement": "Release 2.4.1 stopped cleaning temporary files, so the run filled its spool volume.",
+      "role": "cause",
+      "status": "leading",
+      "subject": "report-exporter",
+      "entities": [
+       "report-exporter",
+       "worker-01"
+      ],
+      "changes": [
+       "jk:report-export#57"
+      ],
+      "confidence": 0.65,
+      "support": [
+       "log:worker-01/810f681e",
+       "log:worker-01/98e857e0",
+       "log:worker-01/0948a873",
+       "jk:report-export#57",
+       "jk:report-export#56"
+      ],
+      "against": [],
+      "source": "derived",
+      "history": [
+       {
+        "as_of": "2026-03-02T02:20:00Z",
+        "status": "leading",
+        "confidence": 0.65,
+        "because": [
+         "log:worker-01/98e857e0",
+         "log:worker-01/0948a873"
+        ]
+       }
+      ]
+     }
+    ],
+    "validation": {
+     "ok": true,
+     "attempts": 1,
+     "dropped": [],
+     "flagged": [],
+     "continuity": null,
+     "verifier": null,
+     "disputed": []
+    },
+    "proposed_actions": [
+     {
+      "call_id": "call_11_propose_action",
+      "tool": "propose_action",
+      "args": {
+       "kind": "halt_change",
+       "target": "report-exporter",
+       "params": [
+        {
+         "name": "to_version",
+         "value": "2.4.0"
+        }
+       ],
+       "evidence": [
+        "log:worker-01/98e857e0",
+        "log:worker-01/0948a873"
+       ]
+      },
+      "rationale": {
+       "tests": "h-release",
+       "expect": "tonight's run cleans up after itself"
+      },
+      "decision": "deferred",
+      "by": {
+       "who": "policy",
+       "via": "headless"
+      },
+      "reason": "unattended run",
+      "decided_at": "2026-10-14T11:52:37.640+00:00"
+     }
+    ]
+   },
+   "status": "completed"
+  },
+  "t_wall": "2026-10-14T11:52:37.647+00:00"
+ },
+ {
+  "seq": 101,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 101,
+  "type": "phase",
+  "data": {
+   "name": "done"
+  },
+  "t_wall": "2026-10-14T11:52:37.649+00:00"
+ },
+ {
+  "seq": 102,
+  "run_id": "20261014T115237Z-4d31f2",
+  "agent_seq": 102,
+  "type": "run_finished",
+  "data": {
+   "status": "completed",
+   "stop_reason": null,
+   "tool_calls": 8,
+   "model_calls": 5,
+   "tokens": {
+    "input_tokens": 67189,
+    "output_tokens": 1320,
+    "cache_read": 0,
+    "cache_write": 0,
+    "reasoning": 0,
+    "cost_usd": 0.0,
+    "model_latency_ms": 3.2
+   },
+   "wall_s": 0.047
+  },
+  "t_wall": "2026-10-14T11:52:37.650+00:00"
+ }
+]

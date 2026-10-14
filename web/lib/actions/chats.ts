@@ -82,12 +82,12 @@ export async function answerGate(chatId: string, interruptId: string, answers: R
   return { ok: true };
 }
 
-export async function sendNote(chatId: string, note: string): Promise<ActionResult & { delivery?: string }> {
+export async function sendNote(chatId: string, note: string): Promise<ActionResult & { delivery?: string; handle?: string }> {
   const parsed = z.object({ chatId: id, note: text(4000) }).safeParse({ chatId, note });
   if (!parsed.success) return { ok: false, error: "Write something first." };
   try {
-    const r = await api<{ delivery: string }>(`/chats/${chatId}/notes`, { json: { text: parsed.data.note } });
-    return { ok: true, delivery: r.delivery };
+    const r = await api<{ delivery: string; handle: string }>(`/chats/${chatId}/notes`, { json: { text: parsed.data.note } });
+    return { ok: true, delivery: r.delivery, handle: r.handle };
   } catch (error) {
     return failed(error);
   }
@@ -100,4 +100,22 @@ export async function setAutoApprove(chatId: string, on: boolean): Promise<Actio
     return failed(error);
   }
   return { ok: true };
+}
+
+const Resolution = z.object({
+  path: z.enum(["agent", "own"]), note: text(4000), resolvedAt: z.string().trim().regex(/^\d{1,2}:\d{2}$/, "Give the time as HH:MM, in UTC."),
+  resolvedBy: z.string().trim().min(1).max(200),
+});
+
+/** Mark the incident resolved in this chat: who found the fix and how, then on to the summary. */
+export async function resolveChat(chatId: string, input: z.infer<typeof Resolution>): Promise<ActionResult> {
+  const parsed = Resolution.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Fill in how it was resolved." };
+  try {
+    await api(`/chats/${id.parse(chatId)}/resolution`, { method: "PUT", json: { path: parsed.data.path, note: parsed.data.note, resolved_at: parsed.data.resolvedAt, resolved_by: parsed.data.resolvedBy } });
+  } catch (error) {
+    return failed(error);
+  }
+  revalidatePath(`/chats/${chatId}`);
+  redirect(`/chats/${chatId}/summary`);
 }

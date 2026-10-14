@@ -98,7 +98,7 @@ SMALLS_API_URL ?= http://127.0.0.1:$(SMALLS_API_PORT)
 SMALLS_API_MODE ?= live
 API_ENV = SMALLS_BUNDLE=$(BUNDLE) SMALLS_CHECKPOINT=$(CHECKPOINT) SMALLS_API_MODE=$(SMALLS_API_MODE)
 
-.PHONY: overfit-review api api-types
+.PHONY: overfit-review api api-types api-fixtures
 
 # The overfit review (ruling U15): every change under the agent, its tools, its contracts and the drafting
 # prompt since BASE, read against the answer. Live: one model call with the investigator's profile.
@@ -114,3 +114,7 @@ api:
 api-types:
 	$(PY) -m smalls.api.openapi --write
 	pnpm --dir web types
+
+# The event logs the web app's reducer tests fold: scripted runs through the API over the made-up fixture incident.
+api-fixtures:
+	$(PY) tests/api/make_fixtures.py

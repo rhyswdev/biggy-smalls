@@ -174,7 +174,8 @@ class Service:
             return self.readers[key]
 
     def incident(self) -> dict[str, Any]:
-        return self.reader().incident(self.settings.trigger(), named=self.settings.incident)
+        trigger = self.settings.trigger()
+        return {**self.reader().incident(trigger, named=self.settings.incident), "trigger": trigger}
 
     def _incident_of(self, trigger: str, now: datetime | str) -> tuple[str | None, str | None]:
         """The title and number of the incident a trigger belongs to, when served data can say."""

@@ -97,7 +97,7 @@ export interface ChatState {
   report: Report | null;
   reportStatus: string | null;
   draftSeq: number | null;
-  verifier: { status: string; disputed: string[] } | null;
+  verifier: { status: string; disputed: string[]; checks: { statement: string; tool: string; args: Record<string, unknown> }[] } | null;
   answers: { text: string; note: string | null }[];
   followups: { n: number; outcome: string; note: string }[];
   finished: { status: string; tool_calls: number; model_calls: number; wall_s: number; cost_usd: number | null } | null;
@@ -315,7 +315,9 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
       state.draftSeq = ev.seq;
       break;
     case "verifier_verdict":
-      state.verifier = { status: str(d.status), disputed: list(d.disputed) };
+      state.verifier = { status: str(d.status), disputed: list(d.disputed),
+        checks: (((d.decision as { checks?: unknown[] } | undefined)?.checks ?? []) as { statement?: string; tool?: string; args?: Record<string, unknown> }[])
+          .map((c) => ({ statement: str(c.statement), tool: str(c.tool), args: c.args ?? {} })) };
       break;
     case "report": {
       const report = d.report as Report;

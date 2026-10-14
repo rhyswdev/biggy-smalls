@@ -40,6 +40,7 @@ export interface IncidentCard {
   } | null;
   note: { author: string | null; role: string | null; time: string | null; text: string };
   found_by: string;
+  trigger: string;
 }
 
 export type ChatOrigin = "chat" | "headless" | "blank" | "past";
