@@ -7,6 +7,8 @@ const api = process.env.SMALLS_API_URL ?? `http://127.0.0.1:${process.env.SMALLS
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // The browser suites and the run commands use 127.0.0.1; the dev server serves its own resources to it.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   // A server-sent event stream must reach the browser one event at a time; compression would buffer it.
   compress: false,
   async rewrites() {

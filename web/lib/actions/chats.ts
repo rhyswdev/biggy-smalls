@@ -1,0 +1,103 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import { api, ApiError } from "@/lib/api";
+import type { ChatSummary } from "@/lib/types";
+
+// Mutations go through these server actions, which check their input before the API sees it (ruling U7). The
+// API checks it again: a second answer to a gate is refused there, whatever happens here.
+
+export interface ActionResult { ok: boolean; error?: string; status?: number }
+
+const id = z.string().regex(/^[A-Za-z0-9._-]{1,80}$/);
+const text = (max: number) => z.string().trim().min(1).max(max);
+
+function failed(error: unknown): ActionResult {
+  if (error instanceof ApiError) return { ok: false, error: error.message, status: error.status };
+  return { ok: false, error: "Something went wrong." };
+}
+
+/** Start an investigation in a chat ("Investigate in chat", or a new chat): open the chat it made. */
+export async function startChat(input: { origin: "chat" | "blank"; trigger: string; autoApprove: boolean }): Promise<ActionResult> {
+  const body = z.object({ origin: z.enum(["chat", "blank"]), trigger: text(8000), autoApprove: z.boolean() }).safeParse(input);
+  if (!body.success) return { ok: false, error: "Write a question or a note first." };
+  let chat: ChatSummary;
+  try {
+    chat = await api<ChatSummary>("/chats", { json: { origin: body.data.origin, trigger: body.data.trigger, auto_approve: body.data.autoApprove } });
+  } catch (error) {
+    return failed(error);
+  }
+  revalidatePath("/");
+  redirect(`/chats/${chat.id}`);
+}
+
+/** "Run agent": an unattended run from the commander's note. The dashboard follows it. */
+export async function runAgent(): Promise<ActionResult> {
+  try {
+    await api<ChatSummary>("/chats", { json: { origin: "headless" } });
+  } catch (error) {
+    return failed(error);
+  }
+  revalidatePath("/");
+  return { ok: true };
+}
+
+export async function stopRun(chatId: string): Promise<ActionResult> {
+  try {
+    await api(`/chats/${id.parse(chatId)}/stop`, { json: {} });
+  } catch (error) {
+    return failed(error);
+  }
+  return { ok: true };
+}
+
+export async function moreRun(chatId: string, resume = false): Promise<ActionResult> {
+  try {
+    await api(`/chats/${id.parse(chatId)}/runs`, { json: { resume } });
+  } catch (error) {
+    return failed(error);
+  }
+  revalidatePath("/");
+  revalidatePath(`/chats/${chatId}`);
+  return { ok: true };
+}
+
+const Answer = z.object({
+  approve: z.boolean().optional(), defer: z.boolean().optional(), reason: z.string().trim().max(2000).optional(),
+  args: z.record(z.string(), z.unknown()).optional(),
+}).refine((a) => a.approve || a.defer || (a.reason ?? "").length > 0, "a rejection needs a reason");
+
+/** Answer a gate: one answer per call. The API applies it only while the gate is still pending (U5). */
+export async function answerGate(chatId: string, interruptId: string, answers: Record<string, z.infer<typeof Answer>>, note?: string): Promise<ActionResult> {
+  const parsed = z.object({ chatId: id, interruptId: z.string().min(1).max(200), answers: z.record(z.string().min(1).max(200), Answer), note: z.string().trim().max(4000).optional() })
+    .safeParse({ chatId, interruptId, answers, note });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid answer." };
+  try {
+    await api(`/chats/${chatId}/gate`, { json: { interrupt_id: interruptId, answers, ...(parsed.data.note ? { note: parsed.data.note } : {}) } });
+  } catch (error) {
+    return failed(error);
+  }
+  return { ok: true };
+}
+
+export async function sendNote(chatId: string, note: string): Promise<ActionResult & { delivery?: string }> {
+  const parsed = z.object({ chatId: id, note: text(4000) }).safeParse({ chatId, note });
+  if (!parsed.success) return { ok: false, error: "Write something first." };
+  try {
+    const r = await api<{ delivery: string }>(`/chats/${chatId}/notes`, { json: { text: parsed.data.note } });
+    return { ok: true, delivery: r.delivery };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
+export async function setAutoApprove(chatId: string, on: boolean): Promise<ActionResult> {
+  try {
+    await api(`/chats/${id.parse(chatId)}/auto-approve`, { method: "PUT", json: { on: z.boolean().parse(on) } });
+  } catch (error) {
+    return failed(error);
+  }
+  return { ok: true };
+}

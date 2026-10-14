@@ -122,13 +122,14 @@ class Service:
         chat_id = f"run-{run_id}"[:64]
         trigger = run.get("trigger") or ""
         body = note_of(trigger)["text"] or trigger
-        title = (body.strip().splitlines() or [run_id])[0][:120]
+        title, incident = self._incident_of(trigger, run.get("now") or self.now)
+        title = title or (body.strip().splitlines() or [run_id])[0][:120]
         status = summary.get("status") or "completed"
         events = record.events()        # read before the app's transaction: one connection's write blocks another's read
         with self.db.write() as conn:
             conn.execute("INSERT INTO chat (id, origin, title, incident, now, created, auto_approve, status, recorded) "
-                         "VALUES (?, 'past', ?, NULL, ?, ?, ?, ?, ?)",
-                         (chat_id, title, run.get("now"), run.get("created"), int(bool((run.get("context") or {}).get("auto_approve"))),
+                         "VALUES (?, 'past', ?, ?, ?, ?, ?, ?, ?)",
+                         (chat_id, title, incident, run.get("now"), run.get("created"), int(bool((run.get("context") or {}).get("auto_approve"))),
                           status, run.get("created")))
             conn.execute("INSERT INTO run (run_id, chat_id, trigger, status, started, finished, folder) VALUES (?, ?, ?, ?, ?, ?, ?)",
                          (run_id, chat_id, trigger, status if status in ("completed", "incomplete", "failed", "paused") else "completed",
@@ -175,6 +176,14 @@ class Service:
     def incident(self) -> dict[str, Any]:
         return self.reader().incident(self.settings.trigger(), named=self.settings.incident)
 
+    def _incident_of(self, trigger: str, now: datetime | str) -> tuple[str | None, str | None]:
+        """The title and number of the incident a trigger belongs to, when served data can say."""
+        try:
+            card = self.reader(now).incident(trigger, named=self.settings.incident).get("incident") or {}
+        except Exception:
+            return None, None
+        return card.get("short_description"), card.get("number")
+
     def records(self, chat_id: str) -> list[RunRecord]:
         return [RunRecord(None, run["run_id"], backend=self.db.records) for run in self.runs(chat_id)]
 
@@ -198,10 +207,13 @@ class Service:
         if not text:
             raise Problem(422, "Invalid request", "A chat starts from a question or a note; this one is empty.")
         headless = origin == "headless"
+        if origin != "blank" and (title is None or incident is None):     # a chat about the incident is named after it
+            found = self._incident_of(text, self.now)
+            title, incident = title or found[0], incident or found[1]
+        title = title or (note_of(text)["text"] or text).strip().splitlines()[0][:120]
         with self.db.write() as conn:
             conn.execute("INSERT INTO chat (id, origin, title, incident, now, created, auto_approve, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                         (chat_id, origin, title or text.splitlines()[0][:120], incident, iso(self.now), stamp(),
-                          int(auto_approve or headless), "running"))
+                         (chat_id, origin, title, incident, iso(self.now), stamp(), int(auto_approve or headless), "running"))
         self.start_run(chat_id, text)
         return self.chat(chat_id)
 
