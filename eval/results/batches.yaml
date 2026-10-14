@@ -114,3 +114,8 @@ batches:
     pass: 7
     what: Section 13's R2, the first look of the live carry-forward (row E4). Three runs at the first checkpoint on sol at medium, each the start of a run at the second checkpoint in batch e4-1452.
     moved: Every run led with the gateway at 0.75 to 0.8 and answered the planned checkout rollback first; one kept the database as an open cause beside its symptom.
+  - name: e4-1452
+    phase: to score
+    pass: 7
+    what: Section 13's R3, the live carry-forward (row E4). One run at the second checkpoint for each run of e4-1440, started from its board (--carry-from), on sol at medium.
+    moved: Each kept its first look's leading cause at 0.8, cited 7 to 11 rows dated after 14:40 that its own calls fetched, passed the continuity check, and took 10 or 11 turns against 12 to 14 for a fresh look.
