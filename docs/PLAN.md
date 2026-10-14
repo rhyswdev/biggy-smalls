@@ -422,7 +422,7 @@ checkpoints:
     confidence: {wrong_leading_max: 0.6}
 ```
 
-**As built (2026-10-14).** The schema is `eval/key.py` (`python -m eval.key` validates the key against the manifest and the alias table). Beyond the shape above: each judge item carries the sentence the judge reads; traps are matched on a hypothesis's `subject` and read with the role as the claim, so a rejected hypothesis never falls, a leading one always does, and `allowed` lists how an open one may stand; and an `alerts:` block holds the right verdicts per alert stream, matched by `sig_id` or class. The rulings are section 13.1 of `docs/decisions/eval-loop.md`.
+**As built (2026-10-14).** The schema is `eval/key.py` (`python -m eval.key` validates the key against the manifest and the alias table). Beyond the shape above: each judge item carries the sentence the judge reads; traps are matched on a hypothesis's `subject` and read with the role as the claim, so a rejected hypothesis never falls, a leading one always does, and `allowed` lists how an open one may stand; and an `alerts:` block holds the right verdicts per alert stream, matched by `sig_id` or class. The rulings are section 14.1 of `docs/decisions/eval-loop.md`.
 
 Every held-out key also carries a generated `dev_answer` trap (matches payments-gateway, CHG0031877, #412, 3.8.0; allowed any role except leading cause), which is the most direct overfitting number available. The scorer contains no bundle ids; judge checklists are per-bundle data under one generic judge prompt; confidence thresholds are identical across bundles.
 
@@ -495,7 +495,7 @@ One judge call: yes/no checklist with quotes required, separate system prompt: t
 
 Validation: score three hand-written reports (correct; "it is the checkout deploy"; "it is the database") and the no-tools baseline (one call with the trigger, the Slack transcript and alert titles). The scorer must separate them; the baseline should fall for at least two traps. Then three agent runs at 14:52 with tokens, tool calls and wall time per run. That table is the "how we know it works" section of the write-up.
 
-**As built (2026-10-14).** `eval/scorer.py` (the deterministic checks, the alert verdicts, the agent bar of section 13 and the process to the first correct leading hypothesis) and `eval/judge.py` (one call, its prompt in `eval/judge/prompt.md`, its profile pinned in `eval/scorer.toml`, with claim support judged in the same call); `make score RUN=<id>` and `python -m eval.table`. The three hand-written reports are in `eval/reports/`. Section 13 of `docs/decisions/eval-loop.md` is the record.
+**As built (2026-10-14).** `eval/scorer.py` (the deterministic checks, the alert verdicts, the agent bar of section 13 and the process to the first correct leading hypothesis) and `eval/judge.py` (one call, its prompt in `eval/judge/prompt.md`, its profile pinned in `eval/scorer.toml`, with claim support judged in the same call); `make score RUN=<id>` and `python -m eval.table`. The three hand-written reports are in `eval/reports/`. Section 14 of `docs/decisions/eval-loop.md` is the record.
 
 Day 2: state continuity (every status change between checkpoints cites a handle dated in the gap), the 14:40 checkpoint, the held-out variants (section 12), tool calls until first correct leading hypothesis.
 

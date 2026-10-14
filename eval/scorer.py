@@ -1,5 +1,5 @@
 """The scorer's deterministic part (docs/PLAN.md section 5; rows S2 and S3 of docs/decisions/eval-loop.md,
-whose section 13 holds the rulings it follows).
+whose section 14 holds the rulings it follows).
 
 Inputs: a run record (the report, the calls with their `shown[]` and `referenced[]`, the notes, the events),
 the bundle's manifest and answer key, and the alias table in `scenario/facts.yaml`. No model is called here;

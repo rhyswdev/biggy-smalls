@@ -1,5 +1,5 @@
 """The answer key: its schema, its validation, the manifest it is read against and the alias table
-(docs/PLAN.md section 3.3; row S1 of docs/decisions/eval-loop.md, whose section 13 holds the rulings).
+(docs/PLAN.md section 3.3; row S1 of docs/decisions/eval-loop.md, whose section 14 holds the rulings).
 
 The key lives in `scenario/content/answer_key.yaml` and is rendered into the bundle's `_internal/`. It names
 facts by `sig_id` and generated class, entities by their `scenario/facts.yaml` key, and never a handle. The
