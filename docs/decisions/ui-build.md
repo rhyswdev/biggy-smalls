@@ -374,4 +374,30 @@ Each has the answer the build uses meanwhile. Q1 and Q2 were ruled in review; Q4
 
 ## 12. Judgment calls made while building
 
-Empty until the build starts. Number them N1, N2 and so on, each with the design text or rule it interprets and the concrete form chosen.
+Three parts: the evidence each row was accepted on (12.1), the judgment calls, numbered N1, N2 and so on, each with the design text or rule it interprets and the concrete form chosen (12.2), and every live model call with its cost (12.3).
+
+### 12.1 Evidence, by row
+
+| Row | Evidence |
+|---|---|
+| R0 | At `049e6a0` (`main` merged in at `904c686`; `main` has not moved since): `make test` 583 passed, 1 skipped, in 103 s; `make lint` 0 errors, 114 prompt texts checked against 162 bundle strings. |
+| R0b | Offline, `tests/test_overfit.py`: hunks are cut and numbered per file; only the guarded paths are read, untracked files included; the reviewer gets the answer key, PLAN 1.1 and 1.5 and every hunk; a hunk with no verdict is a flag; a failed call prints the key variable's name, never its value. Live (`SMALLS_LIVE=1`): the planted diff of three data-specific changes (a time from the answer key in the sweep, a host from the data in a tool description, the mechanism restated in general words in the system prompt) came back 3 of 3 flagged, each mapped to the answer; the planted diff of generic practice (read the runbook, compare change time with first error, read the ticket's history, and a mechanical stop method) came back 0 of 3 flagged. |
+
+### 12.2 Judgment calls
+
+| # | Row | Rule or design text | Concrete form |
+|---|---|---|---|
+| N1 | R0b | U15: the review covers text a model reads and code under `smalls/agent/`, `smalls/tools/` and `smalls/contracts/` | The guarded paths are those three folders and `smalls/api/prompts/`, where U8's drafting prompt lives. `config.toml` and the tag profiles are inside them. Untracked files under them are reviewed as new files, so a seam that adds a module cannot skip the review by not being staged. |
+| N2 | R0b | "prints a verdict per hunk … and exits non-zero on any flag" | A hunk the reviewer gives no verdict for is a flag with the reason "the reviewer gave no verdict for this hunk". An unreviewed change is not a passed one. Exit 1 on a flag, 2 (a `SystemExit` with a message) when the call fails. |
+| N3 | R0b | "makes one call with the investigator's profile" | The reviewer answers through one tool, `submit_review`, that it is asked to call; the call is not forced, because the provider refuses a forced tool choice with reasoning on (tools-agent-build 7.5, fact 2). A JSON object in its text is read when it answers without the tool. The profile comes from the agent's `load_config`, so under pytest it is the scripted one unless `SMALLS_LIVE=1`. |
+| N4 | R0b | "a planted diff that adds three data-specific changes" | The planted time and host are read at test time (the first clock time in the answer key; the first host in the scenario's network list that the answer key names), so the test file holds no value from the data. The third change, the mechanism restated in general words, is written out in the test: it is the case the review exists for, and it names nothing. |
+| N5 | R0b | The review reads "the answer key" | `--bundle` is required and the Makefile passes `BUNDLE`; the module names no bundle. A worktree has no `.env`, so this session runs live targets with `ENV="--env-file <main checkout>/.env"` on the make line; the file is never copied. |
+
+### 12.3 Live spend
+
+Budget $10 (section 3). One line per live call, its cost from its own record or printed result. Models are named by profile.
+
+| # | Row | Call | Cost (USD) | Running total |
+|---|---|---|---|---|
+| 1 | R0b | Overfit review of the planted data-specific diff (profile `anthropic`) | 0.0347 | 0.0347 |
+| 2 | R0b | Overfit review of the planted generic diff (profile `anthropic`) | 0.0357 | 0.0704 |

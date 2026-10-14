@@ -85,3 +85,14 @@ matrix:
 
 heldout:
 	@echo "heldout: stub until step 11"
+
+# -- The UI step (docs/decisions/ui-build.md) ----------------------------------------------------------
+# The ref the overfit review diffs from: make overfit-review BASE=<ref>. The working tree is what is reviewed.
+BASE ?= HEAD
+
+.PHONY: overfit-review
+
+# The overfit review (ruling U15): every change under the agent, its tools, its contracts and the drafting
+# prompt since BASE, read against the answer. Live: one model call with the investigator's profile.
+overfit-review:
+	$(UV) run --python 3.12 $(ENV) python -m smalls_data.overfit --bundle $(BUNDLE) --base $(BASE)
