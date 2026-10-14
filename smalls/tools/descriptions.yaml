@@ -375,8 +375,8 @@ tools:
         Steps someone might reasonably take that the evidence says would do
         harm or waste time.
       alerts: >-
-        A verdict for every alert stream the opening sweep listed, and for any
-        other stream you assessed, by the stream row's handle.
+        A verdict for every alert stream your list_alerts calls showed, and for
+        any other stream you assessed, by the stream row's handle.
       open_questions: >-
         What is still unknown, written in full, each a question a person or a
         call could answer.
