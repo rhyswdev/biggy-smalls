@@ -1,0 +1,241 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h4",
+     "verdict": "partial",
+     "quote": "Retry a timed-out or 5xx authorize up to 3 times with backoff 1 s, 2 s, 4 s",
+     "handle": "conf:KB0010502"
+    },
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "version:2.14.2: 54 points [tag signal=errors] min 8 at 13:56 max 875 at 14:46",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "partial",
+     "quote": "Pool /Common/pool_pay_gw member /Common/10.20.4.34:8443 monitor status down",
+     "handle": "log:ltm/9eed94dd"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "partial",
+     "quote": "start 2026-10-13T14:36:00Z (native 2026-10-13 10:36:00)",
+     "handle": "snow:CHG0031880"
+    },
+    {
+     "id": "h:h5",
+     "verdict": "partial",
+     "quote": "Connection leak detection triggered for org.postgresql.jdbc.PgConnection@5b2a8e1d",
+     "handle": "log:pay-01/336ab539"
+    },
+    {
+     "id": "h:h6",
+     "verdict": "partial",
+     "quote": "slow PSP response: 7177ms for txn=ord-7781067 (warn threshold 5000ms)",
+     "handle": "log:pay-01/f945302c"
+    },
+    {
+     "id": "a:1",
+     "verdict": "supported",
+     "quote": "payments.psp.retries=3",
+     "handle": "log:pay-01/5ad16319"
+    },
+    {
+     "id": "a:2",
+     "verdict": "supported",
+     "quote": "idle in transaction",
+     "handle": "slack:inc-checkout-latency/cd4b848c"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "slow PSP response: 5585ms for txn=ord-7781008 (warn threshold 5000ms)",
+     "handle": "log:pay-02/33353de9"
+    },
+    {
+     "id": "a:4",
+     "verdict": "partial",
+     "quote": "[Datadog] p90 latency high on payments-gw",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "a:5",
+     "verdict": "supported",
+     "quote": "Connection leak detection triggered for org.postgresql.jdbc.PgConnection@5b2a8e1d",
+     "handle": "log:pay-01/336ab539"
+    },
+    {
+     "id": "t:1",
+     "verdict": "partial",
+     "quote": "PSP client configured: endpoint=https://api.paycore.example/v2/authorizations payments.psp.timeout-ms=8000 payments.psp.retries=3",
+     "handle": "log:pay-01/5ad16319"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "end 2026-10-13T10:25:00.062Z  state SUCCESS",
+     "handle": "jk:payments-gateway-deploy#412"
+    },
+    {
+     "id": "t:3",
+     "verdict": "partial",
+     "quote": "slow PSP response: 5585ms for txn=ord-7781008 (warn threshold 5000ms)",
+     "handle": "log:pay-02/33353de9"
+    },
+    {
+     "id": "t:4",
+     "verdict": "partial",
+     "quote": "Connection leak detection triggered for org.postgresql.jdbc.PgConnection@5b2a8e1d on thread http-nio-8443-exec-17",
+     "handle": "log:pay-01/336ab539"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "checkout-api-deploy #897  VERSION 2.14.3  TARGET_ENV prod  CHANGE_TICKET CHG0031902  start 2026-10-13T14:27:30Z",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:6",
+     "verdict": "partial",
+     "quote": "first point < 95 (critical) at 2026-10-13T14:30:00Z, value 89",
+     "handle": "metric:avg:payments.authorize.success_rate{env:prod}@0852-1452"
+    },
+    {
+     "id": "t:7",
+     "verdict": "partial",
+     "quote": "Postgres can_connect on pay-db-01  entity host:pay-db-01  first 2026-10-13T14:33:30Z",
+     "handle": "dd:ev7820518073"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "start 2026-10-13T14:36:00Z (native 2026-10-13 10:36:00)",
+     "handle": "snow:CHG0031880"
+    },
+    {
+     "id": "t:9",
+     "verdict": "partial",
+     "quote": "Pool /Common/pool_pay_gw member /Common/10.20.4.33:8443 monitor status down",
+     "handle": "log:ltm/173b82c5"
+    },
+    {
+     "id": "t:10",
+     "verdict": "supported",
+     "quote": "checkout-api-deploy #898  VERSION 2.14.2  TARGET_ENV prod  CHANGE_TICKET CHG0031902  start 2026-10-13T14:40:30Z  end 2026-10-13T14:42:05.899Z",
+     "handle": "jk:checkout-api-deploy#898"
+    },
+    {
+     "id": "d:1",
+     "verdict": "partial",
+     "quote": "caused by DB pool exhaustion",
+     "handle": "log:ltm/416e563f"
+    },
+    {
+     "id": "d:2",
+     "verdict": "supported",
+     "quote": "version:2.14.3: 14 points [tag signal=errors]",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+    },
+    {
+     "id": "d:3",
+     "verdict": "partial",
+     "quote": "oldest_xact 00:00:38",
+     "handle": "slack:inc-checkout-latency/cd4b848c"
+    },
+    {
+     "id": "d:4",
+     "verdict": "supported",
+     "quote": "Lower DNS TTL for cdn.larkspur.com ahead of CDN provider switch",
+     "handle": "snow:CHG0031880"
+    },
+    {
+     "id": "d:5",
+     "verdict": "supported",
+     "quote": "remaining connection slots are reserved for non-replication superuser connections",
+     "handle": "q:008f51cb"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "The payments-reconciler run #2311, started about 14:30 with 40 recon_app connections and a 17-min transaction, is what pushed pay-db-01 to max_connections. If so, the gateway retry loop only added to the load. The check would show reconciler activity starting at or before 14:30, with pay-db-01 'slots reserved' errors right after it.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:15:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:45:00Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"payments-reconciler\"]"
+       },
+       {
+        "name": "group_by",
+        "value": "minute"
+       }
+      ]
+     }
+    },
+    {
+     "statement": "A rise in checkout traffic (people retrying the pay button) drove the gateway pool exhaustion, rather than the 3.8.0 retry design. The check would show checkout-api request volume climbing before 14:25.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:00:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:52:00Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"checkout-api\"]"
+       },
+       {
+        "name": "group_by",
+        "value": "minute"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [
+    "slack:inc-checkout-latency/8c3f1b34",
+    "slack:inc-checkout-latency/6eeee125"
+   ],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": [
+    "slack:inc-checkout-latency/8c3f1b34",
+    "slack:inc-checkout-latency/6eeee125"
+   ]
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

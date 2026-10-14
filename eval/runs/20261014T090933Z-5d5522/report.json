@@ -1,0 +1,563 @@
+{
+ "summary": "Checkout 504s come from the payments gateway, not from checkout-api, pay-03 or the network. payments-gateway 3.8.0, deployed at 10:25 (jk:payments-gateway-deploy#412, CHG0031877), raised the PayCore timeout to 8 s and added 3 retries with backoff. The prod config is confirmed in log:pay-01/5ad16319. By the design in conf:KB0010502, the retries happen inside the same DB transaction that writes authorization_attempt. So a slow authorization can hold a pgw_app connection for up to 39 s, while checkout-api gives up at 10 s.\n\nAt 14:25 PayCore responses went past 5 to 8 s (log:pay-02/33353de9, q:e3791117) and retries started (q:c86651e8). Hikari flagged connections held across PaymentService.authorize (log:pay-01/336ab539). Pool errors (\"Connection is not available\") started at 14:30 and keep climbing (q:a7bf7879). pay-db-01 is turning connections away (q:008f51cb), and Elena's query shows 133 pgw_app sessions \"idle in transaction\" on the authorization_attempt insert (slack:inc-checkout-latency/cd4b848c). Authorization success fell from 98.5% to about 42% (metric:avg:payments.authorize.success_rate{env:prod}@0852-1452).\n\nThe stated theories don't hold:\n- **checkout-api:** errors on 2.14.2 were already rising before 2.14.3 deployed, and kept rising after the rollback (metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452).\n- **pay-03:** the F5 is dropping all four gateway members (.31 to .34) on 503 health checks, not just pay-03 (log:ltm/416e563f, log:ltm/9eed94dd, log:ltm/5b24e5dd).\n- **Network:** the marketing-site DNS change started at 14:36, eleven minutes after onset (snow:CHG0031880).\n\nPayCore's status page is green (psp:paycore@v1), but our own logs show it slow from 14:25, so it is the trigger. Confidence about 0.7 that the 3.8.0 retry-in-transaction is the cause. Mitigation: revert the retry/timeout settings now, which is a config-only change, and own it in Payments Engineering (on call: Tom Beckett at L1, not responding; Priya Raman at L2, engaged).",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Payments Gateway",
+   "Payments DB",
+   "pay-01",
+   "pay-02",
+   "pay-03",
+   "pay-04",
+   "Checkout API"
+  ],
+  "priority": {
+   "suggested": "1 - Critical",
+   "impact": "1 - High: payment authorization success is down from 98.5% to about 42% across all checkouts",
+   "urgency": "1 - High: ongoing revenue loss, and support already has 40+ tickets"
+  },
+  "assignment_group": "Payments Engineering",
+  "oncall": "Payments Engineering L1 Tom Beckett (not responding to page #8812); L2 Priya Raman (acknowledged, engaged)",
+  "customer": "Since about 14:25 UTC, customers paying at checkout get a hanging payment spinner, then an error (504). About 58% of authorizations are failing."
+ },
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T10:20:30Z",
+   "event": "pay-01 starts 3.8.0 with payments.psp.timeout-ms=8000, retries=3, backoff 1/2/4 s",
+   "evidence": [
+    "log:pay-01/5ad16319"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T10:25:00Z",
+   "event": "payments-gateway 3.8.0 deploy to prod completes (CHG0031877)",
+   "evidence": [
+    "jk:payments-gateway-deploy#412",
+    "snow:CHG0031877"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:25:05Z",
+   "event": "PayCore responses exceed 5 s; gateway authorize retries begin",
+   "evidence": [
+    "log:pay-02/33353de9",
+    "q:e3791117",
+    "q:c86651e8"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:26:34Z",
+   "event": "Hikari leak detection: connection held across the PaymentService.authorize transaction",
+   "evidence": [
+    "log:pay-01/336ab539"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:27:30Z",
+   "event": "checkout-api 2.14.3 deploy starts; errors on 2.14.2 already rising",
+   "evidence": [
+    "jk:checkout-api-deploy#897",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:30:00Z",
+   "event": "Gateway pool exhaustion errors begin; auth success rate drops below 95%",
+   "evidence": [
+    "q:a7bf7879",
+    "metric:avg:payments.authorize.success_rate{env:prod}@0852-1452"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:33:30Z",
+   "event": "pay-db-01 can_connect fails; slots reserved errors for pgw_app",
+   "evidence": [
+    "dd:ev7820518073",
+    "q:008f51cb"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:36:00Z",
+   "event": "Marketing CDN DNS TTL change starts (after checkout onset)",
+   "evidence": [
+    "snow:CHG0031880"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:36:40Z",
+   "event": "F5 starts flapping gateway members .33, .31, .34, .32 on 503 health checks",
+   "evidence": [
+    "log:ltm/173b82c5",
+    "log:ltm/416e563f",
+    "log:ltm/9eed94dd",
+    "log:ltm/5b24e5dd"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:42:05Z",
+   "event": "checkout-api rollback to 2.14.2 completes; errors continue",
+   "evidence": [
+    "jk:checkout-api-deploy#898",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Revert the PAY-2231 PayCore client settings on Payments Gateway with a config-only release: payments.psp.retries 3->0, payments.psp.timeout-ms 8000->3000. If that can't be done within minutes, roll back payments-gateway-deploy#412 to the build before 3.8.0. Proposed to the IC; still deferred.",
+   "owner": "Payments Engineering (Priya Raman, on-call L2)",
+   "evidence": [
+    "conf:KB0010502",
+    "log:pay-01/5ad16319",
+    "log:pay-01/336ab539",
+    "q:a7bf7879"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Confirm recovery: watch idle-in-transaction pgw_app sessions on pay-db-01, the gateway 'Connection is not available' count, F5 pool member status and payments.authorize.success_rate.",
+   "owner": "Database Engineering (Elena) with Payments Engineering",
+   "evidence": [
+    "slack:inc-checkout-latency/cd4b848c",
+    "q:a7bf7879",
+    "metric:avg:payments.authorize.success_rate{env:prod}@0852-1452"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Open a case with PayCore about authorization latency over 5 to 8 s since 14:25 UTC, sending our log evidence (their status page is green).",
+   "owner": "Payments Engineering",
+   "evidence": [
+    "q:e3791117",
+    "q:c86651e8",
+    "psp:paycore@v1"
+   ]
+  },
+  {
+   "rank": 4,
+   "action": "Update INC0048811 with a work note: cause is the Payments Gateway 3.8.0 retry-in-transaction, triggered by PayCore latency; checkout-api, pay-03 and network are cleared. Keep it at P1 with Payments Engineering.",
+   "owner": "Alice Nguyen (IC)",
+   "evidence": [
+    "snow:INC0048811"
+   ]
+  },
+  {
+   "rank": 5,
+   "action": "Fix forward later: move the PayCore call and its retries outside the DB transaction in PaymentService.authorize before re-enabling retries.",
+   "owner": "Payments Engineering",
+   "evidence": [
+    "log:pay-01/336ab539",
+    "conf:KB0010502"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Take pay-03 out of the pool or treat it as a hardware failure",
+   "why": "The F5 flaps all four gateway members (.31-.34) on 503 health checks caused by DB pool exhaustion. Removing one cuts capacity and pushes more load onto the others.",
+   "evidence": [
+    "log:ltm/416e563f",
+    "log:ltm/9eed94dd",
+    "log:ltm/5b24e5dd",
+    "log:ltm/173b82c5"
+   ]
+  },
+  {
+   "action": "Roll back or redeploy checkout-api any further",
+   "why": "Errors started on 2.14.2 before 2.14.3 went out, and continued after the rollback.",
+   "evidence": [
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+   ]
+  },
+  {
+   "action": "Rely on killing idle-in-transaction sessions on pay-db-01 as the fix",
+   "why": "The sessions are recent (oldest about 38 s) and are refilled by the gateway's retry loop, so the pool would drain again within a minute. It also aborts authorization_attempt writes that are in flight.",
+   "evidence": [
+    "slack:inc-checkout-latency/cd4b848c",
+    "q:c86651e8"
+   ]
+  },
+  {
+   "action": "Pause or roll back the marketing CDN DNS change for checkout's sake",
+   "why": "It started at 14:36, after checkout onset at 14:25, and touches cdn.larkspur.com, not the payments path.",
+   "evidence": [
+    "snow:CHG0031880",
+    "q:c86651e8"
+   ]
+  },
+  {
+   "action": "Scale out payments-gateway instances",
+   "why": "More instances would open more pgw_app connections to a pay-db-01 that is already at max_connections.",
+   "evidence": [
+    "q:008f51cb",
+    "slack:inc-checkout-latency/cd4b848c"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820017640",
+   "verdict": "noise"
+  },
+  {
+   "handle": "sw:54977",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820500714",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820508241",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820515412",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101350",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516603",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516604",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516885",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/891f48a7",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517511",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101362",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518073",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/a678ed4b",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/7ae5d933",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820520800",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101377",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "sw:55012",
+   "verdict": "this_incident"
+  }
+ ],
+ "open_questions": [
+  "Is PayCore still slow now? Retry timeouts continue through 14:50, but 'slow PSP response' lines stopped at 14:35, possibly because requests can no longer get a DB connection.",
+  "Which build was in prod before 3.8.0, and is it a clean rollback target if the config-only revert can't be done fast?",
+  "Did the payments-reconciler #2311 run (started 14:30, 40 active recon_app connections, oldest transaction 17 min) make pay-db-01 run out of slots sooner, and should it be paused?",
+  "Is the marketing site outage caused by CHG0031880 (the CDN DNS TTL change)? Not investigated: it is a separate incident."
+ ],
+ "stakeholder_update": {
+  "status": "Identified: the cause is a payments-system setting, and the fix is being prepared.",
+  "customer_impact": "Since about 14:25 UTC many card payments at checkout hang and then fail with an error. Roughly half of payment attempts are failing.",
+  "scope": "Checkout payments are affected. Browsing and carts are not affected by this incident. The marketing site problem is being handled separately.",
+  "changed_since_last": "This is the first update. The earlier checkout software rollback did not help. The cause is in the payment processing service: it waits too long and retries when our card processor is slow.",
+  "next_steps": "The payments team is reverting the retry and timeout settings and will then confirm that payment success recovers. We are also raising the slow responses with our card processor.",
+  "next_update_at": "2026-10-13T15:20:00Z"
+ },
+ "as_of": "2026-10-13T14:52:00Z",
+ "hypotheses": [
+  {
+   "id": "h1",
+   "statement": "checkout-api 2.14.3 deploy at 14:28 caused the 504s on submit.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452",
+    "jk:checkout-api-deploy#898"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.05,
+     "because": [
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h2",
+   "statement": "pay-03 host is failing (hardware) and dropping out of the F5 pool, causing payment failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-03",
+   "entities": [
+    "pay-03",
+    "lb-int-01.larkspur.internal"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "log:ltm/416e563f",
+    "log:ltm/9eed94dd",
+    "log:ltm/5b24e5dd",
+    "log:ltm/173b82c5"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.05,
+     "because": [
+      "log:ltm/416e563f",
+      "log:ltm/9eed94dd"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h3",
+   "statement": "A network problem (shared with the marketing site outage) is causing checkout 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "network",
+   "entities": [
+    "cdn.larkspur.com",
+    "site:marketing"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "snow:CHG0031880",
+    "q:a7bf7879",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.05,
+     "because": [
+      "snow:CHG0031880"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h4",
+   "statement": "payments-gateway 3.8.0 (PAY-2231) retries PayCore calls up to 4x8s inside the DB transaction that writes authorization_attempt, so each slow authorization holds a pgw_app connection for up to 39 s; the Hikari pool and pay-db-01 exhaust, authorizations fail, and checkout-api returns 504.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:payments-gateway-deploy#412",
+    "snow:CHG0031877"
+   ],
+   "confidence": 0.7,
+   "support": [
+    "conf:KB0010502",
+    "q:7bcc6ea7",
+    "q:008f51cb",
+    "q:a7bf7879",
+    "q:c86651e8",
+    "log:pay-01/336ab539",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "leading",
+     "confidence": 0.7,
+     "because": [
+      "conf:KB0010502",
+      "q:7bcc6ea7",
+      "log:pay-01/336ab539",
+      "q:a7bf7879",
+      "q:c86651e8"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h5",
+   "statement": "PayCore slowness alone (without the gateway change) is the cause of the outage.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "PayCore",
+   "entities": [
+    "PayCore",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [],
+   "against": [
+    "conf:KB0010502",
+    "log:pay-01/336ab539"
+   ],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.1,
+     "because": [
+      "log:pay-01/336ab539"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h6",
+   "statement": "PayCore authorization latency rose above 5-8 s from 14:25, setting off the 3.8.0 retry-in-transaction behaviour.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "PayCore",
+   "entities": [
+    "PayCore",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.55,
+   "support": [
+    "q:e3791117",
+    "q:c86651e8",
+    "log:pay-01/f945302c"
+   ],
+   "against": [
+    "psp:paycore@v1"
+   ],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "open",
+     "confidence": 0.55,
+     "because": []
+    }
+   ]
+  }
+ ],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "a:4",
+   "d:1",
+   "d:3",
+   "h:h1",
+   "h:h2",
+   "h:h3",
+   "h:h4",
+   "h:h5",
+   "h:h6",
+   "t:1",
+   "t:3",
+   "t:4",
+   "t:6",
+   "t:7",
+   "t:9"
+  ]
+ },
+ "proposed_actions": [
+  {
+   "call_id": "toolu_01CCbf6nUGAQ1DZsTMvpt1hX",
+   "tool": "propose_action",
+   "args": {
+    "kind": "change_config",
+    "target": "Payments Gateway (payments-gateway on pay-01..pay-04), application-prod.yml",
+    "params": [
+     {
+      "name": "payments.psp.retries",
+      "value": "3 -> 0"
+     },
+     {
+      "name": "payments.psp.timeout-ms",
+      "value": "8000 -> 3000 (pre-3.8.0 value)"
+     },
+     {
+      "name": "method",
+      "value": "config-only release as KB0010502 describes, rolling one host at a time; fallback: roll back jk:payments-gateway-deploy#412 to the pre-3.8.0 build"
+     }
+    ],
+    "evidence": [
+     "conf:KB0010502",
+     "log:pay-01/5ad16319",
+     "log:pay-01/336ab539",
+     "q:a7bf7879",
+     "q:c86651e8",
+     "slack:inc-checkout-latency/cd4b848c",
+     "metric:avg:payments.authorize.success_rate{env:prod}@0852-1452"
+    ]
+   },
+   "rationale": {
+    "tests": "h4: 3.8.0 retry-in-transaction holds pgw_app connections up to 39 s and drains the pool",
+    "expect": "Within minutes of rollout: idle-in-transaction pgw_app sessions on pay-db-01 fall well below 133, 'Connection is not available' errors drop toward zero, F5 health checks stop flapping, and authorize success rises from ~42% back toward the 98.5% baseline. Some authorizations will still be declined fast while PayCore stays slow (as before 3.8.0), but checkout stops hitting 504s."
+   },
+   "decision": "deferred",
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "reason": "unattended run",
+   "decided_at": "2026-10-14T09:10:46.292+00:00"
+  }
+ ]
+}

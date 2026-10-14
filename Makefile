@@ -1,10 +1,12 @@
-# Smalls. Data-phase and ingestion targets are real; the others are stubs until their step in docs/PLAN.md.
+# Smalls. Every target is real but `score` and `heldout`, which wait for their step in docs/PLAN.md.
 UV ?= uv
 PY := $(UV) run --python 3.12 python
 BUNDLE ?= bundles/larkspur-checkout-2026-10-13
 # The replay clock for the targets that need one: the second checkpoint, and the trigger file of the same name.
 NOW ?= 14:52
 CHECKPOINT ?= 1452
+# The committed run that `make demo` replays: the first complete live run, at the second checkpoint (build row C3).
+DEMO_RUN ?= 20261014T090933Z-5d5522
 # Runs per cell of `make matrix`.
 REPS ?= 5
 # Keys come from .env when there is one; nothing here names or prints one.
@@ -61,8 +63,9 @@ solve:
 score:
 	@echo "score: stub until step 7 (scorer)"
 
+# Replay a committed run in the terminal, as it was shown live. No key and no model call.
 demo:
-	@echo "demo: stub until a first complete run is committed (build row C3)"
+	$(UV) run --python 3.12 smalls replay $(DEMO_RUN)
 
 # One investigation at CHECKPOINT, in the terminal. Live: it needs a model key and it costs money.
 run:

@@ -1,0 +1,223 @@
+{
+ "calls": [
+  {
+   "node": "agent",
+   "round": 1,
+   "attempt": 1,
+   "latency_ms": 13748.3,
+   "usage": {
+    "input_tokens": 36623,
+    "output_tokens": 1584,
+    "total_tokens": 38207,
+    "input_token_details": {
+     "cache_creation": 36619,
+     "cache_read": 0
+    },
+    "output_token_details": {
+     "reasoning": 277
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.214791
+  },
+  {
+   "node": "agent",
+   "round": 2,
+   "attempt": 1,
+   "latency_ms": 13052.0,
+   "usage": {
+    "input_tokens": 43491,
+    "output_tokens": 1516,
+    "total_tokens": 45007,
+    "input_token_details": {
+     "cache_creation": 6870,
+     "cache_read": 36619
+    },
+    "output_token_details": {
+     "reasoning": 197
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.072002
+  },
+  {
+   "node": "agent",
+   "round": 3,
+   "attempt": 1,
+   "latency_ms": 9606.5,
+   "usage": {
+    "input_tokens": 48399,
+    "output_tokens": 1070,
+    "total_tokens": 49469,
+    "input_token_details": {
+     "cache_creation": 4908,
+     "cache_read": 43489
+    },
+    "output_token_details": {
+     "reasoning": 298
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.054646
+  },
+  {
+   "node": "agent",
+   "round": 4,
+   "attempt": 1,
+   "latency_ms": 23646.0,
+   "usage": {
+    "input_tokens": 54799,
+    "output_tokens": 2905,
+    "total_tokens": 57704,
+    "input_token_details": {
+     "cache_creation": 6400,
+     "cache_read": 48397
+    },
+    "output_token_details": {
+     "reasoning": 694
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.099787
+  },
+  {
+   "node": "agent",
+   "round": 5,
+   "attempt": 1,
+   "latency_ms": 5588.7,
+   "usage": {
+    "input_tokens": 59591,
+    "output_tokens": 505,
+    "total_tokens": 60096,
+    "input_token_details": {
+     "cache_creation": 4792,
+     "cache_read": 54797
+    },
+    "output_token_details": {
+     "reasoning": 208
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.045027
+  },
+  {
+   "node": "agent",
+   "round": 6,
+   "attempt": 1,
+   "latency_ms": 6334.8,
+   "usage": {
+    "input_tokens": 62174,
+    "output_tokens": 629,
+    "total_tokens": 62803,
+    "input_token_details": {
+     "cache_creation": 2583,
+     "cache_read": 59589
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.037421
+  },
+  {
+   "node": "agent",
+   "round": 7,
+   "attempt": 1,
+   "latency_ms": 43796.6,
+   "usage": {
+    "input_tokens": 62872,
+    "output_tokens": 5340,
+    "total_tokens": 68212,
+    "input_token_details": {
+     "cache_creation": 698,
+     "cache_read": 62172
+    },
+    "output_token_details": {
+     "reasoning": 412
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.122732
+  },
+  {
+   "node": "agent",
+   "round": 8,
+   "attempt": 1,
+   "latency_ms": 31682.5,
+   "usage": {
+    "input_tokens": 68288,
+    "output_tokens": 4832,
+    "total_tokens": 73120,
+    "input_token_details": {
+     "cache_creation": 5416,
+     "cache_read": 62870
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.136302
+  },
+  {
+   "node": "verifier_claims",
+   "round": 8,
+   "attempt": 1,
+   "latency_ms": 41669.7,
+   "usage": {
+    "input_tokens": 34443,
+    "output_tokens": 8614,
+    "total_tokens": 43057,
+    "input_token_details": {
+     "cache_creation": 34439,
+     "cache_read": 0
+    },
+    "output_token_details": {
+     "reasoning": 6545
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-haiku-5-5",
+   "cost_usd": 0.008612
+  },
+  {
+   "node": "verifier_contrarian",
+   "round": 8,
+   "attempt": 1,
+   "latency_ms": 23379.6,
+   "usage": {
+    "input_tokens": 44086,
+    "output_tokens": 2292,
+    "total_tokens": 46378,
+    "input_token_details": {
+     "cache_creation": 44082,
+     "cache_read": 0
+    },
+    "output_token_details": {
+     "reasoning": 891
+    }
+   },
+   "stop_reason": "tool_use",
+   "model": "claude-opus-5-5",
+   "cost_usd": 0.266266
+  }
+ ],
+ "totals": {
+  "input_tokens": 514766,
+  "output_tokens": 29287,
+  "cache_read": 367933,
+  "cache_write": 146807,
+  "reasoning": 9522,
+  "cost_usd": 1.057586,
+  "model_latency_ms": 212504.7
+ }
+}

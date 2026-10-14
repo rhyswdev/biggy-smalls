@@ -1,0 +1,122 @@
+{
+ "run_id": "20261014T090933Z-5d5522",
+ "created": "2026-10-14T09:09:34.054+00:00",
+ "arm": "C",
+ "checkpoint": "1452",
+ "now": "2026-10-13T14:52:00Z",
+ "trigger": "From: Alice Nguyen (incident commander)\nTime: 14:52 UTC\n\nWe rolled checkout-api back to 2.14.2 (done 14:42) and nothing changed. Still 504s on submit, error rate about 17%, and support has 40+ tickets about the payment spinner.\n\nElena has been in the database and posted what she found in the incident channel. Sam thinks pay-03 is dying, it keeps dropping out of the F5 pool. Kofi thinks it's the network because the marketing site is down too, and he says PayCore's status page is green.\n\nI need: what is actually causing this, how sure you are, what we should do in the next 10 minutes, and who should own it.",
+ "registry": "bundle",
+ "bundle": "larkspur-checkout-2026-10-13",
+ "tags": true,
+ "profile": "anthropic",
+ "provider": "anthropic",
+ "model": "claude-opus-5-5",
+ "script": null,
+ "commit": "f3bb336",
+ "prompt_sha": "dd587d395688",
+ "tools_sha": "c489faf51598",
+ "sweep": {
+  "alerts": "-2h",
+  "chat": "-2h",
+  "changes": "-24h"
+ },
+ "versions": {
+  "langgraph": "1.2.15",
+  "langgraph-checkpoint-sqlite": "3.1.2",
+  "langchain": "1.4.5",
+  "langchain-core": "1.6.10",
+  "langchain-anthropic": "1.7.6",
+  "pydantic": "2.14.1"
+ },
+ "key_variables": [
+  "ANTHROPIC_API_KEY",
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "JEV_API_KEY",
+  "OPENAI_API_KEY"
+ ],
+ "runner": "host",
+ "eval_run": false,
+ "durability": "async",
+ "read_tools": [
+  "list_alerts",
+  "get_record",
+  "search_logs",
+  "query_metrics",
+  "list_changes",
+  "itsm_query",
+  "search_knowledge",
+  "get_topology",
+  "get_oncall",
+  "read_chat",
+  "check_status_page"
+ ],
+ "offered": null,
+ "verifier": {
+  "claims": "anthropic-small",
+  "contrarian": "anthropic"
+ },
+ "carried_from": null,
+ "verifier_scripts": null,
+ "config": {
+  "profile": "anthropic",
+  "provider": "anthropic",
+  "model": "claude-opus-5-5",
+  "params": {
+   "max_tokens": 32000,
+   "max_input_tokens": 1000000,
+   "effort": "medium",
+   "thinking": {
+    "type": "adaptive",
+    "display": "summarized"
+   },
+   "cache": true,
+   "strict_tools": false,
+   "betas": [
+    "server-side-fallback-2026-07-01"
+   ],
+   "model_kwargs": {
+    "fallbacks": "default"
+   }
+  },
+  "auto_approve": true,
+  "call_budget": 30,
+  "revision_calls": 5,
+  "extra_turns": 6,
+  "stale_rounds": 3,
+  "stuck_empty": 3,
+  "context_fraction": 0.85,
+  "headless": "defer",
+  "sweep": {
+   "alerts": "-2h",
+   "chat": "-2h",
+   "changes": "-24h"
+  },
+  "verifier": {
+   "enabled": true,
+   "claims_profile": "anthropic-small",
+   "contrarian_profile": "anthropic",
+   "digest_tokens": 1500
+  }
+ },
+ "context": {
+  "now": "2026-10-13T14:52:00+00:00",
+  "checkpoint": "1452",
+  "channel": null,
+  "call_budget": 30,
+  "extra_turns": 6,
+  "revision_calls": 5,
+  "stale_rounds": 3,
+  "stuck_empty": 3,
+  "context_fraction": 0.85,
+  "max_input_tokens": 1000000,
+  "max_tokens": 32000,
+  "auto_approve": true,
+  "sweep": {
+   "alerts": "-2h",
+   "chat": "-2h",
+   "changes": "-24h"
+  },
+  "verifier": true,
+  "single_call": false
+ }
+}

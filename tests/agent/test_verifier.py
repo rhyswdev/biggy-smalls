@@ -80,8 +80,9 @@ def cfg(tmp_path: Path):
     return load_config(runs_dir=tmp_path)
 
 
-def run(cfg, run_id: str, script=fixture_script.turn, **scripts):
+def run(cfg, run_id: str, script=fixture_script.turn, cached: bool = False, **scripts):
     r = Runner(cfg, module_toolbox("fixture_registry"), run_id, script=script, eval_run=True, verifier_scripts=scripts or None)
+    r.cached = r.cached or cached
     result = r.start(fx.TRIGGER, fx.NOW)
     state = r.state()
     r.close()
@@ -110,6 +111,7 @@ def test_a_supported_report_passes_and_the_verdict_is_recorded(cfg):
     assert [str(m.content) for m in answers] == [ACCEPTED]
     usage = read("usage.json")["calls"]
     assert [c["node"] for c in usage if c["node"] != "agent"] == ["verifier_claims", "verifier_contrarian"] and read("summary.json")["process"]["model_turns"] == 5
+    assert read("summary.json")["validation"] == read("report.json")["validation"]          # the summary carries the verdict too
     verdicts = [e for e in events if e["type"] == "verifier_verdict"]
     assert len(verdicts) == 1 and verdicts[0]["data"]["status"] == "pass" and verdicts[0]["data"]["disputed"] == ["t:1"]
     assert any(e["type"] == "phase" and e["data"]["name"] == "verify" for e in events)
@@ -297,3 +299,12 @@ def test_both_verifier_profiles_are_config_and_a_missing_client_says_what_to_ins
         Runner(replace(live, verifier={**live.verifier, "contrarian_profile": "openai"}), module_toolbox("fixture_registry"), "cross")
     with pytest.raises(SystemExit, match="names no profile"):
         Runner(replace(live, verifier={**live.verifier, "claims_profile": "no-such"}), module_toolbox("fixture_registry"), "bad")
+
+
+def test_the_cache_warning_watches_the_investigator_and_not_the_verifier(cfg):
+    """Each verifier pass is one call with its own prompt, so a cold cache there says nothing about cost."""
+    _, _, read, events = run(cfg, "cache", cached=True, claims=claims_script(), contrarian=contrarian_script([]))
+    low = [e["data"] for e in events if e["type"] == "cache_ratio_low"]
+    verifier_rounds = {c["round"] for c in read("usage.json")["calls"] if c["node"].startswith("verifier_")}
+    assert low and all(d["node"] == "agent" for d in low) and verifier_rounds
+    assert len(low) == sum(1 for c in read("usage.json")["calls"] if c["node"] == "agent" and c["round"] >= 2)

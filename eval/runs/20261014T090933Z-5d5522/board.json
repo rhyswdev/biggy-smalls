@@ -1,0 +1,381 @@
+{
+ "as_of": "2026-10-13T14:52:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [],
+   "against": [
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452",
+    "jk:checkout-api-deploy#898"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "toolu_01DcuMN4QjzXCDmwDfgW6wb2",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "toolu_01NpcrXdHyYztXHWsYCJE6oq",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.05
+     },
+     "because": [
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+     ]
+    }
+   ],
+   "statement": "checkout-api 2.14.3 deploy at 14:28 caused the 504s on submit.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "confidence": 0.05,
+   "source": "stated",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "pay-03",
+    "lb-int-01.larkspur.internal"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "log:ltm/416e563f",
+    "log:ltm/9eed94dd",
+    "log:ltm/5b24e5dd",
+    "log:ltm/173b82c5"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "toolu_01DcuMN4QjzXCDmwDfgW6wb2",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "toolu_01NpcrXdHyYztXHWsYCJE6oq",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.05
+     },
+     "because": [
+      "log:ltm/416e563f",
+      "log:ltm/9eed94dd"
+     ]
+    }
+   ],
+   "statement": "pay-03 host is failing (hardware) and dropping out of the F5 pool, causing payment failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-03",
+   "confidence": 0.05,
+   "source": "stated",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "cdn.larkspur.com",
+    "site:marketing"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "snow:CHG0031880",
+    "q:a7bf7879",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "toolu_01DcuMN4QjzXCDmwDfgW6wb2",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "toolu_01NpcrXdHyYztXHWsYCJE6oq",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.05
+     },
+     "because": [
+      "snow:CHG0031880"
+     ]
+    }
+   ],
+   "statement": "A network problem (shared with the marketing site outage) is causing checkout 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "network",
+   "confidence": 0.05,
+   "source": "stated",
+   "id": "h3"
+  },
+  {
+   "entities": [
+    "payments-gateway",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:payments-gateway-deploy#412",
+    "snow:CHG0031877"
+   ],
+   "support": [
+    "conf:KB0010502",
+    "q:7bcc6ea7",
+    "q:008f51cb",
+    "q:a7bf7879",
+    "q:c86651e8",
+    "log:pay-01/336ab539",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:pay-01/336ab539",
+    "q:a7bf7879"
+   ],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "toolu_01DcuMN4QjzXCDmwDfgW6wb2",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.3
+     },
+     "because": []
+    },
+    {
+     "round": 2,
+     "call_id": "toolu_01G8ad3fse4NgTmE7STYJt4A",
+     "from": {
+      "status": "open",
+      "confidence": 0.3
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.45
+     },
+     "because": [
+      "conf:KB0010502",
+      "q:7bcc6ea7"
+     ]
+    },
+    {
+     "round": 4,
+     "call_id": "toolu_01NpcrXdHyYztXHWsYCJE6oq",
+     "from": {
+      "status": "open",
+      "confidence": 0.45
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.7
+     },
+     "because": [
+      "log:pay-01/336ab539",
+      "q:a7bf7879",
+      "q:c86651e8"
+     ]
+    }
+   ],
+   "statement": "payments-gateway 3.8.0 (PAY-2231) retries PayCore calls up to 4x8s inside the DB transaction that writes authorization_attempt, so each slow authorization holds a pgw_app connection for up to 39 s; the Hikari pool and pay-db-01 exhaust, authorizations fail, and checkout-api returns 504.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "payments-gateway",
+   "confidence": 0.7,
+   "source": "derived",
+   "id": "h4"
+  },
+  {
+   "entities": [
+    "PayCore",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "conf:KB0010502",
+    "log:pay-01/336ab539"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "toolu_01DcuMN4QjzXCDmwDfgW6wb2",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "toolu_01NpcrXdHyYztXHWsYCJE6oq",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "log:pay-01/336ab539"
+     ]
+    }
+   ],
+   "statement": "PayCore slowness alone (without the gateway change) is the cause of the outage.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "PayCore",
+   "confidence": 0.1,
+   "source": "derived",
+   "id": "h5"
+  },
+  {
+   "entities": [
+    "PayCore",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "support": [
+    "q:e3791117",
+    "q:c86651e8",
+    "log:pay-01/f945302c"
+   ],
+   "against": [
+    "psp:paycore@v1"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "toolu_01NpcrXdHyYztXHWsYCJE6oq",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.55
+     },
+     "because": []
+    },
+    {
+     "round": 8,
+     "call_id": "toolu_01LBi9TuiLtfpRsMgvD2nsY9",
+     "from": {
+      "status": "open",
+      "confidence": 0.55
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.55
+     },
+     "because": []
+    }
+   ],
+   "statement": "PayCore authorization latency rose above 5-8 s from 14:25, setting off the 3.8.0 retry-in-transaction behaviour.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "PayCore",
+   "confidence": 0.55,
+   "source": "derived",
+   "id": "h6"
+  }
+ ],
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T10:25:00Z",
+   "event": "payments-gateway 3.8.0 (PSP timeout 8s, 3 retries in-transaction) finished deploying to prod",
+   "evidence": [
+    "jk:payments-gateway-deploy#412"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:25:05Z",
+   "event": "First slow PayCore responses (>5s) logged on gateway hosts; authorize retries begin",
+   "evidence": [
+    "log:pay-02/33353de9",
+    "q:c86651e8"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:26:34Z",
+   "event": "Hikari leak detection: connections held across PaymentService.authorize transaction",
+   "evidence": [
+    "log:pay-01/336ab539"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:27:30Z",
+   "event": "checkout-api 2.14.3 deploy starts (errors on 2.14.2 already rising)",
+   "evidence": [
+    "jk:checkout-api-deploy#897",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:30:00Z",
+   "event": "Gateway pool 'Connection is not available' errors begin, then climb",
+   "evidence": [
+    "q:a7bf7879"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:36:40Z",
+   "event": "F5 begins flapping all gateway pool members (.31-.34) on 503 health checks",
+   "evidence": [
+    "log:ltm/173b82c5",
+    "log:ltm/416e563f",
+    "log:ltm/9eed94dd",
+    "log:ltm/5b24e5dd"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:42:05Z",
+   "event": "checkout-api rollback to 2.14.2 complete; errors continue",
+   "evidence": [
+    "jk:checkout-api-deploy#898",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1322-1452"
+   ]
+  }
+ ],
+ "open_questions": []
+}

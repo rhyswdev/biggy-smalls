@@ -43,7 +43,7 @@ max_input_tokens = 1000000
 effort = "medium"           # fixed for the run: changing it invalidates the prompt cache
 thinking = { type = "adaptive", display = "summarized" }
 cache = true
-strict_tools = true         # every tool schema is strict, so a call's arguments always fit it
+strict_tools = false        # the provider refuses strict mode past 24 optional inputs across all tools, and ours have 38 (row C3); our own validation checks every call
 # A request the provider declines is re-run by the provider on its own fallback, inside the same call.
 betas = ["server-side-fallback-2026-07-01"]
 model_kwargs = { fallbacks = "default" }
