@@ -38,7 +38,8 @@ def tallies(s: Service, chat_id: str) -> dict[str, int]:
     """What the chats list and the tally count: reads the agent proposed, ran, the commander rejected or skipped."""
     row = s.db.row("""
         SELECT
-          sum(type = 'tool_call_proposed' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent') AS proposed,
+          sum(type = 'tool_call_proposed' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent'
+              AND json_extract(data, '$.hidden') IS NULL) AS proposed,
           sum(type = 'tool_result' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent'
               AND json_extract(data, '$.status') = 'ok') AS run,
           sum(type = 'gate_decision' AND json_extract(data, '$.decision') = 'rejected' AND json_extract(data, '$.by.who') = 'human') AS rejected,

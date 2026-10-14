@@ -52,6 +52,8 @@ class Call(TypedDict, total=False):
     rationale: dict[str, Any] | None
     by: Literal["agent", "harness", "carry_forward"]
     invalid: str | None                 # set when the model's arguments could not be parsed at all
+    malformed: str | None               # set when they parsed but fail the tool's argument model or the rationale
+    hidden: bool                        # a malformed call answered without being shown (malformed_shown)
 
 
 class LedgerEntry(TypedDict, total=False):
@@ -65,6 +67,7 @@ class LedgerEntry(TypedDict, total=False):
     args: dict[str, Any]
     rationale: dict[str, Any] | None
     status: Literal["ok", "error", "rejected", "deferred", "repeat"]
+    hidden: bool                        # a malformed call answered without being shown
     shown: list[str]
     referenced: list[str]
     t_known: dict[str, str | None]      # per shown handle, from the envelope rows; the carry-forward check reads it
@@ -93,6 +96,7 @@ class GateDecision(TypedDict, total=False):
     by: GateBy
     decided_at: str
     edited_args: dict[str, Any] | None  # approved with these arguments in place of the proposed ones (S2)
+    hidden: bool                        # a malformed call's decision, not shown (malformed_shown)
 
 
 class Note(TypedDict):
@@ -151,6 +155,8 @@ class InvestigationState(TypedDict, total=False):
     gate_waits: Annotated[list[dict[str, Any]], operator.add]           # asked_at, decided_at, wait, once per round
     usage: Annotated[list[dict[str, Any]], operator.add]                # per model call; survives pauses and crashes
     calls_used: int                                                     # reads and actions that ran (J5)
+    malformed_streak: int                                               # model turns in a row with a malformed call
+    malformed_rounds: list[int]                                         # rounds whose every call was malformed (stale rule)
     notes_shown: int                                                    # how many notes the model has been given
     fallback_used: bool                                                 # the fallback profile is tried once per run
     restart_round: int                                                  # a restart clears the repeat index from here (J4)
@@ -186,6 +192,7 @@ class RunContext:
     revision_calls: int = 5
     stale_rounds: int = 3
     stuck_empty: int = 3
+    malformed_shown: int = 3                    # rounds in a row with malformed calls before they are shown
     context_fraction: float = 0.85
     max_input_tokens: int | None = None         # the profile's, else the model's own
     max_tokens: int = 0

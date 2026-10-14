@@ -32,6 +32,7 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 from langgraph.types import RetryPolicy, interrupt
+from pydantic import ValidationError
 
 from smalls.agent import board, carry, gate, prompts, validator, verifier
 from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, HypothesisUpdate, toolset
@@ -46,6 +47,7 @@ from smalls.tools.registry import ToolContext, ToolSpec
 Inventory = Callable[[ToolContext], Envelope]
 NO_PRIOR_BOARD = "none"
 UNPARSEABLE = "Could not parse the arguments for {tool}: {error}. Call it again with valid arguments."
+NO_RATIONALE = "rationale: an object with `tests` and `expect` is required"
 ACCEPTED = "Report accepted."
 NOT_ACCEPTED = "Report not accepted. {findings} Fix these and submit again."
 NOT_RECORDED = "Not recorded. {findings}"
@@ -209,7 +211,22 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                                  "rationale": c["args"].get("rationale")} for c in ai.tool_calls]
         proposed += [{"call_id": c["id"], "tool": c.get("name") or "unknown", "by": "agent", "args": {}, "rationale": None,
                       "invalid": str(c.get("error") or "invalid JSON")} for c in ai.invalid_tool_calls]
-        update: dict[str, Any] = {"messages": [ai], "usage": rows, "proposed": proposed, "fallback_used": fell_back}
+        # A read or action whose arguments cannot run is answered with the error at once, before the gate: no
+        # person is asked about it and it costs nothing. The model is told what to fix every time; nobody else
+        # sees it until it has happened `malformed_shown` model turns in a row.
+        for call in proposed:
+            spec = tools.get(call["tool"])
+            if not call["invalid"] and spec is not None and spec.kind in ("read", "action"):
+                call["malformed"] = _malformed(spec, call)
+        streak = state.get("malformed_streak", 0) + 1 if any(c["invalid"] or c.get("malformed") for c in proposed) else 0
+        retried = bool(proposed) and all(c["invalid"] or c.get("malformed") for c in proposed)     # nothing in it can run
+        for call in proposed:
+            if call["invalid"] or call.get("malformed"):
+                call["hidden"] = streak < ctx.malformed_shown
+        update: dict[str, Any] = {"messages": [ai], "usage": rows, "proposed": proposed, "fallback_used": fell_back,
+                                  "malformed_streak": streak}
+        if retried:     # a round whose every call is answered with its error is not a quiet round for the stale-board rule
+            update["malformed_rounds"] = [*state.get("malformed_rounds", []), rounds(state) + 1]
         if row["stop_reason"] == "refusal":
             update.update(stop_reason=REFUSED, proposed=[])
         elif row["stop_reason"] == "max_tokens" and not ai.tool_calls:
@@ -247,7 +264,8 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         refuse = None
         if not any(c["tool"] == UPDATE_BOARD for c in calls):
             since = (state.get("followup") or {}).get("round", 0)
-            refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds, since=since)
+            refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds, since=since,
+                                         skip=state.get("malformed_rounds") or [])
         # The switch is read once per round, here: a change made while the run waits at a gate applies from
         # the next round, and never to a card already asked (S6).
         auto = ctx.auto_approve_now() if ctx.auto_approve_now else ctx.auto_approve
@@ -340,6 +358,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             if call.get("invalid"):
                 env = errors.error(UNPARSEABLE.format(tool=call["tool"], error=call["invalid"]), "arguments")
                 entry["status"] = "error"
+            elif call.get("malformed"):
+                env = errors.error(call["malformed"], "arguments")
+                entry["status"] = "error"
             elif d["decision"] == "rejected":
                 text = gate.REJECTED.format(who=d["by"]["who"], reason=(d.get("reason_text") or d.get("reason") or "").rstrip("."))
                 note = notes.get(call["call_id"])
@@ -398,11 +419,13 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             seen.add(entry)     # handles from earlier calls in the same batch are citable too
             entry["chars"] = len(env.text)
             entry["latency_ms"] = round((time.perf_counter() - started) * 1000, 2)
+            if call.get("hidden"):
+                entry["hidden"] = True
             ledger.append(entry)
             writer({"type": "tool_result", **{k: entry[k] for k in ("call_id", "tool", "kind", "by", "status", "shown", "referenced",
                                                                     "native_query", "window", "chars", "latency_ms")},
                     "edited_args": entry.get("edited_args"),
-                    "first_line": env.text.split("\n", 1)[0][:200]})
+                    "first_line": env.text.split("\n", 1)[0][:200], **({"hidden": True} if call.get("hidden") else {})})
             if entry["by"] == "harness":
                 blocks.append(SWEEP_BLOCK.format(tool=call["tool"], args=json.dumps(call["args"], ensure_ascii=False), text=env.text))
                 if call["tool"] == "list_alerts" and env.status == "ok":
@@ -460,12 +483,24 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         """What makes two calls the same call (J4): the verifier asks the same question of a proposed check."""
         return verifier.identity(spec, call["args"], ctx.now)
 
+    def _malformed(spec: ToolSpec, call: Call) -> str | None:
+        """The error a gated call would get for its arguments, word for word, or None when they would run."""
+        try:
+            Rationale.model_validate(call.get("rationale"))
+        except Exception:
+            return errors.bad_arguments(spec.name, NO_RATIONALE).text
+        try:
+            spec.args.model_validate(call["args"] or {})
+        except ValidationError as problem:
+            return errors.bad_arguments(spec.name, problem).text
+        return None
+
     def _run(spec: ToolSpec, call: Call, ctx: RunContext) -> Envelope:
         if call.get("by", "agent") == "agent":      # the model owes a reason for every gated call
             try:
                 Rationale.model_validate(call.get("rationale"))
             except Exception:
-                return errors.bad_arguments(spec.name, "rationale: an object with `tests` and `expect` is required")
+                return errors.bad_arguments(spec.name, NO_RATIONALE)
         return registry.call(spec, call["args"], ctx.tool_ctx)
 
     def _update_board(spec: ToolSpec, call: Call, seen: validator.Seen, current: dict[str, Any], round_now: int):

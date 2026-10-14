@@ -60,8 +60,10 @@ def apply(calls: Iterable[Call], tools: dict[str, ToolSpec], *, used: int, budge
     alone = len(calls) == 1
     for call in calls:
         spec = tools.get(call["tool"])
-        if call.get("invalid"):                     # unparseable arguments: the tools node answers with the error
+        if call.get("invalid") or call.get("malformed"):     # arguments that cannot run: the tools node answers with the error
             decisions[call["call_id"]] = decision(call, "approved", "policy", via)
+            if call.get("hidden"):
+                decisions[call["call_id"]]["hidden"] = True
         elif spec is None:
             decisions[call["call_id"]] = decision(call, "rejected", "policy", via, f"no tool named {call['tool']}; the tools are: {', '.join(tools)}")
         elif call["tool"] == SUBMIT_REPORT and not alone:

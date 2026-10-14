@@ -213,7 +213,7 @@ class Runner:
             "config": self.cfg.public(),
             "context": {"now": now.isoformat(), "checkpoint": checkpoint, "channel": channel, "call_budget": self._ctx.call_budget,
                         "extra_turns": self._ctx.extra_turns, "revision_calls": self._ctx.revision_calls,
-                        "stale_rounds": self._ctx.stale_rounds, "stuck_empty": self._ctx.stuck_empty,
+                        "stale_rounds": self._ctx.stale_rounds, "stuck_empty": self._ctx.stuck_empty, "malformed_shown": self._ctx.malformed_shown,
                         "context_fraction": self._ctx.context_fraction, "max_input_tokens": self._ctx.max_input_tokens,
                         "max_tokens": self._ctx.max_tokens, "auto_approve": self._ctx.auto_approve, "sweep": self._ctx.sweep,
                         "verifier": self._ctx.verifier, "single_call": self._ctx.single_call}})
@@ -310,7 +310,7 @@ class Runner:
             run_id=self.run_id, now=now, tool_ctx=self.toolbox.context(now, self.run_id),
             call_budget=saved.get("call_budget", cfg.call_budget), extra_turns=saved.get("extra_turns", cfg.extra_turns),
             revision_calls=saved.get("revision_calls", cfg.revision_calls), stale_rounds=saved.get("stale_rounds", cfg.stale_rounds),
-            stuck_empty=saved.get("stuck_empty", cfg.stuck_empty), context_fraction=saved.get("context_fraction", cfg.context_fraction),
+            stuck_empty=saved.get("stuck_empty", cfg.stuck_empty), malformed_shown=saved.get("malformed_shown", cfg.malformed_shown), context_fraction=saved.get("context_fraction", cfg.context_fraction),
             max_input_tokens=saved.get("max_input_tokens", input_limit(self.spec, self.model)),
             max_tokens=saved.get("max_tokens", int(self.spec.params.get("max_tokens") or 0)),
             auto_approve=saved.get("auto_approve", cfg.auto_approve), via=self.via,
@@ -571,7 +571,8 @@ class Runner:
                 for call in proposed:
                     spec = self.tools.get(call["tool"])
                     self.bus.emit("tool_call_proposed", call_id=call["call_id"], tool=call["tool"], by=call.get("by", "agent"),
-                                  kind=spec.kind if spec else "unknown", rationale=call.get("rationale"), args=call["args"])
+                                  kind=spec.kind if spec else "unknown", rationale=call.get("rationale"), args=call["args"],
+                                  **({"hidden": True} if call.get("hidden") else {}))
                 answer = (update.get("followup") or {}).get("answer")
                 if answer is not None:      # a follow-up answered in text: the report it was asked about stands
                     self.bus.emit("answer", text=answer, note=update["followup"].get("note"))

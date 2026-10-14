@@ -97,6 +97,8 @@ class Renderer:
                 self.c.print(f"[dim italic]{esc(d['text'])}[/]", end="", soft_wrap=True)
             return
         self._end_stream()
+        if d.get("hidden"):     # a malformed call answered without being shown (malformed_shown); the record keeps it
+            return
         if t == "run_started":
             self.c.rule(f"run {esc(ev.run_id)}")
             self.c.print(f"now {esc(d['now'])}  profile {esc(str(d.get('profile')))}  auto-approve {'on' if d.get('auto_approve') else 'off'}"

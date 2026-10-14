@@ -70,6 +70,7 @@ class Config:
     stale_rounds: int
     stuck_empty: int
     context_fraction: float
+    malformed_shown: int
     headless: str
     fallback_profile: str
     cache_ratio_floor: float
@@ -95,7 +96,7 @@ class Config:
         return {"profile": spec.profile, "provider": spec.provider, "model": spec.model, "params": spec.params,
                 "auto_approve": self.auto_approve, "call_budget": self.call_budget, "revision_calls": self.revision_calls,
                 "extra_turns": self.extra_turns, "stale_rounds": self.stale_rounds, "stuck_empty": self.stuck_empty,
-                "context_fraction": self.context_fraction, "headless": self.headless, "sweep": self.sweep,
+                "malformed_shown": self.malformed_shown, "context_fraction": self.context_fraction, "headless": self.headless, "sweep": self.sweep,
                 "verifier": self.verifier, "set": self.set_name,
                 "roles": {name: (s.public() if s else None) for name, s in self.roles.items()}}
 
@@ -206,7 +207,7 @@ def load_config(path: Path | None = None, *, profile: str | None = None, interac
         investigator=investigator, profiles=profiles,
         auto_approve=bool(raw["auto_approve"]) and not interactive,
         call_budget=int(raw["call_budget"]), revision_calls=int(raw["revision_calls"]), extra_turns=int(raw["extra_turns"]),
-        stale_rounds=int(raw["stale_rounds"]), stuck_empty=int(raw["stuck_empty"]),
+        stale_rounds=int(raw["stale_rounds"]), stuck_empty=int(raw["stuck_empty"]), malformed_shown=int(raw.get("malformed_shown", 3)),
         context_fraction=float(raw["context_fraction"]), headless=headless, timeout_s=float(raw["timeout_s"]),
         fallback_profile=str(raw.get("fallback_profile", "")), cache_ratio_floor=float(raw.get("cache_ratio_floor", 0.5)),
         sweep=dict(raw.get("sweep", {})), verifier=dict(raw.get("verifier", {})), heartbeat_s=float(raw.get("heartbeat_s", 10)),

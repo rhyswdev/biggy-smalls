@@ -159,6 +159,14 @@ def test_status_line_flag_stale_hypotheses():
     assert "stale: trig;" in board.status_line(b, round=3, used=0, limit=30, turns_left=33)
 
 
+def test_a_round_whose_every_call_was_malformed_does_not_count_toward_a_stale_board():
+    b = ready_board()                                                             # every row written in round 1
+    assert board.stale_refusal(b, round=5, stale_rounds=3) is not None            # rounds 2, 3 and 4 were quiet
+    assert board.stale_refusal(b, round=5, stale_rounds=3, skip=[3]) is None      # one of them only retried a malformed call
+    assert board.stale_refusal(b, round=6, stale_rounds=3, skip=[3]) is not None
+    assert board.stale_refusal(b, round=5, stale_rounds=3, skip=[1, 5]) is not None     # only quiet rounds before this one are skipped
+
+
 def test_status_line_flag_budget_and_turns():
     assert board.status_line(ready_board(), round=1, used=30, limit=30, turns_left=0).endswith("; budget 30/30, 0 turns left]")
     assert board.status_line(ready_board(), round=1, used=3, limit=35, turns_left=12).endswith("; budget 3/35, 12 turns left]")

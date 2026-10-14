@@ -88,6 +88,49 @@ def test_row1_every_bad_call_is_answered_with_text_and_the_run_goes_on(cfg):
     assert [e["status"] for e in first_round] == ["error"] * 4 and state["calls_used"] == 10       # a call that ran and failed is charged; the others are not
 
 
+def test_row1_a_malformed_call_is_answered_before_the_gate_and_shown_only_on_the_third_round_in_a_row(cfg):
+    bad = {f"call_{80 + n}_search_logs" for n in range(3)}
+
+    def script(messages, tools):
+        n = turns(messages)
+        if n < 3:       # a read without its rationale, three model turns running
+            return "a read without its rationale", [call("search_logs", 80 + n, since="-1h")]
+        mine = [m for m in messages if isinstance(m, AIMessage)][:3]
+        rest = [m for m in messages if all(m is not x for x in mine) and not (isinstance(m, ToolMessage) and m.tool_call_id in bad)]
+        return fixture_script.turn(rest, tools)
+
+    asked: list[str] = []
+
+    def decider(cards):
+        asked.extend(c["call_id"] for c in cards)
+        return approve(cards)
+
+    attended = replace(cfg, auto_approve=False)         # every read asks, so a card for a malformed call would show here
+    clean = runner(attended, "clean", decider=decider)
+    clean.start(fx.TRIGGER, fx.NOW)
+    used_clean = clean.state()["calls_used"]
+    clean.close()
+    asked.clear()
+
+    r = runner(attended, "malformed", script=script, decider=decider)
+    result = r.start(fx.TRIGGER, fx.NOW)
+    state, events = r.state(), events_of(r)
+    r.close()
+    assert result["status"] == "completed"
+    assert not bad & set(asked)                                                     # no person was asked about one
+    assert state["calls_used"] == used_clean                                        # and none was charged
+    answers = {m.tool_call_id: m for m in state["messages"] if isinstance(m, ToolMessage)}
+    for call_id in bad:                                                             # the model is told what to fix, word for word
+        assert answers[call_id].content.startswith(       # the round's board line may follow on the last message
+            "Invalid arguments for search_logs: rationale: an object with `tests` and `expect` is required. Fix them and call again.")
+        assert answers[call_id].status == "error"
+    hidden = {e.data["call_id"]: e.data.get("hidden", False) for e in events if e.type in ("tool_call_proposed", "gate_decision", "tool_result")
+              and e.data.get("call_id") in bad}
+    assert hidden == {"call_80_search_logs": True, "call_81_search_logs": True, "call_82_search_logs": False}     # the third in a row is shown
+    assert [e.get("hidden", False) for e in state["ledger"] if e["call_id"] in bad] == [True, True, False]
+    assert state["malformed_streak"] == 0                                           # a clean turn starts the count again
+
+
 # -- axis 8, row 2: provider 429, 5xx, timeout, refusal, max_tokens --------------------------------------------
 
 

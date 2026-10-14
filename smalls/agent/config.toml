@@ -14,6 +14,8 @@ revision_calls = 5          # extra calls after a verifier asks for a revision
 extra_turns = 6             # model turns allowed beyond the call budget, because internal calls are free
 stale_rounds = 3            # rounds with no board change before the gate says "submit now"
 stuck_empty = 3             # consecutive empty reads before the stuck hint
+malformed_shown = 3         # rounds in a row with a call whose arguments fail validation before those calls are shown;
+                            # until then the model is answered with the error and retries, and nobody sees it
 context_fraction = 0.85     # restart (or stop) when a call's input reaches this share of the input limit
 headless = "defer"          # what an unattended run that is not an eval run answers a gate with
 auto_approve = true         # reads run without asking; --interactive turns this off. Actions always ask.
