@@ -29,11 +29,14 @@ from typing import Any, Callable
 
 from smalls.agent.config import Config, load_config
 from smalls.agent.graph import iso
-from smalls.agent.record import RunRecord, new_run_id
+import json
+from pathlib import Path
+
+from smalls.agent.record import FILES, RunRecord, new_run_id
 from smalls.agent.runner import Runner, Toolbox, bundle_toolbox, module_toolbox
 from smalls.api.db import Database, dumps, loads
 from smalls.api.problems import Problem
-from smalls.api.reader import Reader
+from smalls.api.reader import Reader, note_of
 from smalls.api.settings import Settings
 from smalls.api.sink import AppDbSink
 
@@ -67,12 +70,15 @@ class Service:
         self.listeners: dict[str, set[asyncio.Event]] = {}
         self.readers: dict[str, Reader] = {}            # one toolbox per `now`, for the API's own reads
         self.closing = False
+        self.recorded = self.load_recorded()
 
     # -- capabilities and the stream's listeners -------------------------------------------------------------
 
     def capabilities(self) -> dict[str, Any]:
+        latest = next((self.recorded_summary(f"run-{run_id}"[:64]) for run_id in reversed(self.recorded)), None)
         return {"mode": self.settings.mode, "checkpoint": self.settings.checkpoint, "now": iso(self.now),
-                "profile": self.cfg.investigator.profile, "seams": {k: True for k in SEAMS}, "seam_names": SEAMS}
+                "profile": self.cfg.investigator.profile, "seams": {k: True for k in SEAMS}, "seam_names": SEAMS,
+                "last_recorded": latest}
 
     def notify(self, chat_id: str) -> None:
         """Wake the stream's listeners for a chat. Called from a run's threads."""
@@ -81,6 +87,78 @@ class Service:
             return
         for event in list(self.listeners.get(chat_id, ())):
             loop.call_soon_threadsafe(event.set)
+
+    # -- committed runs --------------------------------------------------------------------------------------
+
+    def load_recorded(self) -> list[str]:
+        """Load each committed run with a report as a finished, read-only `past` chat (6.5, U12). A run the
+        scripted provider made shows the plumbing, not the agent, and is skipped. Nothing is re-run or
+        re-streamed, no model is called and no key is read: the files are copied into the database."""
+        root = Path(self.settings.runs_dir)
+        loaded: list[str] = []
+        for folder in sorted(root.glob("*/report.json")) if root.is_dir() else []:
+            folder = folder.parent
+            try:
+                run = json.loads((folder / "run.json").read_text(encoding="utf-8"))
+                summary = json.loads((folder / "summary.json").read_text(encoding="utf-8")) if (folder / "summary.json").is_file() else {}
+            except (OSError, ValueError):
+                continue
+            if run.get("provider") == "scripted" and not self.settings.load_scripted:
+                continue
+            run_id = run.get("run_id") or folder.name
+            if self.db.records.read_text(run_id, "run.json") is not None:
+                continue
+            for name in FILES:
+                if (folder / name).is_file():
+                    self.db.records.write_text(run_id, name, (folder / name).read_text(encoding="utf-8"))
+            self._past_chat(run_id, run, summary, folder)
+            loaded.append(run_id)
+        return loaded
+
+    def _past_chat(self, run_id: str, run: dict[str, Any], summary: dict[str, Any], folder: Path) -> None:
+        record = RunRecord(None, run_id, backend=self.db.records)
+        chat_id = f"run-{run_id}"[:64]
+        trigger = run.get("trigger") or ""
+        body = note_of(trigger)["text"] or trigger
+        title = (body.strip().splitlines() or [run_id])[0][:120]
+        status = summary.get("status") or "completed"
+        events = record.events()        # read before the app's transaction: one connection's write blocks another's read
+        with self.db.write() as conn:
+            conn.execute("INSERT INTO chat (id, origin, title, incident, now, created, auto_approve, status, recorded) "
+                         "VALUES (?, 'past', ?, NULL, ?, ?, ?, ?, ?)",
+                         (chat_id, title, run.get("now"), run.get("created"), int(bool((run.get("context") or {}).get("auto_approve"))),
+                          status, run.get("created")))
+            conn.execute("INSERT INTO run (run_id, chat_id, trigger, status, started, finished, folder) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                         (run_id, chat_id, trigger, status if status in ("completed", "incomplete", "failed", "paused") else "completed",
+                          run.get("created"), run.get("created"), str(folder)))
+            conn.executemany("INSERT INTO event (chat_id, seq, run_id, agent_seq, type, data, t_wall) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                             [(chat_id, n, run_id, e.seq, e.type, dumps(e.data), e.t_wall) for n, e in enumerate(events, 1)])
+
+    def recorded_summary(self, chat_id: str) -> dict[str, Any] | None:
+        """A recorded run's measured numbers, from its own `summary.json`: what the dashboard shows beside "Run agent"."""
+        run = self.latest_run(chat_id)
+        if run is None:
+            return None
+        record = RunRecord(None, run["run_id"], backend=self.db.records)
+        try:
+            summary = json.loads(record.read_text("summary.json") or "{}")
+            meta = json.loads(record.read_text("run.json") or "{}")
+        except ValueError:
+            return None
+        return {"run_id": run["run_id"], "created": meta.get("created"), "profile": meta.get("profile"), "wall_s": summary.get("wall_s_total"),
+                "tool_calls": summary.get("tool_calls"), "model_calls": summary.get("model_calls"), "gate": summary.get("gate"),
+                "cost_usd": (summary.get("tokens") or {}).get("cost_usd")}
+
+    def export(self, run_id: str) -> dict[str, Any]:
+        """Write a run from the database to the runs folder in the file layout, so it can be committed. The one
+        call that writes to disk. A folder that already exists is never overwritten."""
+        record = RunRecord(None, run_id, backend=self.db.records)
+        if record.read_text("run.json") is None:
+            raise Problem(404, "Not found", f"No run {run_id}.")
+        target = Path(self.settings.runs_dir) / run_id
+        if target.exists():
+            raise Problem(409, "Already exported", f"{target} exists; a run record on disk is never overwritten.")
+        return {"run_id": run_id, "folder": str(record.export(self.settings.runs_dir)), "files": record.missing() == [] and list(FILES)}
 
     # -- reads -----------------------------------------------------------------------------------------------
 

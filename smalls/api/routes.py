@@ -49,7 +49,10 @@ def tallies(s: Service, chat_id: str) -> dict[str, int]:
 
 def summary(s: Service, chat: dict[str, Any]) -> dict[str, Any]:
     gate = s.pending_gate(chat["id"])
-    return {**chat, "status": s.status(chat["id"]), "pending": len(gate["cards"]) if gate else 0, "tally": tallies(s, chat["id"])}
+    out = {**chat, "status": s.status(chat["id"]), "pending": len(gate["cards"]) if gate else 0, "tally": tallies(s, chat["id"])}
+    if chat["origin"] == "past":
+        out["recorded_run"] = s.recorded_summary(chat["id"])
+    return out
 
 
 @router.get("/chats")
@@ -171,6 +174,11 @@ def evidence(chat_id: str, handle: str, request: Request) -> dict[str, Any]:
     if found is None:
         raise not_found(f"Nothing in this chat or in the data at its now has the handle {handle}.")
     return found
+
+
+@router.post("/runs/{run_id}/export", status_code=201)
+def export(run_id: str, request: Request) -> dict[str, Any]:
+    return service(request).export(run_id)
 
 
 @router.get("/tools/schemas")
