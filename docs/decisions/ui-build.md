@@ -160,8 +160,10 @@ flowchart LR
 
 | Process | Listens | Holds | Never holds |
 |---|---|---|---|
-| API, `uv run --env-file .env uvicorn smalls.api.app:app` | `127.0.0.1:8000` on the host; the compose network only in a container | The model keys, the app database, the runs | Anything the browser can read directly |
-| Web, `pnpm --dir web dev` (or `start` after a build) | `localhost:3000` | `SMALLS_API_URL`, server-side | Any key; the API's address in client code |
+| API, `uv run --env-file .env uvicorn smalls.api.app:app` | `127.0.0.1:7318` on the host; the compose network only in a container | The model keys, the app database, the runs | Anything the browser can read directly |
+| Web, `pnpm --dir web dev` (or `start` after a build) | `localhost:7317` | `SMALLS_API_URL` (default `http://127.0.0.1:7318`), server-side | Any key; the API's address in client code |
+
+**Ports.** The web app listens on 7317 and the API on 7318, away from the usual development defaults (3000, 3001, 4200, 5000, 5173, 8000, 8080, 8888), so they are unlikely to be taken on a reviewer's machine. `SMALLS_WEB_PORT` and `SMALLS_API_PORT` change them, and `SMALLS_API_URL` follows the API port unless set. `make app` checks that both ports are free before it starts anything, and if one is taken it says which and how to pick another. Compose publishes only 7317.
 
 **Modes.** `SMALLS_API_MODE` is `live` (the configured profile; a key is needed), or `scripted` (the scripted model with a generic script, no key; for development and tests only). There is no demo mode (U12). The checkpoint is `SMALLS_CHECKPOINT`, default the Makefile's `CHECKPOINT`; the bundle is `SMALLS_BUNDLE`. `/capabilities` tells the web app the mode and which seams exist, and the UI hides what is not available rather than failing.
 
@@ -329,7 +331,7 @@ One sequence. Each row is committed when its acceptance passes; evidence goes in
 | R3 | The event stream (6.3) | A client that disconnects mid-run and reconnects with `Last-Event-ID` receives every `seq` exactly once and in order |
 | R4 | Read endpoints (6.4): incident, chats, calls, evidence, tool schemas | At 14:40 and 14:52, a test calls every endpoint and finds no timestamp at or after `now` (reusing the leak test's scanner) and no opened path under `_internal/` or `scenario/`; an unknown handle is a 404 problem |
 | R5 | Loading committed runs, and export (6.5) | A committed scripted run is skipped and a live one is loaded, labelled as recorded; a run record written by R2's scripted run, exported to files and loaded back as a past chat (with the scripted-provider guard turned off in the test), yields the same event list and renders the same as the live chat |
-| R6 | Web skeleton (7.1 to 7.3), the rewrite, the theme cookie, generated types, the boundary checks, the lint (7.6) | `pnpm build` is clean; the checks pass; the built client assets hold no API address and no key name; through the rewrite on port 3000, events arrive one by one (`curl -N`), not in a burst at the end |
+| R6 | Web skeleton (7.1 to 7.3), the rewrite, the theme cookie, generated types, the boundary checks, the lint (7.6) | `pnpm build` is clean; the checks pass; the built client assets hold no API address and no key name; through the rewrite on port 7317, events arrive one by one (`curl -N`), not in a burst at the end |
 | R7 | Design-system port (7.4) | Each ported component renders in both themes; a screenshot of each beside its prototype board is recorded in section 12 |
 | R8 | Shell and dashboard | Run agent (scripted) goes from idle to running to finished live; a reload mid-run restores the panel; a paused chat shows amber "Waiting on N reads" with Resume as the primary button |
 | R9 | Chat transcript: the reducer, the intro and composer, the commander's turn, narrative per round, the working picture, the tally | Vitest over event logs from scripted runs on the fixture registry, committed under `web/tests/fixtures/` by `make api-fixtures` (synthetic, so the lint passes); the server's first paint equals the client's fold of the same events |
@@ -339,7 +341,7 @@ One sequence. Each row is committed when its acceptance passes; evidence goes in
 | R13 | Resolve dialog and summary | Continue is disabled until there is a note; the `agent` path keeps everything and `own` nothing; unticking a signal's last record shows "Left out"; saving, then any edit, unsaves; Regenerate bumps the version |
 | R14 | Messages (the U8 drafter, its prompt, the `anthropic-mid` profile and its pricing in `config.toml`, the code fallback) and the knowledge-base view | The profile's rates come from the provider's current price list, like the existing entries, and the config change passes the overfit review; A scripted drafter's output goes through the same checks as the code renderer's, and a draft that breaks a rule shows the failing check first; the drafting prompt passes the lint; checks update on each keystroke, failing first; Copy writes the clipboard and marks that exact text copied; an edit clears it; Restore draft is enabled only after a change; "N of 4 copied" counts right; the preview finds the saved entry by its terms |
 | R15 | Accessibility and the whole flow | Axe finds nothing on every page in both themes; the flow from the dashboard to messages runs with the keyboard alone; one Playwright test runs it in scripted mode |
-| R16 | Compose and commands: `api` and `web` services; `make app` (both, on the host), `make api-types`, `make api-fixtures`, `make web-test` | The flow test passes against `docker compose up`; the `web` container's environment holds no key |
+| R16 | Compose and commands: `api` and `web` services on 7317 and 7318 (section 5); `make app` (both, on the host, with the free-port check), `make api-types`, `make api-fixtures`, `make web-test` | The flow test passes against `docker compose up`; the `web` container's environment holds no key; with something listening on 7317, `make app` stops before starting either process and names the port and `SMALLS_WEB_PORT` |
 | R17 | Docs | This record holds every row's evidence and every judgment call; HANDOFF gets a section for the UI step and its run commands |
 | R18 | Merge into `main`: merge `main` into `ui-build` first if it has moved; run `make test`, `make lint` and `pnpm --dir web test`; merge `ui-build` into `main`; run the suite again on `main`; push `main` | `main` holds the UI, the API and the seams, its suite passes, and it is pushed. If a merge conflicts in a way that is not mechanical, stop and report instead of resolving it |
 
@@ -347,7 +349,7 @@ If time runs short, cut in this order: the knowledge-base preview, Regenerate, t
 
 ## 10. Done means
 
-- `make app` opens the dashboard on `localhost:3000`. With a key it runs investigations; without one, the committed live runs still open in full as recorded investigations, and `make demo` still replays the canned run in the terminal.
+- `make app` opens the dashboard on `localhost:7317`. With a key it runs investigations; without one, the committed live runs still open in full as recorded investigations, and `make demo` still replays the canned run in the terminal.
 - From the dashboard, a person can investigate in chat, approving reads one at a time with the keyboard, or run the agent and open its findings, and get the cause, how sure, what to do, who owns it and what not to do from the answer card.
 - Any handle anywhere opens its native record in the drawer, and nothing shown is later than `now`.
 - A gate answered twice, from two tabs or by a held key, resumes the run once. A gate nobody answers waits.
