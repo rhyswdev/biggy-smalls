@@ -434,6 +434,17 @@ Medians, with the lowest and highest run. Read:
 
 **R5, the close (2026-10-15).** The ledger has 71 rows; `docs/tuning-log.md` is regenerated from it. The readings in `eval/results/notes.yaml` that the new groups change are updated in plain words (what led, the share of partly shown claims, hypotheses per report, wall time, turns and wasted turns), dated 2026-10-15. The tuning-log page is refreshed: `export` wrote its three files, each was uploaded and its dataset pointed at the new file, and its key now says what the phase label "to score" means. Spend: $5.24 of the $7 (13.4). HANDOFF says what each set showed. Every judgement that needs a score waits for the scorer: the 16 rows of `e4-1440`, `e4-1452`, `e5-off` and `e5-on` have empty `scores`.
 
+**Scored (2026-10-15).** The thirteen runs of R2 to R4 were scored with the judge (`python -m eval.score`, then `--ledger`; $0.43 of the judge's budget, $2.68 of its $5 in all), and every ledger row now holds scores.
+- **Carry-forward (row E4) meets PLAN 13's bar.** The three looks at 14:40 reached the cause (3 of 3), found 6 of 6 required facts and passed 11 of 12 traps, and met the agent bar. The three carried to 14:52 reached the cause and the trigger (3 of 3 each), found 14 of 15 facts, passed 14 of 15 traps and met the bar, each citing rows dated between the looks (above), with continuity passed. The judge found all four mechanism items in each carried report, against 3, 3 and 4 in pass 7's fresh runs.
+- **Tags (row E5) do no harm, so they stay on (the ruling above).** Tags on (`p07` and `e5-on`): cause 5 of 5, traps 25 of 25, facts 20 of 25, mechanism items 16 of 20, the bar met 5 of 5. Tags off: cause 5 of 5, traps 22 of 25, facts 21 of 25, mechanism items 17 of 20, the bar met 5 of 5. The tags-on side is no worse on outcome and falls for no more traps.
+- **Arm A** is in 14.3: it meets the bar in no run.
+
+**Rulings (2026-10-15), ahead of the freeze.**
+- **E3, the verifier: both passes stay for the freeze.** Over 53 scored arm C runs the two passes cost about 43% of a run ($0.075 for claim support, $0.087 for the contrarian) and sent 2 reports back, neither of which changed the cause. Claim support stays in any case: it is what tells the commander how well each claim is shown. The contrarian is a net for a wrong conclusion, which this incident never produced; it is decided again on the held-out runs, and cut if it changes nothing there either.
+- **O4 and P8, tags on held-out bundles: the session that authors a held-out bundle also runs the tagging pass on it** (`make tag`, with the committed tag profiles), so a held-out run tests what ships, tags on.
+- **The judge's harmful-step check is fixed before the freeze**, so a step given only on a condition, or written out because the commander asked for it, is not read as recommended. It is a new judge version, so the judged runs are judged again. The freeze tag covers the judge, so the fix cannot come after it.
+- **Budget for the freeze and the held-out runs: the session sizes it** (the user, 2026-10-15), keeping a running total and saying what it spent.
+
 ### 13.4 Spend
 
 | Batch | Runs | Cost | Running total |

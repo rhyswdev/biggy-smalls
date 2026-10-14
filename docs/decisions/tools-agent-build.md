@@ -726,7 +726,7 @@ One limit we inherit and do not change here: the container user has a fixed uid,
 | P4 | Are human-written journal entries and paging notes classed with chat? PLAN names only `ic:note` beside chat. | No: only `slack:` and `ic:note/`. The scorer session owns the final answer, through `handle_class()`. |
 | P5 | Which run records are committed. | The first complete run, which `make demo` replays, and the runs the write-up cites, without their checkpoint databases. |
 | P6 | A mechanical guard for the held-out rule in this worktree: a sparse checkout that leaves the three paths off disk, or deny rules in the session settings. | None yet; the rule is kept by discipline. |
-| P8 | How held-out bundles get tags (ruling O4, deferred). With tags on by default (G6), a held-out run at the default would find no cached tags and every record would read as untagged. | Not ours to settle on this track, and nothing waits on it until a held-out run. Two ways out: the held-out authoring session runs the tagging pass on its bundle, or held-out runs set the flag off and the write-up says so. |
+| P8 | **Ruled 2026-10-15 (eval-loop.md 13.3): the authoring session tags its held-out bundle.** How held-out bundles get tags (ruling O4, deferred). With tags on by default (G6), a held-out run at the default would find no cached tags and every record would read as untagged. | Not ours to settle on this track, and nothing waits on it until a held-out run. Two ways out: the held-out authoring session runs the tagging pass on its bundle, or held-out runs set the flag off and the write-up says so. |
 
 P1 (the tags default) and P7 (the 2k clip) were ruled on 2026-10-13: G6 and G7.
 
