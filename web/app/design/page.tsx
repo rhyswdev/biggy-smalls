@@ -43,6 +43,7 @@ function Pane({ theme }: { theme: "light" | "dark" }) {
 export default function DesignSystem() {
   return (
     <main style={{ display: "flex", flexWrap: "wrap", minHeight: "100vh" }}>
+      <h1 className="sm-visually-hidden">Smalls design system</h1>
       <Pane theme="light" />
       <Pane theme="dark" />
     </main>

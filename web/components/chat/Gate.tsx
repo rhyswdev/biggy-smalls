@@ -115,7 +115,7 @@ function title(rows: Row[], local: Record<string, Local> = {}): string {
 function Settled({ chatId, rows, board, onOpen }: { chatId: string; rows: Row[]; board: BoardChange[]; onOpen: (h: string) => void }) {
   if (!rows.length) return <BoardLines board={board} />;
   return (
-    <section className="gg" aria-label={title(rows)}>
+    <section className="gg" role="group" aria-label={title(rows)}>
       <div className="gg-head"><span className="gg-title">{title(rows)}</span></div>
       {rows.map((r) => <Receipt key={r.call_id} chatId={chatId} row={r} onOpen={onOpen} />)}
       <BoardLines board={board} />
@@ -285,7 +285,7 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
   const [one, many] = asked.every(isAction) ? ["action", "actions"] : ["read", "reads"];
   const head = w ? `◆ ${w === 1 ? `1 ${one} needs` : `${w} ${many} need`} your approval` : title(asked, local);
   return (
-    <section className={w ? "gg wait" : "gg"} id={w ? "pending" : undefined} aria-label={head} onKeyDown={gateKey} tabIndex={-1}>
+    <section className={w ? "gg wait" : "gg"} role="group" id={w ? "pending" : undefined} aria-label={head} onKeyDown={gateKey} tabIndex={-1}>
       <div className="gg-head">
         <span className="gg-title">{head}</span>
         {w ? <span className="gg-sub">{asked.every(isAction) ? "Nothing is executed until you choose; an action here is a proposal for you to act on." : "Read-only. Nothing runs until you choose."}</span> : null}

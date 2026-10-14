@@ -109,6 +109,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
       <div style={{ flex: "1 1 auto", display: "flex", flexWrap: "wrap", alignItems: "flex-start", maxWidth: 1440, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
         <main aria-label="Conversation" style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", minHeight: "calc(100vh - 64px)" }}>
           <div className="convo">
+            <h1 className="sm-visually-hidden">{chat.title}</h1>
             {chat.origin === "headless" || past ? (
               <div className="origin">
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: "1 1 360px", minWidth: 0 }}>

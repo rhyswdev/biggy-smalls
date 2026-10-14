@@ -16,6 +16,7 @@ export default async function Dashboard() {
     <div className="v-dash" style={{ minHeight: "100vh" }}>
       <AppBar current="dashboard" />
       <main style={{ maxWidth: 1160, margin: "0 auto", padding: "28px 24px 64px", display: "flex", flexDirection: "column", gap: 32, boxSizing: "border-box" }}>
+        <h1 className="sm-visually-hidden">Smalls dashboard</h1>
         <section aria-labelledby="inc-h" className="sec">
           <div className="sec-head">
             <h2 id="inc-h" className="title" style={{ margin: 0 }}>Incidents</h2>
