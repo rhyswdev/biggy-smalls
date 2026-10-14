@@ -176,6 +176,36 @@ def evidence(chat_id: str, handle: str, request: Request) -> dict[str, Any]:
     return found
 
 
+@router.put("/chats/{chat_id}/resolution")
+def resolve(chat_id: str, body: models.Resolution, request: Request) -> dict[str, Any]:
+    return service(request).resolve(chat_id, body.path, body.note, body.resolved_at, body.resolved_by)
+
+
+@router.get("/chats/{chat_id}/writeup")
+def writeup(chat_id: str, request: Request) -> dict[str, Any]:
+    return service(request).writeup(chat_id)
+
+
+@router.put("/chats/{chat_id}/writeup")
+def edit_writeup(chat_id: str, body: models.WriteupEdit, request: Request) -> dict[str, Any]:
+    return service(request).edit_writeup(chat_id, body.kept, body.note)
+
+
+@router.post("/chats/{chat_id}/writeup/regenerate")
+def regenerate(chat_id: str, request: Request) -> dict[str, Any]:
+    return service(request).regenerate(chat_id)
+
+
+@router.post("/chats/{chat_id}/writeup/save")
+def save_writeup(chat_id: str, body: models.WriteupSave, request: Request) -> dict[str, Any]:
+    return service(request).save_writeup(chat_id, body.version, body.title, body.body, body.terms)
+
+
+@router.get("/kb")
+def kb(request: Request, q: str = "") -> list[dict[str, Any]]:
+    return service(request).kb(q[:500])
+
+
 @router.post("/runs/{run_id}/export", status_code=201)
 def export(run_id: str, request: Request) -> dict[str, Any]:
     return service(request).export(run_id)

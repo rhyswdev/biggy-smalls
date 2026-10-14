@@ -119,3 +119,38 @@ export async function resolveChat(chatId: string, input: z.infer<typeof Resoluti
   revalidatePath(`/chats/${chatId}`);
   redirect(`/chats/${chatId}/summary`);
 }
+
+export interface WriteupResult extends ActionResult { writeup?: { version: number; kept: string[]; saved_at: string | null } | null }
+
+/** Any change to the kept evidence or the note unsaves the write-up until it is saved again. */
+export async function editWriteup(chatId: string, kept: string[], note?: string): Promise<WriteupResult> {
+  const parsed = z.object({ kept: z.array(z.string().max(400)).max(500), note: z.string().trim().max(4000).optional() }).safeParse({ kept, note });
+  if (!parsed.success) return { ok: false, error: "Invalid change." };
+  try {
+    const r = await api<{ writeup: WriteupResult["writeup"] }>(`/chats/${id.parse(chatId)}/writeup`, { method: "PUT", json: parsed.data });
+    return { ok: true, writeup: r.writeup };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
+export async function regenerateWriteup(chatId: string): Promise<WriteupResult> {
+  try {
+    const r = await api<{ writeup: WriteupResult["writeup"] }>(`/chats/${id.parse(chatId)}/writeup/regenerate`, { json: {} });
+    return { ok: true, writeup: r.writeup };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
+export async function saveWriteup(chatId: string, entry: { version: number; title: string; body: string; terms: string[] }): Promise<WriteupResult> {
+  const parsed = z.object({ version: z.number().int().min(1), title: text(300), body: text(40000), terms: z.array(z.string().max(200)).max(100) }).safeParse(entry);
+  if (!parsed.success) return { ok: false, error: "The write-up is incomplete." };
+  try {
+    const r = await api<{ writeup: WriteupResult["writeup"] }>(`/chats/${id.parse(chatId)}/writeup/save`, { json: parsed.data });
+    revalidatePath(`/chats/${chatId}/summary`);
+    return { ok: true, writeup: r.writeup };
+  } catch (error) {
+    return failed(error);
+  }
+}

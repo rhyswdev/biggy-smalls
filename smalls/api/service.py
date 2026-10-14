@@ -46,6 +46,13 @@ SEAMS = {"S1": "web decisions", "S2": "approve with edit", "S3": "follow-ups con
 FINISHED = ("completed", "incomplete", "failed")
 
 
+def cited(report: dict[str, Any] | None) -> set[str]:
+    """Every handle a report cites, in its claims and its alert verdicts."""
+    from smalls.agent import validator
+
+    return set(validator.report_handles(report)) if report else set()
+
+
 def utcnow() -> datetime:
     """The wall clock, in one place, so a test can move it."""
     return datetime.now(timezone.utc)
@@ -426,6 +433,85 @@ class Service:
             return {"run_id": run["run_id"], "status": "resumed"}
         trigger = run["trigger"] if run else self.settings.trigger()
         return {"run_id": self.start_run(chat_id, trigger), "status": "started"}
+
+    # -- after the investigation: resolution, write-up, knowledge base -------------------------------------
+
+    def resolve(self, chat_id: str, path: str, note: str, resolved_at: str, resolved_by: str) -> dict[str, Any]:
+        """Mark the incident resolved in this chat. The write-up starts as version 1: under the agent's path it
+        keeps every handle the report cites, under the commander's own path none (section 4, Summary)."""
+        chat = self.chat(chat_id)
+        if chat["origin"] == "past":
+            raise Problem(409, "Read-only", "A recorded run is read-only.")
+        report = self.report(chat_id)
+        if report is None and path == "agent":
+            raise Problem(409, "No conclusion", "This chat has no report, so Smalls' conclusion cannot be the fix.")
+        with self.db.write() as conn:
+            conn.execute("INSERT OR REPLACE INTO resolution (chat_id, path, note, resolved_at, resolved_by) VALUES (?, ?, ?, ?, ?)",
+                         (chat_id, path, note.strip(), resolved_at, resolved_by.strip()))
+            if not conn.execute("SELECT 1 FROM writeup WHERE chat_id = ?", (chat_id,)).fetchone():
+                kept = sorted(cited(report)) if path == "agent" and report else []
+                conn.execute("INSERT INTO writeup (chat_id, version, kept, body) VALUES (?, 1, ?, '{}')", (chat_id, dumps(kept)))
+            conn.execute("UPDATE chat SET status = 'resolved' WHERE id = ?", (chat_id,))
+        return self.writeup(chat_id)
+
+    def writeup(self, chat_id: str) -> dict[str, Any]:
+        self.chat(chat_id)
+        resolution = self.db.row("SELECT path, note, resolved_at, resolved_by FROM resolution WHERE chat_id = ?", (chat_id,))
+        row = self.db.row("SELECT version, kept, saved_at FROM writeup WHERE chat_id = ? ORDER BY version DESC LIMIT 1", (chat_id,))
+        report = self.report(chat_id)
+        rows: dict[str, str] = {}
+        for record in self.records(chat_id):          # what the run was shown of each handle, its first line
+            for r in record.read_jsonl("evidence.jsonl"):
+                rows.setdefault(r["handle"], r["text"].split("\n", 1)[0][:300])
+        return {"resolution": resolution, "report": report, "rows": rows, "incident": self.chat(chat_id).get("incident"), "cited": sorted(cited(report)),
+                "writeup": {"version": row["version"], "kept": loads(row["kept"]), "saved_at": row["saved_at"]} if row else None}
+
+    def edit_writeup(self, chat_id: str, kept: list[str], note: str | None) -> dict[str, Any]:
+        """Any edit unsaves the write-up until it is saved again."""
+        row = self.db.row("SELECT version FROM writeup WHERE chat_id = ? ORDER BY version DESC LIMIT 1", (chat_id,))
+        if row is None:
+            raise Problem(409, "Not resolved", "Mark the incident resolved first.")
+        with self.db.write() as conn:
+            conn.execute("UPDATE writeup SET kept = ?, saved_at = NULL WHERE chat_id = ? AND version = ?", (dumps(sorted(set(kept))), chat_id, row["version"]))
+            if note is not None:
+                conn.execute("UPDATE resolution SET note = ? WHERE chat_id = ?", (note.strip(), chat_id))
+            conn.execute("DELETE FROM kb_entry WHERE chat_id = ?", (chat_id,))
+        return self.writeup(chat_id)
+
+    def regenerate(self, chat_id: str) -> dict[str, Any]:
+        """A new version from the chat's latest report, keeping the note and the evidence choices."""
+        row = self.db.row("SELECT version, kept FROM writeup WHERE chat_id = ? ORDER BY version DESC LIMIT 1", (chat_id,))
+        if row is None:
+            raise Problem(409, "Not resolved", "Mark the incident resolved first.")
+        with self.db.write() as conn:
+            conn.execute("INSERT INTO writeup (chat_id, version, kept, body) VALUES (?, ?, ?, '{}')", (chat_id, row["version"] + 1, row["kept"]))
+            conn.execute("DELETE FROM kb_entry WHERE chat_id = ?", (chat_id,))
+        return self.writeup(chat_id)
+
+    def save_writeup(self, chat_id: str, version: int, title: str, body: str, terms: list[str]) -> dict[str, Any]:
+        resolution = self.db.row("SELECT note FROM resolution WHERE chat_id = ?", (chat_id,))
+        if not resolution or not resolution["note"].strip():
+            raise Problem(409, "No note", "Say how it was resolved before saving.")
+        current = self.db.row("SELECT version FROM writeup WHERE chat_id = ? ORDER BY version DESC LIMIT 1", (chat_id,))
+        if current is None or current["version"] != version:
+            raise Problem(409, "Out of date", "The write-up changed since this page was loaded. Reload it and save again.")
+        with self.db.write() as conn:
+            conn.execute("UPDATE writeup SET saved_at = ?, body = ? WHERE chat_id = ? AND version = ?", (stamp(), dumps({"title": title, "body": body}), chat_id, version))
+            conn.execute("DELETE FROM kb_entry WHERE chat_id = ?", (chat_id,))
+            conn.execute("INSERT INTO kb_entry (chat_id, title, body, terms, saved_at) VALUES (?, ?, ?, ?, ?)",
+                         (chat_id, title, body, " ".join(dict.fromkeys(t.strip() for t in terms if t.strip())), stamp()))
+        return self.writeup(chat_id)
+
+    def kb(self, q: str) -> list[dict[str, Any]]:
+        """Knowledge-base search over saved entries: every word of the query, quoted, any one enough (U11)."""
+        import re
+
+        words = re.findall(r"\w+", q)
+        if not words:
+            return [dict(r) for r in self.db.rows("SELECT id, chat_id, title, terms, saved_at FROM kb_entry ORDER BY saved_at DESC LIMIT 20")]
+        match = " OR ".join(f'"{w}"' for w in words)
+        return self.db.rows("SELECT k.id, k.chat_id, k.title, k.terms, k.saved_at, snippet(kb_fts, 1, '', '', ' … ', 24) AS snippet, bm25(kb_fts) AS score "
+                            "FROM kb_fts JOIN kb_entry k ON k.id = kb_fts.rowid WHERE kb_fts MATCH ? ORDER BY score LIMIT 20", (match,))
 
     # -- shutdown --------------------------------------------------------------------------------------------
 

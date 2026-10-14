@@ -65,3 +65,22 @@ class Switch(Closed):
 
 class MoreRun(Closed):
     resume: bool = False
+
+
+class Resolution(Closed):
+    path: Literal["agent", "own"]
+    note: str = Field(min_length=1, max_length=NOTE)
+    resolved_at: str = Field(pattern=r"^\d{1,2}:\d{2}$")
+    resolved_by: str = Field(min_length=1, max_length=200)
+
+
+class WriteupEdit(Closed):
+    kept: list[str] = Field(max_length=500)
+    note: str | None = Field(None, max_length=NOTE)
+
+
+class WriteupSave(Closed):
+    version: int = Field(ge=1)
+    title: str = Field(min_length=1, max_length=300)
+    body: str = Field(min_length=1, max_length=40000)
+    terms: list[str] = Field(max_length=100)

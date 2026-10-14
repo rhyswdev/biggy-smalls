@@ -170,6 +170,44 @@
     "title": "NoteIn",
     "type": "object"
    },
+   "Resolution": {
+    "additionalProperties": false,
+    "properties": {
+     "note": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Note",
+      "type": "string"
+     },
+     "path": {
+      "enum": [
+       "agent",
+       "own"
+      ],
+      "title": "Path",
+      "type": "string"
+     },
+     "resolved_at": {
+      "pattern": "^\\d{1,2}:\\d{2}$",
+      "title": "Resolved At",
+      "type": "string"
+     },
+     "resolved_by": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Resolved By",
+      "type": "string"
+     }
+    },
+    "required": [
+     "path",
+     "note",
+     "resolved_at",
+     "resolved_by"
+    ],
+    "title": "Resolution",
+    "type": "object"
+   },
    "Switch": {
     "additionalProperties": false,
     "properties": {
@@ -222,6 +260,74 @@
      "type"
     ],
     "title": "ValidationError",
+    "type": "object"
+   },
+   "WriteupEdit": {
+    "additionalProperties": false,
+    "properties": {
+     "kept": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Kept",
+      "type": "array"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 4000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "required": [
+     "kept"
+    ],
+    "title": "WriteupEdit",
+    "type": "object"
+   },
+   "WriteupSave": {
+    "additionalProperties": false,
+    "properties": {
+     "body": {
+      "maxLength": 40000,
+      "minLength": 1,
+      "title": "Body",
+      "type": "string"
+     },
+     "terms": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Terms",
+      "type": "array"
+     },
+     "title": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+     },
+     "version": {
+      "minimum": 1.0,
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "version",
+     "title",
+     "body",
+     "terms"
+    ],
+    "title": "WriteupSave",
     "type": "object"
    }
   }
@@ -681,6 +787,57 @@
     "summary": "Add Note"
    }
   },
+  "/chats/{chat_id}/resolution": {
+   "put": {
+    "operationId": "resolve_chats__chat_id__resolution_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Resolution"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Resolve Chats  Chat Id  Resolution Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Resolve"
+   }
+  },
   "/chats/{chat_id}/runs": {
    "post": {
     "operationId": "more_runs_chats__chat_id__runs_post",
@@ -773,6 +930,188 @@
     "summary": "Stop"
    }
   },
+  "/chats/{chat_id}/writeup": {
+   "get": {
+    "operationId": "writeup_chats__chat_id__writeup_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Writeup Chats  Chat Id  Writeup Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Writeup"
+   },
+   "put": {
+    "operationId": "edit_writeup_chats__chat_id__writeup_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WriteupEdit"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Edit Writeup Chats  Chat Id  Writeup Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Writeup"
+   }
+  },
+  "/chats/{chat_id}/writeup/regenerate": {
+   "post": {
+    "operationId": "regenerate_chats__chat_id__writeup_regenerate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Regenerate Chats  Chat Id  Writeup Regenerate Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Regenerate"
+   }
+  },
+  "/chats/{chat_id}/writeup/save": {
+   "post": {
+    "operationId": "save_writeup_chats__chat_id__writeup_save_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/WriteupSave"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Save Writeup Chats  Chat Id  Writeup Save Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Save Writeup"
+   }
+  },
   "/health": {
    "get": {
     "operationId": "health_health_get",
@@ -814,6 +1153,51 @@
      }
     },
     "summary": "Incident"
+   }
+  },
+  "/kb": {
+   "get": {
+    "operationId": "kb_kb_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "default": "",
+       "title": "Q",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Kb Kb Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Kb"
    }
   },
   "/runs/{run_id}/export": {
