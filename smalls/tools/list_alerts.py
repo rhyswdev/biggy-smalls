@@ -57,6 +57,11 @@ class Stream:
         return self.records[0]
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str, Window]:
+    """What a call would echo, without running it (seam S7): no single native query, and the resolved window."""
+    return NO_NATIVE, resolve(args.since, args.until, ctx.now)
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     window = resolve(args.since, args.until, ctx.now)
     tagged = ctx.tags and FACET in schemas.offered_facets()

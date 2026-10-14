@@ -27,6 +27,18 @@ _MENTION = re.compile(r"<@([A-Z0-9]+)(?:\|[^>]*)?>")
 _CHANNEL = re.compile(r"<#[A-Z0-9]+\|([^>]+)>")
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str, Window]:
+    """The chat search and the resolved window a call would echo, without running it (seam S7)."""
+    window = resolve(args.since, args.until, ctx.now)
+    return _native(args, window), window
+
+
+def _native(args: Any, window: Window) -> str:
+    expanded = args.thread_ts is not None
+    return " ".join(x for x in (f"in:#{args.channel.lstrip('#')}" if args.channel else "", json.dumps(args.text) if args.text else "",
+                                f"thread_ts:{args.thread_ts}" if expanded else f"after:{iso(window.since)} before:{iso(window.until)}") if x)
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     window = resolve(args.since, args.until, ctx.now)
     tagged = ctx.tags and FACET in schemas.offered_facets()
@@ -63,8 +75,7 @@ def run(args: Any, ctx: ToolContext) -> Parts:
                       f"{len(matched)} carry no {FACET} tag, and a missing tag says nothing about a message]")
         hint = "Drop the tag filter, or widen the window."
     expanded = args.thread_ts is not None
-    native = " ".join(x for x in (f"in:#{args.channel.lstrip('#')}" if args.channel else "", json.dumps(args.text) if args.text else "",
-                                  f"thread_ts:{args.thread_ts}" if expanded else f"after:{iso(window.since)} before:{iso(window.until)}") if x)
+    native = _native(args, window)
     return Parts(rows=[_line(m, names, threads, tagged, expanded) for m in rows], footer=footer, window=window, now=ctx.store.now,
                  what="messages", keep="newest", native_query=native, native_label="chat search",
                  narrow="Name a channel, add text=, or shorten the window.", empty_hint=hint, tag=f"{FACET}={act}" if act else None)

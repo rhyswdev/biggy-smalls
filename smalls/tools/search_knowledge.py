@@ -31,11 +31,20 @@ SHORTENED = "[a passage ending in […] is a snippet: get_record <handle> return
 ADVICE = "[ranked by keyword overlap only, and never tuned: read past the top hit]"
 
 
+NO_WORDS = "(no words in the query)"
+
+
+def preview(args: Any, ctx: ToolContext) -> tuple[str, None]:
+    """The match expression a call would run, without running it (seam S7). It has no window."""
+    words = re.findall(r"\w+", args.query)
+    return (" OR ".join(f'"{word}"' for word in words) if words else NO_WORDS), None
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     words = re.findall(r"\w+", args.query)
     match = " OR ".join(f'"{word}"' for word in words)
     if not words:
-        return Parts(native_query="(no words in the query)", native_label="FTS5", empty_hint="Give at least one word to search for.")
+        return Parts(native_query=NO_WORDS, native_label="FTS5", empty_hint="Give at least one word to search for.")
     hits = derive.query(ctx, "SELECT v.handle, v.kind, v.title, v.t_known, v.attrs, vc.heading, vc.text, bm25(chunk_fts) AS score "
                              "FROM chunk_fts JOIN visible_chunk vc ON vc.chunk_id = chunk_fts.rowid JOIN visible v ON v.rid = vc.rid "
                              "WHERE chunk_fts MATCH ? ORDER BY score, vc.chunk_id", (match,))

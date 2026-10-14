@@ -48,6 +48,22 @@ SHORTENED = "[text ending in […+N chars] is shortened: get_record <handle> ret
 TAG_ONLY_INCIDENTS = "signal applies to table=incident only"
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str, None]:
+    """The table request a call would echo, without running it (seam S7). It has no window."""
+    return _native(args), None
+
+
+def _native(args: Any) -> str:
+    dataset, order_field, defaults = TABLES[args.table]
+    names = [name for name in (args.fields or defaults) if FIELD.match(name)]
+    query = "^".join([*(f"{pair.name}={pair.value}" for pair in args.filters), *([f"123TEXTQUERY321={args.text}"] if args.text else []),
+                      f"ORDERBYDESC{order_field}"])
+    native = f"GET /api/now/table/{dataset}?sysparm_query={query}&sysparm_display_value=true&sysparm_limit={args.limit}"
+    if args.fields:
+        native += "&sysparm_fields=" + ",".join(names)
+    return native
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     dataset, order_field, defaults = TABLES[args.table]
     tagged = ctx.tags and FACET in schemas.offered_facets()
@@ -82,11 +98,7 @@ def run(args: Any, ctx: ToolContext) -> Parts:
     if any("[…+" in line.text for line in lines):
         footer.append(SHORTENED)
     drop = [what for what, value in (("the tag filter", signal), ("a filter", args.filters), ("text=", args.text)) if value]
-    query = "^".join([*(f"{pair.name}={pair.value}" for pair in args.filters), *([f"123TEXTQUERY321={args.text}"] if args.text else []),
-                      f"ORDERBYDESC{order_field}"])
-    native = f"GET /api/now/table/{dataset}?sysparm_query={query}&sysparm_display_value=true&sysparm_limit={args.limit}"
-    if args.fields:
-        native += "&sysparm_fields=" + ",".join(names)
+    native = _native(args)
     return Parts(rows=lines, footer=footer, total=len(listed), what=f"{args.table} rows", keep="newest_first", native_label="sysparm_query",
                  native_query=native, hidden_span=(min(r["t_event"] for r in hidden), max(r["t_event"] for r in hidden)) if hidden else None,
                  narrow="Add a filter or text=.", tag=f"{FACET}={signal}" if signal else None,

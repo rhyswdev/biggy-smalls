@@ -26,6 +26,11 @@ NO_NATIVE = "(no single native query: builds and change requests are listed side
 PLANNED = "planned"
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str, Window]:
+    """What a call would echo, without running it (seam S7): no single native query, and the resolved window."""
+    return NO_NATIVE, resolve(args.since, args.until, ctx.now)
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     window = resolve(args.since, args.until, ctx.now)
     now = ctx.store.now

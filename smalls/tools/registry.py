@@ -46,6 +46,7 @@ class ToolSpec:
     cap_tokens: int                 # PLAN's token figure, or 6,000 where PLAN gives only a row count
     cap_rows: int | None = None     # PLAN's row, message, edge or cell limit
     mock: bool = False              # true for every action tool in v1
+    preview: Callable[[BaseModel, ToolContext], tuple[str | None, Any]] | None = None     # (native query, window) without running (S7)
 
 
 # (cap_tokens, cap_rows) per tool, from PLAN section 4's table.
@@ -66,6 +67,7 @@ CAPS: dict[str, tuple[int, int | None]] = {
 # The tools that are built: name -> the function behind it. It grows through build phases B and D. Filled
 # on first use, because a tool module imports this one for its context type.
 BUILT: dict[str, Callable[[BaseModel, ToolContext], Any]] = {}
+PREVIEWS: dict[str, Callable[[BaseModel, ToolContext], tuple[str | None, Any]]] = {}
 
 
 def _load_built() -> None:
@@ -78,6 +80,9 @@ def _load_built() -> None:
                   "query_metrics": query_metrics.run, "list_changes": list_changes.run, "itsm_query": itsm_query.run,
                   "search_knowledge": search_knowledge.run, "get_topology": get_topology.run, "get_oncall": get_oncall.run,
                   "read_chat": read_chat.run, "check_status_page": check_status_page.run})
+    modules = (check_status_page, get_oncall, get_record, get_topology, itsm_query, list_alerts, list_changes, query_metrics, read_chat,
+               search_knowledge, search_logs)
+    PREVIEWS.update({m.__name__.rsplit(".", 1)[-1]: m.preview for m in modules if hasattr(m, "preview")})
 
 
 def _not_built(args: BaseModel, ctx: ToolContext) -> Envelope:
@@ -87,7 +92,7 @@ def _not_built(args: BaseModel, ctx: ToolContext) -> Envelope:
 def surface(*, tags: bool) -> dict[str, ToolSpec]:
     """All eleven tools in their fixed order, built or not. Tag inputs exist only when `tags` is true."""
     _load_built()
-    return {name: ToolSpec(name, "read", args, BUILT.get(name, _not_built), *CAPS[name])
+    return {name: ToolSpec(name, "read", args, BUILT.get(name, _not_built), *CAPS[name], preview=PREVIEWS.get(name))
             for name, args in schemas.args_models(tags=tags).items()}
 
 
@@ -118,6 +123,27 @@ def call(spec: ToolSpec, raw_args: dict[str, Any], ctx: ToolContext) -> Envelope
     if spec.cap_rows is not None and len(env.rows) > spec.cap_rows:
         return errors.over_cap(spec.name, f"{len(env.rows)} rows", f"{spec.cap_rows}")
     return env
+
+
+def preview(spec: ToolSpec, raw_args: dict[str, Any], ctx: ToolContext) -> dict[str, Any] | None:
+    """What a read would echo before it runs, for the card a person approves (seam S7; agent-design axis 3:
+    "read cards show the resolved window and native query"): `{native_query, window}`. A tool that can say
+    without running gives both; otherwise the window alone is resolved from `since` and `until` when the
+    tool has them. Nothing here reaches the model, and it never raises: arguments that would not validate,
+    or a window that cannot be made, give None, and the call's own run reports the problem."""
+    try:
+        args = spec.args.model_validate(raw_args or {})
+        if spec.preview is not None:
+            native, window = spec.preview(args, ctx)
+        elif "since" in type(args).model_fields and getattr(args, "since", None):
+            native, window = None, windows.resolve(args.since, getattr(args, "until", None), ctx.now)
+        else:
+            return None
+    except Exception:
+        return None
+    if native is None and window is None:
+        return None
+    return {"native_query": native, "window": list(window.iso) if window is not None else None}
 
 
 # -- the model-facing schema -------------------------------------------------------------------------------

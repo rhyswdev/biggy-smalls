@@ -54,6 +54,18 @@ NO_MONITOR = "thresholds: no visible monitor has exactly this query, so no thres
 TOTAL = " (a total over {width}, so it reads higher than any one point; min and max below are of single points)"
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str | None, Window]:
+    """The served query and the resolved window a call would echo, without running it (seam S7). When the run
+    merges points it adds the rollup it chose, which depends on what the window holds; a series that is not
+    in the bundle has no query to show."""
+    window = resolve(args.since, args.until, ctx.now)
+    try:
+        served, _ = _select(ctx, args.metric, args.scope)
+    except errors.Refusal:
+        return None, window
+    return f"{served['query']} from {iso(window.since)} to {iso(window.until)}", window
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     window = resolve(args.since, args.until, ctx.now)
     served, chosen = _select(ctx, args.metric, args.scope)

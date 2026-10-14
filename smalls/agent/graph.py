@@ -253,6 +253,10 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         auto = ctx.auto_approve_now() if ctx.auto_approve_now else ctx.auto_approve
         decisions, ask = gate.apply(calls, tools, used=state.get("calls_used", 0), budget=call_limit(state, ctx),
                                     auto_approve=auto, via=ctx.via, refuse_gated=refuse)
+        # A read card shows what the read would run, before it runs (S7).
+        for card in ask:
+            if card["kind"] == "read" and card["tool"] in tools:
+                card.update(registry.preview(tools[card["tool"]], card["args"], ctx.tool_ctx) or {})
         # An action never reaches a person with evidence no tool showed.
         for card in list(ask):
             if card["kind"] != "action":

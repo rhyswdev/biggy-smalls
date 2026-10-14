@@ -209,10 +209,30 @@ def _sampled_scope(args: Any, ctx: ToolContext, window: Window) -> list[dict[str
     return derive.query(ctx, f"SELECT DISTINCT keep_1_in, sample_per FROM visible WHERE {' AND '.join(where)}", params)
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str, Window]:
+    """The native search and the resolved window a call would echo, without running it (seam S7). A count
+    adds its pipe; a tag-dependent count that would find nothing echoes no pipe when it runs."""
+    window = resolve(args.since, args.until, ctx.now)
+    signal = getattr(args, FACET, None) if ctx.tags and FACET in schemas.offered_facets() else None
+    native = _spl(args, ctx, window) + (NO_NATIVE_TAG if signal else "")
+    by = args.group_by
+    if by == "minute":
+        native += f" | timechart span={_bucket(args, window)[0]} count"
+    elif by:
+        native += NO_NATIVE_TAG if by == FACET else f" | stats count by {'punct' if by == 'template' else by}"
+    return native, window
+
+
+def _bucket(args: Any, window: Window) -> tuple[str, int]:
+    """The bucket a count by time uses: the one asked for, widened until the window needs at most 60."""
+    asked = dict(BUCKETS)[args.bucket]
+    return next(((name, ms) for name, ms in BUCKETS if ms >= asked and -(-(window.until - window.since) // ms) <= MAX_BUCKETS), BUCKETS[-1])
+
+
 def _by_time(args: Any, window: Window, rows: list[dict[str, Any]], sampled: bool) -> tuple[list[str], list[str], str]:
     """One count per bucket, zeros included, never more than 60 buckets: past that the bucket widens."""
     asked = dict(BUCKETS)[args.bucket]
-    label, width = next(((name, ms) for name, ms in BUCKETS if ms >= asked and -(-(window.until - window.since) // ms) <= MAX_BUCKETS), BUCKETS[-1])
+    label, width = _bucket(args, window)
     said = [f"[the bucket was widened from {args.bucket} to {label} to keep the table to {MAX_BUCKETS} buckets]"] if width != asked else []
     start = window.since - window.since % width
     count, estimate = Counter(), Counter()

@@ -43,6 +43,11 @@ SELECT node, min(hop) AS hop FROM reach GROUP BY node
 """
 
 
+def preview(args: Any, ctx: ToolContext) -> tuple[str, None]:
+    """What a call would echo, without running it (seam S7): no single native query, and no window."""
+    return NO_NATIVE, None
+
+
 def run(args: Any, ctx: ToolContext) -> Parts:
     name = args.entity.strip()
     graph = Graph(ctx)
