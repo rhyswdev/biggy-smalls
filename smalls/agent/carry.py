@@ -36,6 +36,7 @@ EARLIER = "The board as it stood at {as_of}, from run {run_id}. Each hypothesis 
 RESTARTED = ("The board of this run as it stands. The conversation was restarted from it to free context: what it holds was established in this run, "
              "and its cited rows were shown in this run and can still be cited.")
 RESERVED = "Rows served again for this run, one line each; get_record returns a whole record:"
+OWED = "Alert streams your alert listings showed before the restart, one line each; the report owes each a verdict:"
 DROPPED = "Not carried, and removed from the entries above: {listed}."
 WHY_NOTE, WHY_GONE, WHY_NO_CALL = "an earlier note is not carried", "it no longer resolves", "the call that minted it could not be run again"
 CONTINUITY = ("{id} was carried from the earlier look at {as_of} and cites no row that became known after it and that a call of this run showed. "
@@ -134,8 +135,10 @@ def seed(earlier: dict[str, Any], read_tools: dict[str, ToolSpec], tool_ctx: Too
 
 
 def render(hypotheses: dict[str, dict[str, Any]], timeline: list[dict[str, Any]], open_questions: list[str], *, head: str,
-           rows: dict[str, str] | None = None, dropped: dict[str, str] | None = None, retest: bool = False) -> str:
-    """The board as text, for the first turn of a later look or of a restart."""
+           rows: dict[str, str] | None = None, dropped: dict[str, str] | None = None, retest: bool = False,
+           owed: dict[str, str] | None = None) -> str:
+    """The board as text, for the first turn of a later look or of a restart. `owed` holds, for a restart, the
+    alert streams the run has listed: the report owes each a verdict (J7), so each is shown again."""
     lines = [head]
     for h in hypotheses.values():
         lines.append(f"{h['id']}  [{h.get('status')} {h.get('role')}, confidence {float(h.get('confidence') or 0):.2f}, blames {h.get('subject')}, "
@@ -150,6 +153,9 @@ def render(hypotheses: dict[str, dict[str, Any]], timeline: list[dict[str, Any]]
     if rows:
         lines.append(RESERVED)
         lines += ["    " + (text if len(text) <= ROW_CHARS else text[:ROW_CHARS] + " […]") for text in rows.values()]
+    if owed:
+        lines.append(OWED)
+        lines += ["    " + (text if len(text) <= ROW_CHARS else text[:ROW_CHARS] + " […]") for text in owed.values()]
     if dropped:
         lines.append(DROPPED.format(listed="; ".join(f"{handle} ({why})" for handle, why in dropped.items())))
     return "\n".join(lines)

@@ -34,12 +34,14 @@ def swept_alerts(messages: list[BaseMessage]) -> list[str]:
     for m in messages:
         if isinstance(m, ToolMessage) and m.name == "list_alerts":
             block = str(m.content)
+        elif isinstance(m, HumanMessage) and "the report owes each a verdict:" in str(m.content):        # after a restart
+            block = str(m.content).split("the report owes each a verdict:", 1)[1]
         elif isinstance(m, HumanMessage) and "== list_alerts " in str(m.content):
             block = str(m.content).split("== list_alerts ", 1)[1].split("\n== ", 1)[0]
         else:
             continue
         for line in block.splitlines():
-            first = line.split("  ", 1)[0].strip()
+            first = line.strip().split("  ", 1)[0]
             if is_handle(first) and first not in found:
                 found.append(first)
     return found

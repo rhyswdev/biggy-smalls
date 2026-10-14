@@ -440,18 +440,23 @@ class Runner:
         """Restart the conversation from the board (J16): a new thread, `<run_id>.<n>`, seeded with every
         channel except the messages, whose first turn is the first-turn template with the board as it
         stands. The run enters after orientation, so the agent's next turn reads the new first turn.
-        The ledger, the board, the budget and the usage all carry over; the repeat index starts again."""
+        The ledger, the board, the budget and the usage all carry over; the repeat index starts again. The alert
+        streams the run has listed carry over too, and the report still owes each a verdict (J7), so the first
+        turn shows each one again: what the agent is held to, it can see."""
         ctx = self._ctx
         n = values.get("restarts", 0) + 1
         hypotheses = values.get("hypotheses") or {}
         cited = {h for hyp in hypotheses.values() for name in carry.LISTS for h in hyp.get(name) or []}
         cited |= {h for row in values.get("timeline") or [] for h in row.get("evidence") or []}
-        rows = {r["handle"]: r["text"].split("\n", 1)[0] for r in self.record.read_jsonl("evidence.jsonl") if r["handle"] in cited}
+        shown = {r["handle"]: r["text"].split("\n", 1)[0] for r in self.record.read_jsonl("evidence.jsonl")}
+        rows = {h: text for h, text in shown.items() if h in cited}
+        owed = {h: shown.get(h, h) for h in values.get("swept") or []}
         round_now = rounds(values)
         first = prompts.first_turn(
             now=iso(ctx.now), inventory=self.toolbox.inventory(ctx.tool_ctx).text, trigger=values.get("trigger", ""),
             budget=f"{call_limit(values, ctx) - values.get('calls_used', 0)} tool calls, {turn_limit(values, ctx) - round_now} model turns",
-            prior_board=carry.render(hypotheses, values.get("timeline") or [], values.get("open_questions") or [], head=carry.RESTARTED, rows=rows))
+            prior_board=carry.render(hypotheses, values.get("timeline") or [], values.get("open_questions") or [], head=carry.RESTARTED, rows=rows,
+                                     owed=owed))
         seeded = {k: v for k, v in values.items() if k not in ("messages", "proposed", "decisions", "pending", "restart_pending")}
         seeded.update(messages=[HumanMessage(first)], hypotheses={hid: {**h, "_seed": True} for hid, h in hypotheses.items()}, restarts=n,
                       restart_round=round_now, restart_pending=False, proposed=[], status="investigating")

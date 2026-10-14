@@ -226,9 +226,13 @@ def test_a_scripted_run_with_a_low_input_limit_restarts_once_and_keeps_its_ledge
     assert "re-test" not in board_text and "Rows served again for this run" in board_text and "No space left on device" in board_text
     assert f"{small.call_budget - 7} tool calls, {small.call_budget + small.extra_turns - 3} model turns" in first      # what is left, not what it began with
     assert sum(isinstance(m, AIMessage) for m in state["messages"]) == 2 and isinstance(state["messages"][1], AIMessage)     # the agent's turn follows at once
+    # The alert streams listed before the restart are still owed a verdict, so the first turn shows each one again.
+    owed = first.split(carry.OWED, 1)[1].splitlines()[1:]
+    assert len(state["swept"]) == 3 and [line.strip().split("  ", 1)[0] for line in owed[:3]] == state["swept"]
     # The run then finishes on the new thread, citing what the earlier conversation was shown: nothing it cites is dropped.
     report = Report.model_validate(json.loads((r.dir / "report.json").read_text()))
     assert result["status"] == "completed" and {h.id for h in report.hypotheses} == {"h-full", "h-dying"}
+    assert [a.handle for a in report.alerts] == state["swept"] and {a.verdict for a in report.alerts} == {"noise"}     # judged, not unassessed
     assert report.validation.dropped == [] and report.validation.flagged == ["h:h-dying"] and len(next(h for h in report.hypotheses if h.id == "h-full").support) == 3
     assert r.record.missing() == [] and json.loads((r.dir / "summary.json").read_text())["process"]["restarts"] == 1
     r.close()
