@@ -25,6 +25,8 @@ smalls = "smalls.cli:main"
 dev = ["pytest>=8.2"]
 # The classifier SDK. Only `smalls tag` imports it; ingest, the tests and the demo never do.
 tagging = ["typesafe-sdk>=0.7.4,<0.8"]
+# The client for the cross-provider verifier profile. Nothing imports it unless a [verifier] profile names that provider.
+verifier-openai = ["langchain-openai>=1.7,<1.8"]
 
 [build-system]
 requires = ["hatchling"]

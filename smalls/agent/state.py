@@ -152,6 +152,8 @@ class InvestigationState(TypedDict, total=False):
     report_attempts: int                                                # per submission cycle
     validation: dict[str, Any] | None
     verdict: dict[str, Any] | None
+    verify_call: str | None                                             # the accepted submit_report call the verifier answers (J13)
+    first_report: dict[str, Any] | None                                 # the report a revision was asked of, for the diff
     revisions: int
     status: Literal["investigating", "verifying", "completed", "incomplete", "paused"]
     stop_reason: str | None                                             # why an incomplete run stopped
@@ -183,6 +185,7 @@ class RunContext:
     # may be new in the report and the first submission is the one that stands.
     single_call: bool = False
     evidence: Callable[[str, Any], None] | None = None      # (call_id, envelope rows) -> the evidence file
+    read_evidence: Callable[[], list[dict[str, Any]]] | None = None     # the evidence file so far, for the verifier's packets
 
     def turn_cap(self, revisions: int = 0) -> int:
         """Model turns are capped at the budget plus `extra_turns`; a revision adds 7 (J5)."""

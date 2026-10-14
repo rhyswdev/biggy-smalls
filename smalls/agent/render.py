@@ -89,6 +89,11 @@ class Renderer:
             self.c.print(f"  [yellow]cache[/] only {d['ratio']:.0%} of the input was read from cache (floor {d['floor']:.0%}): cost is climbing")
         elif t == "validation":
             self.c.print(f"  [{'green' if d.get('ok') else 'red'}]validator[/] {esc(json.dumps(d, ensure_ascii=False))}")
+        elif t == "verifier_verdict":
+            decision = d.get("decision") or {}
+            self.c.print(f"  [bold]verifier[/] {esc(str(d.get('status')))}: {len(decision.get('unsupported') or [])} leading claim(s) not supported, "
+                         f"{len(decision.get('checks') or [])} new check(s), {len(decision.get('discarded_checks') or [])} already run or invalid"
+                         + (f"; disputed: {esc(', '.join(d['disputed']))}" if d.get("disputed") else ""))
         elif t == "report":
             self._report(d["report"], d.get("status"))
         elif t == "run_paused":
@@ -117,6 +122,9 @@ class Renderer:
                          + (f" ({esc(str(p['reason']))})" if p.get("reason") else ""))
         for q in r.get("open_questions", []):
             self.c.print(f"  [dim]open: {esc(q)}[/]")
+        checked = r.get("validation") or {}
+        if checked.get("verifier"):
+            self.c.print(f"  [dim]verifier: {esc(checked['verifier'])}" + (f"; disputed: {esc(', '.join(checked['disputed']))}" if checked.get("disputed") else "") + "[/]")
 
 
 def interactive_decider(console: Console | None = None):

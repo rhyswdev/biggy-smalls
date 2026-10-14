@@ -32,14 +32,14 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 from langgraph.types import RetryPolicy, interrupt
 
-from smalls.agent import board, gate, prompts, validator
+from smalls.agent import board, gate, prompts, validator, verifier
 from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, HypothesisUpdate, toolset
 from smalls.agent.models import as_model_call_error, provider_tools, retryable
 from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext, merge_hypotheses
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.handles import ic_note_handle
 from smalls.contracts.report import Rationale, Report
-from smalls.tools import errors, registry, windows
+from smalls.tools import errors, registry
 from smalls.tools.registry import ToolContext, ToolSpec
 
 Inventory = Callable[[ToolContext], Envelope]
@@ -98,9 +98,12 @@ def partial_report(state: dict[str, Any], why: str) -> dict[str, Any]:
 
 def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory: Inventory, *, provider: str = "scripted",
                 bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None, strict: bool = True,
-                fallback: tuple[BaseChatModel, str, dict[str, Any]] | None = None, offered: tuple[str, ...] | None = None):
+                fallback: tuple[BaseChatModel, str, dict[str, Any]] | None = None, offered: tuple[str, ...] | None = None,
+                verify: dict[str, Any] | None = None):
     """`offered` names the tools the model is given, when that is fewer than the run has: the harness can
-    still call the rest, as the opening sweep does."""
+    still call the rest, as the opening sweep does. `verify` holds the verifier's passes, each a bound
+    model with its system prompt, under `claims`, `contrarian` and `recheck`; without it no report is
+    verified."""
     tools = toolset(read_tools)
     definitions = [registry.definition(spec, texts) for spec in tools.values() if offered is None or spec.name in offered]
     bound = model.bind_tools(provider_tools(definitions, provider, strict=strict), **(bind_kwargs or {}))
@@ -255,6 +258,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         ledger: list[LedgerEntry] = []
         update: dict[str, Any] = {}
         accepted = None
+        accepted_call = None
 
         for call in state.get("proposed") or []:
             d = decisions[call["call_id"]]
@@ -296,7 +300,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                     attempts = result["attempts"]
                     update["validation"] = result["validation"]
                     if result.get("report"):
-                        accepted = result["report"]
+                        accepted, accepted_call = result["report"], call["call_id"]
                         if result["merged"]:
                             update.setdefault("hypotheses", {}).update(result["merged"])
                             current = merge_hypotheses(current, result["merged"])
@@ -359,19 +363,15 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         update.update(messages=messages, ledger=ledger, calls_used=used, report_attempts=attempts, proposed=[])
         if accepted is not None:
             update["report"] = accepted
+            if verify and ctx.verifier and not ctx.single_call:
+                # The verifier answers this call, so its verdict can come back as the call's own result (J13).
+                update.update(messages=[m for m in messages if getattr(m, "tool_call_id", None) != accepted_call], verify_call=accepted_call,
+                              status="verifying")
         return update
 
     def _identity(spec: ToolSpec, call: Call, ctx: RunContext) -> str | None:
-        """What makes two calls the same call: the tool and its validated arguments, with defaults filled
-        and relative times resolved, without the rationale (J4). None when the arguments do not validate."""
-        try:
-            data = spec.args.model_validate(call["args"]).model_dump()
-            if data.get("since"):
-                window = windows.resolve(data["since"], data.get("until"), ctx.now)
-                data["since"], data["until"] = window.iso
-        except Exception:
-            return None
-        return json.dumps({"tool": spec.name, **data}, sort_keys=True, default=str)
+        """What makes two calls the same call (J4): the verifier asks the same question of a proposed check."""
+        return verifier.identity(spec, call["args"], ctx.now)
 
     def _run(spec: ToolSpec, call: Call, ctx: RunContext) -> Envelope:
         if call.get("by", "agent") == "agent":      # the model owes a reason for every gated call
@@ -436,12 +436,73 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         report["alerts"] = [*report["alerts"], *({"handle": h, "verdict": "unassessed"} for h in unjudged)]    # code adds these, never the model
         merged = {hid: {k: ([h for h in v if h not in bad] if isinstance(v, list) else v) for k, v in upd.items()} for hid, upd in merged.items()}
         validation = {"ok": not (bad or problems or flagged or unjudged), "attempts": attempts + 1, "dropped": bad, "flagged": flagged,
-                      "continuity": None}
+                      "continuity": None, "verifier": None, "disputed": []}
         report["validation"] = validation
         result.update(attempts=attempts, validation=validation, merged=merged, report=report)
         return Envelope(" ".join([ACCEPTED, *(n + "." for n in notes)])), result
 
+    def verify_node(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        """The verifier's passes over an accepted report, and what code decides from them. The first time,
+        claim support and the contrarian case; after a revision, claim support on what the revision changed."""
+        ctx = runtime.context
+        writer = get_stream_writer()
+        report, call_id, round_now = state["report"], state["verify_call"], rounds(state)
+        evidence = ctx.read_evidence() if ctx.read_evidence else []
+        usage: list[dict[str, Any]] = []
+
+        def run(which: str, turn: str) -> verifier.SubmitVerdictArgs | None:
+            bound_pass, system_prompt = verify[which]
+            try:
+                verdict, rows = verifier.ask(bound_pass, system_prompt, turn)
+            except Exception as error:
+                raise as_model_call_error(error) from None
+            for row in rows:
+                row = {"node": f"verifier_{which}", "round": round_now, **row}
+                writer({"type": "model_call", **row})
+                usage.append(row)
+            return verdict
+
+        def answer(text: str, ok: bool) -> ToolMessage:
+            return ToolMessage(text, tool_call_id=call_id, name=SUBMIT_REPORT, status="success" if ok else "error")
+
+        def stands(verdict: dict[str, Any], *judged: Any) -> dict[str, Any]:
+            final = {**report, "validation": {**(report.get("validation") or {}), "verifier": verdict["status"],
+                                              "disputed": verifier.disputed(report, *judged)}}
+            writer({"type": "verifier_verdict", "status": verdict["status"], "disputed": final["validation"]["disputed"],
+                    "decision": verdict["decision"], "diff": verdict.get("diff")})
+            return {"messages": [answer(ACCEPTED, True)], "usage": usage, "verdict": verdict, "report": final, "verify_call": None}
+
+        first = state.get("verdict")
+        if state.get("revisions", 0) and first:         # the re-check: only what the revision added or changed
+            diff = verifier.changed_claims(state.get("first_report") or {}, report)
+            only = set(diff["added"]) | set(diff["changed"])
+            again = run(verifier.RECHECK, verifier.user_turn(report, evidence, verifier.RECHECK, only=only)) if only and verifier.RECHECK in verify else None
+            kept = {"claims": [c for c in (first.get("claims") or {}).get("claims", []) if c["id"] not in only]}
+            return stands({**first, "status": "revised", "recheck": again.model_dump() if again else None, "diff": diff}, kept, again)
+        claims = run(verifier.CLAIMS, verifier.user_turn(report, evidence, verifier.CLAIMS)) if verifier.CLAIMS in verify else None
+        contrarian = (run(verifier.CONTRARIAN, verifier.user_turn(report, evidence, verifier.CONTRARIAN, digest_tokens=verify.get("digest_tokens", 1500)))
+                      if verifier.CONTRARIAN in verify else None)
+        decision = verifier.decide(report, claims, contrarian, read_tools=read_tools, ledger=state.get("ledger", []),
+                                   shown={row["handle"] for row in evidence}, now=ctx.now)
+        verdict = {"claims": claims.model_dump() if claims else None, "contrarian": contrarian.model_dump() if contrarian else None,
+                   "decision": decision, "status": "pass" if (claims or contrarian) else "unverified", "recheck": None, "diff": None}
+        if decision["revise"] and not state.get("revisions", 0) and not state.get("stop_reason"):
+            verdict["status"] = "revise"
+            turns = ctx.turn_cap(1) - ctx.turn_cap(0)
+            line = board.status_line(state.get("hypotheses") or {}, round=round_now, used=state.get("calls_used", 0), limit=ctx.budget(1),
+                                     turns_left=ctx.turn_cap(1) - round_now)
+            writer({"type": "verifier_verdict", "status": "revise", "disputed": [], "decision": decision, "diff": None})
+            return {"messages": [answer(verifier.sent_back(decision, calls=ctx.revision_calls, turns=turns) + "\n" + line, False)], "usage": usage,
+                    "verdict": verdict, "first_report": report, "report": None, "verify_call": None, "revisions": 1, "report_attempts": 0,
+                    "status": "investigating"}
+        return stands(verdict, claims)
+
+    def route_verify(state: InvestigationState) -> str:
+        return "finalize" if state.get("report") else "agent"
+
     def route_tools(state: InvestigationState, runtime: Runtime[RunContext]) -> str:
+        if state.get("report") and state.get("verify_call"):
+            return "verify"
         if state.get("report") or state.get("stop_reason"):
             return "finalize"
         if rounds(state) >= runtime.context.turn_cap(state.get("revisions", 0)):   # internal calls are free, so turns are capped too
@@ -467,6 +528,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
     g.add_node("gate", gate_node)
     g.add_node("ask", ask)
     g.add_node("tools", tools_node)
+    g.add_node("verify", verify_node, retry_policy=retry)
     g.add_node("finalize", finalize)
     g.add_edge(START, "orient")
     g.add_edge("orient", "sweep")
@@ -474,6 +536,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
     g.add_conditional_edges("agent", route_agent, ["gate", "finalize"])
     g.add_conditional_edges("gate", route_gate, ["ask", "tools"])
     g.add_edge("ask", "tools")
-    g.add_conditional_edges("tools", route_tools, ["agent", "finalize"])
+    g.add_conditional_edges("tools", route_tools, ["agent", "verify", "finalize"])
+    g.add_conditional_edges("verify", route_verify, ["agent", "finalize"])
     g.add_edge("finalize", END)
     return g.compile(checkpointer=checkpointer)

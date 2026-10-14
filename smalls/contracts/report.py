@@ -146,6 +146,8 @@ class Validation(Strict):
     dropped: list[str] = Field(default_factory=list)        # handles removed because no tool showed them
     flagged: list[str] = Field(default_factory=list)        # claim ids left with no handle
     continuity: Literal["passed", "failed"] | None = None   # the carry-forward check; None when nothing was carried
+    verifier: Literal["pass", "revised", "unverified"] | None = None    # what the verifier did; None when it did not run
+    disputed: list[str] = Field(default_factory=list)       # claim ids the verifier left short of supported
 
 
 class Report(Strict):

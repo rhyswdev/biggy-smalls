@@ -137,7 +137,8 @@ def cmd_run(args: argparse.Namespace) -> int:
     decider = interactive_decider(console) if attended else (headless(args.headless) if args.headless else None)
     toolbox = _toolbox(args)
     run = Runner(cfg, toolbox, args.run_id, sinks=[Renderer(console, not args.no_thinking)], decider=decider,
-                 stop_at_gate=args.stop_at_gate, attended=attended, eval_run=args.eval_run, script=args.script, durability=args.durability)
+                 stop_at_gate=args.stop_at_gate, attended=attended, eval_run=args.eval_run, script=args.script, durability=args.durability,
+                 verifier_scripts=dict(pair.split("=", 1) for pair in args.verifier_script or [] if "=" in pair))
     result = run.start(trigger, parse_now(args.now, toolbox.describe.get("bundle") and args.bundle), checkpoint=args.checkpoint,
                        arm=args.arm, channel=args.channel)
     run.close()
@@ -171,6 +172,7 @@ def cmd_resume(args: argparse.Namespace) -> int:
         toolbox.read_tools = {name: spec for name, spec in toolbox.read_tools.items() if name in saved["read_tools"]}
     run = Runner(cfg, toolbox, args.run_id, sinks=[Renderer(console)], decider=decider, attended=attended,
                  eval_run=saved.get("eval_run", False), script=saved.get("script"), offered=tuple(saved.get("offered") or ()) or None,
+                 verifier_scripts=saved.get("verifier_scripts"),
                  durability=None if saved.get("durability") in (None, "async") else saved["durability"])
     result = run.resume(note=args.note)
     run.close()
@@ -262,6 +264,8 @@ def add_run_commands(sub) -> None:
     run.add_argument("--no-thinking", action="store_true")
     run.add_argument("--registry", metavar="MODULE", help="a module exposing registry() and inventory(), in place of the bundle's tools")
     run.add_argument("--script", metavar="MODULE:FUNCTION", help="the script the scripted profile plays")
+    run.add_argument("--verifier-script", action="append", metavar="PASS=MODULE:FUNCTION",
+                     help="with the scripted profile: the script a verifier pass plays (claims= or contrarian=); none means no verifier")
     run.set_defaults(run=cmd_run)
 
     resume = sub.add_parser("resume", help="resume a run paused at a gate")

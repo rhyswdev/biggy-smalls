@@ -314,7 +314,7 @@ def test_a_claim_with_no_handle_gets_the_retry_then_is_kept_and_flagged(cfg):
     state = report_from(edit_report(strip_evidence), cfg, "flagged")
     refusal = next(m for m in state["messages"] if isinstance(m, ToolMessage) and m.name == "submit_report")
     assert "t:1: cites no handle." in refusal.content and "d:1: cites no handle." in refusal.content
-    assert state["validation"] == {"ok": False, "attempts": 2, "dropped": [], "flagged": ["d:1", "t:1"], "continuity": None}
+    assert state["validation"] == {"ok": False, "attempts": 2, "dropped": [], "flagged": ["d:1", "t:1"], "continuity": None, "verifier": None, "disputed": []}
     assert len(state["report"]["timeline"]) == 2 and state["report"]["timeline"][0]["evidence"] == []     # kept, and flagged
 
 

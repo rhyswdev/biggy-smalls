@@ -519,6 +519,30 @@
           ],
           "default": null,
           "title": "Continuity"
+        },
+        "verifier": {
+          "anyOf": [
+            {
+              "enum": [
+                "pass",
+                "revised",
+                "unverified"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verifier"
+        },
+        "disputed": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Disputed",
+          "type": "array"
         }
       },
       "required": [

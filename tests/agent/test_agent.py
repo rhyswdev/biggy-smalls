@@ -169,7 +169,7 @@ def test_the_report_cites_specific_rows_inline_and_in_support(cfg):
     leading = next(h for h in report["hypotheses"] if h["status"] == "leading")
     assert leading["id"] == "h-release" and len(leading["support"]) == 5 and leading["source"] == "derived"
     assert leading["history"] == [{"as_of": "2026-03-02T02:20:00Z", "status": "leading", "confidence": 0.65, "because": leading["history"][0]["because"]}]
-    assert report["validation"] == {"ok": True, "attempts": 1, "dropped": [], "flagged": [], "continuity": None}
+    assert report["validation"] == {"ok": True, "attempts": 1, "dropped": [], "flagged": [], "continuity": None, "verifier": None, "disputed": []}
 
 
 def test_interactive_mode_gates_reads_too(tmp_path):
@@ -193,7 +193,7 @@ def test_the_validator_refuses_an_unknown_handle_once_then_accepts(cfg):
     state = r.state()
     r.close()
     assert result["status"] == "completed" and state["report_attempts"] == 1
-    assert state["validation"] == {"ok": True, "attempts": 2, "dropped": [], "flagged": [], "continuity": None}
+    assert state["validation"] == {"ok": True, "attempts": 2, "dropped": [], "flagged": [], "continuity": None, "verifier": None, "disputed": []}
     assert "log:worker-01/deadbeef" not in json.dumps(state["report"])
     refusal = next(m for m in state["messages"] if isinstance(m, ToolMessage) and m.name == "submit_report")
     assert refusal.status == "error" and "log:worker-01/deadbeef" in refusal.content and refusal.content.startswith("Report not accepted.")
@@ -213,7 +213,7 @@ def test_a_handle_that_stays_bad_is_dropped_and_recorded(cfg):
     state = r.state()
     r.close()
     assert result["status"] == "completed"
-    assert state["validation"] == {"ok": False, "attempts": 2, "dropped": ["log:worker-01/deadbeef"], "flagged": ["d:1"], "continuity": None}
+    assert state["validation"] == {"ok": False, "attempts": 2, "dropped": ["log:worker-01/deadbeef"], "flagged": ["d:1"], "continuity": None, "verifier": None, "disputed": []}
     claims = {k: v for k, v in state["report"].items() if k != "validation"}      # the validation block is where it is recorded
     assert "log:worker-01/deadbeef" not in json.dumps(claims) and state["report"]["do_not"][0]["evidence"] == []
     assert state["report"]["validation"] == state["validation"]

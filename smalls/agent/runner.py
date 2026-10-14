@@ -28,12 +28,12 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.errors import GraphRecursionError
 from langgraph.types import Command
 
-from smalls.agent import gate, metrics, prompts
+from smalls.agent import gate, metrics, prompts, verifier
 from smalls.agent.config import SCRIPTED, Config
 from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
 from smalls.agent.graph import build_graph, iso, partial_report
 from smalls.agent.internal_tools import toolset
-from smalls.agent.models import ModelCallError, import_local, input_limit, make_model, reasoning_text
+from smalls.agent.models import ModelCallError, import_local, input_limit, make_model, provider_tools, reasoning_text
 from smalls.agent.record import RunRecord, RunsIndex, commit, cost, key_names, new_run_id, scrub, sha, usage_totals, versions
 from smalls.contracts.handles import ic_note_handle
 from smalls.agent.state import RunContext
@@ -89,7 +89,7 @@ class Runner:
     def __init__(self, cfg: Config, toolbox: Toolbox, run_id: str | None = None, *, sinks: list[Sink] | None = None,
                  decider: Decider | None = None, stop_at_gate: bool = False, attended: bool = False, eval_run: bool = False,
                  script: Any = None, durability: str | None = None, fallback_script: Any = None, offered: tuple[str, ...] | None = None,
-                 single_call: bool = False):
+                 single_call: bool = False, verifier_scripts: dict[str, Any] | None = None):
         self.cfg = cfg
         self.toolbox = toolbox
         self.record = RunRecord(cfg.runs_dir, run_id or new_run_id())
@@ -121,10 +121,12 @@ class Runner:
             other = other.with_params(script=fallback_script or self.script) if other.provider == SCRIPTED else other
             other_model, other_bind = make_model(other, timeout_s=cfg.timeout_s)
             fallback = (other_model, other.provider, other_bind)
+        self.verifier_scripts = dict(verifier_scripts or {})
+        self.verify, self.verifier_profiles = self._verifier()
         self.conn = sqlite3.connect(self.record.checkpoints(), check_same_thread=False)
         self.graph = build_graph(self.model, toolbox.read_tools, toolbox.inventory, provider=spec.provider, bind_kwargs=bind,
                                  checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)), fallback=fallback,
-                                 offered=self.offered)
+                                 offered=self.offered, verify=self.verify)
         self.index = RunsIndex(cfg.runs_dir)
         self._thinking: list[str] = []          # this model call's reasoning, whole
         self._unsent: list[str] = []            # the part not yet emitted as a delta
@@ -132,6 +134,44 @@ class Runner:
         self.config = {"configurable": {"thread_id": self.run_id}, "recursion_limit": 6 * (cfg.call_budget + cfg.extra_turns) + 40}
         self._ctx: RunContext | None = None
         self._investigating = False
+
+    def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
+        """The verifier's passes, each a model bound to `submit_verdict` with its prompt, and the profile
+        behind each. A live run takes the two profiles the config names; either may be left empty to cut
+        that pass. A scripted run verifies only with the scripts it was given, so a run that brings none
+        is not verified. A single-call run never is."""
+        cfg = self.cfg
+        if not cfg.verifier.get("enabled") or self.single_call:
+            return None, {}
+        definition = [registry.definition(verifier.spec())]
+
+        def bound(spec: Any) -> Any:
+            try:
+                model, bind = make_model(spec, timeout_s=cfg.timeout_s)
+            except ImportError as missing:
+                raise SystemExit(f"the verifier profile {spec.profile!r} needs a client that is not installed ({missing.name}). "
+                                 "Install its dependency group, or name another profile under [verifier].") from None
+            return model.bind_tools(provider_tools(definition, spec.provider, strict=bool(spec.params.get("strict_tools", True))), **bind)
+
+        passes: dict[str, Any] = {}
+        profiles: dict[str, str] = {}
+        for which, key in ((verifier.CLAIMS, "claims_profile"), (verifier.CONTRARIAN, "contrarian_profile")):
+            if self.spec.provider == SCRIPTED:
+                script = self.verifier_scripts.get(which)
+                spec = self.spec.with_params(script=script) if script else None
+            else:
+                name = cfg.verifier.get(key)
+                if name and name not in cfg.profiles:
+                    raise SystemExit(f"[verifier] {key} names no profile: {name!r}")
+                spec = cfg.profiles[name] if name else None
+            if spec is not None:
+                passes[which] = (bound(spec), prompts.load(f"verifier_{which}"))
+                profiles[which] = spec.profile
+        if not passes:
+            return None, {}
+        if verifier.CLAIMS in passes:       # the re-check after a revision is claim support again, on what changed
+            passes[verifier.RECHECK] = passes[verifier.CLAIMS]
+        return {**passes, "digest_tokens": int(cfg.verifier.get("digest_tokens", 1500))}, profiles
 
     # -- entry points --------------------------------------------------------------------------------------
 
@@ -146,6 +186,8 @@ class Runner:
             "tools_sha": sha(json.dumps(definitions, sort_keys=True)), "sweep": self.cfg.sweep, "versions": versions(),
             "key_variables": key_names(), "runner": os.environ.get("SMALLS_RUNNER", "host"), "eval_run": self.eval_run,
             "durability": self.durability or "async", "read_tools": list(self.toolbox.read_tools), "offered": list(self.offered) if self.offered else None,
+            "verifier": self.verifier_profiles or None,
+            "verifier_scripts": {k: v for k, v in self.verifier_scripts.items() if isinstance(v, str)} or None,
             "config": self.cfg.public(),
             "context": {"now": now.isoformat(), "checkpoint": checkpoint, "channel": channel, "call_budget": self._ctx.call_budget,
                         "extra_turns": self._ctx.extra_turns, "revision_calls": self._ctx.revision_calls,
@@ -200,8 +242,9 @@ class Runner:
             max_tokens=saved.get("max_tokens", int(self.spec.params.get("max_tokens") or 0)),
             auto_approve=saved.get("auto_approve", cfg.auto_approve), via="cli" if self.attended else "headless",
             checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
-            sweep=saved.get("sweep", dict(cfg.sweep)), verifier=saved.get("verifier", bool(cfg.verifier.get("enabled"))),
-            single_call=saved.get("single_call", self.single_call), evidence=self.record.evidence)
+            sweep=saved.get("sweep", dict(cfg.sweep)), verifier=bool(self.verify) and saved.get("verifier", True),
+            single_call=saved.get("single_call", self.single_call), evidence=self.record.evidence,
+            read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"))
 
     # -- the loop ------------------------------------------------------------------------------------------
 
@@ -350,6 +393,8 @@ class Runner:
                     self.bus.emit("validation", **update["validation"])
                 if update.get("report"):
                     self.bus.emit("draft_report", report=update["report"])
+                if update.get("verify_call"):
+                    self.bus.emit("phase", name="verify")
             elif node == "finalize":
                 self.bus.emit("report", report=update["report"], status=update["status"])
 
