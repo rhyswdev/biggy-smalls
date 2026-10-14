@@ -27,6 +27,16 @@ findings:
     pass: 2
     after: {p02-C-1452-tags-r1: {disputed: 10}, p02-C-1452-tags-r2: {disputed: 10}, p02-C-1440-tags-r1: {disputed: 10}, all: {claims: 80, partial: 26}}
     status: kept (020e74b)
+  F-03:
+    kind: prompt
+    layer: reasoning
+    text: eval/findings/F-03.md
+    runs:
+      open_at_floor_no_question: [sol-shake-C-1452-tags-r1, sol-base-C-1452-tags-r1, sol-base-C-1452-tags-r2, p02-C-1452-tags-r1, p02-C-1452-tags-r2]
+      rejected: [p01-C-1452-tags-r1, p01-C-1452-tags-r2]
+    review: the first draft named the checkpoint, the confidence values and the row counts, and the overfit reviewer
+      flagged it as steering rival dispositions toward the answer; the generic rewrite passed (0 of 1 flagged)
+    status: pass 3 running
 probes:
   effort-low:
     what: the investigator at low effort, the rest of the sol set unchanged, on the original five files
