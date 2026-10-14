@@ -33,11 +33,11 @@ from langchain_core.messages import HumanMessage
 
 from smalls.agent import carry, gate, metrics, prompts, verifier
 from smalls.agent.config import SCRIPTED, Config
-from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
+from smalls.agent.events import Bus, Sink
 from smalls.agent.graph import FOLLOWUP, FOLLOWUP_TURNS, NOTE_ROW, build_graph, call_limit, iso, partial_report, rounds, turn_limit
 from smalls.agent.internal_tools import toolset
 from smalls.agent.models import ModelCallError, import_local, input_limit, make_model, provider_tools, reasoning_text
-from smalls.agent.record import RunRecord, RunsIndex, commit, cost, key_names, new_run_id, scrub, sha, usage_totals, versions
+from smalls.agent.record import FileBackend, RunRecord, SqliteBackend, commit, cost, key_names, new_run_id, scrub, sha, usage_totals, versions
 from smalls.contracts.handles import ic_note_handle
 from smalls.agent.state import RunContext
 from smalls.contracts.envelope import Envelope
@@ -92,14 +92,19 @@ class Runner:
     def __init__(self, cfg: Config, toolbox: Toolbox, run_id: str | None = None, *, sinks: list[Sink] | None = None,
                  decider: Decider | None = None, stop_at_gate: bool = False, attended: bool = False, eval_run: bool = False,
                  script: Any = None, durability: str | None = None, fallback_script: Any = None, offered: tuple[str, ...] | None = None,
-                 single_call: bool = False, verifier_scripts: dict[str, Any] | None = None):
+                 single_call: bool = False, verifier_scripts: dict[str, Any] | None = None,
+                 backend: FileBackend | SqliteBackend | None = None, checkpointer: sqlite3.Connection | None = None):
+        """`backend` holds the run record: files under `cfg.runs_dir` by default, or a SQLite database
+        (seam S8). `checkpointer` is a connection for the checkpointer, which the caller owns; without one
+        the backend opens the run's own."""
         self.cfg = cfg
         self.toolbox = toolbox
-        self.record = RunRecord(cfg.runs_dir, run_id or new_run_id())
+        self.backend = backend or FileBackend(cfg.runs_dir)
+        self.record = RunRecord(cfg.runs_dir, run_id or new_run_id(), backend=self.backend)
         self.run_id = self.record.run_id
         self.dir = self.record.dir
-        self.jsonl = JsonlSink(self.record.path("events.jsonl"))
-        self.bus = Bus(self.run_id, [self.jsonl, *(sinks or [])], start_seq=last_seq(self.record.path("events.jsonl")))
+        self.events_sink = self.record.events_sink()
+        self.bus = Bus(self.run_id, [self.events_sink, *(sinks or [])], start_seq=self.record.last_seq())
         self.attended = attended
         self.eval_run = eval_run
         self.stop_at_gate = stop_at_gate
@@ -126,11 +131,12 @@ class Runner:
             fallback = (other_model, other.provider, other_bind)
         self.verifier_scripts = dict(verifier_scripts or {})
         self.verify, self.verifier_profiles = self._verifier()
-        self.conn = sqlite3.connect(self.record.checkpoints(), check_same_thread=False)
+        self._own_conn = checkpointer is None
+        self.conn = checkpointer if checkpointer is not None else self.backend.checkpointer(self.run_id)
         self.graph = build_graph(self.model, toolbox.read_tools, toolbox.inventory, provider=spec.provider, bind_kwargs=bind,
                                  checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)), fallback=fallback,
                                  offered=self.offered, verify=self.verify)
-        self.index = RunsIndex(cfg.runs_dir)
+        self.index = self.backend.index()
         self._thinking: list[str] = []          # this model call's reasoning, whole
         self._unsent: list[str] = []            # the part not yet emitted as a delta
         self._last_flush = 0.0
@@ -183,7 +189,7 @@ class Runner:
     def start(self, trigger: str, now: datetime, *, checkpoint: str | None = None, arm: str = "C", channel: str | None = None,
               carry_from: str | None = None) -> dict[str, Any]:
         """`carry_from` names an earlier run of the same incident: this run starts from its board (J8)."""
-        self._carry = carry.load(self.cfg.runs_dir, carry_from) if carry_from else None
+        self._carry = carry.load(self.backend, carry_from) if carry_from else None
         if self._carry and self._carry["as_of"] >= iso(now):
             raise SystemExit(f"cannot carry forward from {carry_from}: its board is as of {self._carry['as_of']}, which is not before this run's now")
         self._ctx = self._context(now, checkpoint=checkpoint, channel=channel)
@@ -525,7 +531,7 @@ class Runner:
 
     def _write_derived(self, values: dict[str, Any], wall_s: float) -> dict[str, Any]:
         usage_calls = self._usage_calls(values)
-        events = read_events(self.record.path("events.jsonl"))
+        events = self.record.events()
         counts: dict[str, int] = {}
         for event in events:
             counts[event.type] = counts.get(event.type, 0) + 1
@@ -547,7 +553,7 @@ class Runner:
                    "tokens": usage_totals(usage_calls), "events": counts,
                    "process": metrics.process(values, usage_calls, counts, budget=call_limit(values, self._ctx),
                                               turn_cap=turn_limit(values, self._ctx)) if self._ctx else None,
-                   "event_bytes": self.record.path("events.jsonl").stat().st_size, "dropped_sinks": self.bus.dropped}
+                   "event_bytes": self.record.size("events.jsonl"), "dropped_sinks": self.bus.dropped}
         self.record.write_derived(values, usage_calls, summary)
         return summary
 
@@ -564,5 +570,6 @@ class Runner:
         return self.graph.get_state(self.config).values
 
     def close(self) -> None:
-        self.jsonl.close()
-        self.conn.close()
+        self.events_sink.close()
+        if self._own_conn:
+            self.conn.close()

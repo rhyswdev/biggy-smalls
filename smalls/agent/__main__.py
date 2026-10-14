@@ -179,31 +179,38 @@ def cmd_resume(args: argparse.Namespace) -> int:
     return 0 if result["status"] in ("completed", "paused") and not result.get("error") else 1
 
 
+def _record(run: str):
+    """A run record named by its id, under the configured runs folder, or by the path of its folder."""
+    from smalls.agent.config import load_config
+    from smalls.agent.record import FileBackend, RunRecord
+
+    folder = Path(run)
+    if folder.is_dir():
+        return RunRecord(None, folder.resolve().name, backend=FileBackend(folder.resolve().parent))
+    return RunRecord(load_config().runs_dir, run)
+
+
 def cmd_replay(args: argparse.Namespace) -> int:
     from rich.console import Console
 
-    from smalls.agent.config import load_config
-    from smalls.agent.events import read_events
     from smalls.agent.render import Renderer
 
-    folder = Path(args.run_id) if Path(args.run_id).is_dir() else load_config().runs_dir / args.run_id
-    log = folder / "events.jsonl"
-    if not log.is_file():
-        raise SystemExit(f"no run record at {folder}")
+    record = _record(args.run_id)
+    if record.read_text("events.jsonl") is None:
+        raise SystemExit(f"no run record for {args.run_id}")
     renderer = Renderer(Console(highlight=False), not args.no_thinking)
-    for event in read_events(log):
+    for event in record.events():
         renderer.emit(event)
     return 0
 
 
 def cmd_show(args: argparse.Namespace) -> int:
-    from smalls.agent.config import load_config
     from smalls.agent.render import show
 
-    folder = Path(args.run_id) if Path(args.run_id).is_dir() else load_config().runs_dir / args.run_id
-    if not (folder / "evidence.jsonl").is_file():
-        raise SystemExit(f"no run record at {folder}")
-    return show(folder, args.handle)
+    record = _record(args.run_id)
+    if record.read_text("evidence.jsonl") is None:
+        raise SystemExit(f"no run record for {args.run_id}")
+    return show(record, args.handle)
 
 
 def cmd_blind(args: argparse.Namespace) -> int:

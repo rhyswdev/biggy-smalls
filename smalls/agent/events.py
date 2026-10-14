@@ -117,8 +117,13 @@ class Bus:
 
 def read_events(path: Path) -> list[Event]:
     """Every whole event in a log. A torn line is skipped, not raised on."""
+    return parse_events(path.read_text(encoding="utf-8"))
+
+
+def parse_events(text: str) -> list[Event]:
+    """Every whole event in the text of a log, from a file or a database."""
     out = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in text.splitlines():
         try:
             d = json.loads(line)
             out.append(Event(type=d["type"], data=d["data"], run_id=d["run_id"], seq=d["seq"], t_wall=d["t_wall"]))

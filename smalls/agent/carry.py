@@ -42,16 +42,25 @@ CONTINUITY = ("{id} was carried from the earlier look at {as_of} and cites no ro
               "Cite such a row in its support, or change which hypothesis leads")
 
 
-def load(runs_dir: Path, run_id: str) -> dict[str, Any]:
-    """What a later look needs of an earlier run: its board, its report's hypotheses and its calls."""
-    folder = Path(runs_dir) / run_id
+def load(source: Path | Any, run_id: str) -> dict[str, Any]:
+    """What a later look needs of an earlier run: its board, its report's hypotheses and its calls. `source`
+    is the runs folder or a run-record backend; either way the record is read through `RunRecord`."""
+    from smalls.agent.record import FileBackend, RunRecord
+
+    backend = source if hasattr(source, "read_text") else FileBackend(source)
+    record = RunRecord(None, run_id, backend=backend)
 
     def read(name: str) -> Any:
-        return json.loads((folder / name).read_text(encoding="utf-8"))
+        text = record.read_text(name)
+        if text is None:
+            raise FileNotFoundError(name)
+        return json.loads(text)
 
     try:
         board, report = read("board.json"), read("report.json") or {}
-        calls = [json.loads(line) for line in (folder / "calls.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+        calls = [json.loads(line) for line in (record.read_text("calls.jsonl") or "").splitlines() if line.strip()]
+        if record.read_text("calls.jsonl") is None:
+            raise FileNotFoundError("calls.jsonl")
     except (OSError, ValueError) as problem:
         raise SystemExit(f"cannot carry forward from {run_id}: its run record is not readable ({type(problem).__name__})") from None
     if not board.get("as_of"):

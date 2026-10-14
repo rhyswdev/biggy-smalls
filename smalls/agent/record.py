@@ -16,6 +16,13 @@ section 7.2). Every eval layer reads these, and a replay needs nothing else.
 | checkpoints.sqlite  | the checkpointer; git-ignored                                                      |
 
 A run record stores the names of the key variables that were set, never their values.
+
+Where a record lives is a backend (seam S8 in docs/decisions/ui-build.md). `FileBackend` is the layout
+above, under a runs folder, with the index in `index.sqlite` beside the run folders: the default, and what
+the CLI, the eval and the scorer read. `SqliteBackend` keeps the same files as tables of one SQLite
+database, one table per file and one for the index, keyed by run id, so a server can hold every run in
+memory and write nothing to disk; `RunRecord.export` writes such a run out in the file layout. Everything
+that reads a record (resume, carry-forward, replay, the next event number) reads through the backend.
 """
 
 from __future__ import annotations
@@ -24,12 +31,16 @@ import hashlib
 import json
 import os
 import re
+import sqlite3
 import subprocess
+import threading
 import uuid
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any, Iterable
+
+from smalls.agent.events import Event, parse_events
 
 RUN_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
 KEY_NAME = re.compile(r"(API_KEY|TOKEN|SECRET|PASSWORD)", re.I)
@@ -94,34 +105,184 @@ def scrub(text: str) -> str:
 
 class RunsIndex:
     """`eval/runs/index.sqlite`: one row per run, kept current at start, pause, finish and failure. It is
-    rebuilt from the run folders if lost, and it is git-ignored."""
+    rebuilt from the run folders if lost, and it is git-ignored. Under the SQLite backend the same rows are
+    a table of that database."""
 
     COLUMNS = ("run_id", "status", "created", "last_event_at", "checkpoint", "arm", "now", "profile", "prompt_sha", "tools_sha",
                "commit_sha", "tags", "cost_usd", "stop_reason")
 
-    def __init__(self, runs_dir: Path):
-        self.path = Path(runs_dir) / "index.sqlite"
+    def __init__(self, runs_dir: Path | None = None, *, conn: sqlite3.Connection | None = None, table: str = "runs",
+                 lock: threading.Lock | None = None):
+        self.path = Path(runs_dir) / "index.sqlite" if runs_dir is not None else None
+        self.conn, self.table, self.lock = conn, table, lock or threading.Lock()
+
+    def _ddl(self) -> str:
+        return f"CREATE TABLE IF NOT EXISTS {self.table} ({', '.join(c + (' TEXT PRIMARY KEY' if c == 'run_id' else '') for c in self.COLUMNS)})"
 
     def upsert(self, **row: Any) -> None:
-        import sqlite3
-
+        sql = f"INSERT OR REPLACE INTO {self.table} ({', '.join(self.COLUMNS)}) VALUES ({', '.join('?' * len(self.COLUMNS))})"
+        if self.conn is not None:
+            with self.lock, self.conn:
+                self.conn.execute(self._ddl())
+                self.conn.execute(sql, tuple(row.get(c) for c in self.COLUMNS))
+            return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(self.path, timeout=5)
         with conn:
-            conn.execute(f"CREATE TABLE IF NOT EXISTS runs ({', '.join(c + (' TEXT PRIMARY KEY' if c == 'run_id' else '') for c in self.COLUMNS)})")
-            conn.execute(f"INSERT OR REPLACE INTO runs ({', '.join(self.COLUMNS)}) VALUES ({', '.join('?' * len(self.COLUMNS))})",
-                         tuple(row.get(c) for c in self.COLUMNS))
+            conn.execute(self._ddl())
+            conn.execute(sql, tuple(row.get(c) for c in self.COLUMNS))
         conn.close()
 
     def rows(self, where: str = "1 = 1", params: tuple = ()) -> list[dict[str, Any]]:
-        import sqlite3
-
+        sql = f"SELECT {', '.join(self.COLUMNS)} FROM {self.table} WHERE {where} ORDER BY created"
+        if self.conn is not None:
+            with self.lock:
+                self.conn.execute(self._ddl())
+                return [dict(zip(self.COLUMNS, r)) for r in self.conn.execute(sql, params)]
         if not self.path.exists():
             return []
         conn = sqlite3.connect(self.path)
-        found = [dict(zip(self.COLUMNS, r)) for r in conn.execute(f"SELECT {', '.join(self.COLUMNS)} FROM runs WHERE {where} ORDER BY created", params)]
+        found = [dict(zip(self.COLUMNS, r)) for r in conn.execute(sql, params)]
         conn.close()
         return found
+
+
+class FileBackend:
+    """The run record as files: a folder per run under `runs_dir`, the index in `index.sqlite` beside them,
+    and each run's checkpoints in its folder (or under SMALLS_STATE_DIR)."""
+
+    kind = "files"
+
+    def __init__(self, runs_dir: Path | str):
+        self.runs_dir = Path(runs_dir)
+
+    def folder(self, run_id: str, create: bool = True) -> Path:
+        folder = self.runs_dir / run_id
+        if create:
+            folder.mkdir(parents=True, exist_ok=True)
+        return folder
+
+    def read_text(self, run_id: str, name: str) -> str | None:
+        path = self.runs_dir / run_id / name
+        return path.read_text(encoding="utf-8") if path.exists() else None
+
+    def write_text(self, run_id: str, name: str, text: str) -> None:
+        (self.folder(run_id) / name).write_text(text, encoding="utf-8")
+
+    def append_lines(self, run_id: str, name: str, lines: Iterable[str]) -> None:
+        with (self.folder(run_id) / name).open("a", encoding="utf-8") as f:
+            for line in lines:
+                f.write(line + "\n")
+
+    def exists(self, run_id: str, name: str) -> bool:
+        return (self.runs_dir / run_id / name).exists()
+
+    def size(self, run_id: str, name: str) -> int:
+        path = self.runs_dir / run_id / name
+        return path.stat().st_size if path.exists() else 0
+
+    def checkpoints(self, run_id: str) -> Path:
+        """The checkpoint database. SMALLS_STATE_DIR moves it off the run folder if a mount proves slow."""
+        elsewhere = os.environ.get("SMALLS_STATE_DIR")
+        if not elsewhere:
+            return self.folder(run_id) / CHECKPOINTS
+        folder = Path(elsewhere) / run_id
+        folder.mkdir(parents=True, exist_ok=True)
+        return folder / CHECKPOINTS
+
+    def checkpointer(self, run_id: str) -> sqlite3.Connection:
+        return sqlite3.connect(self.checkpoints(run_id), check_same_thread=False)
+
+    def index(self) -> RunsIndex:
+        return RunsIndex(self.runs_dir)
+
+    def runs(self) -> list[str]:
+        """Every run with a `run.json`, by id."""
+        return sorted(p.parent.name for p in self.runs_dir.glob("*/run.json")) if self.runs_dir.is_dir() else []
+
+    def close(self) -> None:
+        pass
+
+
+def _table(name: str) -> str:
+    return "run_" + name.split(".", 1)[0]
+
+
+class SqliteBackend:
+    """The run record as tables of one SQLite database: a JSON file is one row per run (`run_id`, `body`),
+    a JSON-lines file is one row per line (`run_id`, `n`, `line`), and the index is `run_index`. Opened by
+    URI, so a server can give it the shared in-memory database (`file:/<name>?vfs=memdb`), and each run's
+    checkpointer gets its own connection to the same database. Every statement on the backend's own
+    connection is taken under one lock, because a run writes events from more than one thread."""
+
+    kind = "sqlite"
+
+    def __init__(self, uri: str, *, timeout: float = 5.0):
+        self.uri, self.timeout = uri, timeout
+        self.conn = sqlite3.connect(uri, uri=True, check_same_thread=False, timeout=timeout)
+        self.lock = threading.Lock()
+        with self.lock, self.conn:
+            for name in FILES:
+                if name.endswith(".jsonl"):
+                    self.conn.execute(f"CREATE TABLE IF NOT EXISTS {_table(name)} (run_id TEXT NOT NULL, n INTEGER NOT NULL, line TEXT NOT NULL, "
+                                      "PRIMARY KEY (run_id, n))")
+                else:
+                    self.conn.execute(f"CREATE TABLE IF NOT EXISTS {_table(name)} (run_id TEXT PRIMARY KEY, body TEXT NOT NULL)")
+
+    def folder(self, run_id: str, create: bool = True) -> None:
+        return None
+
+    def _lines(self, run_id: str, name: str) -> list[str]:
+        return [r[0] for r in self.conn.execute(f"SELECT line FROM {_table(name)} WHERE run_id = ? ORDER BY n", (run_id,))]
+
+    def read_text(self, run_id: str, name: str) -> str | None:
+        with self.lock:
+            if name.endswith(".jsonl"):
+                lines = self._lines(run_id, name)
+                return "".join(line + "\n" for line in lines) if lines or self._known(run_id) else None
+            row = self.conn.execute(f"SELECT body FROM {_table(name)} WHERE run_id = ?", (run_id,)).fetchone()
+            return row[0] if row else None
+
+    def _known(self, run_id: str) -> bool:
+        """A JSON-lines file exists, perhaps empty, once its run has a `run.json` or any event."""
+        return bool(self.conn.execute("SELECT 1 FROM run_run WHERE run_id = ? UNION ALL SELECT 1 FROM run_events WHERE run_id = ? LIMIT 1",
+                                      (run_id, run_id)).fetchone())
+
+    def write_text(self, run_id: str, name: str, text: str) -> None:
+        with self.lock, self.conn:
+            if name.endswith(".jsonl"):
+                self.conn.execute(f"DELETE FROM {_table(name)} WHERE run_id = ?", (run_id,))
+                self.conn.executemany(f"INSERT INTO {_table(name)} (run_id, n, line) VALUES (?, ?, ?)",
+                                      [(run_id, n, line) for n, line in enumerate(text.splitlines(), 1) if line.strip()])
+            else:
+                self.conn.execute(f"INSERT OR REPLACE INTO {_table(name)} (run_id, body) VALUES (?, ?)", (run_id, text))
+
+    def append_lines(self, run_id: str, name: str, lines: Iterable[str]) -> None:
+        with self.lock, self.conn:
+            last = self.conn.execute(f"SELECT coalesce(max(n), 0) FROM {_table(name)} WHERE run_id = ?", (run_id,)).fetchone()[0]
+            self.conn.executemany(f"INSERT INTO {_table(name)} (run_id, n, line) VALUES (?, ?, ?)",
+                                  [(run_id, last + i, line) for i, line in enumerate(lines, 1)])
+
+    def exists(self, run_id: str, name: str) -> bool:
+        return self.read_text(run_id, name) is not None
+
+    def size(self, run_id: str, name: str) -> int:
+        return len((self.read_text(run_id, name) or "").encode("utf-8"))
+
+    def checkpointer(self, run_id: str) -> sqlite3.Connection:
+        """A connection of the run's own to the same database: the checkpointer keeps its own lock and its own
+        tables (`checkpoints`, `writes`), and SQLite's locking keeps the two apart."""
+        return sqlite3.connect(self.uri, uri=True, check_same_thread=False, timeout=self.timeout)
+
+    def index(self) -> RunsIndex:
+        return RunsIndex(conn=self.conn, table="run_index", lock=self.lock)
+
+    def runs(self) -> list[str]:
+        with self.lock:
+            return [r[0] for r in self.conn.execute("SELECT run_id FROM run_run ORDER BY run_id")]
+
+    def close(self) -> None:
+        self.conn.close()
 
 
 def cost(call: dict[str, Any], price: dict[str, float]) -> float:
@@ -152,42 +313,85 @@ def usage_totals(calls: list[dict[str, Any]]) -> dict[str, Any]:
     return totals
 
 
+class RecordSink:
+    """The events file of a record, as an event sink: one line per event, written through the backend."""
+
+    def __init__(self, record: "RunRecord"):
+        self.record = record
+
+    def emit(self, ev: Event) -> None:
+        self.record.backend.append_lines(self.record.run_id, "events.jsonl", [ev.to_json()])
+
+    def close(self) -> None:
+        pass
+
+
 class RunRecord:
-    def __init__(self, runs_dir: Path, run_id: str):
+    def __init__(self, runs_dir: Path | None, run_id: str, backend: FileBackend | SqliteBackend | None = None):
         self.run_id = check_run_id(run_id)
-        self.dir = Path(runs_dir) / self.run_id
-        self.dir.mkdir(parents=True, exist_ok=True)
+        self.backend = backend or FileBackend(runs_dir)
+        self.dir = self.backend.folder(self.run_id, create=False)       # None when the record is not files; made on first write
         self._evidence_seen: set[tuple[str, str, str]] | None = None
 
     def path(self, name: str) -> Path:
+        if self.dir is None:
+            raise TypeError(f"run {self.run_id} is held in a {self.backend.kind} backend and has no files")
         return self.dir / name
 
     def checkpoints(self) -> Path:
-        """The checkpoint database. SMALLS_STATE_DIR moves it off the run folder if a mount proves slow."""
-        elsewhere = os.environ.get("SMALLS_STATE_DIR")
-        if not elsewhere:
-            return self.dir / CHECKPOINTS
-        folder = Path(elsewhere) / self.run_id
-        folder.mkdir(parents=True, exist_ok=True)
-        return folder / CHECKPOINTS
+        return self.backend.checkpoints(self.run_id)
+
+    def read_text(self, name: str) -> str | None:
+        return self.backend.read_text(self.run_id, name)
 
     def write_json(self, name: str, data: Any) -> None:
-        self.path(name).write_text(json.dumps(data, indent=1, default=str, ensure_ascii=False) + "\n", encoding="utf-8")
+        self.backend.write_text(self.run_id, name, json.dumps(data, indent=1, default=str, ensure_ascii=False) + "\n")
 
     def read_json(self, name: str) -> Any:
-        return json.loads(self.path(name).read_text(encoding="utf-8"))
+        text = self.read_text(name)
+        if text is None:
+            raise FileNotFoundError(f"run {self.run_id} has no {name}")
+        return json.loads(text)
 
     def write_jsonl(self, name: str, rows: Iterable[dict[str, Any]]) -> None:
-        with self.path(name).open("w", encoding="utf-8") as f:
-            for row in rows:
-                f.write(json.dumps(row, default=str, ensure_ascii=False) + "\n")
+        self.backend.write_text(self.run_id, name, "".join(json.dumps(row, default=str, ensure_ascii=False) + "\n" for row in rows))
+
+    def events_sink(self):
+        """The sink a run's bus writes its events through: an open file for files, rows for SQLite."""
+        if self.dir is not None:
+            from smalls.agent.events import JsonlSink
+
+            return JsonlSink(self.path("events.jsonl"))
+        return RecordSink(self)
+
+    def events(self) -> list[Event]:
+        return parse_events(self.read_text("events.jsonl") or "")
+
+    def last_seq(self) -> int:
+        """The highest event number so far, so a resumed run goes on numbering where the last one stopped."""
+        return max((e.seq for e in self.events()), default=0)
+
+    def size(self, name: str) -> int:
+        return self.backend.size(self.run_id, name)
+
+    def export(self, runs_dir: Path | str) -> Path:
+        """Write this record out in the file layout, under `runs_dir`, so a run held in SQLite can be
+        committed and read by the CLI, the eval and the scorer. The checkpoints are not exported: they are
+        git-ignored in the file layout too."""
+        folder = Path(runs_dir) / self.run_id
+        folder.mkdir(parents=True, exist_ok=True)
+        for name in FILES:
+            text = self.read_text(name)
+            if text is not None:
+                (folder / name).write_text(text, encoding="utf-8")
+        return folder
 
     def read_jsonl(self, name: str) -> list[dict[str, Any]]:
-        path = self.path(name)
-        if not path.exists():
+        text = self.read_text(name)
+        if text is None:
             return []
         out = []
-        for line in path.read_text(encoding="utf-8").splitlines():
+        for line in text.splitlines():
             try:
                 out.append(json.loads(line))
             except ValueError:      # a torn last line from a crashed run
@@ -200,14 +404,15 @@ class RunRecord:
         writes nothing twice."""
         if self._evidence_seen is None:
             self._evidence_seen = {(r["call_id"], r["handle"], r["sha256"]) for r in self.read_jsonl("evidence.jsonl")}
-        with self.path("evidence.jsonl").open("a", encoding="utf-8") as f:
-            for row in rows:
-                digest = hashlib.sha256(row.text.encode("utf-8")).hexdigest()
-                if (call_id, row.handle, digest) in self._evidence_seen:
-                    continue
-                self._evidence_seen.add((call_id, row.handle, digest))
-                f.write(json.dumps({"call_id": call_id, "handle": row.handle, "t_known": row.t_known, "sha256": digest,
-                                    "text": row.text}, ensure_ascii=False) + "\n")
+        lines = []
+        for row in rows:
+            digest = hashlib.sha256(row.text.encode("utf-8")).hexdigest()
+            if (call_id, row.handle, digest) in self._evidence_seen:
+                continue
+            self._evidence_seen.add((call_id, row.handle, digest))
+            lines.append(json.dumps({"call_id": call_id, "handle": row.handle, "t_known": row.t_known, "sha256": digest,
+                                     "text": row.text}, ensure_ascii=False))
+        self.backend.append_lines(self.run_id, "evidence.jsonl", lines)
 
     def write_derived(self, values: dict[str, Any], usage_calls: list[dict[str, Any]], summary: dict[str, Any]) -> None:
         """Everything that is read from state: written at the end of a run, and at a pause, and on every
@@ -216,8 +421,8 @@ class RunRecord:
         self.write_jsonl("calls.jsonl", ({**{k: e.get(k) for k in CALL_KEYS}, "gate": gate.get(e["call_id"])}
                                          for e in values.get("ledger", [])))
         self.write_jsonl("notes.jsonl", values.get("ic_notes", []))
-        if not self.path("evidence.jsonl").exists():
-            self.path("evidence.jsonl").touch()
+        if not self.backend.exists(self.run_id, "evidence.jsonl"):
+            self.backend.write_text(self.run_id, "evidence.jsonl", "")
         self.write_json("board.json", {"as_of": values.get("as_of"), "hypotheses": list((values.get("hypotheses") or {}).values()),
                                        "timeline": values.get("timeline", []), "open_questions": values.get("open_questions", [])})
         self.write_json("report.json", values.get("report"))
@@ -226,4 +431,4 @@ class RunRecord:
         self.write_json("summary.json", summary)
 
     def missing(self) -> list[str]:
-        return [name for name in FILES if not self.path(name).exists()]
+        return [name for name in FILES if not self.backend.exists(self.run_id, name)]

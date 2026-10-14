@@ -52,10 +52,15 @@ def citations(report: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(found))
 
 
-def show(folder: Any, wanted: str, console: Console | None = None) -> int:
-    """Print the row behind a handle, or behind a number of the report's citation list, as the run was shown it."""
+def show(record: Any, wanted: str, console: Console | None = None) -> int:
+    """Print the row behind a handle, or behind a number of the report's citation list, as the run was shown it.
+    `record` is a `RunRecord`, or the folder of one in the file layout."""
+    from smalls.agent.record import FileBackend, RunRecord
+
+    if not isinstance(record, RunRecord):
+        record = RunRecord(None, record.resolve().name, backend=FileBackend(record.resolve().parent))
     c = console or Console(highlight=False)
-    read = lambda name: (folder / name).read_text(encoding="utf-8") if (folder / name).is_file() else ""      # noqa: E731
+    read = lambda name: record.read_text(name) or ""      # noqa: E731
     report = json.loads(read("report.json") or "null") or {}
     numbered = citations(report)
     handle = numbered[int(wanted) - 1] if wanted.isdigit() and 0 < int(wanted) <= len(numbered) else wanted
