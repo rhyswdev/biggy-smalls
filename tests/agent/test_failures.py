@@ -24,6 +24,7 @@ from smalls.agent.record import FILES, RunsIndex, check_run_id, new_run_id, scru
 from smalls.agent.runner import Runner, Toolbox, module_toolbox, resume_hint
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.report import Report
+from smalls.tools import errors, windows
 
 
 @pytest.fixture
@@ -129,6 +130,41 @@ def test_row1_a_malformed_call_is_answered_before_the_gate_and_shown_only_on_the
     assert [e.get("hidden", False) for e in state["ledger"] if e["call_id"] in bad] == [True, True, False]
     assert state["malformed_streak"] == 0                                           # a clean turn starts the count again
 
+
+
+def test_row1_a_time_the_tool_cannot_read_is_answered_before_the_gate_with_the_tools_own_words(cfg):
+    bad = "call_90_search_logs"
+
+    def script(messages, tools):
+        if turns(messages) == 0:        # a read with its rationale but a time no tool reads
+            return "a read with a time no tool reads", [call("search_logs", 90, rationale=("t", "e"), since="last tuesday")]
+        mine = [m for m in messages if isinstance(m, AIMessage)][:1]
+        rest = [m for m in messages if all(m is not x for x in mine) and not (isinstance(m, ToolMessage) and m.tool_call_id == bad)]
+        return fixture_script.turn(rest, tools)
+
+    asked: list[str] = []
+
+    def decider(cards):
+        asked.extend(c["call_id"] for c in cards)
+        return approve(cards)
+
+    attended = replace(cfg, auto_approve=False)
+    clean = runner(attended, "clean", decider=decider)
+    clean.start(fx.TRIGGER, fx.NOW)
+    used_clean = clean.state()["calls_used"]
+    clean.close()
+    asked.clear()
+
+    r = runner(attended, "bad-time", script=script, decider=decider)
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "completed"
+    state = r.state()
+    r.close()
+    assert bad not in asked and state["calls_used"] == used_clean                  # nobody was asked, nothing was charged
+    answer = next(m for m in state["messages"] if isinstance(m, ToolMessage) and m.tool_call_id == bad)
+    with pytest.raises(windows.WindowError) as caught:
+        windows.resolve("last tuesday", None, fx.NOW)
+    tools_words = errors.bad_arguments("search_logs", str(caught.value)).text     # what registry.call answers for it
+    assert answer.status == "error" and answer.content.startswith(tools_words)
 
 # -- axis 8, row 2: provider 429, 5xx, timeout, refusal, max_tokens --------------------------------------------
 

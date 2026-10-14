@@ -42,7 +42,7 @@ from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.handles import ic_note_handle
 from smalls.contracts.report import Rationale, Report
-from smalls.tools import errors, registry
+from smalls.tools import errors, registry, windows
 from smalls.tools.registry import ToolContext, ToolSpec
 
 Inventory = Callable[[ToolContext], Envelope]
@@ -223,7 +223,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         for call in proposed:
             spec = tools.get(call["tool"])
             if not call["invalid"] and spec is not None and spec.kind in ("read", "action"):
-                call["malformed"] = _malformed(spec, call)
+                call["malformed"] = _malformed(spec, call, ctx.now)
         streak = state.get("malformed_streak", 0) + 1 if any(c["invalid"] or c.get("malformed") for c in proposed) else 0
         retried = bool(proposed) and all(c["invalid"] or c.get("malformed") for c in proposed)     # nothing in it can run
         for call in proposed:
@@ -495,16 +495,23 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         """What makes two calls the same call (J4): the verifier asks the same question of a proposed check."""
         return verifier.identity(spec, call["args"], ctx.now)
 
-    def _malformed(spec: ToolSpec, call: Call) -> str | None:
-        """The error a gated call would get for its arguments, word for word, or None when they would run."""
+    def _malformed(spec: ToolSpec, call: Call, now: datetime) -> str | None:
+        """The error a gated call would get for its arguments, word for word, or None when they would run. A
+        window is read here too: its times are free strings to the schema, and the tool reads them at `now`."""
         try:
             Rationale.model_validate(call.get("rationale"))
         except Exception:
             return errors.bad_arguments(spec.name, NO_RATIONALE).text
         try:
-            spec.args.model_validate(call["args"] or {})
+            args = spec.args.model_validate(call["args"] or {})
         except ValidationError as problem:
             return errors.bad_arguments(spec.name, problem).text
+        since = getattr(args, "since", None)
+        if since is not None:
+            try:
+                windows.resolve(since, getattr(args, "until", None), now)
+            except windows.WindowError as problem:
+                return errors.bad_arguments(spec.name, str(problem)).text
         return None
 
     def _run(spec: ToolSpec, call: Call, ctx: RunContext) -> Envelope:

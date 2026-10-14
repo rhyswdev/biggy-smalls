@@ -44,8 +44,26 @@ def test_until_defaults_to_now_and_a_window_is_clamped_to_now():
     assert windows.resolve("-30h", None, NOW).spans_dates() and not windows.resolve("-1h", None, NOW).spans_dates()
 
 
+@pytest.mark.parametrize("since,until,window", [
+    ("11:15", None, ("2026-05-04T11:15:00Z", "2026-05-04T12:00:00Z")),          # since: the latest at or before now
+    ("9:05:30", None, ("2026-05-04T09:05:30Z", "2026-05-04T12:00:00Z")),
+    ("23:00", None, ("2026-05-03T23:00:00Z", "2026-05-04T12:00:00Z")),          # later than now today, so yesterday
+    ("23:00", "01:30", ("2026-05-03T23:00:00Z", "2026-05-04T01:30:00Z")),       # until: the first after since
+    ("22:00", "23:00", ("2026-05-03T22:00:00Z", "2026-05-03T23:00:00Z")),
+    ("-2h", "11:30", ("2026-05-04T10:00:00Z", "2026-05-04T11:30:00Z")),
+    ("2026-05-04T11:00:00Z", "11:20", ("2026-05-04T11:00:00Z", "2026-05-04T11:20:00Z"))])
+def test_a_clock_time_is_utc_since_the_latest_at_or_before_now_and_until_the_first_after_since(since, until, window):
+    assert windows.resolve(since, until, NOW).iso == window
+
+
+def test_a_clock_time_past_now_in_until_is_clamped_like_any_other():
+    w = windows.resolve("11:00", "13:00", NOW)
+    assert w.iso == ("2026-05-04T11:00:00Z", "2026-05-04T12:00:00Z") and w.clamped
+
+
 @pytest.mark.parametrize("since,until,field,words", [
     ("yesterday", None, "since", "is not a time"), ("-1h", "soon", "until", "is not a time"), ("-1w", None, "since", "is not a time"),
+    ("24:00", None, "since", "is not a time"), ("11:5", None, "since", "is not a time"), ("12:00", None, "since", "at or after now"),
     ("-1h", "-2h", "since", "at or after until"), ("-1h", "-1h", "since", "at or after until"),
     ("2026-05-04T13:00:00Z", None, "since", "at or after now"), ("2026-05-04T13:00:00Z", "2026-05-04T14:00:00Z", "since", "at or after now")])
 def test_a_window_that_cannot_be_made_names_the_field(since, until, field, words):
