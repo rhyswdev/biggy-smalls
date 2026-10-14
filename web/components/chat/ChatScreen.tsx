@@ -11,12 +11,14 @@ import { suggestions, type CodeAnswer, type Suggestion } from "@/lib/chat/answer
 import { startedAt, type ChatState, type Turn } from "@/lib/chat/reduce";
 import { useChatEvents } from "@/lib/events";
 import { clock, day, plural, seconds, stamp, waitingText } from "@/lib/format";
+import { sendKey } from "@/lib/keys";
 import type { ChatSummary, IncidentCard, MessageRow } from "@/lib/types";
 import { specs } from "@/lib/writeup/messages";
 import { DraftAnswer } from "@/components/messages/DraftAnswer";
 import { AnswerCard } from "./AnswerCard";
 import { answerRestFirst, GroupView, refocus, type ToolSchema } from "./Gate";
 import { Linked } from "./Linked";
+import { Prose } from "./Prose";
 import { ResolveDialog } from "./ResolveDialog";
 import { WorkingPicture } from "./WorkingPicture";
 
@@ -65,11 +67,16 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   const offers = useMemo(() => (finished || past ? suggestions(state.report, state.verifier?.checks ?? [], state.verifier?.disputed ?? []) : []), [finished, past, state.report, state.verifier]);
   const offered = offers.filter((s) => !used.includes(s.id) && (!past || s.kind === "code"));
 
+  const { convo, atEnd } = useFollow(running);
+  const pin = useRef(false);      // the person just asked for something: bring it into view, wherever they were
+
   useEffect(() => { if (finishedAtStart !== finished && finished) router.refresh(); }, [finished, finishedAtStart, router]);
   useEffect(() => { if (state.pending) refocus(); }, [state.pending]);
+  useEffect(() => { if (pin.current || atEnd.current) toEnd(); pin.current = false; }, [local, atEnd]);
 
   function pick(s: Suggestion) {
     setUsed((u) => [...u, s.id]);
+    pin.current = s.kind !== "run";      // a run's note is pinned when it is sent
     if (s.kind === "code" && s.answer) setLocal((l) => [...l, { key: `${s.id}:${l.length}`, q: s.q, answer: s.answer }]);
     else if (s.kind === "run" && s.note) send(s.note);
     else if (s.kind === "draft") draftExec(`${s.id}:${local.length}`, s.q);
@@ -91,6 +98,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
       const r = await sendNote(chat.id, note);
       if (!r.ok) { setError(r.error ?? "The note was not sent."); return; }
       setDraft("");
+      pin.current = true;
       setLocal((l) => [...l, { key: `note:${l.length}`, q: note, pending: { handle: r.handle ?? null, text: note, delivery: r.delivery ?? "next round" } }]);
       refocus();
     });
@@ -112,7 +120,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
       {children}
       <div style={{ flex: "1 1 auto", display: "flex", flexWrap: "wrap", alignItems: "flex-start", maxWidth: 1440, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
         <main aria-label="Conversation" style={{ flex: "999 1 640px", minWidth: 0, display: "flex", flexDirection: "column", minHeight: "calc(100vh - 64px)" }}>
-          <div className="convo">
+          <div className="convo" ref={convo}>
             <h1 className="sm-visually-hidden">{chat.title}</h1>
             {chat.origin === "headless" || past ? (
               <div className="origin">
@@ -164,7 +172,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
                 <div className="composer">
                   <textarea className="sm-input" rows={2} aria-label="Message Smalls" placeholder={finished ? "Ask Smalls a follow-up" : "Add a note for Smalls"} value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !waiting) { e.preventDefault(); send(draft); } }} />
+                    onKeyDown={(e) => { if (sendKey(e)) { e.preventDefault(); if (!waiting && !busy) send(draft); } }} />
                   <div className="acts">
                     <Toggle checked={auto} onChange={switchAuto} label="Auto-approve reads" disabled={busy} />
                     <span className="grow" />
@@ -189,6 +197,37 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
     </div>
   );
 }
+
+/** Keeps the end of the conversation in view while Smalls works, as long as the person is at the end: scrolling up
+ * lets go, and scrolling back to the end takes hold again. A chat that opens while it runs opens at its end. When
+ * the run stops, the end is shown once more if they were there; after that, opening something in place never
+ * moves the page. */
+function useFollow(live: boolean) {
+  const convo = useRef<HTMLDivElement>(null);
+  const atEnd = useRef(live);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    atEnd.current ||= endGap() < 64;
+    const check = () => {
+      const y = window.scrollY, gap = endGap();
+      atEnd.current = gap < 4 || (y >= lastY && (atEnd.current || gap < 64));
+      lastY = y;
+    };
+    window.addEventListener("scroll", check, { passive: true });
+    return () => window.removeEventListener("scroll", check);
+  }, []);
+  useEffect(() => {
+    const el = convo.current;
+    if (!live || !el) { if (atEnd.current) toEnd(); return; }
+    const grows = new ResizeObserver(() => { if (atEnd.current) toEnd(); });
+    grows.observe(el);
+    return () => grows.disconnect();
+  }, [live]);
+  return { convo, atEnd };
+}
+
+const endGap = () => document.documentElement.scrollHeight - window.innerHeight - window.scrollY;
+const toEnd = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
 
 /** Reasoning that grows while it streams, shown as it grows. The provider often sends a long stretch in one
  * piece; that piece is written out over a moment instead of landing all at once. Text present at first paint,
@@ -242,12 +281,11 @@ function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, onRefus
             : paragraphs.length || turn.text ? <span className="who"><b>Smalls</b></span> : null}
           {paragraphs.length ? (
             <>
-              <p className="narr">{all ? null : paragraphs[0]}</p>
-              {all ? paragraphs.map((p, i) => <p key={i} className="narr">{p}</p>) : null}
+              {(all ? paragraphs : paragraphs.slice(0, 1)).map((p, i) => <Prose key={i} text={p} />)}
               {paragraphs.length > 1 ? <button type="button" className="linkbtn" style={{ alignSelf: "flex-start" }} onClick={() => setAll(!all)} aria-expanded={all}>{all ? "Show less" : "Show all of its reasoning"}</button> : null}
             </>
           ) : null}
-          {turn.text ? <p className="narr"><Linked text={turn.text} onOpen={onOpen} /></p> : null}
+          {turn.text ? <Prose text={turn.text} onOpen={onOpen} /> : null}
           <GroupView chatId={chat.id} group={turn} rows={state.rows} pending={state.pending} schemas={schemas} onOpen={onOpen} onRefused={onRefused} />
         </div>
       );
@@ -256,7 +294,7 @@ function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, onRefus
       return (
         <div className="msg-sm">
           <span className="who"><b>Smalls</b> · answered from what it already had; the report stands</span>
-          <p className="narr"><Linked text={turn.text} onOpen={onOpen} /></p>
+          <Prose text={turn.text} onOpen={onOpen} />
         </div>
       );
     case "report": {

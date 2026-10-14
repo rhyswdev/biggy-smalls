@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { Prose } from "@/components/chat/Prose";
 import { Button, Handle, Handles } from "@/components/ds";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { editWriteup, regenerateWriteup, saveWriteup } from "@/lib/actions/chats";
@@ -66,7 +67,7 @@ export function SummaryScreen({ chatId, data, children }: { chatId: string; data
                 <span className="small muted">{own ? "Smalls’ last picture, before you resolved it another way" : "Smalls’ account, from the evidence"}</span>
               </div>
               <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12, padding: "16px 20px" }}>
-                <p className="narr" style={{ fontSize: 15, lineHeight: "23px" }}>{w.narrative}</p>
+                <Prose text={w.narrative} style={{ fontSize: 15, lineHeight: "23px" }} />
                 <span className="label">{w.chainTitle}</span>
                 <ol className="chain">
                   {w.chain.map((c, i) => (

@@ -4,7 +4,8 @@ import { Button, Confidence, Handles, StatusTag } from "@/components/ds";
 import { leading } from "@/lib/chat/reduce";
 import { clock } from "@/lib/format";
 import type { Report } from "@/lib/types";
-import { firstSentence, Linked } from "./Linked";
+import { leadSentence } from "@/lib/chat/prose";
+import { Inline, Prose } from "./Prose";
 
 export const SURE = 0.7;      // at or above this, the answer leads with the four asks; below, a narrative
 
@@ -14,14 +15,14 @@ export function AnswerCard({ report, status, first, onOpen, onResolve, resolved 
   report: Report; status: string; first: number | undefined; onOpen: (h: string) => void; onResolve?: () => void; resolved?: boolean;
 }) {
   const lead = leading(report);
-  const [opening, rest] = firstSentence(report.summary);
+  const [sentence, rest] = leadSentence(report.summary);
   const action = [...report.actions].sort((a, b) => a.rank - b.rank)[0];
   const owner = action?.owner || report.impact?.oncall || null;
   const dont = report.do_not[0];
   const sure = lead && lead.confidence >= SURE;
   return (
     <>
-      <p className="lead"><Linked text={opening} onOpen={onOpen} /></p>
+      {sentence ? <p className="lead"><Inline text={sentence} onOpen={onOpen} /></p> : null}
       {sure ? (
         <dl className="ans" aria-label="Answer">
           <div className="ans-row"><dt>Cause</dt><dd>{lead.statement}</dd></div>
@@ -36,7 +37,7 @@ export function AnswerCard({ report, status, first, onOpen, onResolve, resolved 
         </dl>
       ) : (
         <>
-          {rest ? <p className="narr"><Linked text={rest} onOpen={onOpen} /></p> : null}
+          {rest ? <Prose text={rest} onOpen={onOpen} /> : null}
           {lead ? <p className="narr">Leading, not yet sure: {lead.statement} <span className="time">({lead.confidence.toFixed(2)})</span></p> : null}
           <Handles ids={lead?.support ?? []} onOpen={onOpen} none="No evidence cited yet" />
         </>

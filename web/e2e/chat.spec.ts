@@ -64,3 +64,32 @@ test("Investigate in chat loads the commander's note to send as it is", async ({
   await expect(page).toHaveURL(/\/chats\/[0-9a-f]+$/);
   await expect(page.locator("#pending")).toBeVisible({ timeout: 20_000 });          // reads ask by default
 });
+
+test("Enter sends, Shift+Enter starts a new line, and the end of the conversation stays in view while Smalls answers", async ({ page, request }) => {
+  const id = await newChat(request, { origin: "headless" });
+  await until(request, id, ["finished"]);
+  await page.setViewportSize({ width: 1440, height: 600 });
+  await page.goto(`/chats/${id}`);
+  const gap = () => page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight - window.scrollY);
+  await expect(page.locator(".rep")).toBeVisible();
+  expect(await gap()).toBeGreaterThan(200);                       // longer than the window, and still at the top
+  const box = page.getByLabel("Message Smalls");
+  await box.fill("Why do you think that?");
+  await box.press("Shift+Enter");
+  await box.pressSequentially("And what next?");
+  await expect(box).toHaveValue("Why do you think that?\nAnd what next?");
+  await box.press("Enter");
+  await expect(box).toHaveValue("");
+  await expect(page.locator(".msg-sm").filter({ hasText: "answered from what it already had" })).toBeVisible({ timeout: 20_000 });
+  await expect.poll(gap).toBeLessThan(4);
+});
+
+test("Enter starts a new chat, and does nothing while the box is empty", async ({ page }) => {
+  await page.goto("/chats/new");
+  const box = page.getByLabel("Message Smalls");
+  await box.press("Enter");
+  await expect(page).toHaveURL(/\/chats\/new$/);
+  await box.fill("Jobs on the batch hosts keep failing since this morning.");
+  await box.press("Enter");
+  await expect(page).toHaveURL(/\/chats\/[0-9a-f]+$/);
+});

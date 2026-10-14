@@ -19,8 +19,3 @@ export function Linked({ text, onOpen }: { text: string; onOpen: (h: string) => 
   if (at < text.length) out.push(text.slice(at));
   return <>{out}</>;
 }
-
-export function firstSentence(text: string): [string, string] {
-  const m = /^(.+?[.!?])(\s+|$)([\s\S]*)$/.exec(text.trim());
-  return m ? [m[1]!, m[3]!.trim()] : [text.trim(), ""];
-}

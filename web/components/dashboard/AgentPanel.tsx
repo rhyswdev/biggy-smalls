@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { Prose } from "@/components/chat/Prose";
 import { Button, Confidence, StatusTag } from "@/components/ds";
 import { moreRun, runAgent, stopRun } from "@/lib/actions/chats";
 import { leading, startedAt, steps, type ChatState } from "@/lib/chat/reduce";
@@ -153,7 +154,7 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
       </div>
       {lead ? <p className="lead">{lead.subject} is the leading {lead.role} ({lead.confidence.toFixed(2)}).</p>
         : report ? <p className="lead">No hypothesis leads yet: the report is inconclusive.</p> : null}
-      {report ? <p className="narr">{report.summary}</p> : null}
+      {report ? <Prose text={report.summary} /> : null}
       {unapproved ? <span className="small" style={{ color: "var(--attention)" }}>◆ {plural(unapproved, "action")} proposed, not approved</span> : null}
       {hyps.length ? (
         <div style={{ display: "flex", flexDirection: "column" }}>
