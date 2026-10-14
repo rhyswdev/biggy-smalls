@@ -10,7 +10,7 @@ batches, so a measure can be followed from pass to pass.
     python -m eval.results add <run folder>... --batch <name> [--pass <n>]
     python -m eval.results report [--out docs/tuning-log.md]
     python -m eval.results rebuild                # every row again from its record, when a row gains a field
-    python -m eval.results export <folder>        # runs.json and batches.json for the published page
+    python -m eval.results export <folder>        # runs.json, batches.json and notes.json for the published page
 
 A row holds no judgement of right or wrong. Until the scorer lands, `scores` is empty; when it lands it fills
 `scores` for every row, and the log shows them beside the rest.
@@ -31,6 +31,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "eval" / "results" / "runs.jsonl"
 BATCHES = ROOT / "eval" / "results" / "batches.yaml"
+NOTES = ROOT / "eval" / "results" / "notes.yaml"
 LOG = ROOT / "docs" / "tuning-log.md"
 FRAMING = ROOT / "eval" / "framing"
 ROLE_OF_NODE = {"agent": "investigator", "fallback": "investigator", "verifier_claims": "claims", "verifier_recheck": "claims",
@@ -223,6 +224,12 @@ def export(folder: Path, rows: list[dict[str, Any]] | None = None, described: li
     paths = [folder / "runs.json", folder / "batches.json"]
     paths[0].write_text(json.dumps(run_rows, ensure_ascii=False, indent=0), encoding="utf-8")
     paths[1].write_text(json.dumps(batch_rows, ensure_ascii=False, indent=0), encoding="utf-8")
+    if NOTES.exists():          # the readings of each chart, written by a person and dated
+        raw = yaml.safe_load(NOTES.read_text(encoding="utf-8")) or {}
+        notes = [{"chart": n["chart"], "reading": " ".join(str(n["reading"]).split()), "as_of": str(raw.get("as_of", ""))}
+                 for n in raw.get("notes") or []]
+        paths.append(folder / "notes.json")
+        paths[2].write_text(json.dumps(notes, ensure_ascii=False, indent=0), encoding="utf-8")
     return paths
 
 

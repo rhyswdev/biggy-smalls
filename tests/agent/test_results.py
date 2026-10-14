@@ -96,7 +96,8 @@ def test_rebuild_keeps_each_rows_batch_and_scores_and_export_writes_the_pages_tw
     rebuilt = {r["run_id"]: r for r in results.load(ledger)}
     assert (n, missing) == (2, ["gone"]) and rebuilt["gone"]["batch"] == "base"                 # a row with no record here is kept
     assert rebuilt[record.name]["scores"] == {"outcome": 1} and rebuilt[record.name]["board_only_turns"] is not None
-    runs_path, batches_path = results.export(tmp_path / "page", [rebuilt[record.name]], results.batches(described))
+    runs_path, batches_path, *notes = results.export(tmp_path / "page", [rebuilt[record.name]], results.batches(described))
+    assert [n.name for n in notes] == (["notes.json"] if results.NOTES.exists() else [])
     runs, batch_rows = json.loads(runs_path.read_text()), json.loads(batches_path.read_text())
     assert [r["run_id"] for r in runs] == [record.name] and runs[0]["investigator"] == "scripted" and runs[0]["batch_order"] == 1
     assert {"trigger_on_board", "board_only_turns", "cost_usd", "partial", "nudges"} <= set(runs[0])
