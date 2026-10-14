@@ -33,7 +33,7 @@ from langgraph.runtime import Runtime
 from langgraph.types import RetryPolicy, interrupt
 
 from smalls.agent import board, gate, prompts, validator
-from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, toolset
+from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, HypothesisUpdate, toolset
 from smalls.agent.models import as_model_call_error, provider_tools, retryable
 from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext, merge_hypotheses
 from smalls.contracts.envelope import Envelope
@@ -98,9 +98,11 @@ def partial_report(state: dict[str, Any], why: str) -> dict[str, Any]:
 
 def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory: Inventory, *, provider: str = "scripted",
                 bind_kwargs: dict[str, Any] | None = None, checkpointer=None, texts: dict[str, Any] | None = None, strict: bool = True,
-                fallback: tuple[BaseChatModel, str, dict[str, Any]] | None = None):
+                fallback: tuple[BaseChatModel, str, dict[str, Any]] | None = None, offered: tuple[str, ...] | None = None):
+    """`offered` names the tools the model is given, when that is fewer than the run has: the harness can
+    still call the rest, as the opening sweep does."""
     tools = toolset(read_tools)
-    definitions = [registry.definition(spec, texts) for spec in tools.values()]
+    definitions = [registry.definition(spec, texts) for spec in tools.values() if offered is None or spec.name in offered]
     bound = model.bind_tools(provider_tools(definitions, provider, strict=strict), **(bind_kwargs or {}))
     # A fallback profile, used once when the model declines to continue: (model, provider, bind kwargs).
     second = fallback[0].bind_tools(provider_tools(definitions, fallback[1], strict=strict), **fallback[2]) if fallback else None
@@ -290,7 +292,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                     if args and args.open_questions:
                         update["open_questions"] = [*update.get("open_questions", []), *args.open_questions]
                 elif call["tool"] == SUBMIT_REPORT:
-                    env, result = _submit_report(spec, call, state, seen, current, round_now, attempts)
+                    env, result = _submit_report(spec, call, state, seen, current, round_now, attempts, single=ctx.single_call)
                     attempts = result["attempts"]
                     update["validation"] = result["validation"]
                     if result.get("report"):
@@ -399,15 +401,19 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         return Envelope(" ".join([text, *(n + "." for n in notes)])), merged, args
 
     def _submit_report(spec: ToolSpec, call: Call, state: dict[str, Any], seen: validator.Seen, current: dict[str, Any],
-                       round_now: int, attempts: int) -> tuple[Envelope, dict[str, Any]]:
+                       round_now: int, attempts: int, *, single: bool = False) -> tuple[Envelope, dict[str, Any]]:
         """Validate a submitted report. One retry per submission cycle covers every finding; after it a
-        bad handle is dropped and recorded, and a claim left with no handle is kept and flagged (J14)."""
+        bad handle is dropped and recorded, and a claim left with no handle is kept and flagged (J14).
+        In a single-call run there is no board tool and no second turn: a hypothesis may be new here, as
+        one the model derived, and the first submission is treated as the last."""
         result: dict[str, Any] = {"attempts": attempts, "validation": state.get("validation"), "merged": {}}
         try:
             args = spec.args.model_validate(call["args"])
         except Exception as problem:
             return errors.bad_arguments(spec.name, problem), result
-        merged, problems, notes = board.apply_update(current, args.hypotheses, round=round_now, call_id=call["call_id"], allow_new=False)
+        updates = [HypothesisUpdate(**h.model_dump(exclude_unset=True), source="derived") if single and h.id not in current else h
+                   for h in args.hypotheses]
+        merged, problems, notes = board.apply_update(current, updates, round=round_now, call_id=call["call_id"], allow_new=single)
         after = merge_hypotheses(current, merged)
         draft = {**args.model_dump(exclude={"hypotheses"}), "as_of": state["as_of"], "hypotheses": board.for_report(after, state["as_of"])}
         unknown, only_listed = seen.split(validator.report_handles(draft))
@@ -418,7 +424,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         if unjudged:        # one verdict for every alert stream the sweep showed (J7)
             findings.append(NO_VERDICT.format(handles=", ".join(unjudged)))
         findings += [f"{claim}: {what}." for claim, what in validator.structure(draft)]
-        if findings and attempts == 0:
+        if findings and attempts == 0 and not single:
             result.update(attempts=1, validation={"ok": False, "attempts": 1, "findings": findings})
             return errors.error(NOT_ACCEPTED.format(findings=" ".join(findings))), result
         if problems:        # the board would not take the update even on the retry: the board stands as it was

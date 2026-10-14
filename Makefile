@@ -2,10 +2,17 @@
 UV ?= uv
 PY := $(UV) run --python 3.12 python
 BUNDLE ?= bundles/larkspur-checkout-2026-10-13
-# The replay clock for the targets that need one: the second checkpoint.
+# The replay clock for the targets that need one: the second checkpoint, and the trigger file of the same name.
 NOW ?= 14:52
+CHECKPOINT ?= 1452
+# Runs per cell of `make matrix`.
+REPS ?= 5
+# Keys come from .env when there is one; nothing here names or prints one.
+ENV := $(if $(wildcard .env),--env-file .env)
+# The commit a run record carries. A container has no git, so the host passes it in.
+export SMALLS_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 
-.PHONY: data lint ingest tag docker-test leak-test tools-smoke retrieval score demo run heldout test schemas
+.PHONY: data lint ingest tag docker-test leak-test tools-smoke retrieval score demo run resume regress matrix heldout test schemas
 
 data:
 	$(PY) -m smalls_data.build
@@ -51,10 +58,23 @@ score:
 	@echo "score: stub until step 7 (scorer)"
 
 demo:
-	@echo "demo: stub until step 10"
+	@echo "demo: stub until a first complete run is committed (build row C3)"
 
+# One investigation at CHECKPOINT, in the terminal. Live: it needs a model key and it costs money.
 run:
-	@echo "run: stub until the agent exists"
+	$(UV) run --python 3.12 $(ENV) smalls run --bundle $(BUNDLE) --now $(NOW) --trigger-file $(BUNDLE)/triggers/$(CHECKPOINT).md --checkpoint $(CHECKPOINT)
+
+# Go on with a paused run: make resume RUN=<run id>
+resume:
+	$(UV) run --python 3.12 $(ENV) smalls resume $(RUN) --bundle $(BUNDLE)
+
+# The regression set: the agent at the second checkpoint, three runs, one process each. Live: it costs money for each run.
+regress:
+	$(UV) run --python 3.12 $(ENV) python -m eval.matrix --bundle $(BUNDLE)
+
+# The matrix: the no-tools baseline and the agent, at both checkpoints, REPS runs per cell. Live, and REPS times dearer.
+matrix:
+	$(UV) run --python 3.12 $(ENV) python -m eval.matrix --bundle $(BUNDLE) --arms A,C --checkpoints 1440,1452 --reps $(REPS)
 
 heldout:
 	@echo "heldout: stub until step 11"

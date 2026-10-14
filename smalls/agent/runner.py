@@ -28,7 +28,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.errors import GraphRecursionError
 from langgraph.types import Command
 
-from smalls.agent import gate, prompts
+from smalls.agent import gate, metrics, prompts
 from smalls.agent.config import SCRIPTED, Config
 from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
 from smalls.agent.graph import build_graph, iso, partial_report
@@ -88,7 +88,8 @@ def resume_hint(run_id: str) -> str:
 class Runner:
     def __init__(self, cfg: Config, toolbox: Toolbox, run_id: str | None = None, *, sinks: list[Sink] | None = None,
                  decider: Decider | None = None, stop_at_gate: bool = False, attended: bool = False, eval_run: bool = False,
-                 script: Any = None, durability: str | None = None, fallback_script: Any = None):
+                 script: Any = None, durability: str | None = None, fallback_script: Any = None, offered: tuple[str, ...] | None = None,
+                 single_call: bool = False):
         self.cfg = cfg
         self.toolbox = toolbox
         self.record = RunRecord(cfg.runs_dir, run_id or new_run_id())
@@ -100,6 +101,8 @@ class Runner:
         self.eval_run = eval_run
         self.stop_at_gate = stop_at_gate
         self.durability = durability
+        self.offered = tuple(offered) if offered else None
+        self.single_call = single_call
         self.tools = toolset(toolbox.read_tools)
         # Who answers a gate when nobody is asked: an eval run approves and records; any other unattended
         # run takes the configured answer, which defers by default (J15).
@@ -120,7 +123,8 @@ class Runner:
             fallback = (other_model, other.provider, other_bind)
         self.conn = sqlite3.connect(self.record.checkpoints(), check_same_thread=False)
         self.graph = build_graph(self.model, toolbox.read_tools, toolbox.inventory, provider=spec.provider, bind_kwargs=bind,
-                                 checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)), fallback=fallback)
+                                 checkpointer=SqliteSaver(self.conn), strict=bool(spec.params.get("strict_tools", True)), fallback=fallback,
+                                 offered=self.offered)
         self.index = RunsIndex(cfg.runs_dir)
         self._thinking: list[str] = []          # this model call's reasoning, whole
         self._unsent: list[str] = []            # the part not yet emitted as a delta
@@ -133,7 +137,7 @@ class Runner:
 
     def start(self, trigger: str, now: datetime, *, checkpoint: str | None = None, arm: str = "C", channel: str | None = None) -> dict[str, Any]:
         self._ctx = self._context(now, checkpoint=checkpoint, channel=channel)
-        definitions = [registry.definition(spec) for spec in self.tools.values()]
+        definitions = [registry.definition(spec) for spec in self.tools.values() if self.offered is None or spec.name in self.offered]
         self.record.write_json("run.json", {
             "run_id": self.run_id, "created": gate.now_iso(), "arm": arm, "checkpoint": checkpoint, "now": iso(now), "trigger": trigger,
             **self.toolbox.describe, "profile": self.spec.profile, "provider": self.spec.provider, "model": self.spec.model,
@@ -141,13 +145,14 @@ class Runner:
             "prompt_sha": sha("\n".join(prompts.load(name) for name in prompts.NAMES)),
             "tools_sha": sha(json.dumps(definitions, sort_keys=True)), "sweep": self.cfg.sweep, "versions": versions(),
             "key_variables": key_names(), "runner": os.environ.get("SMALLS_RUNNER", "host"), "eval_run": self.eval_run,
+            "durability": self.durability or "async", "read_tools": list(self.toolbox.read_tools), "offered": list(self.offered) if self.offered else None,
             "config": self.cfg.public(),
             "context": {"now": now.isoformat(), "checkpoint": checkpoint, "channel": channel, "call_budget": self._ctx.call_budget,
                         "extra_turns": self._ctx.extra_turns, "revision_calls": self._ctx.revision_calls,
                         "stale_rounds": self._ctx.stale_rounds, "stuck_empty": self._ctx.stuck_empty,
                         "context_fraction": self._ctx.context_fraction, "max_input_tokens": self._ctx.max_input_tokens,
                         "max_tokens": self._ctx.max_tokens, "auto_approve": self._ctx.auto_approve, "sweep": self._ctx.sweep,
-                        "verifier": self._ctx.verifier}})
+                        "verifier": self._ctx.verifier, "single_call": self._ctx.single_call}})
         self.bus.emit("run_started", now=iso(now), trigger=trigger, checkpoint=checkpoint, profile=self.spec.profile,
                       auto_approve=self._ctx.auto_approve, attended=self.attended, tags=self.toolbox.describe.get("tags"))
         self.bus.emit("phase", name="orient")
@@ -196,7 +201,7 @@ class Runner:
             auto_approve=saved.get("auto_approve", cfg.auto_approve), via="cli" if self.attended else "headless",
             checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
             sweep=saved.get("sweep", dict(cfg.sweep)), verifier=saved.get("verifier", bool(cfg.verifier.get("enabled"))),
-            evidence=self.record.evidence)
+            single_call=saved.get("single_call", self.single_call), evidence=self.record.evidence)
 
     # -- the loop ------------------------------------------------------------------------------------------
 
@@ -375,6 +380,8 @@ class Runner:
                    "tool_calls": values.get("calls_used", 0), "calls_by_status": statuses, "gate": decided,
                    "validation": values.get("validation"), "revisions": values.get("revisions", 0),
                    "tokens": usage_totals(usage_calls), "events": counts,
+                   "process": metrics.process(values, usage_calls, counts, budget=self._ctx.budget(values.get("revisions", 0)),
+                                              turn_cap=self._ctx.turn_cap(values.get("revisions", 0))) if self._ctx else None,
                    "event_bytes": self.record.path("events.jsonl").stat().st_size, "dropped_sinks": self.bus.dropped}
         self.record.write_derived(values, usage_calls, summary)
         return summary

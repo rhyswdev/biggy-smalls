@@ -179,6 +179,9 @@ class RunContext:
     channel: str | None = None
     sweep: dict[str, str] = field(default_factory=dict)
     verifier: bool = False
+    # The no-tools baseline (eval arm A): the model gets one turn with only the report tool, so a hypothesis
+    # may be new in the report and the first submission is the one that stands.
+    single_call: bool = False
     evidence: Callable[[str, Any], None] | None = None      # (call_id, envelope rows) -> the evidence file
 
     def turn_cap(self, revisions: int = 0) -> int:
