@@ -37,6 +37,7 @@ class Settings:
     workers: int = 4
     tags: bool | None = None
     load_scripted: bool = False         # load committed runs of the scripted provider too; tests only (R5)
+    clock: str | None = None            # an ISO time in place of the checkpoint's clock: for a fixture registry with its own day
     db_name: str = field(default_factory=lambda: f"smalls-{uuid.uuid4().hex[:12]}")
 
     @classmethod
@@ -65,6 +66,8 @@ class Settings:
         """The checkpoint's clock time on the bundle's day: `1452` is 14:52."""
         from smalls.tools.store import Bundle, Store
 
+        if self.clock:
+            return datetime.fromisoformat(self.clock.replace("Z", "+00:00"))
         text = self.checkpoint
         clock = f"{text[:-2]}:{text[-2:]}" if text.isdigit() and len(text) in (3, 4) else text
         ms = Store(None, Bundle(self.bundle)).resolve_time(clock)

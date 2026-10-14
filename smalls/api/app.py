@@ -9,6 +9,7 @@ does.
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -22,6 +23,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         service = Service(settings or Settings.from_env())
+        service.loop = asyncio.get_running_loop()
         app.state.service = service
         try:
             yield

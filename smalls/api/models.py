@@ -1,0 +1,67 @@
+"""Request bodies (docs/decisions/ui-build.md section 6.4). Every one is closed and every text has a length
+limit, so the API never takes more than a person would type."""
+
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+TEXT = 8000         # a trigger or a pasted note
+NOTE = 4000
+REASON = 2000
+
+
+class Closed(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class NewChat(Closed):
+    origin: Literal["chat", "headless", "blank"]
+    trigger: str | None = Field(None, max_length=TEXT)
+    auto_approve: bool = False
+    title: str | None = Field(None, max_length=200)
+
+
+class Answer(Closed):
+    """One call's answer: approve (optionally with edited arguments), skip (defer) or reject with a reason."""
+
+    approve: bool = False
+    defer: bool = False
+    reason: str | None = Field(None, max_length=REASON)
+    args: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def one_answer(self) -> "Answer":
+        if self.approve and self.defer:
+            raise ValueError("an answer approves or defers, not both")
+        if not self.approve and not self.defer and not (self.reason or "").strip():
+            raise ValueError("a rejection needs a reason")
+        if self.args is not None and not self.approve:
+            raise ValueError("edited arguments come with an approval")
+        return self
+
+    def for_runner(self) -> dict[str, Any]:
+        if self.approve:
+            return {"approve": True, **({"args": self.args} if self.args is not None else {})}
+        if self.defer:
+            return {"defer": True, **({"reason": self.reason} if self.reason else {})}
+        return {"approve": False, "reason": (self.reason or "").strip()}
+
+
+class GateAnswer(Closed):
+    interrupt_id: str = Field(min_length=1, max_length=200)
+    answers: dict[str, Answer] = Field(min_length=1, max_length=50)
+    note: str | None = Field(None, max_length=NOTE)
+
+
+class NoteIn(Closed):
+    text: str = Field(min_length=1, max_length=NOTE)
+
+
+class Switch(Closed):
+    on: bool
+
+
+class MoreRun(Closed):
+    resume: bool = False
