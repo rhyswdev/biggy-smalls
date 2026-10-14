@@ -2,7 +2,7 @@
 # its profile is pinned here, so a benchmark that changes the agent's models is always scored by the same judge.
 # Model names live only here and in smalls/agent/config.toml.
 
-budget_usd = 5.0            # live judge calls spend up to this without asking (S4); the running total is eval/judge/spend.jsonl
+budget_usd = 9.0            # live judge calls spend up to this without asking (S4; raised from 5 for judge 2's regrade, Z2); the running total is eval/judge/spend.jsonl
 claim_chars = 2400          # a longer row keeps its first two thirds and last third, so the judge reads at most this much of it
 max_claims = 12             # hypotheses judged per report, leading first
 

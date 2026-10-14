@@ -3,6 +3,7 @@
     python -m eval.score <run id or folder>... [--no-judge]       # writes scores.json into each run's folder
     python -m eval.score --report <file.json> [--checkpoint 1452]  # prints a hand-written report's scores
     python -m eval.score --ledger                                  # each ledger row's `scores`, from its scores.json
+    python -m eval.score --agreement                               # the judge's claim verdicts against the hand labels
 
 A run id is looked for in `eval/loop-runs/` and then `eval/runs/`. `scores.json` holds the deterministic checks
 (`eval/scorer.py`) and the judge's part (`eval/judge.py`), with the versions of both, so a score can be traced
@@ -127,6 +128,30 @@ def fill_ledger(ledger: Path | None = None) -> tuple[int, list[str]]:
     return filled, missing
 
 
+LABELS = ROOT / "eval" / "judge" / "labels.yaml"
+
+
+def agreement(labels: Path = LABELS) -> dict[str, Any]:
+    """The judge's claim verdicts against the hand labels (row S4): each label beside the verdict in its run's
+    `scores.json`. A label whose run has no judged verdict for that claim is counted as missing."""
+    import yaml
+
+    rows = []
+    for item in yaml.safe_load(labels.read_text(encoding="utf-8"))["claims"]:
+        try:
+            path = find(item["run"]) / "scores.json"
+            j = json.loads(path.read_text(encoding="utf-8")).get("judge") or {}
+        except (SystemExit, OSError):
+            j = {}
+        got = (((j.get("claims") or {}).get("by_id") or {}).get(item["id"]) or {}).get("verdict")
+        rows.append({"run": item["run"], "id": item["id"], "label": item["label"], "judge": got, "version": j.get("judge")})
+    by_label = {k: [sum(1 for r in rows if r["label"] == k and r["judge"] == k), sum(1 for r in rows if r["label"] == k)]
+                for k in judging.VERDICTS}
+    return {"agree": sum(1 for r in rows if r["judge"] == r["label"]), "of": len(rows),
+            "missing": sum(1 for r in rows if r["judge"] not in judging.VERDICTS), "by_label": by_label,
+            "versions": sorted({str(r["version"]) for r in rows}), "rows": rows}
+
+
 def line(s: dict[str, Any]) -> str:
     """One run's scores in a line, as counts."""
     if "error" in s:
@@ -156,7 +181,16 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--no-judge", action="store_true", help="the deterministic checks only; no model call")
     p.add_argument("--rejudge", action="store_true", help="call the judge again even where scores.json holds this judge's verdict")
     p.add_argument("--ledger", action="store_true", help="fill every ledger row's `scores` from its run's scores.json")
+    p.add_argument("--agreement", action="store_true", help="the judge's claim verdicts against the hand labels; no model call")
     args = p.parse_args(argv)
+    if args.agreement:
+        a = agreement()
+        print(f"judge {', '.join(a['versions'])}: agrees with {a['agree']} of {a['of']} hand labels"
+              + "".join(f"; {k} {n} of {of}" for k, (n, of) in a["by_label"].items()) + (f"; {a['missing']} unjudged" if a["missing"] else ""))
+        for r in a["rows"]:
+            if r["judge"] != r["label"]:
+                print(f"  {r['run']} {r['id']}: labelled {r['label']}, judged {r['judge']}")
+        return 0
     if args.ledger:
         filled, missing = fill_ledger()
         print(f"ledger: {filled} rows scored" + (f"; no scores.json for {', '.join(missing)}" if missing else ""))

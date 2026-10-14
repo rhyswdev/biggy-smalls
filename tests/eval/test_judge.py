@@ -134,3 +134,18 @@ def test_rescoring_keeps_the_judges_verdict_unless_asked(tmp_path):
     assert len(calls) == 1
     score_folder(folder, script=script, rejudge=True)
     assert len(calls) == 2
+
+
+def test_agreement_sets_each_hand_label_beside_the_judges_verdict(tmp_path):
+    from eval import score
+
+    run = tmp_path / "r1"
+    run.mkdir()
+    (run / "scores.json").write_text(json.dumps({"judge": {"judge": "2", "claims": {"by_id": {
+        "h1": {"verdict": "supported"}, "h2": {"verdict": "supported"}}}}}))
+    labels = tmp_path / "labels.yaml"
+    labels.write_text(f"claims:\n  - {{run: {run}, id: h1, label: supported}}\n  - {{run: {run}, id: h2, label: partial}}\n"
+                      f"  - {{run: {run}, id: h3, label: unsupported}}\n")
+    a = score.agreement(labels)
+    assert (a["agree"], a["of"], a["missing"], a["versions"]) == (1, 3, 1, ["2"])
+    assert a["by_label"] == {"supported": [1, 1], "partial": [0, 1], "unsupported": [0, 1]}

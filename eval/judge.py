@@ -28,7 +28,7 @@ PROMPT = ROOT / "eval" / "judge" / "prompt.md"
 SPEND = ROOT / "eval" / "judge" / "spend.jsonl"
 GROUPS = ("mechanism", "actions", "harmful_top3")
 VERDICTS = ("supported", "partial", "unsupported")
-JUDGE_VERSION = "1"
+JUDGE_VERSION = "2"        # 2 (2026-10-15): a conditional or requested step is not a recommended harmful step
 CUT = " [cut]"
 ESTIMATE_USD = 0.12        # what one call is assumed to cost when the budget is checked before it
 
