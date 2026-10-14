@@ -276,6 +276,35 @@ def test_an_empty_result_names_what_to_drop_and_a_clamped_window_says_so():
 
 
 @pytest.mark.parametrize("checkpoint", CHECKPOINTS)
+def test_a_count_of_nothing_is_a_citable_table_unless_it_depends_on_a_tag(checkpoint):
+    """Ruling 11 of section 11.1: an absence can be cited, for exactly the terms, filters and window asked."""
+    ctx = golden.ctx(checkpoint, tags=True)
+    nothing = ["zz-no-such-term-zz"]
+    by_minute = golden.run("search_logs", ctx, since="-6m", terms=nothing, group_by="minute")
+    [row] = by_minute.rows
+    assert by_minute.status == "ok" and by_minute.meta["empty"] and by_minute.meta["total"] == 0
+    assert row.handle.startswith("q:") and is_handle(row.handle) and list(by_minute.shown) == [row.handle]
+    title, head, *buckets = row.text.splitlines()
+    assert "count by minute: 0 log records" in title and head == "bucket  records" and len(buckets) >= 6 and all(b.endswith("  0") for b in buckets)
+    assert "A misspelt term also counts 0" in by_minute.text and "To look wider: Drop a term, or widen the window." in by_minute.text
+    assert golden.handles(golden.run("search_logs", ctx, since="-6m", terms=nothing, group_by="minute")) == golden.handles(by_minute)
+    assert golden.handles(golden.run("search_logs", ctx, since="-7m", terms=nothing, group_by="minute")) != golden.handles(by_minute)
+    by_host = golden.run("search_logs", ctx, since="-1h", terms=nothing, group_by="host")
+    assert by_host.rows[0].text.splitlines()[-1] == "(none: no record matched)" and by_host.rows[0].handle.startswith("q:")
+    # A count of nothing over sampled sources says that a rare record may not have been kept.
+    rates = dict(ctx.store.conn.execute("SELECT json_extract(attrs, '$.sourcetype'), max(coalesce(keep_1_in, 1)) FROM visible WHERE kind = 'log' "
+                                        "AND t_known >= ? GROUP BY 1", (ctx.store.now - 3_600_000,)))
+    sampled, plain = next(st for st, r in rates.items() if r > 1), next(st for st, r in rates.items() if r == 1)
+    assert "[the sources in scope keep 1:" in golden.run("search_logs", ctx, since="-1h", terms=nothing, sourcetype=sampled, group_by="level").text
+    assert "[the sources in scope keep" not in golden.run("search_logs", ctx, since="-1h", terms=nothing, sourcetype=plain, group_by="level").text
+    # A count that depends on a tag mints no handle, so a count of nothing under a tag stays the empty sentence.
+    value = profiles.facets()["signal"][0]
+    for args in ({"group_by": "signal"}, {"group_by": "host", "signal": value}):
+        env = golden.run("search_logs", ctx, since="-1h", terms=nothing, **args)
+        assert not env.rows and env.meta["empty"] and env.text.startswith("0 rows."), args
+
+
+@pytest.mark.parametrize("checkpoint", CHECKPOINTS)
 def test_no_search_shows_anything_from_after_now(checkpoint):
     ctx = golden.ctx(checkpoint, tags=True)
     now = ctx.store.now

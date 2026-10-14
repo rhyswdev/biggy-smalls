@@ -114,7 +114,7 @@ def render(parts: Parts, *, cap_tokens: int, cap_rows: int | None = None) -> Env
         return Envelope(text, rows=[Row(row.handle, row.text, None) for row in rows[:1]], referenced=list(dict.fromkeys(
                             [*(ref for row in rows[:1] for ref in row.refs), *parts.referenced])),
                         native_query=parts.native_query, window=parts.window.iso if parts.window else None,
-                        meta={**parts.meta, "total": total, "returned": total, "truncated": False, "empty": False,
+                        meta={**parts.meta, "total": total, "returned": total, "truncated": False, "empty": total == 0,
                               "clamped": bool(parts.window and parts.window.clamped), "sampled": parts.sampled, "tag": parts.tag})
     while cap_rows is not None and len(rows) > cap_rows:
         drop_one()

@@ -225,7 +225,7 @@ def cmd_blind(args: argparse.Namespace) -> int:
         print("\n".join(f"installed {name}" for name in blind.install(folder)))
         return 0
     findings = blind.check(folder, skeleton())      # with no folder, the files as installed
-    print("\n".join(findings) if findings else "placeholder gate, slot check and descriptions coverage: all pass")
+    print("\n".join(findings) if findings else "placeholder gate, slot check, descriptions coverage and tool list: all pass")
     return 1 if findings else 0
 
 

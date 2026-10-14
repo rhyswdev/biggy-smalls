@@ -4,8 +4,9 @@ docs/decisions/tools-agent-build.md).
 
 The model writes judgements; code writes the bookkeeping and enforces the caps.
 
-- A new hypothesis must carry its statement, role, status, subject, confidence and source. `source` is
-  set when a hypothesis is created and cannot change (J1).
+- A new hypothesis must carry its statement, role, status, subject, confidence and source. `source` and
+  `role` are set when a hypothesis is created and cannot change (J1): the role is what the hypothesis
+  claims, and `status` says whether that claim stands, so a cleared rival keeps its role and is rejected.
 - With no non-chat support, confidence is capped at 0.5: the value is clamped and the result says so.
 - At most one hypothesis is `leading`: a second is refused.
 - Ready (J2): one hypothesis leads; it has a non-chat handle in `support` and in `discriminating`; every
@@ -55,6 +56,10 @@ def apply_update(board: dict[str, dict[str, Any]], updates: list[Any], *, round:
                 continue
         elif "source" in fields and fields["source"] != prev.get("source"):
             problems.append(f"{hid}: source is set when a hypothesis is created and cannot change (it is {prev.get('source')})")
+            continue
+        elif "role" in fields and fields["role"] != prev.get("role"):
+            problems.append(f"{hid}: role is what the hypothesis claims, set when it is created; it cannot change (it is {prev.get('role')}). "
+                            "A different claim is a new hypothesis")
             continue
         after = {**(prev or {}), **fields}
         if after.get("confidence", 0) > CAP_WITHOUT_NON_CHAT and not non_chat(after.get("support")):

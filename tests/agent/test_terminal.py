@@ -54,7 +54,7 @@ def test_a_run_paused_in_one_process_resumes_in_another_and_prints_what_a_replay
     bars = [line for line in printed(replayed) if " · calls " in line and "round " in line]
     assert len(bars) >= 5 and "round 0 · no leading hypothesis · 0 open, 0 rejected · calls 0/30" in bars[0]
     assert any("round 2 · leading h-full 0.60 · 1 open, 0 rejected · calls 4/30" in bar for bar in bars)
-    assert [bar for bar in printed(second) if "leading h-release 0.65 · 1 open, 1 rejected" in bar]
+    assert [bar for bar in printed(second) if "leading h-release 0.65 · 0 open, 2 rejected" in bar]
 
 
 def events_of(run_dir: Path) -> list[dict]:

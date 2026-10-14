@@ -80,6 +80,23 @@ def test_a_new_hypothesis_needs_its_fields_and_source_cannot_change():
     assert problems == ["ghost: the board holds no hypothesis with this id; create it with update_board first"]
 
 
+def test_role_is_the_claim_so_it_cannot_change_and_a_cleared_rival_still_needs_against():
+    """Ruling 4 of section 11.1: the role is what a hypothesis claims; `status` says whether it stands."""
+    b, _, _ = apply({}, upd("h", **NEW))
+    after, problems, _ = apply(b, upd("h", role="symptom", status="rejected", against=[LOG]), round=2)
+    assert after == b and problems == ["h: role is what the hypothesis claims, set when it is created; it cannot change (it is cause). "
+                                       "A different claim is a new hypothesis"]
+    same, problems, _ = apply(b, upd("h", role="cause", status="rejected", against=[LOG]), round=2)
+    assert not problems and same["h"]["role"] == "cause" and same["h"]["status"] == "rejected"     # the same role restated is no change
+    # Relabelling a rival is refused, so the ready check still asks a cleared cause for its against handle.
+    lead = {"lead": {**NEW, "id": "lead", "status": "leading", "support": [LOG], "discriminating": [LOG2]}}
+    rival, _, _ = apply(merge_hypotheses({}, lead), upd("rival", **NEW))
+    relabelled, problems, _ = apply(rival, upd("rival", role="unrelated", status="rejected"), round=2)
+    assert problems and relabelled["rival"]["role"] == "cause" and board.missing_for_ready(relabelled) == ["rival rival has no against"]
+    _, problems, _ = apply(b, HypothesisFields(id="ghost", confidence=0.4), round=2, allow_new=False)
+    assert problems == ["ghost: the board holds no hypothesis with this id; create it with update_board first"]
+
+
 def test_an_update_carries_only_what_it_sets_and_a_list_that_is_set_replaces_the_list():
     b, _, _ = apply({}, upd("h", **{**NEW, "support": [LOG, LOG2], "entities": ["x", "y"]}))
     b, _, _ = apply(b, upd("h", confidence=0.4, because=[LOG]), round=2)

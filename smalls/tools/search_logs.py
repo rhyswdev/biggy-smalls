@@ -6,8 +6,9 @@ the record's first line, with a stack trace folded to three frames. A row that w
 `get_record` on its handle returns the whole record.
 
 Stats mode prints a count table by minute, host, level, template or, with tags on, signal. It is one
-citable row whose handle is minted for this call. A count that depends on a tag is not citable, because a
-tag is never evidence.
+citable row whose handle is minted for this call. A count that matches nothing is still a table with its
+handle, so an absence can be cited for exactly those terms, filters and window. A count that depends on a
+tag is not citable, because a tag is never evidence, and when it matches nothing it is the empty sentence.
 
 Every count from a sampled source carries its sampling rate and an estimate: the sum of each matched
 record's own rate. Only the rate and its unit are ever shown.
@@ -39,6 +40,10 @@ SHORTENED = "[a row ending in […] is shortened, and a structured record shows 
 NOT_CITABLE = "[not citable: this count depends on a tag, and a tag is a search aid, never evidence. Cite the records themselves.]"
 MULTI_TAG = "[a record that carries two values is counted under each, so these counts can add up to more than the {n} records matched]"
 NO_NATIVE_TAG = " (the tag filter has no native equivalent and is not in this query)"
+NO_GROUPS = "(none: no record matched)"
+ZERO = ("[no record matched these terms and filters in the window. A misspelt term also counts 0, so check the terms "
+        "before reading this as an absence. To look wider: {hint}]")
+ZERO_SAMPLED = "[the sources in scope keep {rate}, so a rare record may not have been kept]"
 
 
 def run(args: Any, ctx: ToolContext) -> Parts:
@@ -166,13 +171,17 @@ def _stats(args: Any, ctx: ToolContext, window: Window, rows: list[dict[str, Any
            common: dict[str, Any], signal: str | None) -> Parts:
     by = args.group_by
     sampled = _is_sampled(rows)
-    if not rows:
+    if not rows and (signal or by == FACET):        # a tag-dependent count of nothing stays the empty sentence
         return Parts(footer=footer, native_query=native, empty_hint=_empty_hint(args, signal), **common)
+    if not rows:
+        kept = _sampled_scope(args, ctx, window)
+        footer = [ZERO.format(hint=_empty_hint(args, signal)), *([ZERO_SAMPLED.format(rate=_rate(kept))] if kept else []), *footer]
     examples: list[str] = []
     if by == "minute":
         table, said, pipe = _by_time(args, window, rows, sampled)
     else:
         table, said, pipe, examples = _by_group(by, rows, sampled)
+        table = table or [NO_GROUPS]
     title = f"count by {by}: {len(rows)} log records{_sampled(rows)}, {iso(window.since)} to {iso(window.until)}"
     head = ["  ".join(["group" if by != "minute" else "bucket", "records", *(["estimated"] if sampled else [])])]
     native = native + pipe
@@ -185,6 +194,19 @@ def _stats(args: Any, ctx: ToolContext, window: Window, rows: list[dict[str, Any
     text = "\n".join([f"{handle}  {title}", *said, *head, *table])
     return Parts(rows=[Line(handle, text, refs=tuple(examples))], footer=footer, native_query=native, total=len(rows), aggregate=True,
                  sampled=sampled, **common)
+
+
+def _sampled_scope(args: Any, ctx: ToolContext, window: Window) -> list[dict[str, Any]]:
+    """The sampled records in the window under the same sourcetype and host, terms aside: what a count of
+    nothing cannot see."""
+    where, params = ["kind = 'log'", "t_event < ?", "t_known >= ?", "keep_1_in > 1"], [window.until, window.since]
+    if args.sourcetype is not None:
+        where.append("json_extract(attrs, '$.sourcetype') = ?")
+        params.append(args.sourcetype)
+    if args.host is not None:
+        where.append("host = ?")
+        params.append(args.host)
+    return derive.query(ctx, f"SELECT DISTINCT keep_1_in, sample_per FROM visible WHERE {' AND '.join(where)}", params)
 
 
 def _by_time(args: Any, window: Window, rows: list[dict[str, Any]], sampled: bool) -> tuple[list[str], list[str], str]:

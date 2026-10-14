@@ -88,7 +88,7 @@ def turn(messages: list[BaseMessage], tools: list[dict[str, Any]], bad_handle: b
                          "changes": ["jk:report-export#57"], "confidence": 0.65, "source": "derived",
                          "support": deploy + cleanup + ["jk:report-export#57", "jk:report-export#56"], "discriminating": cleanup,
                          "because": deploy + cleanup},
-                        {"id": "h-full", "role": "symptom", "status": "open"},
+                        {"id": "h-full", "status": "rejected", "confidence": 0.3, "against": cleanup, "because": cleanup},
                         {"id": "h-dying", "status": "rejected", "confidence": 0.1, "against": disk, "because": disk}]),
                     call("propose_action", 11, ("h-release", "tonight's run cleans up after itself"), kind=action_kind(tools),
                          target="report-exporter", params=[{"name": "to_version", "value": "2.4.0"}], evidence=deploy + cleanup)])

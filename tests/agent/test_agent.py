@@ -155,7 +155,7 @@ def test_board_history_records_round_call_and_reason(cfg):
     assert first["round"] == 2 and first["call_id"].endswith("update_board")
     assert first["from"] is None and first["to"]["status"] == "leading" and first["because"]
     assert [row["to"]["status"] for row in board["h-dying"]["history"]] == ["open", "rejected"]
-    assert board["h-dying"]["source"] == "stated" and board["h-release"]["status"] == "leading" and board["h-full"]["role"] == "symptom"
+    assert board["h-dying"]["source"] == "stated" and board["h-release"]["status"] == "leading" and (board["h-full"]["role"], board["h-full"]["status"]) == ("cause", "rejected")
     saved = json.loads((r.dir / "board.json").read_text())
     assert [h["id"] for h in saved["hypotheses"]] == ["h-full", "h-dying", "h-release"]
 

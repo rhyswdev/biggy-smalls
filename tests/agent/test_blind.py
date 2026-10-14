@@ -11,7 +11,7 @@ import yaml
 from smalls.agent import __main__ as cli
 from smalls.agent import blind, prompts
 from smalls.agent.config import ROOT
-from smalls.tools import descriptions
+from smalls.tools import descriptions, schemas
 from smalls_data import prompt_lint
 
 ROOM_FILES = ["BRIEF.md", "agent-design.md", "descriptions.yaml", "first_turn.md", "investigator.md", "prompt-v0.txt", "requirements.md",
@@ -31,6 +31,9 @@ def fill(folder: Path) -> None:
     """Stand in for an author: replace every placeholder with some text."""
     for name in blind.PROMPT_FILES:
         text = (folder / name).read_text().replace(prompts.PLACEHOLDER, f"Text for {name}.")
+        if name == "verifier_contrarian.md":
+            text += "".join(f"- `{tool}`: " + ", ".join(f"`{arg}`" for arg in model.model_fields) + "\n"
+                            for tool, model in schemas.args_models(tags=False).items())
         (folder / name).write_text(text)
     texts = yaml.safe_load((folder / "descriptions.yaml").read_text())
 
@@ -112,6 +115,13 @@ def test_the_checks_name_a_check_and_a_file_and_nothing_else(room, capsys):
     for broken in (good.replace("{budget}", ""), good + "{now}", good + "{surprise}", good + "{"):
         template.write_text(broken)
         assert blind.check(room, cli.skeleton()) == ["slot check: first_turn.md"]
+    template.write_text(good)
+    contrarian = room / "verifier_contrarian.md"
+    listed = contrarian.read_text()
+    for stale in (listed.replace("`get_oncall`", "`get_on_call`"), listed.replace(", `hops`", ""), "Text for verifier_contrarian.md.\n"):
+        contrarian.write_text(stale)        # a renamed tool, a missing argument, no list at all
+        assert blind.check(room, cli.skeleton()) == ["tool list: verifier_contrarian.md"]
+    contrarian.write_text(listed)
     template.write_text(good)
     texts = yaml.safe_load((room / "descriptions.yaml").read_text())
     del texts["tools"]["get_record"]["params"]["part"]

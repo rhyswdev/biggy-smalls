@@ -290,3 +290,18 @@ def test_action_kinds_come_from_the_descriptions_file():
     assert custom.model_validate({"kind": "rollback", "target": "x", "evidence": []}).params == []
     with pytest.raises(ValidationError):
         custom.model_validate({"kind": "reboot", "target": "x", "evidence": []})
+
+
+def test_each_action_kind_reaches_the_model_with_its_text():
+    """Ruling 9 of section 11.1: the `kind` description is the author's text, then one `kind: text` line per
+    kind, in the order of the closed list. No other tool's description changes."""
+    texts = descriptions.load()
+    kind = registry.definition(actions.spec())["parameters"]["properties"]["kind"]
+    lead, listed = kind["description"].split("\n\n", 1)
+    assert lead == texts["tools"]["propose_action"]["params"]["kind"]
+    assert listed.splitlines() == [f"{name}: {' '.join(text.split())}" for name, text in texts["action_kinds"].items()] and kind["enum"] == list(texts["action_kinds"])
+    # A kind the descriptions do not hold adds no line.
+    custom = registry.definition(actions.spec(("restart", "rollback")))["parameters"]["properties"]["kind"]
+    assert custom["description"] == texts["tools"]["propose_action"]["params"]["kind"]
+    for spec in registry.registry(tags=True).values():
+        assert all("\n\n" not in str(p.get("description", "")) for p in registry.definition(spec)["parameters"]["properties"].values())

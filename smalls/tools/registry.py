@@ -165,6 +165,10 @@ def definition(spec: ToolSpec, texts: dict[str, Any] | None = None) -> dict[str,
         own = {**own, "params": {"rationale": texts["rationale"], **own["params"]}}
     for name, prop in props.items():
         prop["description"] = own["params"][name]
+    if spec.kind == "action" and "enum" in props.get("kind", {}):      # each kind's text, joined to the closed list (ruling 9 of 11.1)
+        kinds = texts.get("action_kinds", {})
+        lines = [f"{kind}: {' '.join(str(kinds[kind]).split())}" for kind in props["kind"]["enum"] if kind in kinds]
+        props["kind"]["description"] = "\n\n".join([props["kind"]["description"], "\n".join(lines)]) if lines else props["kind"]["description"]
     for cls_name, node in defs.items():
         for field, prop in node.get("properties", {}).items():
             prop["description"] = texts["objects"][descriptions.owner(classes[cls_name], field)][field]

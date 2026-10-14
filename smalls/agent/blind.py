@@ -7,8 +7,8 @@ author who has never seen the incident, working in a folder that holds only what
 that builds the agent never writes that prose: its part is this module, which is mechanical.
 
 `write_room` fills the folder. `check` runs the checks that need nothing from the dataset: the placeholder
-gate, the slot check and the coverage of the descriptions file. They print the name of a check and a file,
-nothing else. The bundle-string lint lives with the generator and is run from there. `install` copies the
+gate, the slot check, the coverage of the descriptions file and the contrarian prompt's tool list. They
+print the name of a check and a file, nothing else. The bundle-string lint lives with the generator and is run from there. `install` copies the
 five files in, byte for byte.
 """
 
@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import ast
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -24,7 +25,7 @@ import yaml
 
 from smalls.agent import prompts
 from smalls.agent.config import ROOT
-from smalls.tools import descriptions
+from smalls.tools import descriptions, schemas
 
 DOCS = {"requirements.md": "docs/requirements.md", "agent-design.md": "docs/research/agent-design.md",
         "tools-agent-build.md": "docs/decisions/tools-agent-build.md"}
@@ -116,6 +117,15 @@ def write_room(target: Path | str, schema: dict[str, Any], skeleton: dict[str, A
     return sorted(p.name for p in room.iterdir())
 
 
+def names_every_read_tool(text: str) -> bool:
+    """Whether the contrarian prompt names every read tool and each of its arguments, tag inputs aside, in
+    backticks. The check it asks for must be a call the run can make, and the verifier drops one that names
+    a tool or an argument the run does not have, so a list gone stale would fail silently (ruling 7 of
+    section 11.1). A rename fails here, because the new name is missing."""
+    named = set(re.findall(r"`([A-Za-z_][A-Za-z0-9_]*)`", text))
+    return all(tool in named and set(model.model_fields) <= named for tool, model in schemas.args_models(tags=False).items())
+
+
 def installed() -> dict[str, Path]:
     """Where the five files live in the package."""
     return {**{name: prompts.HERE / name for name in PROMPT_FILES}, "descriptions.yaml": descriptions.PATH}
@@ -133,6 +143,8 @@ def check(folder: Path | str | None, skeleton: dict[str, Any]) -> list[str]:
         text = paths[name].read_text(encoding="utf-8")
         if prompts.PLACEHOLDER in text or not text.strip():
             findings.append(f"placeholder gate: {name}")
+        elif name == "verifier_contrarian.md" and not names_every_read_tool(text):
+            findings.append(f"tool list: {name}")
     try:
         found = prompts.slots_of(paths["first_turn.md"].read_text(encoding="utf-8"))
         if sorted(found) != sorted(prompts.SLOTS):
