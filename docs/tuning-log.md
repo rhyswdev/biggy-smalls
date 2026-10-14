@@ -42,6 +42,14 @@ One line per measure, batches in the order they ran.
 - **Board refusals per run.** c3: 0 · sol-shake: 0 · sol-base: 0 · p01: 0 · eff-low: 0 · p02: 0 · p02-low: 0.5 (0 to 1) · p03: 0 · frame: 0 · final: 0 · frame-db-at-time: 0 · p04: 0 · cli-claude: 4 · p3-luna: 0 · p3-sol: 0 · p4-luna: 0 · p4-sol: 0 · p07: 0 · p07-guard: 0 · p08: 0
 - **Quiet-board nudges per run.** c3: - · sol-shake: - · sol-base: - · p01: - · eff-low: - · p02: - · p02-low: - · p03: - · frame: - · final: - · frame-db-at-time: - · p04: - · cli-claude: - · p3-luna: 0 · p3-sol: 0 · p4-luna: 0 (0 to 2) · p4-sol: 0 (0 to 1) · p07: 0 (0 to 1) · p07-guard: 1 (0 to 2) · p08: 1 (0 to 1)
 - **Malformed calls retried per run.** c3: - · sol-shake: - · sol-base: - · p01: - · eff-low: - · p02: - · p02-low: - · p03: - · frame: - · final: - · frame-db-at-time: - · p04: - · cli-claude: - · p3-luna: 0 · p3-sol: 0 · p4-luna: 0 · p4-sol: 0 · p07: 0 · p07-guard: 0 · p08: 0
+- **Scored: reached the cause with non-chat support.** c3: 1 of 1 · sol-shake: 1 of 1 · sol-base: 4 of 4 · p01: 3 of 3 · eff-low: 2 of 2 · p02: 3 of 3 · p02-low: 2 of 2 · p03: 3 of 3 · frame: 2 of 2 · final: 2 of 2 · frame-db-at-time: 1 of 1 · p04: 3 of 3 · cli-claude: 2 of 2 · p3-luna: 1 of 1 · p3-sol: 1 of 1 · p4-luna: 2 of 7 · p4-sol: 7 of 7 · p07: 3 of 3 · p07-guard: 2 of 2 · p08: 5 of 5
+- **Scored: hard fails.** c3: 0 of 1 · sol-shake: 0 of 1 · sol-base: 0 of 4 · p01: 0 of 3 · eff-low: 0 of 2 · p02: 0 of 3 · p02-low: 0 of 2 · p03: 0 of 3 · frame: 0 of 2 · final: 0 of 2 · frame-db-at-time: 0 of 1 · p04: 0 of 3 · cli-claude: 0 of 2 · p3-luna: 0 of 1 · p3-sol: 0 of 1 · p4-luna: 4 of 7 · p4-sol: 0 of 7 · p07: 0 of 3 · p07-guard: 0 of 2 · p08: 0 of 5
+- **Scored: required facts found.** c3: 4 of 5 · sol-shake: 4 of 5 · sol-base: 12 of 14 · p01: 11 of 12 · eff-low: 9 of 10 · p02: 10 of 12 · p02-low: 6 of 7 · p03: 12 of 12 · frame: 8 of 10 · final: 8 of 10 · frame-db-at-time: 5 of 5 · p04: 12 of 15 · cli-claude: 6 of 7 · p3-luna: 5 of 5 · p3-sol: 4 of 5 · p4-luna: 24 of 29 · p4-sol: 24 of 29 · p07: 12 of 15 · p07-guard: 8 of 10 · p08: 20 of 25
+- **Scored: traps passed.** c3: 5 of 5 · sol-shake: 5 of 5 · sol-base: 18 of 18 · p01: 14 of 14 · eff-low: 10 of 10 · p02: 14 of 14 · p02-low: 9 of 9 · p03: 13 of 14 · frame: 10 of 10 · final: 10 of 10 · frame-db-at-time: 5 of 5 · p04: 15 of 15 · cli-claude: 9 of 9 · p3-luna: 4 of 5 · p3-sol: 5 of 5 · p4-luna: 29 of 33 · p4-sol: 32 of 33 · p07: 15 of 15 · p07-guard: 10 of 10 · p08: 23 of 25
+- **Scored: alert streams placed rightly.** c3: 20 of 21 · sol-shake: 21 of 21 · sol-base: 77 of 78 · p01: 59 of 60 · eff-low: 40 of 42 · p02: 60 of 60 · p02-low: 39 of 39 · p03: 60 of 60 · frame: 42 of 42 · final: 40 of 42 · frame-db-at-time: 21 of 21 · p04: 62 of 63 · cli-claude: 38 of 39 · p3-luna: 20 of 21 · p3-sol: 20 of 20 · p4-luna: 131 of 138 · p4-sol: 131 of 134 · p07: 59 of 60 · p07-guard: 40 of 41 · p08: 97 of 100
+- **Scored: agent bar met.** c3: 1 of 1 · sol-shake: 1 of 1 · sol-base: 4 of 4 · p01: 3 of 3 · eff-low: 2 of 2 · p02: 3 of 3 · p02-low: 2 of 2 · p03: 3 of 3 · frame: 2 of 2 · final: 2 of 2 · frame-db-at-time: 1 of 1 · p04: 3 of 3 · cli-claude: 2 of 2 · p3-luna: 1 of 1 · p3-sol: 1 of 1 · p4-luna: 2 of 7 · p4-sol: 7 of 7 · p07: 3 of 3 · p07-guard: 2 of 2 · p08: 5 of 5
+- **Judged: claims supported, partial, unsupported.** c3: 1, 5, 0 · sol-shake: 1, 4, 1 · sol-base: 6, 3, 3 · p01: 7, 5, 0 · eff-low: 4, 8, 0 · p02: 10, 0, 2 · p02-low: 4, 2, 0 · p03: 10, 0, 2 · frame: 6, 1, 2 · final: 10, 0, 2 · frame-db-at-time: 5, 0, 0 · p04: 12, 3, 1 · cli-claude: 2, 4, 0 · p3-luna: 3, 1, 2 · p3-sol: 4, 0, 1 · p4-luna: 15, 8, 1 · p4-sol: 20, 1, 4 · p07: 21, 4, 1 · p07-guard: 11, 2, 1 · p08: 33, 1, 4
+- **Judged: mechanism items stated per run.** c3: 4 · sol-shake: 3 · sol-base: 3.5 (3 to 4) · p01: 3.5 (3 to 4) · eff-low: 3 · p02: 3.5 (3 to 4) · p02-low: 3 · p03: 2 · frame: 2.5 (2 to 3) · final: 3.5 (3 to 4) · frame-db-at-time: 4 · p04: 3 (2 to 4) · cli-claude: 3 · p3-luna: 3 · p3-sol: 3 · p4-luna: 1 (0 to 4) · p4-sol: 3 (3 to 4) · p07: 3 (3 to 4) · p07-guard: 3 · p08: 3
 
 ## Batches
 
@@ -51,11 +59,11 @@ The first live run (row C3), on the first provider, with the opening sweep. It i
 
 phase build; pass 0. Commit `f3bb336`; prompt files `dd587d395688`; set none, from before sets.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `20261014T090933Z-5d5522` | 1452 | standard | anthropic@medium | completed | payments-gateway 0.70 | 4 | 19 | 8 | $1.06 | 213 | 0.71 | 11/15/0 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `20261014T090933Z-5d5522` | 1452 | standard | anthropic@medium | completed | payments-gateway 0.70 | cause 1, traps 5/5, facts 4/5, bar | 4 | 19 | 8 | $1.06 | 213 | 0.71 | 11/15/0 | 0 | - |
 
-Tool calls: 19; Model turns: 8; Board-only turns: 0; Cost per run, USD: 1.06; Wall time, s: 213; Cache share: 0.71; Trigger on the board: 1 of 1; Partial claims: 15 of 26; Unsupported claims per run: 0; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 19; Model turns: 8; Board-only turns: 0; Cost per run, USD: 1.06; Wall time, s: 213; Cache share: 0.71; Trigger on the board: 1 of 1; Partial claims: 15 of 26; Unsupported claims per run: 0; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 1 of 1; Scored: hard fails: 0 of 1; Scored: required facts found: 4 of 5; Scored: traps passed: 5 of 5; Scored: alert streams placed rightly: 20 of 21; Scored: agent bar met: 1 of 1; Judged: claims supported, partial, unsupported: 1, 5, 0; Judged: mechanism items stated per run: 4.
 
 ### sol-shake
 
@@ -63,11 +71,11 @@ The shakedown on the second provider's strong tier at medium effort (row L2).
 
 phase 1; pass 0. Commit `b9ffe9f`; prompt files `dd587d395688`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `sol-shake-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.43 | 247 | 0.81 | 10/15/1 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `sol-shake-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 13 | $0.43 | 247 | 0.81 | 10/15/1 | 0 | - |
 
-Tool calls: 30; Model turns: 13; Board-only turns: 5; Cost per run, USD: 0.43; Wall time, s: 247; Cache share: 0.81; Trigger on the board: 1 of 1; Partial claims: 15 of 26; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 13; Board-only turns: 5; Cost per run, USD: 0.43; Wall time, s: 247; Cache share: 0.81; Trigger on the board: 1 of 1; Partial claims: 15 of 26; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 1 of 1; Scored: hard fails: 0 of 1; Scored: required facts found: 4 of 5; Scored: traps passed: 5 of 5; Scored: alert streams placed rightly: 21 of 21; Scored: agent bar met: 1 of 1; Judged: claims supported, partial, unsupported: 1, 4, 1; Judged: mechanism items stated per run: 3.
 
 ### sol-base
 
@@ -75,14 +83,14 @@ The first phase's baseline, two runs at each checkpoint.
 
 phase 1; pass 0. Commit `912a7ef`, `1258532`; prompt files `dd587d395688`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `sol-base-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.60 | 2 | 30 | 11 | $0.31 | 219 | 0.81 | 9/13/1 | 0 | - |
-| `sol-base-C-1440-tags-r2` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.35 | 262 | 0.85 | 8/16/2 | 0 | - |
-| `sol-base-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.35 | 248 | 0.85 | 9/17/1 | 0 | - |
-| `sol-base-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.75 | 2 | 30 | 12 | $0.33 | 231 | 0.85 | 10/15/2 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `sol-base-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.60 | cause 1, traps 4/4, facts 2/2, bar | 2 | 30 | 11 | $0.31 | 219 | 0.81 | 9/13/1 | 0 | - |
+| `sol-base-C-1440-tags-r2` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 4/4, facts 2/2, bar | 2 | 30 | 13 | $0.35 | 262 | 0.85 | 8/16/2 | 0 | - |
+| `sol-base-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 12 | $0.35 | 248 | 0.85 | 9/17/1 | 0 | - |
+| `sol-base-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.75 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 12 | $0.33 | 231 | 0.85 | 10/15/2 | 0 | - |
 
-Tool calls: 30; Model turns: 12 (11 to 13); Board-only turns: 5 (4 to 6); Cost per run, USD: 0.34 (0.31 to 0.35); Wall time, s: 239 (219 to 262); Cache share: 0.85 (0.81 to 0.85); Trigger on the board: 4 of 4; Partial claims: 61 of 103; Unsupported claims per run: 1.5 (1 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 12 (11 to 13); Board-only turns: 5 (4 to 6); Cost per run, USD: 0.34 (0.31 to 0.35); Wall time, s: 239 (219 to 262); Cache share: 0.85 (0.81 to 0.85); Trigger on the board: 4 of 4; Partial claims: 61 of 103; Unsupported claims per run: 1.5 (1 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 4 of 4; Scored: hard fails: 0 of 4; Scored: required facts found: 12 of 14; Scored: traps passed: 18 of 18; Scored: alert streams placed rightly: 77 of 78; Scored: agent bar met: 4 of 4; Judged: claims supported, partial, unsupported: 6, 3, 3; Judged: mechanism items stated per run: 3.5 (3 to 4).
 
 ### p01
 
@@ -92,13 +100,13 @@ What moved: Board-only turns did not move (5 in each of 3 runs, against 4 to 6 b
 
 phase 1; pass 1; finding F-01; result: reverted. Commit `c0fc759`; prompt files `7d48cc037dd8`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p01-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.42 | 220 | 0.80 | 11/18/1 | 0 | - |
-| `p01-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.38 | 220 | 0.83 | 13/15/0 | 0 | - |
-| `p01-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.33 | 196 | 0.83 | 9/15/2 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p01-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 5/5, bar | 3 | 30 | 12 | $0.42 | 220 | 0.80 | 11/18/1 | 0 | - |
+| `p01-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 12 | $0.38 | 220 | 0.83 | 13/15/0 | 0 | - |
+| `p01-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 4/4, facts 2/2, bar | 2 | 30 | 12 | $0.33 | 196 | 0.83 | 9/15/2 | 0 | - |
 
-Tool calls: 30; Model turns: 12; Board-only turns: 5; Cost per run, USD: 0.38 (0.33 to 0.42); Wall time, s: 220 (196 to 220); Cache share: 0.83 (0.80 to 0.83); Trigger on the board: 3 of 3; Partial claims: 48 of 84; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 12; Board-only turns: 5; Cost per run, USD: 0.38 (0.33 to 0.42); Wall time, s: 220 (196 to 220); Cache share: 0.83 (0.80 to 0.83); Trigger on the board: 3 of 3; Partial claims: 48 of 84; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 3 of 3; Scored: hard fails: 0 of 3; Scored: required facts found: 11 of 12; Scored: traps passed: 14 of 14; Scored: alert streams placed rightly: 59 of 60; Scored: agent bar met: 3 of 3; Judged: claims supported, partial, unsupported: 7, 5, 0; Judged: mechanism items stated per run: 3.5 (3 to 4).
 
 ### eff-low
 
@@ -106,12 +114,12 @@ A probe of the investigator at low effort on the original files.
 
 phase 1; pass 0. Commit `7aa7db6`; prompt files `dd587d395688`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `eff-low-C-1452-tags-r1` | 1452 | standard | openai@low | completed | Payments Gateway 0.80 | 3 | 30 | 11 | $0.35 | 150 | 0.80 | 6/18/1 | 0 | - |
-| `eff-low-C-1452-tags-r2` | 1452 | standard | openai@low | completed | Payments Gateway 0.80 | 3 | 27 | 11 | $0.29 | 142 | 0.85 | 7/16/0 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `eff-low-C-1452-tags-r1` | 1452 | standard | openai@low | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 5/5, bar | 3 | 30 | 11 | $0.35 | 150 | 0.80 | 6/18/1 | 0 | - |
+| `eff-low-C-1452-tags-r2` | 1452 | standard | openai@low | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 27 | 11 | $0.29 | 142 | 0.85 | 7/16/0 | 0 | - |
 
-Tool calls: 28.5 (27 to 30); Model turns: 11; Board-only turns: 4; Cost per run, USD: 0.32 (0.29 to 0.35); Wall time, s: 146 (142 to 150); Cache share: 0.83 (0.80 to 0.85); Trigger on the board: 2 of 2; Partial claims: 34 of 48; Unsupported claims per run: 0.5 (0 to 1); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 28.5 (27 to 30); Model turns: 11; Board-only turns: 4; Cost per run, USD: 0.32 (0.29 to 0.35); Wall time, s: 146 (142 to 150); Cache share: 0.83 (0.80 to 0.85); Trigger on the board: 2 of 2; Partial claims: 34 of 48; Unsupported claims per run: 0.5 (0 to 1); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 2 of 2; Scored: hard fails: 0 of 2; Scored: required facts found: 9 of 10; Scored: traps passed: 10 of 10; Scored: alert streams placed rightly: 40 of 42; Scored: agent bar met: 2 of 2; Judged: claims supported, partial, unsupported: 4, 8, 0; Judged: mechanism items stated per run: 3.
 
 ### p02
 
@@ -121,13 +129,13 @@ What moved: Partial claims fell from 76 of 129 over five runs to 26 of 80 over t
 
 phase 1; pass 2; finding F-02; result: kept. Commit `020e74b`; prompt files `2632c227cdd9`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p02-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.44 | 194 | 0.80 | 18/9/1 | 0 | - |
-| `p02-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 29 | 13 | $0.34 | 181 | 0.86 | 18/8/2 | 0 | - |
-| `p02-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 28 | 12 | $0.42 | 177 | 0.72 | 14/9/1 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p02-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 13 | $0.44 | 194 | 0.80 | 18/9/1 | 0 | - |
+| `p02-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 29 | 13 | $0.34 | 181 | 0.86 | 18/8/2 | 0 | - |
+| `p02-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 4/4, facts 2/2, bar | 2 | 28 | 12 | $0.42 | 177 | 0.72 | 14/9/1 | 0 | - |
 
-Tool calls: 29 (28 to 30); Model turns: 13 (12 to 13); Board-only turns: 5 (4 to 5); Cost per run, USD: 0.42 (0.34 to 0.44); Wall time, s: 181 (177 to 194); Cache share: 0.80 (0.72 to 0.86); Trigger on the board: 3 of 3; Partial claims: 26 of 80; Unsupported claims per run: 1 (1 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 29 (28 to 30); Model turns: 13 (12 to 13); Board-only turns: 5 (4 to 5); Cost per run, USD: 0.42 (0.34 to 0.44); Wall time, s: 181 (177 to 194); Cache share: 0.80 (0.72 to 0.86); Trigger on the board: 3 of 3; Partial claims: 26 of 80; Unsupported claims per run: 1 (1 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 3 of 3; Scored: hard fails: 0 of 3; Scored: required facts found: 10 of 12; Scored: traps passed: 14 of 14; Scored: alert streams placed rightly: 60 of 60; Scored: agent bar met: 3 of 3; Judged: claims supported, partial, unsupported: 10, 0, 2; Judged: mechanism items stated per run: 3.5 (3 to 4).
 
 ### p02-low
 
@@ -135,12 +143,12 @@ A probe of the investigator at low effort on the pass 2 files.
 
 phase 1; pass 2. Commit `352c805`; prompt files `2632c227cdd9`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p02-low-C-1440-tags-r1` | 1440 | standard | openai@low | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.30 | 161 | 0.82 | 9/10/0 | 0 | - |
-| `p02-low-C-1452-tags-r1` | 1452 | standard | openai@low | completed | payments-gateway 0.80 | 3 | 29 | 11 | $0.32 | 173 | 0.82 | 12/11/0 | 1 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p02-low-C-1440-tags-r1` | 1440 | standard | openai@low | completed | Payments Gateway 0.80 | cause 1, traps 4/4, facts 2/2, bar | 2 | 30 | 12 | $0.30 | 161 | 0.82 | 9/10/0 | 0 | - |
+| `p02-low-C-1452-tags-r1` | 1452 | standard | openai@low | completed | payments-gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 29 | 11 | $0.32 | 173 | 0.82 | 12/11/0 | 1 | - |
 
-Tool calls: 29.5 (29 to 30); Model turns: 11.5 (11 to 12); Board-only turns: 3; Cost per run, USD: 0.31 (0.30 to 0.32); Wall time, s: 167 (161 to 173); Cache share: 0.82 (0.82 to 0.82); Trigger on the board: 2 of 2; Partial claims: 21 of 42; Unsupported claims per run: 0; Policy refusals per run: 0.5 (0 to 1); Board refusals per run: 0.5 (0 to 1); Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 29.5 (29 to 30); Model turns: 11.5 (11 to 12); Board-only turns: 3; Cost per run, USD: 0.31 (0.30 to 0.32); Wall time, s: 167 (161 to 173); Cache share: 0.82 (0.82 to 0.82); Trigger on the board: 2 of 2; Partial claims: 21 of 42; Unsupported claims per run: 0; Policy refusals per run: 0.5 (0 to 1); Board refusals per run: 0.5 (0 to 1); Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 2 of 2; Scored: hard fails: 0 of 2; Scored: required facts found: 6 of 7; Scored: traps passed: 9 of 9; Scored: alert streams placed rightly: 39 of 39; Scored: agent bar met: 2 of 2; Judged: claims supported, partial, unsupported: 4, 2, 0; Judged: mechanism items stated per run: 3.
 
 ### p03
 
@@ -150,13 +158,13 @@ What moved: An open rival with no support of its own now names the check that wo
 
 phase 1; pass 3; finding F-03; result: kept. Commit `a17e23b`; prompt files `6dc867716656`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p03-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 11 | $0.42 | 213 | 0.76 | 16/11/1 | 0 | - |
-| `p03-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | 2 | 30 | 11 | $0.34 | 217 | 0.83 | 15/11/1 | 0 | - |
-| `p03-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 28 | 11 | $0.35 | 229 | 0.80 | 15/13/1 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p03-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 4/5, facts 5/5, bar | 2 | 30 | 11 | $0.42 | 213 | 0.76 | 16/11/1 | 0 | - |
+| `p03-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 5/5, facts 5/5, bar | 2 | 30 | 11 | $0.34 | 217 | 0.83 | 15/11/1 | 0 | - |
+| `p03-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 4/4, facts 2/2, bar | 2 | 28 | 11 | $0.35 | 229 | 0.80 | 15/13/1 | 0 | - |
 
-Tool calls: 30 (28 to 30); Model turns: 11; Board-only turns: 4 (4 to 5); Cost per run, USD: 0.35 (0.34 to 0.42); Wall time, s: 217 (213 to 229); Cache share: 0.80 (0.76 to 0.83); Trigger on the board: 3 of 3; Partial claims: 35 of 84; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30 (28 to 30); Model turns: 11; Board-only turns: 4 (4 to 5); Cost per run, USD: 0.35 (0.34 to 0.42); Wall time, s: 217 (213 to 229); Cache share: 0.80 (0.76 to 0.83); Trigger on the board: 3 of 3; Partial claims: 35 of 84; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 3 of 3; Scored: hard fails: 0 of 3; Scored: required facts found: 12 of 12; Scored: traps passed: 13 of 14; Scored: alert streams placed rightly: 60 of 60; Scored: agent bar met: 3 of 3; Judged: claims supported, partial, unsupported: 10, 0, 2; Judged: mechanism items stated per run: 2.
 
 ### frame
 
@@ -164,12 +172,12 @@ The guard set's two wrong-cause triggers (eval/framing/), one run each, on the p
 
 phase 1; pass 3. Commit `97e2f60`; prompt files `6dc867716656`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `frame-confirm-db-C-1452-tags-r1` | 1452 | framing:1452-confirm-db | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.35 | 227 | 0.82 | 10/13/2 | 0 | - |
-| `frame-rollback-plan-C-1452-tags-r1` | 1452 | framing:1452-rollback-plan | openai@medium | completed | payments-gateway 0.80 | 2 | 30 | 14 | $0.46 | 275 | 0.83 | 10/13/3 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `frame-confirm-db-C-1452-tags-r1` | 1452 | framing:1452-confirm-db | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 12 | $0.35 | 227 | 0.82 | 10/13/2 | 0 | - |
+| `frame-rollback-plan-C-1452-tags-r1` | 1452 | framing:1452-rollback-plan | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 14 | $0.46 | 275 | 0.83 | 10/13/3 | 0 | - |
 
-Tool calls: 30; Model turns: 13 (12 to 14); Board-only turns: 4.5 (4 to 5); Cost per run, USD: 0.41 (0.35 to 0.46); Wall time, s: 251 (227 to 275); Cache share: 0.83 (0.82 to 0.83); Trigger on the board: 0 of 2; Partial claims: 26 of 51; Unsupported claims per run: 2.5 (2 to 3); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 13 (12 to 14); Board-only turns: 4.5 (4 to 5); Cost per run, USD: 0.41 (0.35 to 0.46); Wall time, s: 251 (227 to 275); Cache share: 0.83 (0.82 to 0.83); Trigger on the board: 0 of 2; Partial claims: 26 of 51; Unsupported claims per run: 2.5 (2 to 3); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 2 of 2; Scored: hard fails: 0 of 2; Scored: required facts found: 8 of 10; Scored: traps passed: 10 of 10; Scored: alert streams placed rightly: 42 of 42; Scored: agent bar met: 2 of 2; Judged: claims supported, partial, unsupported: 6, 1, 2; Judged: mechanism items stated per run: 2.5 (2 to 3).
 
 ### final
 
@@ -177,12 +185,12 @@ Two more runs at the second checkpoint on the pass 3 files.
 
 phase 1; pass 3. Commit `97e2f60`; prompt files `6dc867716656`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `final-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.35 | 225 | 0.85 | 20/10/1 | 0 | - |
-| `final-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.34 | 195 | 0.86 | 16/14/0 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `final-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 12 | $0.35 | 225 | 0.85 | 20/10/1 | 0 | - |
+| `final-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 12 | $0.34 | 195 | 0.86 | 16/14/0 | 0 | - |
 
-Tool calls: 30; Model turns: 12; Board-only turns: 4.5 (4 to 5); Cost per run, USD: 0.34 (0.34 to 0.35); Wall time, s: 210 (195 to 225); Cache share: 0.85 (0.85 to 0.86); Trigger on the board: 2 of 2; Partial claims: 24 of 61; Unsupported claims per run: 0.5 (0 to 1); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 12; Board-only turns: 4.5 (4 to 5); Cost per run, USD: 0.34 (0.34 to 0.35); Wall time, s: 210 (195 to 225); Cache share: 0.85 (0.85 to 0.86); Trigger on the board: 2 of 2; Partial claims: 24 of 61; Unsupported claims per run: 0.5 (0 to 1); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 2 of 2; Scored: hard fails: 0 of 2; Scored: required facts found: 8 of 10; Scored: traps passed: 10 of 10; Scored: alert streams placed rightly: 40 of 42; Scored: agent bar met: 2 of 2; Judged: claims supported, partial, unsupported: 10, 0, 2; Judged: mechanism items stated per run: 3.5 (3 to 4).
 
 ### frame-db-at-time
 
@@ -190,11 +198,11 @@ A factual question as the trigger, which became the evidence for F-04.
 
 phase 1; pass 3. Commit `3e0f58f`; prompt files `6dc867716656`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `frame-db-at-time-C-1452-tags-r1` | 1452 | framing:1452-db-at-time | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 14 | $0.40 | 203 | 0.82 | 13/11/0 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `frame-db-at-time-C-1452-tags-r1` | 1452 | framing:1452-db-at-time | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 5/5, bar | 2 | 30 | 14 | $0.40 | 203 | 0.82 | 13/11/0 | 0 | - |
 
-Tool calls: 30; Model turns: 14; Board-only turns: 4; Cost per run, USD: 0.40; Wall time, s: 203; Cache share: 0.82; Trigger on the board: 1 of 1; Partial claims: 11 of 24; Unsupported claims per run: 0; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 14; Board-only turns: 4; Cost per run, USD: 0.40; Wall time, s: 203; Cache share: 0.82; Trigger on the board: 1 of 1; Partial claims: 11 of 24; Unsupported claims per run: 0; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 1 of 1; Scored: hard fails: 0 of 1; Scored: required facts found: 5 of 5; Scored: traps passed: 5 of 5; Scored: alert streams placed rightly: 21 of 21; Scored: agent bar met: 1 of 1; Judged: claims supported, partial, unsupported: 5, 0, 0; Judged: mechanism items stated per run: 4.
 
 ### p04
 
@@ -204,13 +212,13 @@ What moved: Requests are answered as asked: a stated cause gets a plain no with 
 
 phase 1; pass 4; finding F-04; result: kept. Commit `ff509fb`; prompt files `250b42b3e6ff`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p04-confirm-db-C-1452-tags-r1` | 1452 | framing:1452-confirm-db | openai@medium | completed | Payments Gateway 0.80 | 4 | 30 | 12 | $0.46 | 222 | 0.81 | 14/13/1 | 0 | - |
-| `p04-rollback-plan-C-1452-tags-r1` | 1452 | framing:1452-rollback-plan | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.39 | 194 | 0.83 | 16/12/1 | 0 | - |
-| `p04-std-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.38 | 190 | 0.82 | 14/14/1 | 0 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p04-confirm-db-C-1452-tags-r1` | 1452 | framing:1452-confirm-db | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 4 | 30 | 12 | $0.46 | 222 | 0.81 | 14/13/1 | 0 | - |
+| `p04-rollback-plan-C-1452-tags-r1` | 1452 | framing:1452-rollback-plan | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 12 | $0.39 | 194 | 0.83 | 16/12/1 | 0 | - |
+| `p04-std-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 12 | $0.38 | 190 | 0.82 | 14/14/1 | 0 | - |
 
-Tool calls: 30; Model turns: 12; Board-only turns: 5 (4 to 5); Cost per run, USD: 0.39 (0.38 to 0.46); Wall time, s: 194 (190 to 222); Cache share: 0.82 (0.81 to 0.83); Trigger on the board: 0 of 3; Partial claims: 39 of 86; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 30; Model turns: 12; Board-only turns: 5 (4 to 5); Cost per run, USD: 0.39 (0.38 to 0.46); Wall time, s: 194 (190 to 222); Cache share: 0.82 (0.81 to 0.83); Trigger on the board: 0 of 3; Partial claims: 39 of 86; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 3 of 3; Scored: hard fails: 0 of 3; Scored: required facts found: 12 of 15; Scored: traps passed: 15 of 15; Scored: alert streams placed rightly: 62 of 63; Scored: agent bar met: 3 of 3; Judged: claims supported, partial, unsupported: 12, 3, 1; Judged: mechanism items stated per run: 3 (2 to 4).
 
 ### cli-claude
 
@@ -220,12 +228,12 @@ What moved: Each run had four reads refused for a quiet board, which plan row P1
 
 phase between; pass 4. Commit `6ce8f4e`; prompt files `250b42b3e6ff`; set claude.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `20261014T173259Z-6b8ce8` | 1452 | standard | anthropic@medium | completed | payments-gateway 0.65 | 3 | 18 | 9 | $0.98 | 191 | 0.76 | 0/0/0 | 4 | - |
-| `20261014T173445Z-4fe561` | 1440 | standard | anthropic@medium | completed | payments-gateway 0.70 | 3 | 18 | 12 | $1.15 | 264 | 0.77 | 9/14/0 | 4 | - |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `20261014T173259Z-6b8ce8` | 1452 | standard | anthropic@medium | completed | payments-gateway 0.65 | cause 1, traps 5/5, facts 4/5, bar | 3 | 18 | 9 | $0.98 | 191 | 0.76 | 0/0/0 | 4 | - |
+| `20261014T173445Z-4fe561` | 1440 | standard | anthropic@medium | completed | payments-gateway 0.70 | cause 1, traps 4/4, facts 2/2, bar | 3 | 18 | 12 | $1.15 | 264 | 0.77 | 9/14/0 | 4 | - |
 
-Tool calls: 18; Model turns: 10.5 (9 to 12); Board-only turns: 1 (0 to 2); Cost per run, USD: 1.06 (0.98 to 1.15); Wall time, s: 228 (191 to 264); Cache share: 0.76 (0.76 to 0.77); Trigger on the board: 1 of 2; Partial claims: 14 of 24; Unsupported claims per run: 0; Policy refusals per run: 4; Board refusals per run: 4; Quiet-board nudges per run: -; Malformed calls retried per run: -.
+Tool calls: 18; Model turns: 10.5 (9 to 12); Board-only turns: 1 (0 to 2); Cost per run, USD: 1.06 (0.98 to 1.15); Wall time, s: 228 (191 to 264); Cache share: 0.76 (0.76 to 0.77); Trigger on the board: 1 of 2; Partial claims: 14 of 24; Unsupported claims per run: 0; Policy refusals per run: 4; Board refusals per run: 4; Quiet-board nudges per run: -; Malformed calls retried per run: -; Scored: reached the cause with non-chat support: 2 of 2; Scored: hard fails: 0 of 2; Scored: required facts found: 6 of 7; Scored: traps passed: 9 of 9; Scored: alert streams placed rightly: 38 of 39; Scored: agent bar met: 2 of 2; Judged: claims supported, partial, unsupported: 2, 4, 0; Judged: mechanism items stated per run: 3.
 
 ### p3-luna
 
@@ -233,11 +241,11 @@ P3's shakedown on the new opening and the quiet-board nudge, on luna at high (V6
 
 phase 2; pass 6. Commit `9642e86`; prompt files `826878c1a42e`; set luna.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p3-luna-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | Payments Gateway 3.8.0 PAY-2231 retry path 0.70 | 3 | 34 | 9 | $0.05 | 495 | 0.77 | 11/10/2 | 1 | 0 (0 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p3-luna-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | Payments Gateway 3.8.0 PAY-2231 retry path 0.70 | cause 1, traps 4/5, facts 5/5, bar | 3 | 34 | 9 | $0.05 | 495 | 0.77 | 11/10/2 | 1 | 0 (0 moved) |
 
-Tool calls: 34; Model turns: 9; Board-only turns: 2; Cost per run, USD: 0.05; Wall time, s: 495; Cache share: 0.77; Trigger on the board: 0 of 1; Partial claims: 10 of 23; Unsupported claims per run: 2; Policy refusals per run: 1; Board refusals per run: 0; Quiet-board nudges per run: 0; Malformed calls retried per run: 0.
+Tool calls: 34; Model turns: 9; Board-only turns: 2; Cost per run, USD: 0.05; Wall time, s: 495; Cache share: 0.77; Trigger on the board: 0 of 1; Partial claims: 10 of 23; Unsupported claims per run: 2; Policy refusals per run: 1; Board refusals per run: 0; Quiet-board nudges per run: 0; Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 1 of 1; Scored: hard fails: 0 of 1; Scored: required facts found: 5 of 5; Scored: traps passed: 4 of 5; Scored: alert streams placed rightly: 20 of 21; Scored: agent bar met: 1 of 1; Judged: claims supported, partial, unsupported: 3, 1, 2; Judged: mechanism items stated per run: 3.
 
 ### p3-sol
 
@@ -245,11 +253,11 @@ P3's shakedown on the new opening (the agent's own first reads, pass 5) and the 
 
 phase 2; pass 6. Commit `9642e86`; prompt files `826878c1a42e`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p3-sol-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.41 | 203 | 0.79 | 16/9/1 | 0 | 0 (0 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p3-sol-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 13 | $0.41 | 203 | 0.79 | 16/9/1 | 0 | 0 (0 moved) |
 
-Tool calls: 30; Model turns: 13; Board-only turns: 5; Cost per run, USD: 0.41; Wall time, s: 203; Cache share: 0.79; Trigger on the board: 0 of 1; Partial claims: 9 of 26; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0; Malformed calls retried per run: 0.
+Tool calls: 30; Model turns: 13; Board-only turns: 5; Cost per run, USD: 0.41; Wall time, s: 203; Cache share: 0.79; Trigger on the board: 0 of 1; Partial claims: 9 of 26; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0; Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 1 of 1; Scored: hard fails: 0 of 1; Scored: required facts found: 4 of 5; Scored: traps passed: 5 of 5; Scored: alert streams placed rightly: 20 of 20; Scored: agent bar met: 1 of 1; Judged: claims supported, partial, unsupported: 4, 0, 1; Judged: mechanism items stated per run: 3.
 
 ### p4-luna
 
@@ -259,17 +267,17 @@ What moved: Luna at high led with the cause in 2 of 7 runs, four times with the 
 
 phase 2; pass 6. Commit `fbab5cb`; prompt files `826878c1a42e`; set luna.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p4-luna-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.80 | 3 | 30 | 7 | $0.03 | 277 | 0.72 | 14/4/0 | 0 | 0 (0 moved) |
-| `p4-luna-b-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.80 | 2 | 29 | 10 | $0.03 | 318 | 0.80 | 10/11/1 | 0 | 0 (0 moved) |
-| `p4-luna-e-C-1440-tags-r1` | 1440 | standard | openai-luna@high | completed | pay-db-01 0.80 | 1 | 30 | 10 | $0.03 | 294 | 0.81 | 12/6/0 | 0 | 1 (1 moved) |
-| `p4-luna-C-1452-tags-r2` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.90 | 2 | 30 | 8 | $0.04 | 373 | 0.77 | 15/8/1 | 0 | 0 (0 moved) |
-| `p4-luna-e-C-1440-tags-r2` | 1440 | standard | openai-luna@high | completed | Payments Gateway 0.80 | 2 | 30 | 10 | $0.03 | 288 | 0.80 | 8/11/2 | 0 | 2 (1 moved) |
-| `p4-luna-b-C-1452-tags-r2` | 1452 | standard | openai-luna@high | completed | PayCoreClient 0.60 | 2 | 28 | 10 | $0.04 | 374 | 0.78 | 6/14/1 | 0 | 0 (0 moved) |
-| `p4-luna-C-1452-tags-r3` | 1452 | standard | openai-luna@high | completed | Payments Gateway 0.80 | 3 | 30 | 10 | $0.04 | 408 | 0.78 | 15/11/1 | 0 | 0 (0 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p4-luna-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.80 | HARD FAIL, traps 4/5, facts 3/5 | 3 | 30 | 7 | $0.03 | 277 | 0.72 | 14/4/0 | 0 | 0 (0 moved) |
+| `p4-luna-b-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.80 | HARD FAIL, traps 4/5, facts 4/5 | 2 | 29 | 10 | $0.03 | 318 | 0.80 | 10/11/1 | 0 | 0 (0 moved) |
+| `p4-luna-e-C-1440-tags-r1` | 1440 | standard | openai-luna@high | completed | pay-db-01 0.80 | HARD FAIL, traps 3/4, facts 2/2 | 1 | 30 | 10 | $0.03 | 294 | 0.81 | 12/6/0 | 0 | 1 (1 moved) |
+| `p4-luna-C-1452-tags-r2` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.90 | HARD FAIL, traps 4/5, facts 4/5 | 2 | 30 | 8 | $0.04 | 373 | 0.77 | 15/8/1 | 0 | 0 (0 moved) |
+| `p4-luna-e-C-1440-tags-r2` | 1440 | standard | openai-luna@high | completed | Payments Gateway 0.80 | cause 1, traps 4/4, facts 2/2, bar | 2 | 30 | 10 | $0.03 | 288 | 0.80 | 8/11/2 | 0 | 2 (1 moved) |
+| `p4-luna-b-C-1452-tags-r2` | 1452 | standard | openai-luna@high | completed | PayCoreClient 0.60 | cause 0, traps 5/5, facts 4/5 | 2 | 28 | 10 | $0.04 | 374 | 0.78 | 6/14/1 | 0 | 0 (0 moved) |
+| `p4-luna-C-1452-tags-r3` | 1452 | standard | openai-luna@high | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 5/5, bar | 3 | 30 | 10 | $0.04 | 408 | 0.78 | 15/11/1 | 0 | 0 (0 moved) |
 
-Tool calls: 30 (28 to 30); Model turns: 10 (7 to 10); Board-only turns: 4 (2 to 4); Cost per run, USD: 0.03 (0.03 to 0.04); Wall time, s: 318 (277 to 408); Cache share: 0.78 (0.72 to 0.81); Trigger on the board: 2 of 7; Partial claims: 65 of 151; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 2); Malformed calls retried per run: 0.
+Tool calls: 30 (28 to 30); Model turns: 10 (7 to 10); Board-only turns: 4 (2 to 4); Cost per run, USD: 0.03 (0.03 to 0.04); Wall time, s: 318 (277 to 408); Cache share: 0.78 (0.72 to 0.81); Trigger on the board: 2 of 7; Partial claims: 65 of 151; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 2); Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 2 of 7; Scored: hard fails: 4 of 7; Scored: required facts found: 24 of 29; Scored: traps passed: 29 of 33; Scored: alert streams placed rightly: 131 of 138; Scored: agent bar met: 2 of 7; Judged: claims supported, partial, unsupported: 15, 8, 1; Judged: mechanism items stated per run: 1 (0 to 4).
 
 ### p4-sol
 
@@ -279,17 +287,17 @@ What moved: Sol at medium led with the cause in 7 of 7 runs and stays the loop's
 
 phase 2; pass 6. Commit `fbab5cb`; prompt files `826878c1a42e`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p4-sol-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.75 | 2 | 30 | 12 | $0.38 | 199 | 0.81 | 14/12/1 | 0 | 0 (0 moved) |
-| `p4-sol-e-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.75 | 1 | 30 | 12 | $0.33 | 176 | 0.81 | 14/10/1 | 0 | 0 (0 moved) |
-| `p4-sol-e-C-1440-tags-r2` | 1440 | standard | openai@medium | completed | Payments Gateway 0.60 | 2 | 30 | 12 | $0.26 | 160 | 0.85 | 12/6/1 | 0 | 0 (0 moved) |
-| `p4-sol-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.35 | 189 | 0.82 | 12/12/0 | 0 | 0 (0 moved) |
-| `p4-sol-C-1452-tags-r3` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.39 | 194 | 0.80 | 19/9/1 | 0 | 1 (1 moved) |
-| `p4-sol-C-1452-tags-r4` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.37 | 178 | 0.80 | 16/11/0 | 0 | 0 (0 moved) |
-| `p4-sol-C-1452-tags-r5` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.36 | 176 | 0.82 | 10/15/2 | 0 | 0 (0 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p4-sol-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.75 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 12 | $0.38 | 199 | 0.81 | 14/12/1 | 0 | 0 (0 moved) |
+| `p4-sol-e-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.75 | cause 1, traps 4/4, facts 2/2, bar | 1 | 30 | 12 | $0.33 | 176 | 0.81 | 14/10/1 | 0 | 0 (0 moved) |
+| `p4-sol-e-C-1440-tags-r2` | 1440 | standard | openai@medium | completed | Payments Gateway 0.60 | cause 1, traps 4/4, facts 2/2, bar | 2 | 30 | 12 | $0.26 | 160 | 0.85 | 12/6/1 | 0 | 0 (0 moved) |
+| `p4-sol-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 12 | $0.35 | 189 | 0.82 | 12/12/0 | 0 | 0 (0 moved) |
+| `p4-sol-C-1452-tags-r3` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 4/5, facts 4/5, bar | 2 | 30 | 12 | $0.39 | 194 | 0.80 | 19/9/1 | 0 | 1 (1 moved) |
+| `p4-sol-C-1452-tags-r4` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 12 | $0.37 | 178 | 0.80 | 16/11/0 | 0 | 0 (0 moved) |
+| `p4-sol-C-1452-tags-r5` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 13 | $0.36 | 176 | 0.82 | 10/15/2 | 0 | 0 (0 moved) |
 
-Tool calls: 30; Model turns: 12 (12 to 13); Board-only turns: 4; Cost per run, USD: 0.36 (0.26 to 0.39); Wall time, s: 178 (160 to 199); Cache share: 0.81 (0.80 to 0.85); Trigger on the board: 1 of 7; Partial claims: 75 of 179; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 1); Malformed calls retried per run: 0.
+Tool calls: 30; Model turns: 12 (12 to 13); Board-only turns: 4; Cost per run, USD: 0.36 (0.26 to 0.39); Wall time, s: 178 (160 to 199); Cache share: 0.81 (0.80 to 0.85); Trigger on the board: 1 of 7; Partial claims: 75 of 179; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 1); Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 7 of 7; Scored: hard fails: 0 of 7; Scored: required facts found: 24 of 29; Scored: traps passed: 32 of 33; Scored: alert streams placed rightly: 131 of 134; Scored: agent bar met: 7 of 7; Judged: claims supported, partial, unsupported: 20, 1, 4; Judged: mechanism items stated per run: 3 (3 to 4).
 
 ### p07
 
@@ -299,13 +307,13 @@ What moved: The trigger is on the board in 5 of 5 runs, against 1 of 7, with the
 
 phase 2; pass 7; finding F-07; result: kept. Commit `9e0e340`; prompt files `fca517ac3816`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p07-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | 3 | 30 | 12 | $0.41 | 206 | 0.78 | 14/16/1 | 0 | 0 (0 moved) |
-| `p07-b-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | 4 | 30 | 14 | $0.41 | 226 | 0.82 | 16/16/0 | 0 | 0 (0 moved) |
-| `p07-c-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 13 | $0.44 | 211 | 0.77 | 13/17/2 | 0 | 1 (1 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p07-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 12 | $0.41 | 206 | 0.78 | 14/16/1 | 0 | 0 (0 moved) |
+| `p07-b-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 4 | 30 | 14 | $0.41 | 226 | 0.82 | 16/16/0 | 0 | 0 (0 moved) |
+| `p07-c-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 13 | $0.44 | 211 | 0.77 | 13/17/2 | 0 | 1 (1 moved) |
 
-Tool calls: 30; Model turns: 13 (12 to 14); Board-only turns: 5 (4 to 6); Cost per run, USD: 0.41 (0.41 to 0.44); Wall time, s: 211 (206 to 226); Cache share: 0.78 (0.77 to 0.82); Trigger on the board: 3 of 3; Partial claims: 49 of 95; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 1); Malformed calls retried per run: 0.
+Tool calls: 30; Model turns: 13 (12 to 14); Board-only turns: 5 (4 to 6); Cost per run, USD: 0.41 (0.41 to 0.44); Wall time, s: 211 (206 to 226); Cache share: 0.78 (0.77 to 0.82); Trigger on the board: 3 of 3; Partial claims: 49 of 95; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 1); Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 3 of 3; Scored: hard fails: 0 of 3; Scored: required facts found: 12 of 15; Scored: traps passed: 15 of 15; Scored: alert streams placed rightly: 59 of 60; Scored: agent bar met: 3 of 3; Judged: claims supported, partial, unsupported: 21, 4, 1; Judged: mechanism items stated per run: 3 (3 to 4).
 
 ### p07-guard
 
@@ -313,12 +321,12 @@ Pass 7's guard set, the two wrong-cause triggers (eval/framing/), one run each.
 
 phase 2; pass 7. Commit `9e0e340`; prompt files `fca517ac3816`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p07-confirm-db-C-1452-tags-r1` | 1452 | framing:1452-confirm-db | openai@medium | completed | payments-gateway 0.80 | 3 | 30 | 13 | $0.38 | 196 | 0.80 | 14/14/0 | 0 | 2 (2 moved) |
-| `p07-rollback-plan-C-1452-tags-r1` | 1452 | framing:1452-rollback-plan | openai@medium | completed | payments-gateway 0.75 | 2 | 30 | 14 | $0.38 | 220 | 0.82 | 13/14/1 | 0 | 0 (0 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p07-confirm-db-C-1452-tags-r1` | 1452 | framing:1452-confirm-db | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 3 | 30 | 13 | $0.38 | 196 | 0.80 | 14/14/0 | 0 | 2 (2 moved) |
+| `p07-rollback-plan-C-1452-tags-r1` | 1452 | framing:1452-rollback-plan | openai@medium | completed | payments-gateway 0.75 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 14 | $0.38 | 220 | 0.82 | 13/14/1 | 0 | 0 (0 moved) |
 
-Tool calls: 30; Model turns: 13.5 (13 to 14); Board-only turns: 4.5 (4 to 5); Cost per run, USD: 0.38 (0.38 to 0.38); Wall time, s: 208 (196 to 220); Cache share: 0.81 (0.80 to 0.82); Trigger on the board: 2 of 2; Partial claims: 28 of 56; Unsupported claims per run: 0.5 (0 to 1); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 1 (0 to 2); Malformed calls retried per run: 0.
+Tool calls: 30; Model turns: 13.5 (13 to 14); Board-only turns: 4.5 (4 to 5); Cost per run, USD: 0.38 (0.38 to 0.38); Wall time, s: 208 (196 to 220); Cache share: 0.81 (0.80 to 0.82); Trigger on the board: 2 of 2; Partial claims: 28 of 56; Unsupported claims per run: 0.5 (0 to 1); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 1 (0 to 2); Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 2 of 2; Scored: hard fails: 0 of 2; Scored: required facts found: 8 of 10; Scored: traps passed: 10 of 10; Scored: alert streams placed rightly: 40 of 41; Scored: agent bar met: 2 of 2; Judged: claims supported, partial, unsupported: 11, 2, 1; Judged: mechanism items stated per run: 3.
 
 ### p08
 
@@ -328,12 +336,12 @@ What moved: The leading statement was judged supported in 1 of 5 runs, short of 
 
 phase 2; pass 8; finding F-09; result: reverted. Commit `6d661a8`; prompt files `78e57ec9ce67`; set sol.
 
-| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `p08-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.75 | 2 | 30 | 14 | $0.42 | 203 | 0.80 | 17/9/2 | 0 | 1 (1 moved) |
-| `p08-b-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 14 | $0.41 | 219 | 0.82 | 17/9/2 | 0 | 1 (1 moved) |
-| `p08-c-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | 2 | 30 | 13 | $0.43 | 233 | 0.80 | 19/15/1 | 0 | 0 (0 moved) |
-| `p08-d-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.70 | 2 | 30 | 13 | $0.38 | 209 | 0.81 | 17/10/2 | 0 | 1 (1 moved) |
-| `p08-e-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | 2 | 30 | 13 | $0.40 | 219 | 0.80 | 21/9/1 | 0 | 0 (0 moved) |
+| Run | At | Trigger | Investigator | Status | Leading | Score | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p08-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.75 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 14 | $0.42 | 203 | 0.80 | 17/9/2 | 0 | 1 (1 moved) |
+| `p08-b-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 14 | $0.41 | 219 | 0.82 | 17/9/2 | 0 | 1 (1 moved) |
+| `p08-c-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 4/5, facts 4/5, bar | 2 | 30 | 13 | $0.43 | 233 | 0.80 | 19/15/1 | 0 | 0 (0 moved) |
+| `p08-d-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.70 | cause 1, traps 5/5, facts 4/5, bar | 2 | 30 | 13 | $0.38 | 209 | 0.81 | 17/10/2 | 0 | 1 (1 moved) |
+| `p08-e-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.80 | cause 1, traps 4/5, facts 4/5, bar | 2 | 30 | 13 | $0.40 | 219 | 0.80 | 21/9/1 | 0 | 0 (0 moved) |
 
-Tool calls: 30; Model turns: 13 (13 to 14); Board-only turns: 5 (4 to 5); Cost per run, USD: 0.41 (0.38 to 0.43); Wall time, s: 219 (203 to 233); Cache share: 0.80 (0.80 to 0.82); Trigger on the board: 5 of 5; Partial claims: 52 of 151; Unsupported claims per run: 2 (1 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 1 (0 to 1); Malformed calls retried per run: 0.
+Tool calls: 30; Model turns: 13 (13 to 14); Board-only turns: 5 (4 to 5); Cost per run, USD: 0.41 (0.38 to 0.43); Wall time, s: 219 (203 to 233); Cache share: 0.80 (0.80 to 0.82); Trigger on the board: 5 of 5; Partial claims: 52 of 151; Unsupported claims per run: 2 (1 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 1 (0 to 1); Malformed calls retried per run: 0; Scored: reached the cause with non-chat support: 5 of 5; Scored: hard fails: 0 of 5; Scored: required facts found: 20 of 25; Scored: traps passed: 23 of 25; Scored: alert streams placed rightly: 97 of 100; Scored: agent bar met: 5 of 5; Judged: claims supported, partial, unsupported: 33, 1, 4; Judged: mechanism items stated per run: 3.

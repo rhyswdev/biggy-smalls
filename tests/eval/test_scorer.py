@@ -290,3 +290,20 @@ def test_score_run_reads_a_record_folder(tmp_path):
     (folder / "summary.json").write_text(json.dumps({"status": "completed", "stop_reason": None}))
     s = score_run(folder)
     assert s["run_id"] == "run1" and s["has_report"] and s["cause"]["score"] == 1.0 and s["alerts"]["missing"] == []
+
+
+def test_a_ledger_row_keeps_counts_and_flags_only():
+    from eval.score import compact
+    s = {"run_id": "r", "has_report": True, **score(correct())}
+    c = compact(s)
+    text = json.dumps(c)
+    assert c["cause"] == 1.0 and c["traps"] == [5, 5] and c["bar"] is True
+    assert not any(h in text for h in SHOWN) and "payments-gateway" not in text and "db-capacity" not in text
+
+
+def test_the_change_may_be_named_by_its_own_hypothesis_on_the_same_subject():
+    r = correct()
+    r["hypotheses"][0].update(changes=[], support=[POOL, IDLE])
+    assert score(r)["cause"]["score"] == 0.5
+    r["hypotheses"].append(hyp("h6", "Payments Gateway", "contributing", "open", 0.7, [CHANGE], changes=[CHANGE]))
+    assert score(r)["cause"]["score"] == 1.0

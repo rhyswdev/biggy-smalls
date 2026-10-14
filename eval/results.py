@@ -285,6 +285,42 @@ def _leads(rows: list[dict[str, Any]]) -> str:
     return "; ".join(f"{shown[k]} ×{n}" for k, n in counts.most_common())
 
 
+def _scores(rs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [r["scores"] for r in rs if (r.get("scores") or {}).get("scorer") and "error" not in r["scores"]]
+
+
+def _scored(rs: list[dict[str, Any]], test: Callable[[dict[str, Any]], Any]) -> str:
+    """A count over the scored runs of a batch (eval/scorer.py), or a dash when none is scored."""
+    ss = _scores(rs)
+    return f"{sum(1 for s in ss if test(s))} of {len(ss)}" if ss else "-"
+
+
+def _scored_spread(rs: list[dict[str, Any]], key: str) -> str:
+    """Found of asked, summed over the batch's scored runs, since the two checkpoints ask for different numbers."""
+    ss = _scores(rs)
+    return f"{sum(s[key][0] for s in ss)} of {sum(s[key][1] for s in ss)}" if ss else "-"
+
+
+def _scored_sum(rs: list[dict[str, Any]], key: str) -> str:
+    ss = _scores(rs)
+    return f"{sum(s[key][0] for s in ss)} of {sum(s[key][1] for s in ss)}" if ss else "-"
+
+
+def _judged_claims(rs: list[dict[str, Any]]) -> str:
+    js = [s["judge"] for s in _scores(rs) if s.get("judge")]
+    return ", ".join(str(sum(j["claims"][k] for j in js)) for k in ("supported", "partial", "unsupported")) if js else "-"
+
+
+def _score_cell(r: dict[str, Any]) -> str:
+    s = r.get("scores") or {}
+    if not s.get("scorer"):
+        return "-"
+    if "error" in s:
+        return "no report"
+    head = "HARD FAIL" if s.get("hard_fail") else f"cause {s['cause']:g}"
+    return f"{head}, traps {s['traps'][0]}/{s['traps'][1]}, facts {s['facts'][0]}/{s['facts'][1]}{', bar' if s.get('bar') else ''}"
+
+
 MEASURES: list[tuple[str, Callable[[list[dict[str, Any]]], str]]] = [
     ("Runs", lambda rs: str(len(rs))),
     ("Completed", lambda rs: f"{sum(1 for r in rs if r.get('status') == 'completed')} of {len(rs)}"),
@@ -302,6 +338,14 @@ MEASURES: list[tuple[str, Callable[[list[dict[str, Any]]], str]]] = [
     ("Board refusals per run", lambda rs: _spread([r.get("board_refusals") for r in rs])),
     ("Quiet-board nudges per run", lambda rs: _spread([_nudges(r) for r in rs])),
     ("Malformed calls retried per run", lambda rs: _spread([r.get("malformed_retries") for r in rs])),
+    ("Scored: reached the cause with non-chat support", lambda rs: _scored(rs, lambda s: s.get("cause_non_chat"))),
+    ("Scored: hard fails", lambda rs: _scored(rs, lambda s: s.get("hard_fail"))),
+    ("Scored: required facts found", lambda rs: _scored_spread(rs, "facts")),
+    ("Scored: traps passed", lambda rs: _scored_spread(rs, "traps")),
+    ("Scored: alert streams placed rightly", lambda rs: _scored_sum(rs, "alerts")),
+    ("Scored: agent bar met", lambda rs: _scored(rs, lambda s: s.get("bar"))),
+    ("Judged: claims supported, partial, unsupported", _judged_claims),
+    ("Judged: mechanism items stated per run", lambda rs: _spread([((r.get("scores") or {}).get("judge") or {}).get("mechanism", [None])[0] for r in rs])),
 ]
 
 COLUMNS: list[tuple[str, Callable[[dict[str, Any]], str]]] = [
@@ -311,6 +355,7 @@ COLUMNS: list[tuple[str, Callable[[dict[str, Any]], str]]] = [
     ("Investigator", lambda r: str((r.get("profiles") or {}).get("investigator"))),
     ("Status", lambda r: str(r.get("status"))),
     ("Leading", _lead),
+    ("Score", _score_cell),
     ("Rejected", lambda r: str(len(r.get("rejected") or []))),
     ("Calls", lambda r: str(r.get("tool_calls"))),
     ("Turns", lambda r: str(r.get("model_turns"))),

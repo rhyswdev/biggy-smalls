@@ -1,4 +1,4 @@
-# Smalls. Every target is real but `score` and `heldout`, which wait for their step in docs/PLAN.md.
+# Smalls. Every target is real but `heldout`, which waits for its step in docs/PLAN.md.
 UV ?= uv
 PY := $(UV) run --python 3.12 python
 BUNDLE ?= bundles/larkspur-checkout-2026-10-13
@@ -60,8 +60,10 @@ retrieval:
 solve:
 	$(PY) -m eval.solve.run --bundle $(BUNDLE)
 
+# Score one run (RUN=<id>): scores.json in its folder. The judge is live and spends from eval/scorer.toml's budget;
+# JUDGE=off scores without it.
 score:
-	@echo "score: stub until step 7 (scorer)"
+	$(UV) run --python 3.12 $(ENV) python -m eval.score $(RUN) $(if $(filter off,$(JUDGE)),--no-judge)
 
 # Replay a committed run in the terminal, as it was shown live. No key and no model call.
 demo:

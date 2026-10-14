@@ -78,3 +78,59 @@ def test_hand_written_reports_are_separated():
     for wrong in ("checkout-deploy", "database"):
         assert scores[wrong]["cause"]["score"] == 0.0 and scores[wrong]["confidence"]["hard_fail"]
         assert scores[wrong]["traps"]["passed"] < scores["correct"]["traps"]["passed"]
+
+
+# -- S7: the room's summary ------------------------------------------------------------------------------
+
+
+def _poisoned(strings: list[str]) -> dict:
+    """A score whose every free-text field carries incident strings, handles and times."""
+    from eval.scorer import score_report
+    from tests.eval.test_scorer import Log, correct as run_report
+    s = score_report(run_report(), checkpoint="1452", as_of="2026-10-13T14:52:00Z", log=Log(), bundle="larkspur-checkout-2026-10-13")
+    junk = strings + ["log:pay-02/3fa91c0e", "14:31", "2026-10-13T14:31:07Z"]
+    s["run_id"] = " ".join(junk)
+    s["traps"]["traps"] = {name: {"pass": False, "why": "fell", "by": junk} for name in strings[:5]}
+    s["facts"]["missing"] = junk
+    s["integrity"]["unseen"] = junk
+    s["alerts"]["wrong"] = [{"handle": h, "verdict": "noise", "expected": h} for h in junk]
+    s["alerts"]["missing"] = junk
+    s["causal_links"]["without"] = junk
+    s["judge"] = {"mechanism": {"yes": 2, "of": 4, "items": {x: {} for x in junk}}, "actions": {"yes": 1, "of": 4, "items": {}},
+                  "harmful_top3": {"yes": 1, "of": 6, "items": {x: {} for x in junk}},
+                  "claims": {"supported": 3, "partial": 1, "unsupported": 1, "unjudged": 0, "of": 5, "quote_missing": 0, "by_id": {x: {} for x in junk}}}
+    return s
+
+
+def test_the_room_summary_carries_no_incident_string_handle_or_time():
+    from eval.room_metrics import leaks, summary
+    from smalls_data.prompt_lint import bundle_strings
+    strings = bundle_strings()
+    text = summary([_poisoned(strings), _poisoned(strings)])
+    assert leaks(text) == []
+    assert "of 2 runs" in text and "Claims judged supported, partial, unsupported: 6, 2, 2" in text
+
+
+def test_the_leak_check_catches_what_it_should():
+    from eval.room_metrics import leaks
+    assert leaks("the pool on pay-db-01 at 14:31 per log:pay-02/3fa91c0e")
+
+
+def test_rescoring_keeps_the_judges_verdict_unless_asked(tmp_path):
+    from eval.score import score_folder
+    from tests.eval.test_scorer import AS_OF, BUNDLE, SHOWN
+    folder = tmp_path / "run"
+    folder.mkdir()
+    (folder / "run.json").write_text(json.dumps({"run_id": "run", "checkpoint": "1452", "now": AS_OF, "bundle": BUNDLE}))
+    (folder / "report.json").write_text(json.dumps(correct()))
+    (folder / "calls.jsonl").write_text(json.dumps({"tool": "get_record", "shown": SHOWN}) + "\n")
+    calls = []
+
+    def script(turn: str) -> dict:
+        calls.append(turn)
+        return {"checklist": [], "claims": []}
+    score_folder(folder, script=script)
+    score_folder(folder, script=script)
+    assert len(calls) == 1
+    score_folder(folder, script=script, rejudge=True)
+    assert len(calls) == 2

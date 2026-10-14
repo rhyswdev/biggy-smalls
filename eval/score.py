@@ -2,10 +2,14 @@
 
     python -m eval.score <run id or folder>... [--no-judge]       # writes scores.json into each run's folder
     python -m eval.score --report <file.json> [--checkpoint 1452]  # prints a hand-written report's scores
+    python -m eval.score --ledger                                  # each ledger row's `scores`, from its scores.json
 
 A run id is looked for in `eval/loop-runs/` and then `eval/runs/`. `scores.json` holds the deterministic checks
 (`eval/scorer.py`) and the judge's part (`eval/judge.py`), with the versions of both, so a score can be traced
 to the grader that gave it. The judge spends money: it stops at the budget in `eval/scorer.toml`.
+
+A run whose `scores.json` already holds this judge's verdict keeps it, so re-scoring after a change to the
+deterministic checks costs nothing; `--rejudge` calls the judge again.
 
 A hand-written report has no run behind it, so every handle the bundle holds at its `as_of` counts as shown,
 and the judge reads its checklist only: there are no rows the run saw to judge its claims against.
@@ -52,12 +56,15 @@ class HandLog(RunLog):
         return self.seen(handle)
 
 
-def score_folder(folder: Path, *, with_judge: bool = True, script: judging.Script | None = None) -> dict[str, Any]:
+def score_folder(folder: Path, *, with_judge: bool = True, rejudge: bool = False, script: judging.Script | None = None) -> dict[str, Any]:
     scores = score_run(folder)
     run = json.loads((folder / "run.json").read_text(encoding="utf-8")) if (folder / "run.json").exists() else {}
     report = json.loads((folder / "report.json").read_text(encoding="utf-8")) if (folder / "report.json").exists() else None
     cp = load_key(run.get("bundle") or DEFAULT_BUNDLE).checkpoint(str(run.get("checkpoint") or ""))
-    if with_judge and report and cp is not None:
+    earlier = json.loads((folder / "scores.json").read_text(encoding="utf-8")).get("judge") if (folder / "scores.json").exists() else None
+    if with_judge and report and cp is not None and not rejudge and earlier and earlier.get("judge") == judging.JUDGE_VERSION:
+        scores["judge"] = earlier          # the same report, judged by the same judge: no second call
+    elif with_judge and report and cp is not None:
         scores["judge"] = judging.judge(report, cp, judging.evidence_texts(folder), label=scores["run_id"], script=script)
     else:
         scores["judge"] = None
@@ -74,6 +81,50 @@ def score_hand(path: Path, checkpoint: str, *, with_judge: bool = True, bundle: 
     cp = load_key(bundle).checkpoint(checkpoint)
     scores["judge"] = judging.judge(report, cp, {}, label=f"hand:{path.stem}", script=script) if with_judge and cp else None
     return scores
+
+
+def compact(s: dict[str, Any]) -> dict[str, Any]:
+    """What a ledger row keeps of a run's scores: counts and flags only, no handle, subject or trap name."""
+    if "error" in s or not s.get("has_report"):
+        return {"scorer": s.get("scorer"), "error": s.get("error") or "no report"}
+    out: dict[str, Any] = {
+        "scorer": s["scorer"], "cause": s["cause"]["score"], "trigger": (s.get("trigger") or {}).get("score"),
+        "cause_non_chat": s["bar"]["cause_with_non_chat"], "hard_fail": s["confidence"]["hard_fail"], "soft_fail": s["confidence"]["soft_fail"],
+        "integrity_ok": s["integrity"]["ok"], "fabricated": len(s["integrity"]["fabricated"]), "future": len(s["integrity"]["future"]),
+        "unseen": len(s["integrity"]["unseen"]), "facts": [s["facts"]["required"], s["facts"]["required_of"]],
+        "traps": [s["traps"]["passed"], s["traps"]["of"]], "owner": None if s["owner"] is None else s["owner"]["pass"],
+        "contributing": None if s["contributing"] is None else s["contributing"]["found"] > 0,
+        "links": [s["causal_links"]["with_non_chat"], s["causal_links"]["links"]],
+        "alerts": [s["alerts"]["side_right"], s["alerts"]["given"], len(s["alerts"]["missing"])],
+        "bar": s["bar"]["met"], "first_correct": s.get("first_correct"),
+    }
+    j = s.get("judge")
+    if j and "mechanism" in j:
+        out["judge"] = {"version": j["judge"], "mechanism": [j["mechanism"]["yes"], j["mechanism"]["of"]],
+                        "actions": [j["actions"]["yes"], j["actions"]["of"]], "harmful_top3": j["harmful_top3"]["yes"],
+                        "claims": {k: j["claims"][k] for k in ("supported", "partial", "unsupported", "of")}}
+    return out
+
+
+def fill_ledger(ledger: Path | None = None) -> tuple[int, list[str]]:
+    """Write each row's `scores` from its run's `scores.json`. Rows whose record has none are left as they are."""
+    from eval import results
+
+    ledger = ledger or results.LEDGER
+    rows = results.load(ledger)
+    filled, missing = 0, []
+    for row in rows:
+        try:
+            path = find(row["run_id"]) / "scores.json"
+        except SystemExit:
+            path = None
+        if path is None or not path.exists():
+            missing.append(row["run_id"])
+            continue
+        row["scores"] = compact(json.loads(path.read_text(encoding="utf-8")))
+        filled += 1
+    results.save(rows, ledger)
+    return filled, missing
 
 
 def line(s: dict[str, Any]) -> str:
@@ -103,7 +154,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--report", type=Path, help="a hand-written report (JSON) to score instead of a run")
     p.add_argument("--checkpoint", default="1452")
     p.add_argument("--no-judge", action="store_true", help="the deterministic checks only; no model call")
+    p.add_argument("--rejudge", action="store_true", help="call the judge again even where scores.json holds this judge's verdict")
+    p.add_argument("--ledger", action="store_true", help="fill every ledger row's `scores` from its run's scores.json")
     args = p.parse_args(argv)
+    if args.ledger:
+        filled, missing = fill_ledger()
+        print(f"ledger: {filled} rows scored" + (f"; no scores.json for {', '.join(missing)}" if missing else ""))
+        return 0
     if args.report:
         print(line(score_hand(args.report, args.checkpoint, with_judge=not args.no_judge)))
         return 0
@@ -111,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
         p.error("name at least one run, or --report")
     for run in args.runs:
         folder = find(run)
-        print(line(score_folder(folder, with_judge=not args.no_judge)))
+        print(line(score_folder(folder, with_judge=not args.no_judge, rejudge=args.rejudge)))
     if not args.no_judge:
         print(f"judge spend so far: ${judging.spent():.2f} of ${float(judging.config().get('budget_usd', 5)):.2f}")
     return 0

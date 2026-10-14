@@ -146,14 +146,17 @@ def _names_change(h: dict[str, Any], change_any: list[str]) -> bool:
 
 
 def cause(report: dict[str, Any], cp: Checkpoint, aliases: Aliases) -> dict[str, Any]:
-    """1: the leading hypothesis blames the key's cause, claims the role `cause`, and names the change when the
-    key gives one. 0.5: it blames the right subject but misses the role or the change, or the right subject is a
+    """1: the leading hypothesis blames the key's cause, claims the role `cause`, and the change is named, when the
+    key gives one, by it or by another standing hypothesis on the same subject. 0.5: it blames the right subject but misses the role or the change, or the right subject is a
     `cause` still open. 0: neither."""
     lead = leading_of(report)
     entities = cp.cause_entities
     lead_right = bool(lead) and any(_matches(lead, e, aliases) for e in entities)
     change = cp.leading.change_any if cp.leading else []
-    named = bool(lead) and lead_right and (not change or _names_change(lead, change))
+    # The change may sit in its own standing hypothesis on the same subject: one link per statement.
+    same = [h for h in report.get("hypotheses") or [] if h["status"] != "rejected" and lead_right
+            and any(_matches(h, e, aliases) for e in entities)]
+    named = bool(lead) and lead_right and (not change or any(_names_change(h, change) for h in same))
     if lead_right and lead["role"] == "cause" and named:
         score = 1.0
     elif lead_right:

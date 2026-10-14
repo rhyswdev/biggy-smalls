@@ -95,6 +95,19 @@ def read_summary(runs_dir: Path, name: str) -> dict[str, Any]:
     return {**summary, "dropped_citations": len(validation.get("dropped") or []), "flagged_claims": len(validation.get("flagged") or [])}
 
 
+def score(folder: Path, *, judge: bool = False) -> dict[str, Any] | None:
+    """The run's scores (row S6 of docs/decisions/eval-loop.md), written to its `scores.json`; the judge only when
+    asked, since it spends money. A run with no report, or a scorer that fails, leaves no scores and says why."""
+    if not (folder / "report.json").exists():
+        return None
+    try:
+        from eval.score import score_folder
+        return score_folder(folder, with_judge=judge)
+    except (Exception, SystemExit) as error:        # a scoring problem never loses the matrix's own table
+        print(f"  scoring {folder.name} failed: {error}")
+        return None
+
+
 def spread(values: list[float]) -> str:
     values = [v for v in values if v is not None]
     if not values:
@@ -138,6 +151,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--label", help="the prefix of every run id (default: the time the matrix started)")
     p.add_argument("--runs-dir", help="where run records go (default: the configured folder)")
     p.add_argument("--dry-run", action="store_true", help="print each run's command and start nothing")
+    p.add_argument("--judge", action="store_true", help="also run the judge on each run's report (live, costs money; eval/scorer.toml)")
     args = p.parse_args(argv)
     if not args.bundle:
         raise SystemExit("eval.matrix: name a bundle with --bundle <folder> or SMALLS_BUNDLE")
@@ -169,13 +183,18 @@ def main(argv: list[str] | None = None) -> int:
                                       set_name=args.set, roles=args.role, effort=args.effort),
                               cwd=ROOT, env=env, capture_output=True, text=True)
         summary = read_summary(runs_dir, name)
-        rows.append({**cell, "run_id": name, "exit": done.returncode, "summary": summary})
+        scored = score(runs_dir / name, judge=args.judge)
+        rows.append({**cell, "run_id": name, "exit": done.returncode, "summary": summary, **({"scores": scored} if scored else {})})
         print(f"  {n}/{len(plan)} {name}: {summary.get('status')} in {time.perf_counter() - started:.1f}s"
               + (f" ({summary.get('stop_reason')})" if summary.get("stop_reason") else ""))
     runs_dir.mkdir(parents=True, exist_ok=True)
     (runs_dir / f"{label}.matrix.json").write_text(json.dumps({"label": label, "bundle": args.bundle, "profile": args.profile, "runs": rows}, indent=2),
                                                    encoding="utf-8")
     print("\n" + table(rows))
+    scored = [row["scores"] for row in rows if row.get("scores")]
+    if scored:
+        from eval.table import table as score_table
+        print("\n" + score_table(scored))
     return 0 if all(row["summary"].get("status") in ("completed", "incomplete") for row in rows) else 1
 
 
