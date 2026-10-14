@@ -100,6 +100,11 @@ def smoke(built: dict, ctx) -> int:
     seen: list[str] = []
     for name, spec in sorted(built.items(), key=lambda item: item[0] == "get_record"):      # get_record last: it needs a handle
         arguments = {"handle": seen[0]} if name == "get_record" and seen else SMOKE_ARGUMENTS.get(name, {})
+        if name == "query_metrics":         # what to ask for is data: the first series the inventory would list
+            from smalls.tools import derive
+
+            served = derive.metric_queries(ctx)[:1]
+            arguments = {"metric": served[0]["metric"], "scope": ",".join(sorted(served[0]["scope"])), "since": "-1h"} if served else {}
         env = registry.call(spec, arguments, ctx)
         seen += list(env.shown)
         failed += env.status != "ok"

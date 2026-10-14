@@ -71,10 +71,12 @@ BUILT: dict[str, Callable[[BaseModel, ToolContext], Any]] = {}
 def _load_built() -> None:
     if BUILT:
         return
-    from smalls.tools import get_record, list_alerts, list_changes, read_chat, search_knowledge, search_logs
+    from smalls.tools import (check_status_page, get_record, list_alerts, list_changes, query_metrics, read_chat, search_knowledge,
+                              search_logs)
 
     BUILT.update({"list_alerts": list_alerts.run, "get_record": get_record.run, "search_logs": search_logs.run,
-                  "list_changes": list_changes.run, "search_knowledge": search_knowledge.run, "read_chat": read_chat.run})
+                  "query_metrics": query_metrics.run, "list_changes": list_changes.run, "search_knowledge": search_knowledge.run,
+                  "read_chat": read_chat.run, "check_status_page": check_status_page.run})
 
 
 def _not_built(args: BaseModel, ctx: ToolContext) -> Envelope:

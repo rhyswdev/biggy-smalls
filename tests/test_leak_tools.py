@@ -26,7 +26,7 @@ import parity
 import test_leak
 from eval.retrieval import run as retrieval
 from smalls.contracts.envelope import Envelope
-from smalls.tools import inventory, registry, windows
+from smalls.tools import derive, inventory, registry, windows
 
 CHECKPOINTS = list(golden.CHECKPOINTS)
 ARMS = [(c, tags) for c in CHECKPOINTS for tags in (False, True)]
@@ -43,6 +43,11 @@ def list_calls(ctx) -> dict[str, list[dict]]:
         "list_changes": [{"since": WIDEST}, {"since": WIDEST, "until": "now"}],
         "read_chat": [{"since": WIDEST}, *({"since": WIDEST, "channel": c} for c in channels(ctx))],
         "search_knowledge": [{"query": q["query"]} for q in retrieval.load_queries()],     # the retrieval-check queries
+        # every served query, whole and one series at a time, at the widest window and at a short one
+        "query_metrics": [{"metric": q["metric"], "scope": ",".join(sorted(q["scope"] | set(extra))), "since": since}
+                          for q in derive.metric_queries(ctx) for extra in ([], *(s["tag_set"] for s in q["series"] if s["tag_set"]))
+                          for since in (WIDEST, "-30m")],
+        "check_status_page": [{}, *({"provider": p} for p in providers(ctx))],      # each provider, and none
         "get_record": [],       # every handle in the store, below
     }
     if ctx.tags:
@@ -51,6 +56,10 @@ def list_calls(ctx) -> dict[str, list[dict]]:
         calls["list_changes"] += [{"since": WIDEST, "change_kind": "untagged"}]
         calls["read_chat"] += [{"since": WIDEST, "act": "untagged"}]
     return calls
+
+
+def providers(ctx) -> list[str]:
+    return [p for (p,) in ctx.store.conn.execute("SELECT DISTINCT source FROM visible WHERE kind = 'status'")]
 
 
 def channels(ctx) -> list[str]:
@@ -160,7 +169,6 @@ NOT_LISTED_YET = {
     ("dynatrace", "entities"): "get_topology, row D7",
     ("pagerduty", "services"): "get_oncall, row D7", ("pagerduty", "escalation_policies"): "get_oncall, row D7",
     ("pagerduty", "oncalls"): "get_oncall, row D7",
-    (None, "status"): "check_status_page, row D3",
 }
 
 

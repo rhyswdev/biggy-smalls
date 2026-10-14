@@ -26,6 +26,8 @@ CLAMPED = "The window was clamped to now ({now}): nothing after now exists yet."
 OVER_CAP = "{tool} produced a result over its cap ({size} against {cap}). This is a fault in the tool, not in the call."
 UNKNOWN_VALUE = "{field}={value!r} matches nothing visible. {field} is one of: {values}."
 PART_OUT_OF_RANGE = "{handle} has {parts} part{s}; part {part} does not exist."
+SERIES = ("{handle}: a metric series holds points and no record to fetch. Call query_metrics with metric={metric!r}, scope={scope!r} "
+          "and a window to read it.")
 
 
 class Refusal(Exception):
@@ -79,6 +81,10 @@ def malformed_handle(handle: str) -> Envelope:
 
 def minted(handle: str, what: str, again: str) -> Envelope:
     return error(MINTED_PER_CALL.format(handle=handle, what=what, again=again), "minted")
+
+
+def series(handle: str, metric: str, scope: str) -> Envelope:
+    return error(SERIES.format(handle=handle, metric=metric, scope=scope), "series")
 
 
 def unknown_value(field: str, value: str, values: list[str]) -> Envelope:

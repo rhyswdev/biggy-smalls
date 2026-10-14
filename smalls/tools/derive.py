@@ -159,7 +159,7 @@ def metric_queries(ctx: ToolContext) -> list[dict[str, Any]]:
     for row in query(ctx, "SELECT handle, series, count(*) AS n, min(t) AS first, max(t) AS last, max(interval_s) AS interval_s, "
                           "max(tags) AS tags FROM visible_point GROUP BY handle, series ORDER BY handle, series"):
         visible.setdefault(row["handle"], {})[row["series"]] = row
-    for ref in query(ctx, "SELECT name, native, flags FROM ref ORDER BY name"):
+    for ref in query(ctx, "SELECT source, name, native, flags FROM ref ORDER BY name"):
         try:
             served = json.loads(render_native(ref["native"], ref["flags"]))
         except ValueError:
@@ -183,7 +183,7 @@ def metric_queries(ctx: ToolContext) -> list[dict[str, Any]]:
         scope = set.intersection(*(s["scope"] - set(s["tag_set"]) for s in series))
         first = served["series"][0]
         out.append({"handle": handle, "query": served["query"], "metric": f"{first.get('aggr')}:{first.get('metric')}", "aggr": first.get("aggr"),
-                    "name": first.get("metric"), "scope": scope, "by": grouped, "series": series, "path": ref["name"]})
+                    "name": first.get("metric"), "scope": scope, "by": grouped, "series": series, "path": ref["name"], "source": ref["source"]})
     return out
 
 

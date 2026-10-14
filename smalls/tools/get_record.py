@@ -42,6 +42,11 @@ def run(args: Any, ctx: ToolContext) -> Envelope:
         return refusal
     record = derive.one(ctx, "SELECT * FROM visible WHERE handle = ?", (handle,))
     if record is None:
+        # A metric series has points and no record. One with a visible point is answered with the call that
+        # reads it; one with none is answered like any handle that is not here.
+        served = next((q for q in derive.metric_queries(ctx) if q["handle"] == handle), None) if handle.startswith("metric:") else None
+        if served:
+            return errors.series(handle, served["metric"], ",".join(sorted(served["scope"])) or "*")
         return errors.not_in_bundle(handle)
     head, body, children = render(ctx, record)
     pieces = split(body, CAP_TOKENS * CHARS_PER_TOKEN - RESERVE_CHARS - len(head))
