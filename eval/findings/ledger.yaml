@@ -23,3 +23,12 @@ findings:
       sol-base-C-1440-tags-r1: {claims: 23, partial: 13, unsupported: 1}
       sol-base-C-1440-tags-r2: {claims: 26, partial: 16, unsupported: 2}
     status: open
+probes:
+  effort-low:
+    what: the investigator at low effort, the rest of the sol set unchanged, on the original five files
+    runs:
+      eff-low-C-1452-tags-r1: {calls: 30, turns: 13, cost_usd: 0.347, wall_s: 150, leading_correct: true}
+      eff-low-C-1452-tags-r2: {calls: 27, turns: 13, cost_usd: 0.291, wall_s: 142, leading_correct: true}
+    against: medium at 14:52 on the same files, five runs, cost 0.33 to 0.43, wall 231 to 248 s, all leading_correct
+    note: same conclusions in about 60% of the wall time and slightly less cost; two runs only. The loop stays at medium
+      so passes compare like with like; switching the set's investigator effort is a config change for the end of the loop.
