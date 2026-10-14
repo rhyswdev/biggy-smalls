@@ -1,0 +1,884 @@
+{
+ "components": {
+  "schemas": {
+   "Answer": {
+    "additionalProperties": false,
+    "description": "One call's answer: approve (optionally with edited arguments), skip (defer) or reject with a reason.",
+    "properties": {
+     "approve": {
+      "default": false,
+      "title": "Approve",
+      "type": "boolean"
+     },
+     "args": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Args"
+     },
+     "defer": {
+      "default": false,
+      "title": "Defer",
+      "type": "boolean"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "maxLength": 2000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     }
+    },
+    "title": "Answer",
+    "type": "object"
+   },
+   "GateAnswer": {
+    "additionalProperties": false,
+    "properties": {
+     "answers": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/Answer"
+      },
+      "maxProperties": 50,
+      "minProperties": 1,
+      "title": "Answers",
+      "type": "object"
+     },
+     "interrupt_id": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Interrupt Id",
+      "type": "string"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 4000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "required": [
+     "interrupt_id",
+     "answers"
+    ],
+    "title": "GateAnswer",
+    "type": "object"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "title": "Detail",
+      "type": "array"
+     }
+    },
+    "title": "HTTPValidationError",
+    "type": "object"
+   },
+   "MoreRun": {
+    "additionalProperties": false,
+    "properties": {
+     "resume": {
+      "default": false,
+      "title": "Resume",
+      "type": "boolean"
+     }
+    },
+    "title": "MoreRun",
+    "type": "object"
+   },
+   "NewChat": {
+    "additionalProperties": false,
+    "properties": {
+     "auto_approve": {
+      "default": false,
+      "title": "Auto Approve",
+      "type": "boolean"
+     },
+     "origin": {
+      "enum": [
+       "chat",
+       "headless",
+       "blank"
+      ],
+      "title": "Origin",
+      "type": "string"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "trigger": {
+      "anyOf": [
+       {
+        "maxLength": 8000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Trigger"
+     }
+    },
+    "required": [
+     "origin"
+    ],
+    "title": "NewChat",
+    "type": "object"
+   },
+   "NoteIn": {
+    "additionalProperties": false,
+    "properties": {
+     "text": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "NoteIn",
+    "type": "object"
+   },
+   "Switch": {
+    "additionalProperties": false,
+    "properties": {
+     "on": {
+      "title": "On",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "on"
+    ],
+    "title": "Switch",
+    "type": "object"
+   },
+   "ValidationError": {
+    "properties": {
+     "ctx": {
+      "title": "Context",
+      "type": "object"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "title": "Location",
+      "type": "array"
+     },
+     "msg": {
+      "title": "Message",
+      "type": "string"
+     },
+     "type": {
+      "title": "Error Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError",
+    "type": "object"
+   }
+  }
+ },
+ "info": {
+  "title": "Smalls API",
+  "version": "1"
+ },
+ "openapi": "3.1.0",
+ "paths": {
+  "/capabilities": {
+   "get": {
+    "operationId": "capabilities_capabilities_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Capabilities Capabilities Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Capabilities"
+   }
+  },
+  "/chats": {
+   "get": {
+    "operationId": "list_chats_chats_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response List Chats Chats Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "List Chats"
+   },
+   "post": {
+    "operationId": "create_chat_chats_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NewChat"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Create Chat Chats Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Create Chat"
+   }
+  },
+  "/chats/{chat_id}": {
+   "get": {
+    "operationId": "get_chat_chats__chat_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Get Chat Chats  Chat Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Get Chat"
+   }
+  },
+  "/chats/{chat_id}/auto-approve": {
+   "put": {
+    "operationId": "auto_approve_chats__chat_id__auto_approve_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/Switch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Auto Approve Chats  Chat Id  Auto Approve Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Auto Approve"
+   }
+  },
+  "/chats/{chat_id}/calls/{call_id}": {
+   "get": {
+    "operationId": "call_chats__chat_id__calls__call_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "call_id",
+      "required": true,
+      "schema": {
+       "title": "Call Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "run_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Run Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Call Chats  Chat Id  Calls  Call Id  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Call"
+   }
+  },
+  "/chats/{chat_id}/events": {
+   "get": {
+    "description": "The chat's events (6.3): every stored one after `Last-Event-ID` (or `after`), then each as it is written,\nwith a comment line every 15 s so proxies keep the connection open.",
+    "operationId": "events_chats__chat_id__events_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Events"
+   }
+  },
+  "/chats/{chat_id}/evidence/{handle}": {
+   "get": {
+    "operationId": "evidence_chats__chat_id__evidence__handle__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "handle",
+      "required": true,
+      "schema": {
+       "title": "Handle",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Evidence Chats  Chat Id  Evidence  Handle  Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Evidence"
+   }
+  },
+  "/chats/{chat_id}/gate": {
+   "post": {
+    "operationId": "answer_gate_chats__chat_id__gate_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/GateAnswer"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Answer Gate Chats  Chat Id  Gate Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Answer Gate"
+   }
+  },
+  "/chats/{chat_id}/notes": {
+   "post": {
+    "operationId": "add_note_chats__chat_id__notes_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NoteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Add Note Chats  Chat Id  Notes Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Note"
+   }
+  },
+  "/chats/{chat_id}/runs": {
+   "post": {
+    "operationId": "more_runs_chats__chat_id__runs_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MoreRun"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response More Runs Chats  Chat Id  Runs Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "More Runs"
+   }
+  },
+  "/chats/{chat_id}/stop": {
+   "post": {
+    "operationId": "stop_chats__chat_id__stop_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "202": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Stop Chats  Chat Id  Stop Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Stop"
+   }
+  },
+  "/health": {
+   "get": {
+    "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "title": "Response Health Health Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Health"
+   }
+  },
+  "/incident": {
+   "get": {
+    "description": "The incident card: the incident as it stands at `now` and the commander's note. No derived fact.",
+    "operationId": "incident_incident_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Incident Incident Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Incident"
+   }
+  },
+  "/runs/{run_id}/export": {
+   "post": {
+    "operationId": "export_runs__run_id__export_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Export Runs  Run Id  Export Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Export"
+   }
+  },
+  "/tools/schemas": {
+   "get": {
+    "operationId": "tool_schemas_tools_schemas_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Tool Schemas Tools Schemas Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Tool Schemas"
+   }
+  }
+ }
+}

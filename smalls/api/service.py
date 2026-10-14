@@ -60,6 +60,8 @@ class Service:
         self.settings = settings
         self.db = Database(settings.uri)
         self.cfg: Config = load_config(profile="scripted" if settings.mode == "scripted" else None)
+        if self.cfg.investigator.provider == "scripted" and settings.script_delay:
+            self.cfg = replace(self.cfg, investigator=self.cfg.investigator.with_params(delay_s=settings.script_delay))
         self.now: datetime = settings.now()
         self.pool = ThreadPoolExecutor(max_workers=settings.workers, thread_name_prefix="smalls-run")
         self.runners: dict[str, Runner] = {}            # run id -> the runner of a run kept in memory

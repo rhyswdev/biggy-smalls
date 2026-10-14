@@ -98,7 +98,7 @@ SMALLS_API_URL ?= http://127.0.0.1:$(SMALLS_API_PORT)
 SMALLS_API_MODE ?= live
 API_ENV = SMALLS_BUNDLE=$(BUNDLE) SMALLS_CHECKPOINT=$(CHECKPOINT) SMALLS_API_MODE=$(SMALLS_API_MODE)
 
-.PHONY: overfit-review api
+.PHONY: overfit-review api api-types
 
 # The overfit review (ruling U15): every change under the agent, its tools, its contracts and the drafting
 # prompt since BASE, read against the answer. Live: one model call with the investigator's profile.
@@ -108,3 +108,9 @@ overfit-review:
 # The API alone, on 127.0.0.1:SMALLS_API_PORT. Live mode reads the key from .env; nothing is written to disk.
 api:
 	$(API_ENV) $(UV) run --python 3.12 $(ENV) uvicorn smalls.api.app:app --host 127.0.0.1 --port $(SMALLS_API_PORT) --timeout-graceful-shutdown 3
+
+# The web app's API types: the API's OpenAPI document from the app object (no server needed), then the
+# TypeScript generated from it. A test fails when the committed document differs from the app's.
+api-types:
+	$(PY) -m smalls.api.openapi --write
+	pnpm --dir web types

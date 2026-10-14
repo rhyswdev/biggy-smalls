@@ -625,10 +625,20 @@ class Lint:
             self.err(16, hit)
         self.notes.append(f"[16] {len(texts)} prompt texts checked against {len(strings)} bundle strings")
 
+    def inv17_ui_text(self) -> None:
+        """No bundle string in the UI's code: the API and the web app (docs/decisions/ui-build.md section 7.6)."""
+        from smalls_data import ui_lint
+
+        strings = prompt_lint.bundle_strings(self.facts)
+        texts = ui_lint.ui_texts()
+        for hit in ui_lint.find(texts, strings):
+            self.err(17, hit)
+        self.notes.append(f"[17] {len(texts)} UI source files checked against {len(strings)} bundle strings")
+
     def run(self) -> None:
         for f in (self.inv1_connections, self.inv2_little, self.inv3_sequences, self.inv4_splunk_raw, self.inv5_visibility, self.inv6_answer_key,
                   self.inv7_tokens, self.inv8_clocks, self.inv10_served, self.inv9_aliases, self.inv11_schema, self.inv12_strings, self.inv13_budget,
-                  self.inv14_parity, self.inv15_sampling, self.inv16_prompt_text):
+                  self.inv14_parity, self.inv15_sampling, self.inv16_prompt_text, self.inv17_ui_text):
             f()
         self.notes.append("[10] served files checked; the store half is `make leak-test`; the tool-output half arrives with the tools (step 6a-tools)")
 

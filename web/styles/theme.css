@@ -1,0 +1,24 @@
+/* With no theme chosen, the page follows the system: the dark values of tokens.css, under the system's
+   preference. The page is rendered with data-theme="system" until a choice is saved in a cookie. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="system"] {
+  --surface: #111315; --surface-raised: #1a1d20; --surface-sunken: #0b0c0e; --line: #2b2f33; --line-strong: #6e757c;
+  --ink: #e7e9e6; --ink-muted: #a2a9af; --action: #80b0fb; --action-soft: #162a47; --on-action: #0b1220;
+  --attention: #f0b65a; --attention-soft: #382a0f; --attention-fill: #e5a23a; --on-attention: #1b1405;
+  --danger: #ff8e7e; --danger-soft: #3c1814; --ok: #5ccfbf; --ok-soft: #0f2d2a; --mark: #5a4600; --link: var(--action);
+  --shadow-drawer: -1px 0 0 #2b2f33, -12px 0 32px -8px #000000b3;
+  --focus-ring: 0 0 0 2px #111315, 0 0 0 4px #80b0fb;
+  }
+}
+[data-theme="system"] { color-scheme: light dark; }
+[data-theme="light"] { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+/* The fonts come through next/font, self-hosted, so the browser makes no request to Google. */
+:root {
+  --font-sans: var(--font-plex-sans), "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+html, body { margin: 0; }
+body { min-height: 100vh; background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 14px; line-height: 20px; }
