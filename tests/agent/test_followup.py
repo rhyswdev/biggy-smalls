@@ -84,7 +84,7 @@ def test_a_followup_answered_in_text_continues_the_same_run_and_the_report_stand
     r.close()
     assert result["status"] == "completed" and r.run_id == "fu-text"
     assert harness_calls(state) == harness_calls(before_state)                              # no second sweep, no second inventory
-    assert sum(isinstance(m, HumanMessage) and str(m.content).startswith("Opening sweep") for m in state["messages"]) == 1
+    assert not any(isinstance(m, HumanMessage) and str(m.content).startswith("Opening sweep") for m in state["messages"])      # nothing is read for it
     assert state["messages"][: len(before_state["messages"])] == before_state["messages"]   # the same conversation, extended
     after = json.loads((r.dir / "report.json").read_text())
     assert {k: v for k, v in after.items() if k != "proposed_actions"} == {k: v for k, v in before.items() if k != "proposed_actions"}

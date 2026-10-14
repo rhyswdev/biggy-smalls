@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { API, newChat, until } from "./helpers";
 
 // Row R10: the approval gate's keyboard model. Each test starts a chat that asks before every read, so it stops at
-// the opening sweep's gate of three reads.
+// the gate of the dev script's own first three reads.
 
 async function waitingChat(page: Page, request: Parameters<typeof newChat>[0]): Promise<string> {
   const id = await newChat(request, { origin: "chat", auto_approve: false });
@@ -13,6 +13,8 @@ async function waitingChat(page: Page, request: Parameters<typeof newChat>[0]): 
   return id;
 }
 
+// The dev script's first turn: what is alerting, what changed and what people are saying, chosen by its "model".
+const FIRST = ["call_101_list_alerts", "call_102_list_changes", "call_103_read_chat"];
 const gate = (page: Page) => page.locator("#pending");
 const target = (page: Page) => page.locator("#pending [data-kf] button").first();
 const rows = (page: Page) => page.locator("#pending .row");
@@ -110,7 +112,7 @@ test("turning auto-approve on keeps the decisions already made on the waiting ga
   await expect.poll(async () => {
     const view = await (await request.get(`${API}/chats/${id}`)).json();
     return view.events
-      .filter((e: { type: string; data: { call_id?: string } }) => e.type === "gate_decision" && e.data.call_id?.startsWith("sweep_"))
+      .filter((e: { type: string; data: { call_id?: string } }) => e.type === "gate_decision" && FIRST.includes(e.data.call_id ?? ""))
       .map((e: { data: { call_id?: string; decision?: string } }) => `${e.data.call_id === first ? "first" : "other"}:${e.data.decision}`)
       .sort();
   }, { timeout: 20_000 }).toEqual(["first:rejected", "other:approved", "other:approved"]);
@@ -150,7 +152,7 @@ test("a double submit from two tabs records one decision", async ({ browser, pag
   const view = await (await request.get(`${API}/chats/${id}`)).json();
   const resumed = view.events.filter((e: { type: string; data: { name?: string } }) => e.type === "phase" && e.data.name === "resumed");
   const sweep = view.events.filter((e: { type: string; data: { call_id?: string; by?: { who?: string } } }) =>
-    e.type === "gate_decision" && e.data.call_id?.startsWith("sweep_") && e.data.by?.who === "human");
+    e.type === "gate_decision" && FIRST.includes(e.data.call_id ?? "") && e.data.by?.who === "human");
   expect(resumed.length).toBeGreaterThanOrEqual(1);
   expect(sweep).toHaveLength(3);                                          // one decision per card, from one tab
   expect(new Set(sweep.map((e: { data: { decision?: string } }) => e.data.decision)).size).toBe(1);

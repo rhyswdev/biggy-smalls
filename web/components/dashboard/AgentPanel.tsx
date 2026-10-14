@@ -10,9 +10,11 @@ import { useChatEvents } from "@/lib/events";
 import { elapsed, money, plural, seconds } from "@/lib/format";
 import type { RecordedRun } from "@/lib/types";
 
-const PHASES = ["orient", "sweep", "investigate", "report", "verify"];
+// The agent chooses its own first reads, so a run goes from orientation straight to investigating. A recorded run
+// from before that had an opening sweep, which shows as part of orientation.
+const PHASES = ["orient", "investigate", "report", "verify"];
 const PHASE_WORDS: Record<string, string> = {
-  orient: "Reading what exists", sweep: "Opening sweep: alerts, changes, chat", investigate: "Investigating", report: "Writing the report",
+  orient: "Reading what exists", investigate: "Investigating", report: "Writing the report",
   verify: "Checking the report's claims", followup: "Answering a follow-up", done: "Done",
 };
 
@@ -94,7 +96,7 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
 
   if (running || state.status === "waiting") {
     const list = steps(state);
-    const phase = state.phase ?? "orient";
+    const phase = !state.phase || state.phase === "sweep" ? "orient" : state.phase;
     const at = PHASES.indexOf(phase);
     return (
       <>

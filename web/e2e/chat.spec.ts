@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { API, newChat, until } from "./helpers";
 
-// Row R12: a follow-up after the answer continues the same run, with no second sweep; the suggested questions are
+// Row R12: a follow-up after the answer continues the same run, with nothing read again for it; the suggested questions are
 // answered from the report; the headless and blank origins show what started them.
 
 test("a free-text follow-up on a finished run continues the same run, below the first answer", async ({ page, request }) => {
@@ -14,8 +14,8 @@ test("a free-text follow-up on a finished run continues the same run, below the 
   await expect(page.locator(".msg-sm").filter({ hasText: "answered from what it already had" })).toBeVisible({ timeout: 20_000 });
   const after = await (await request.get(`${API}/chats/${id}`)).json();
   expect(after.runs.map((r: { run_id: string }) => r.run_id)).toEqual(before.runs.map((r: { run_id: string }) => r.run_id));
-  const sweeps = (v: { events: { type: string; data: { by?: string } }[] }) => v.events.filter((e) => e.type === "tool_call_proposed" && e.data.by === "harness").length;
-  expect(sweeps(after)).toBe(sweeps(before));
+  const harnessReads = (v: { events: { type: string; data: { by?: string } }[] }) => v.events.filter((e) => e.type === "tool_call_proposed" && e.data.by === "harness").length;
+  expect(harnessReads(after)).toBe(harnessReads(before));
   const order = await page.locator(".convo > *").evaluateAll((els) => els.map((e) => e.textContent ?? ""));
   const report = order.findIndex((t) => t.includes("Findings"));
   const answer = order.findIndex((t) => t.includes("answered from what it already had"));

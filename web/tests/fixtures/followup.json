@@ -1,7 +1,7 @@
 [
  {
   "seq": 1,
-  "run_id": "20261014T115237Z-78179c",
+  "run_id": "20261014T200746Z-1a965e",
   "agent_seq": 1,
   "type": "run_started",
   "data": {
@@ -13,345 +13,62 @@
    "attended": false,
    "tags": false
   },
-  "t_wall": "2026-10-14T11:52:37.670+00:00"
+  "t_wall": "2026-10-14T20:07:46.449+00:00"
  },
  {
   "seq": 2,
-  "run_id": "20261014T115237Z-78179c",
+  "run_id": "20261014T200746Z-1a965e",
   "agent_seq": 2,
   "type": "phase",
   "data": {
    "name": "orient"
   },
-  "t_wall": "2026-10-14T11:52:37.670+00:00"
+  "t_wall": "2026-10-14T20:07:46.449+00:00"
  },
  {
   "seq": 3,
-  "run_id": "20261014T115237Z-78179c",
+  "run_id": "20261014T200746Z-1a965e",
   "agent_seq": 3,
-  "type": "phase",
-  "data": {
-   "name": "sweep"
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 4,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 4,
-  "type": "tool_call_proposed",
-  "data": {
-   "call_id": "sweep_01_list_alerts",
-   "tool": "list_alerts",
-   "by": "harness",
-   "kind": "read",
-   "rationale": {
-    "tests": "the opening sweep",
-    "expect": "what is alerting, what changed and what people are saying"
-   },
-   "args": {
-    "since": "-2h"
-   }
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 5,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 5,
-  "type": "tool_call_proposed",
-  "data": {
-   "call_id": "sweep_02_list_changes",
-   "tool": "list_changes",
-   "by": "harness",
-   "kind": "read",
-   "rationale": {
-    "tests": "the opening sweep",
-    "expect": "what is alerting, what changed and what people are saying"
-   },
-   "args": {
-    "since": "-24h"
-   }
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 6,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 6,
-  "type": "tool_call_proposed",
-  "data": {
-   "call_id": "sweep_03_read_chat",
-   "tool": "read_chat",
-   "by": "harness",
-   "kind": "read",
-   "rationale": {
-    "tests": "the opening sweep",
-    "expect": "what is alerting, what changed and what people are saying"
-   },
-   "args": {
-    "since": "-2h"
-   }
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 7,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 7,
-  "type": "gate_decision",
-  "data": {
-   "call_id": "sweep_01_list_alerts",
-   "tool": "list_alerts",
-   "decision": "approved",
-   "reason": null,
-   "reason_text": null,
-   "by": {
-    "who": "auto",
-    "via": "headless"
-   },
-   "decided_at": "2026-10-14T11:52:37.672+00:00",
-   "wait_ms": null
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 8,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 8,
-  "type": "gate_decision",
-  "data": {
-   "call_id": "sweep_02_list_changes",
-   "tool": "list_changes",
-   "decision": "approved",
-   "reason": null,
-   "reason_text": null,
-   "by": {
-    "who": "auto",
-    "via": "headless"
-   },
-   "decided_at": "2026-10-14T11:52:37.672+00:00",
-   "wait_ms": null
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 9,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 9,
-  "type": "gate_decision",
-  "data": {
-   "call_id": "sweep_03_read_chat",
-   "tool": "read_chat",
-   "decision": "approved",
-   "reason": null,
-   "reason_text": null,
-   "by": {
-    "who": "auto",
-    "via": "headless"
-   },
-   "decided_at": "2026-10-14T11:52:37.672+00:00",
-   "wait_ms": null
-  },
-  "t_wall": "2026-10-14T11:52:37.672+00:00"
- },
- {
-  "seq": 10,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 10,
-  "type": "tool_started",
-  "data": {
-   "call_id": "sweep_01_list_alerts",
-   "tool": "list_alerts"
-  },
-  "t_wall": "2026-10-14T11:52:37.673+00:00"
- },
- {
-  "seq": 11,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 11,
-  "type": "tool_result",
-  "data": {
-   "call_id": "sweep_01_list_alerts",
-   "tool": "list_alerts",
-   "kind": "read",
-   "by": "harness",
-   "status": "ok",
-   "shown": [
-    "dd:ev1000000001",
-    "dd:ev1000000002",
-    "dd:ev1000000004"
-   ],
-   "referenced": [
-    "dd:ev1000000003"
-   ],
-   "native_query": "alerts",
-   "window": [
-    "2026-03-02T00:20:00Z",
-    "2026-03-02T02:20:00Z"
-   ],
-   "chars": 511,
-   "latency_ms": 0.17,
-   "edited_args": null,
-   "first_line": "dd:ev1000000001  2026-03-02T02:06:45Z  datadog  mon101  [Warn] Disk usage high on /var/spool  host:worker-01  first 02:06:45Z  last 02:08:57Z  state alert  transitions 2"
-  },
-  "t_wall": "2026-10-14T11:52:37.673+00:00"
- },
- {
-  "seq": 12,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 12,
-  "type": "tool_started",
-  "data": {
-   "call_id": "sweep_02_list_changes",
-   "tool": "list_changes"
-  },
-  "t_wall": "2026-10-14T11:52:37.674+00:00"
- },
- {
-  "seq": 13,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 13,
-  "type": "tool_result",
-  "data": {
-   "call_id": "sweep_02_list_changes",
-   "tool": "list_changes",
-   "kind": "read",
-   "by": "harness",
-   "status": "ok",
-   "shown": [
-    "jk:report-exporter-deploy#12",
-    "jk:report-export#57"
-   ],
-   "referenced": [
-    "jk:report-export#57/0a1b2c3d"
-   ],
-   "native_query": "changes",
-   "window": [
-    "2026-03-01T02:20:00Z",
-    "2026-03-02T02:20:00Z"
-   ],
-   "chars": 267,
-   "latency_ms": 1.46,
-   "edited_args": null,
-   "first_line": "jk:report-exporter-deploy#12  2026-03-02T01:00:04Z  build  report-exporter-deploy#12  VERSION 2.4.1  SUCCESS  start 2026-03-02T01:00:00Z"
-  },
-  "t_wall": "2026-10-14T11:52:37.676+00:00"
- },
- {
-  "seq": 14,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 14,
-  "type": "tool_started",
-  "data": {
-   "call_id": "sweep_03_read_chat",
-   "tool": "read_chat"
-  },
-  "t_wall": "2026-10-14T11:52:37.676+00:00"
- },
- {
-  "seq": 15,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 15,
-  "type": "tool_result",
-  "data": {
-   "call_id": "sweep_03_read_chat",
-   "tool": "read_chat",
-   "kind": "read",
-   "by": "harness",
-   "status": "ok",
-   "shown": [
-    "slack:ops/38be245b",
-    "slack:ops/c3c3e1bd",
-    "slack:ops/684ed931"
-   ],
-   "referenced": [],
-   "native_query": "in:#ops",
-   "window": [
-    "2026-03-02T00:20:00Z",
-    "2026-03-02T02:20:00Z"
-   ],
-   "chars": 292,
-   "latency_ms": 0.11,
-   "edited_args": null,
-   "first_line": "slack:ops/38be245b  2026-03-02T02:11:00Z  someone: report-export just failed again, is the disk on worker-01 dying?"
-  },
-  "t_wall": "2026-10-14T11:52:37.676+00:00"
- },
- {
-  "seq": 16,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 16,
-  "type": "board_status",
-  "data": {
-   "line": "[board: not ready: no leading hypothesis; budget 0/30, 36 turns left]",
-   "ready": false,
-   "stale": []
-  },
-  "t_wall": "2026-10-14T11:52:37.676+00:00"
- },
- {
-  "seq": 17,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 17,
-  "type": "budget",
-  "data": {
-   "used": 0,
-   "limit": 30,
-   "turns_left": 36,
-   "round": 0,
-   "board": {
-    "leading": null,
-    "open": 0,
-    "rejected": 0
-   }
-  },
-  "t_wall": "2026-10-14T11:52:37.676+00:00"
- },
- {
-  "seq": 18,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 18,
   "type": "thinking_delta",
   "data": {
    "text": "The "
   },
-  "t_wall": "2026-10-14T11:52:37.677+00:00"
+  "t_wall": "2026-10-14T20:07:46.451+00:00"
  },
  {
-  "seq": 19,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 19,
+  "seq": 4,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 4,
   "type": "thinking_delta",
   "data": {
-   "text": "job failed at 02:10. Start with the job's own log lines and any errors in the last hour, in parallel."
+   "text": "job failed at 02:10. Start with what is alerting, what changed and what the channel says, and the job's own log lines and any errors in the last hour, all in parallel."
   },
-  "t_wall": "2026-10-14T11:52:37.678+00:00"
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
  },
  {
-  "seq": 20,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 20,
+  "seq": 5,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 5,
   "type": "thinking",
   "data": {
-   "text": "The job failed at 02:10. Start with the job's own log lines and any errors in the last hour, in parallel."
+   "text": "The job failed at 02:10. Start with what is alerting, what changed and what the channel says, and the job's own log lines and any errors in the last hour, all in parallel."
   },
-  "t_wall": "2026-10-14T11:52:37.678+00:00"
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
  },
  {
-  "seq": 21,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 21,
+  "seq": 6,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 6,
   "type": "model_call",
   "data": {
    "node": "agent",
    "round": 1,
    "attempt": 1,
-   "latency_ms": 0.6,
+   "latency_ms": 0.8,
    "usage": {
-    "input_tokens": 12764,
-    "output_tokens": 82,
-    "total_tokens": 12846,
+    "input_tokens": 13273,
+    "output_tokens": 160,
+    "total_tokens": 13433,
     "input_token_details": {
      "cache_creation": 0,
      "cache_read": 0
@@ -361,22 +78,82 @@
    "model": "scripted",
    "cost_usd": 0.0
   },
-  "t_wall": "2026-10-14T11:52:37.678+00:00"
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
  },
  {
-  "seq": 22,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 22,
+  "seq": 7,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 7,
   "type": "phase",
   "data": {
    "name": "investigate"
   },
-  "t_wall": "2026-10-14T11:52:37.678+00:00"
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
  },
  {
-  "seq": 23,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 23,
+  "seq": 8,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 8,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_97_list_alerts",
+   "tool": "list_alerts",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-full",
+    "expect": "what is alerting"
+   },
+   "args": {
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
+ },
+ {
+  "seq": 9,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 9,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_98_list_changes",
+   "tool": "list_changes",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-release",
+    "expect": "what changed"
+   },
+   "args": {
+    "since": "-24h"
+   }
+  },
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
+ },
+ {
+  "seq": 10,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 10,
+  "type": "tool_call_proposed",
+  "data": {
+   "call_id": "call_99_read_chat",
+   "tool": "read_chat",
+   "by": "agent",
+   "kind": "read",
+   "rationale": {
+    "tests": "h-dying",
+    "expect": "what people are saying"
+   },
+   "args": {
+    "since": "-2h"
+   }
+  },
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
+ },
+ {
+  "seq": 11,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 11,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_01_search_logs",
@@ -394,12 +171,12 @@
     "since": "-2h"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.678+00:00"
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
  },
  {
-  "seq": 24,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 24,
+  "seq": 12,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 12,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_02_search_logs",
@@ -417,12 +194,72 @@
     "since": "-60m"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.679+00:00"
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
  },
  {
-  "seq": 25,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 25,
+  "seq": 13,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 13,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_97_list_alerts",
+   "tool": "list_alerts",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T20:07:46.453+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T20:07:46.453+00:00"
+ },
+ {
+  "seq": 14,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 14,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_98_list_changes",
+   "tool": "list_changes",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T20:07:46.453+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T20:07:46.455+00:00"
+ },
+ {
+  "seq": 15,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 15,
+  "type": "gate_decision",
+  "data": {
+   "call_id": "call_99_read_chat",
+   "tool": "read_chat",
+   "decision": "approved",
+   "reason": null,
+   "reason_text": null,
+   "by": {
+    "who": "auto",
+    "via": "headless"
+   },
+   "decided_at": "2026-10-14T20:07:46.453+00:00",
+   "wait_ms": null
+  },
+  "t_wall": "2026-10-14T20:07:46.455+00:00"
+ },
+ {
+  "seq": 16,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 16,
   "type": "gate_decision",
   "data": {
    "call_id": "call_01_search_logs",
@@ -434,15 +271,15 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.679+00:00",
+   "decided_at": "2026-10-14T20:07:46.453+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.679+00:00"
+  "t_wall": "2026-10-14T20:07:46.455+00:00"
  },
  {
-  "seq": 26,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 26,
+  "seq": 17,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 17,
   "type": "gate_decision",
   "data": {
    "call_id": "call_02_search_logs",
@@ -454,26 +291,149 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.679+00:00",
+   "decided_at": "2026-10-14T20:07:46.453+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.679+00:00"
+  "t_wall": "2026-10-14T20:07:46.455+00:00"
  },
  {
-  "seq": 27,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 27,
+  "seq": 18,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 18,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_97_list_alerts",
+   "tool": "list_alerts"
+  },
+  "t_wall": "2026-10-14T20:07:46.455+00:00"
+ },
+ {
+  "seq": 19,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 19,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_97_list_alerts",
+   "tool": "list_alerts",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "dd:ev1000000001",
+    "dd:ev1000000002",
+    "dd:ev1000000004"
+   ],
+   "referenced": [
+    "dd:ev1000000003"
+   ],
+   "native_query": "alerts",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 511,
+   "latency_ms": 3.22,
+   "edited_args": null,
+   "first_line": "dd:ev1000000001  2026-03-02T02:06:45Z  datadog  mon101  [Warn] Disk usage high on /var/spool  host:worker-01  first 02:06:45Z  last 02:08:57Z  state alert  transitions 2"
+  },
+  "t_wall": "2026-10-14T20:07:46.459+00:00"
+ },
+ {
+  "seq": 20,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 20,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_98_list_changes",
+   "tool": "list_changes"
+  },
+  "t_wall": "2026-10-14T20:07:46.459+00:00"
+ },
+ {
+  "seq": 21,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 21,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_98_list_changes",
+   "tool": "list_changes",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "jk:report-exporter-deploy#12",
+    "jk:report-export#57"
+   ],
+   "referenced": [
+    "jk:report-export#57/0a1b2c3d"
+   ],
+   "native_query": "changes",
+   "window": [
+    "2026-03-01T02:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 267,
+   "latency_ms": 0.07,
+   "edited_args": null,
+   "first_line": "jk:report-exporter-deploy#12  2026-03-02T01:00:04Z  build  report-exporter-deploy#12  VERSION 2.4.1  SUCCESS  start 2026-03-02T01:00:00Z"
+  },
+  "t_wall": "2026-10-14T20:07:46.459+00:00"
+ },
+ {
+  "seq": 22,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 22,
+  "type": "tool_started",
+  "data": {
+   "call_id": "call_99_read_chat",
+   "tool": "read_chat"
+  },
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
+ },
+ {
+  "seq": 23,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 23,
+  "type": "tool_result",
+  "data": {
+   "call_id": "call_99_read_chat",
+   "tool": "read_chat",
+   "kind": "read",
+   "by": "agent",
+   "status": "ok",
+   "shown": [
+    "slack:ops/38be245b",
+    "slack:ops/c3c3e1bd",
+    "slack:ops/684ed931"
+   ],
+   "referenced": [],
+   "native_query": "in:#ops",
+   "window": [
+    "2026-03-02T00:20:00Z",
+    "2026-03-02T02:20:00Z"
+   ],
+   "chars": 292,
+   "latency_ms": 0.14,
+   "edited_args": null,
+   "first_line": "slack:ops/38be245b  2026-03-02T02:11:00Z  someone: report-export just failed again, is the disk on worker-01 dying?"
+  },
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
+ },
+ {
+  "seq": 24,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 24,
   "type": "tool_started",
   "data": {
    "call_id": "call_01_search_logs",
    "tool": "search_logs"
   },
-  "t_wall": "2026-10-14T11:52:37.679+00:00"
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
  },
  {
-  "seq": 28,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 28,
+  "seq": 25,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 25,
   "type": "tool_result",
   "data": {
    "call_id": "call_01_search_logs",
@@ -496,27 +456,27 @@
     "2026-03-02T02:20:00Z"
    ],
    "chars": 992,
-   "latency_ms": 1.42,
+   "latency_ms": 0.16,
    "edited_args": null,
    "first_line": "log:worker-01/98e857e0  2026-03-02T01:00:04Z  worker-01  2026-03-02T01:00:04.101Z INFO  [deploy] report-exporter version=2.4.1 installed (was 2.4.0)"
   },
-  "t_wall": "2026-10-14T11:52:37.681+00:00"
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
  },
  {
-  "seq": 29,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 29,
+  "seq": 26,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 26,
   "type": "tool_started",
   "data": {
    "call_id": "call_02_search_logs",
    "tool": "search_logs"
   },
-  "t_wall": "2026-10-14T11:52:37.684+00:00"
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
  },
  {
-  "seq": 30,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 30,
+  "seq": 27,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 27,
   "type": "tool_result",
   "data": {
    "call_id": "call_02_search_logs",
@@ -536,31 +496,31 @@
     "2026-03-02T02:20:00Z"
    ],
    "chars": 558,
-   "latency_ms": 1.41,
+   "latency_ms": 0.12,
    "edited_args": null,
    "first_line": "log:worker-01/810f681e  2026-03-02T02:09:31Z  worker-01  2026-03-02T02:09:31.004Z ERROR [exporter] write failed: [Errno 28] No space left on device: '/var/spool/report-exporter/tmp/part-0412.csv'"
   },
-  "t_wall": "2026-10-14T11:52:37.684+00:00"
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
  },
  {
-  "seq": 31,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 31,
+  "seq": 28,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 28,
   "type": "board_status",
   "data": {
-   "line": "[board: not ready: no leading hypothesis; budget 2/30, 35 turns left]",
+   "line": "[board: not ready: no leading hypothesis; budget 5/30, 35 turns left]",
    "ready": false,
    "stale": []
   },
-  "t_wall": "2026-10-14T11:52:37.684+00:00"
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
  },
  {
-  "seq": 32,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 32,
+  "seq": 29,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 29,
   "type": "budget",
   "data": {
-   "used": 2,
+   "used": 5,
    "limit": 30,
    "turns_left": 35,
    "round": 1,
@@ -570,32 +530,32 @@
     "rejected": 0
    }
   },
-  "t_wall": "2026-10-14T11:52:37.684+00:00"
+  "t_wall": "2026-10-14T20:07:46.461+00:00"
  },
  {
-  "seq": 33,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 33,
+  "seq": 30,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 30,
   "type": "thinking_delta",
   "data": {
    "text": "The exporter ran out of space at 02:09 and the run exited 1 a few seconds later. The channel's theory is a dying disk; record both, then check the disk trend and the runbook."
   },
-  "t_wall": "2026-10-14T11:52:37.685+00:00"
+  "t_wall": "2026-10-14T20:07:46.462+00:00"
  },
  {
-  "seq": 34,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 34,
+  "seq": 31,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 31,
   "type": "thinking",
   "data": {
    "text": "The exporter ran out of space at 02:09 and the run exited 1 a few seconds later. The channel's theory is a dying disk; record both, then check the disk trend and the runbook."
   },
-  "t_wall": "2026-10-14T11:52:37.686+00:00"
+  "t_wall": "2026-10-14T20:07:46.464+00:00"
  },
  {
-  "seq": 35,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 35,
+  "seq": 32,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 32,
   "type": "model_call",
   "data": {
    "node": "agent",
@@ -603,9 +563,9 @@
    "attempt": 1,
    "latency_ms": 0.7,
    "usage": {
-    "input_tokens": 13217,
+    "input_tokens": 14010,
     "output_tokens": 244,
-    "total_tokens": 13461,
+    "total_tokens": 14254,
     "input_token_details": {
      "cache_creation": 0,
      "cache_read": 0
@@ -615,12 +575,12 @@
    "model": "scripted",
    "cost_usd": 0.0
   },
-  "t_wall": "2026-10-14T11:52:37.686+00:00"
+  "t_wall": "2026-10-14T20:07:46.464+00:00"
  },
  {
-  "seq": 36,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 36,
+  "seq": 33,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 33,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_03_update_board",
@@ -666,12 +626,12 @@
     ]
    }
   },
-  "t_wall": "2026-10-14T11:52:37.686+00:00"
+  "t_wall": "2026-10-14T20:07:46.464+00:00"
  },
  {
-  "seq": 37,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 37,
+  "seq": 34,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 34,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_04_search_logs",
@@ -689,12 +649,12 @@
     "since": "-2h"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.686+00:00"
+  "t_wall": "2026-10-14T20:07:46.464+00:00"
  },
  {
-  "seq": 38,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 38,
+  "seq": 35,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 35,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_05_get_record",
@@ -709,12 +669,12 @@
     "handle": "conf:RB-DISK-SPACE"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.686+00:00"
+  "t_wall": "2026-10-14T20:07:46.464+00:00"
  },
  {
-  "seq": 39,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 39,
+  "seq": 36,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 36,
   "type": "gate_decision",
   "data": {
    "call_id": "call_03_update_board",
@@ -726,15 +686,15 @@
     "who": "policy",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.686+00:00",
+   "decided_at": "2026-10-14T20:07:46.464+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.687+00:00"
+  "t_wall": "2026-10-14T20:07:46.464+00:00"
  },
  {
-  "seq": 40,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 40,
+  "seq": 37,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 37,
   "type": "gate_decision",
   "data": {
    "call_id": "call_04_search_logs",
@@ -746,15 +706,15 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.686+00:00",
+   "decided_at": "2026-10-14T20:07:46.464+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.687+00:00"
+  "t_wall": "2026-10-14T20:07:46.466+00:00"
  },
  {
-  "seq": 41,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 41,
+  "seq": 38,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 38,
   "type": "gate_decision",
   "data": {
    "call_id": "call_05_get_record",
@@ -766,26 +726,26 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.686+00:00",
+   "decided_at": "2026-10-14T20:07:46.464+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.687+00:00"
+  "t_wall": "2026-10-14T20:07:46.466+00:00"
  },
  {
-  "seq": 42,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 42,
+  "seq": 39,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 39,
   "type": "tool_started",
   "data": {
    "call_id": "call_03_update_board",
    "tool": "update_board"
   },
-  "t_wall": "2026-10-14T11:52:37.687+00:00"
+  "t_wall": "2026-10-14T20:07:46.466+00:00"
  },
  {
-  "seq": 43,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 43,
+  "seq": 40,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 40,
   "type": "hypothesis_update",
   "data": {
    "entities": [
@@ -822,12 +782,12 @@
    "source": "derived",
    "id": "h-full"
   },
-  "t_wall": "2026-10-14T11:52:37.687+00:00"
+  "t_wall": "2026-10-14T20:07:46.468+00:00"
  },
  {
-  "seq": 44,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 44,
+  "seq": 41,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 41,
   "type": "hypothesis_update",
   "data": {
    "entities": [
@@ -857,12 +817,12 @@
    "source": "stated",
    "id": "h-dying"
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 45,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 45,
+  "seq": 42,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 42,
   "type": "tool_result",
   "data": {
    "call_id": "call_03_update_board",
@@ -879,23 +839,23 @@
    "edited_args": null,
    "first_line": "Recorded: h-full leading 0.60; h-dying open 0.20."
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 46,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 46,
+  "seq": 43,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 43,
   "type": "tool_started",
   "data": {
    "call_id": "call_04_search_logs",
    "tool": "search_logs"
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 47,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 47,
+  "seq": 44,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 44,
   "type": "tool_result",
   "data": {
    "call_id": "call_04_search_logs",
@@ -915,27 +875,27 @@
     "2026-03-02T02:20:00Z"
    ],
    "chars": 400,
-   "latency_ms": 0.14,
+   "latency_ms": 1.64,
    "edited_args": null,
    "first_line": "log:worker-01/afb4c3b3  2026-03-02T02:03:12Z  worker-01  2026-03-02T02:03:12.870Z WARN  [disk] /var/spool usage=88% free=5.9GiB"
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 48,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 48,
+  "seq": 45,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 45,
   "type": "tool_started",
   "data": {
    "call_id": "call_05_get_record",
    "tool": "get_record"
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 49,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 49,
+  "seq": 46,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 46,
   "type": "tool_result",
   "data": {
    "call_id": "call_05_get_record",
@@ -950,31 +910,31 @@
    "native_query": null,
    "window": null,
    "chars": 367,
-   "latency_ms": 1.33,
+   "latency_ms": 0.09,
    "edited_args": null,
    "first_line": "conf:RB-DISK-SPACE  (as of 2026-03-02T02:20:00Z)"
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 50,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 50,
+  "seq": 47,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 47,
   "type": "board_status",
   "data": {
-   "line": "[board: not ready: leading h-full has no discriminating evidence, rival h-dying has no against; budget 4/30, 34 turns left]",
+   "line": "[board: not ready: leading h-full has no discriminating evidence, rival h-dying has no against; budget 7/30, 34 turns left]",
    "ready": false,
    "stale": []
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 51,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 51,
+  "seq": 48,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 48,
   "type": "budget",
   "data": {
-   "used": 4,
+   "used": 7,
    "limit": 30,
    "turns_left": 34,
    "round": 2,
@@ -987,32 +947,32 @@
     "rejected": 0
    }
   },
-  "t_wall": "2026-10-14T11:52:37.690+00:00"
+  "t_wall": "2026-10-14T20:07:46.470+00:00"
  },
  {
-  "seq": 52,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 52,
+  "seq": 49,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 49,
   "type": "thinking_delta",
   "data": {
    "text": "Usage climbed from 88% to 99% inside the run. Did something change? Compare this build with the last good one, and look for a deploy."
   },
-  "t_wall": "2026-10-14T11:52:37.691+00:00"
+  "t_wall": "2026-10-14T20:07:46.471+00:00"
  },
  {
-  "seq": 53,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 53,
+  "seq": 50,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 50,
   "type": "thinking",
   "data": {
    "text": "Usage climbed from 88% to 99% inside the run. Did something change? Compare this build with the last good one, and look for a deploy."
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 54,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 54,
+  "seq": 51,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 51,
   "type": "model_call",
   "data": {
    "node": "agent",
@@ -1020,9 +980,9 @@
    "attempt": 1,
    "latency_ms": 0.6,
    "usage": {
-    "input_tokens": 13517,
+    "input_tokens": 14310,
     "output_tokens": 152,
-    "total_tokens": 13669,
+    "total_tokens": 14462,
     "input_token_details": {
      "cache_creation": 0,
      "cache_read": 0
@@ -1032,12 +992,12 @@
    "model": "scripted",
    "cost_usd": 0.0
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 55,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 55,
+  "seq": 52,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 52,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_06_get_record",
@@ -1052,12 +1012,12 @@
     "handle": "jk:report-export#57"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 56,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 56,
+  "seq": 53,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 53,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_07_get_record",
@@ -1072,12 +1032,12 @@
     "handle": "jk:report-export#56"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 57,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 57,
+  "seq": 54,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 54,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_08_search_logs",
@@ -1095,12 +1055,12 @@
     "since": "-2h"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 58,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 58,
+  "seq": 55,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 55,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_09_search_logs",
@@ -1118,12 +1078,12 @@
     "since": "-2h"
    }
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 59,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 59,
+  "seq": 56,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 56,
   "type": "gate_decision",
   "data": {
    "call_id": "call_06_get_record",
@@ -1135,15 +1095,15 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.693+00:00",
+   "decided_at": "2026-10-14T20:07:46.473+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.473+00:00"
  },
  {
-  "seq": 60,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 60,
+  "seq": 57,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 57,
   "type": "gate_decision",
   "data": {
    "call_id": "call_07_get_record",
@@ -1155,15 +1115,15 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.693+00:00",
+   "decided_at": "2026-10-14T20:07:46.473+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.475+00:00"
  },
  {
-  "seq": 61,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 61,
+  "seq": 58,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 58,
   "type": "gate_decision",
   "data": {
    "call_id": "call_08_search_logs",
@@ -1175,15 +1135,15 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.693+00:00",
+   "decided_at": "2026-10-14T20:07:46.473+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.475+00:00"
  },
  {
-  "seq": 62,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 62,
+  "seq": 59,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 59,
   "type": "gate_decision",
   "data": {
    "call_id": "call_09_search_logs",
@@ -1195,26 +1155,26 @@
     "who": "auto",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.693+00:00",
+   "decided_at": "2026-10-14T20:07:46.473+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.693+00:00"
+  "t_wall": "2026-10-14T20:07:46.475+00:00"
  },
  {
-  "seq": 63,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 63,
+  "seq": 60,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 60,
   "type": "tool_started",
   "data": {
    "call_id": "call_06_get_record",
    "tool": "get_record"
   },
-  "t_wall": "2026-10-14T11:52:37.694+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 64,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 64,
+  "seq": 61,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 61,
   "type": "tool_result",
   "data": {
    "call_id": "call_06_get_record",
@@ -1231,27 +1191,27 @@
    "native_query": null,
    "window": null,
    "chars": 239,
-   "latency_ms": 0.09,
+   "latency_ms": 0.06,
    "edited_args": null,
    "first_line": "jk:report-export#57  (as of 2026-03-02T02:20:00Z)"
   },
-  "t_wall": "2026-10-14T11:52:37.694+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 65,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 65,
+  "seq": 62,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 62,
   "type": "tool_started",
   "data": {
    "call_id": "call_07_get_record",
    "tool": "get_record"
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 66,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 66,
+  "seq": 63,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 63,
   "type": "tool_result",
   "data": {
    "call_id": "call_07_get_record",
@@ -1266,27 +1226,27 @@
    "native_query": null,
    "window": null,
    "chars": 156,
-   "latency_ms": 0.09,
+   "latency_ms": 0.05,
    "edited_args": null,
    "first_line": "jk:report-export#56  (as of 2026-03-02T02:20:00Z)"
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 67,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 67,
+  "seq": 64,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 64,
   "type": "tool_started",
   "data": {
    "call_id": "call_08_search_logs",
    "tool": "search_logs"
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 68,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 68,
+  "seq": 65,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 65,
   "type": "tool_result",
   "data": {
    "call_id": "call_08_search_logs",
@@ -1304,27 +1264,27 @@
     "2026-03-02T02:20:00Z"
    ],
    "chars": 165,
-   "latency_ms": 0.07,
+   "latency_ms": 0.08,
    "edited_args": null,
    "first_line": "log:worker-01/98e857e0  2026-03-02T01:00:04Z  worker-01  2026-03-02T01:00:04.101Z INFO  [deploy] report-exporter version=2.4.1 installed (was 2.4.0)"
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 69,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 69,
+  "seq": 66,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 66,
   "type": "tool_started",
   "data": {
    "call_id": "call_09_search_logs",
    "tool": "search_logs"
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 70,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 70,
+  "seq": 67,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 67,
   "type": "tool_result",
   "data": {
    "call_id": "call_09_search_logs",
@@ -1342,31 +1302,31 @@
     "2026-03-02T02:20:00Z"
    ],
    "chars": 159,
-   "latency_ms": 1.31,
+   "latency_ms": 0.09,
    "edited_args": null,
    "first_line": "log:worker-01/0948a873  2026-03-02T02:10:02Z  worker-01  2026-03-02T02:10:02.560Z WARN  [exporter] temp cleanup skipped: cleanup_on_exit=false"
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 71,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 71,
+  "seq": 68,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 68,
   "type": "board_status",
   "data": {
-   "line": "[board: not ready: leading h-full has no discriminating evidence, rival h-dying has no against; budget 8/30, 33 turns left]",
+   "line": "[board: not ready: leading h-full has no discriminating evidence, rival h-dying has no against; budget 11/30, 33 turns left]",
    "ready": false,
    "stale": []
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 72,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 72,
+  "seq": 69,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 69,
   "type": "budget",
   "data": {
-   "used": 8,
+   "used": 11,
    "limit": 30,
    "turns_left": 33,
    "round": 3,
@@ -1379,32 +1339,32 @@
     "rejected": 0
    }
   },
-  "t_wall": "2026-10-14T11:52:37.697+00:00"
+  "t_wall": "2026-10-14T20:07:46.476+00:00"
  },
  {
-  "seq": 73,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 73,
+  "seq": 70,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 70,
   "type": "thinking_delta",
   "data": {
    "text": "2.4.1 replaced 2.4.0 at 01:00 and this run skipped temp cleanup; the good run was on 2.4.0. The release is the cause and the full volume is how it showed. Propose a rollback for the commander."
   },
-  "t_wall": "2026-10-14T11:52:37.698+00:00"
+  "t_wall": "2026-10-14T20:07:46.477+00:00"
  },
  {
-  "seq": 74,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 74,
+  "seq": 71,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 71,
   "type": "thinking",
   "data": {
    "text": "2.4.1 replaced 2.4.0 at 01:00 and this run skipped temp cleanup; the good run was on 2.4.0. The release is the cause and the full volume is how it showed. Propose a rollback for the commander."
   },
-  "t_wall": "2026-10-14T11:52:37.699+00:00"
+  "t_wall": "2026-10-14T20:07:46.477+00:00"
  },
  {
-  "seq": 75,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 75,
+  "seq": 72,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 72,
   "type": "model_call",
   "data": {
    "node": "agent",
@@ -1412,9 +1372,9 @@
    "attempt": 1,
    "latency_ms": 0.7,
    "usage": {
-    "input_tokens": 13782,
+    "input_tokens": 14575,
     "output_tokens": 345,
-    "total_tokens": 14127,
+    "total_tokens": 14920,
     "input_token_details": {
      "cache_creation": 0,
      "cache_read": 0
@@ -1424,12 +1384,12 @@
    "model": "scripted",
    "cost_usd": 0.0
   },
-  "t_wall": "2026-10-14T11:52:37.699+00:00"
+  "t_wall": "2026-10-14T20:07:46.477+00:00"
  },
  {
-  "seq": 76,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 76,
+  "seq": 73,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 73,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_10_update_board",
@@ -1497,12 +1457,12 @@
     ]
    }
   },
-  "t_wall": "2026-10-14T11:52:37.699+00:00"
+  "t_wall": "2026-10-14T20:07:46.478+00:00"
  },
  {
-  "seq": 77,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 77,
+  "seq": 74,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 74,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_11_propose_action",
@@ -1528,12 +1488,12 @@
     ]
    }
   },
-  "t_wall": "2026-10-14T11:52:37.700+00:00"
+  "t_wall": "2026-10-14T20:07:46.478+00:00"
  },
  {
-  "seq": 78,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 78,
+  "seq": 75,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 75,
   "type": "gate_decision",
   "data": {
    "call_id": "call_10_update_board",
@@ -1545,20 +1505,20 @@
     "who": "policy",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.700+00:00",
+   "decided_at": "2026-10-14T20:07:46.478+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.700+00:00"
+  "t_wall": "2026-10-14T20:07:46.478+00:00"
  },
  {
-  "seq": 79,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 79,
+  "seq": 76,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 76,
   "type": "gate_pending",
   "data": {
-   "interrupt_id": "4655c21734d169faa99c3b62b86a6276",
+   "interrupt_id": "86ede77d48a116b83783a11e93a53041",
    "round": 4,
-   "asked_at": "2026-10-14T11:52:37.700+00:00",
+   "asked_at": "2026-10-14T20:07:46.478+00:00",
    "calls": [
     {
      "call_id": "call_11_propose_action",
@@ -1586,12 +1546,12 @@
     }
    ]
   },
-  "t_wall": "2026-10-14T11:52:37.702+00:00"
+  "t_wall": "2026-10-14T20:07:46.478+00:00"
  },
  {
-  "seq": 80,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 80,
+  "seq": 77,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 77,
   "type": "gate_decision",
   "data": {
    "call_id": "call_11_propose_action",
@@ -1603,26 +1563,26 @@
     "who": "policy",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.704+00:00",
+   "decided_at": "2026-10-14T20:07:46.482+00:00",
    "wait_ms": 4.5
   },
-  "t_wall": "2026-10-14T11:52:37.704+00:00"
+  "t_wall": "2026-10-14T20:07:46.482+00:00"
  },
  {
-  "seq": 81,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 81,
+  "seq": 78,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 78,
   "type": "tool_started",
   "data": {
    "call_id": "call_10_update_board",
    "tool": "update_board"
   },
-  "t_wall": "2026-10-14T11:52:37.706+00:00"
+  "t_wall": "2026-10-14T20:07:46.484+00:00"
  },
  {
-  "seq": 82,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 82,
+  "seq": 79,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 79,
   "type": "hypothesis_update",
   "data": {
    "entities": [
@@ -1665,12 +1625,12 @@
    "source": "derived",
    "id": "h-release"
   },
-  "t_wall": "2026-10-14T11:52:37.707+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 83,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 83,
+  "seq": 80,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 80,
   "type": "hypothesis_update",
   "data": {
    "entities": [
@@ -1724,12 +1684,12 @@
    "source": "derived",
    "id": "h-full"
   },
-  "t_wall": "2026-10-14T11:52:37.707+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 84,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 84,
+  "seq": 81,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 81,
   "type": "hypothesis_update",
   "data": {
    "entities": [
@@ -1780,12 +1740,12 @@
    "source": "stated",
    "id": "h-dying"
   },
-  "t_wall": "2026-10-14T11:52:37.707+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 85,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 85,
+  "seq": 82,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 82,
   "type": "tool_result",
   "data": {
    "call_id": "call_10_update_board",
@@ -1802,12 +1762,12 @@
    "edited_args": null,
    "first_line": "Recorded: h-release leading 0.65; h-full rejected 0.30; h-dying rejected 0.10."
   },
-  "t_wall": "2026-10-14T11:52:37.707+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 86,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 86,
+  "seq": 83,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 83,
   "type": "tool_result",
   "data": {
    "call_id": "call_11_propose_action",
@@ -1824,27 +1784,27 @@
    "edited_args": null,
    "first_line": "DEFERRED: the incident commander has not decided. The call was not run. Continue without assuming it happened."
   },
-  "t_wall": "2026-10-14T11:52:37.708+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 87,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 87,
+  "seq": 84,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 84,
   "type": "board_status",
   "data": {
-   "line": "[board: ready; budget 8/30, 32 turns left]",
+   "line": "[board: ready; budget 11/30, 32 turns left]",
    "ready": true,
    "stale": []
   },
-  "t_wall": "2026-10-14T11:52:37.708+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 88,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 88,
+  "seq": 85,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 85,
   "type": "budget",
   "data": {
-   "used": 8,
+   "used": 11,
    "limit": 30,
    "turns_left": 32,
    "round": 4,
@@ -1857,42 +1817,42 @@
     "rejected": 2
    }
   },
-  "t_wall": "2026-10-14T11:52:37.708+00:00"
+  "t_wall": "2026-10-14T20:07:46.486+00:00"
  },
  {
-  "seq": 89,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 89,
+  "seq": 86,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 86,
   "type": "thinking_delta",
   "data": {
    "text": "Enough evidence. Submit the report."
   },
-  "t_wall": "2026-10-14T11:52:37.709+00:00"
+  "t_wall": "2026-10-14T20:07:46.487+00:00"
  },
  {
-  "seq": 90,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 90,
+  "seq": 87,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 87,
   "type": "thinking",
   "data": {
    "text": "Enough evidence. Submit the report."
   },
-  "t_wall": "2026-10-14T11:52:37.710+00:00"
+  "t_wall": "2026-10-14T20:07:46.489+00:00"
  },
  {
-  "seq": 91,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 91,
+  "seq": 88,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 88,
   "type": "model_call",
   "data": {
    "node": "agent",
    "round": 5,
    "attempt": 1,
-   "latency_ms": 0.5,
+   "latency_ms": 0.6,
    "usage": {
-    "input_tokens": 13909,
+    "input_tokens": 14702,
     "output_tokens": 497,
-    "total_tokens": 14406,
+    "total_tokens": 15199,
     "input_token_details": {
      "cache_creation": 0,
      "cache_read": 0
@@ -1902,12 +1862,12 @@
    "model": "scripted",
    "cost_usd": 0.0
   },
-  "t_wall": "2026-10-14T11:52:37.710+00:00"
+  "t_wall": "2026-10-14T20:07:46.489+00:00"
  },
  {
-  "seq": 92,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 92,
+  "seq": 89,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 89,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_12_submit_report",
@@ -2015,22 +1975,22 @@
     }
    }
   },
-  "t_wall": "2026-10-14T11:52:37.710+00:00"
+  "t_wall": "2026-10-14T20:07:46.489+00:00"
  },
  {
-  "seq": 93,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 93,
+  "seq": 90,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 90,
   "type": "phase",
   "data": {
    "name": "report"
   },
-  "t_wall": "2026-10-14T11:52:37.710+00:00"
+  "t_wall": "2026-10-14T20:07:46.489+00:00"
  },
  {
-  "seq": 94,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 94,
+  "seq": 91,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 91,
   "type": "gate_decision",
   "data": {
    "call_id": "call_12_submit_report",
@@ -2042,26 +2002,26 @@
     "who": "policy",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.710+00:00",
+   "decided_at": "2026-10-14T20:07:46.489+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.711+00:00"
+  "t_wall": "2026-10-14T20:07:46.490+00:00"
  },
  {
-  "seq": 95,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 95,
+  "seq": 92,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 92,
   "type": "tool_started",
   "data": {
    "call_id": "call_12_submit_report",
    "tool": "submit_report"
   },
-  "t_wall": "2026-10-14T11:52:37.712+00:00"
+  "t_wall": "2026-10-14T20:07:46.492+00:00"
  },
  {
-  "seq": 96,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 96,
+  "seq": 93,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 93,
   "type": "tool_result",
   "data": {
    "call_id": "call_12_submit_report",
@@ -2074,19 +2034,19 @@
    "native_query": null,
    "window": null,
    "chars": 16,
-   "latency_ms": 0.11,
+   "latency_ms": 0.12,
    "edited_args": null,
    "first_line": "Report accepted."
   },
-  "t_wall": "2026-10-14T11:52:37.713+00:00"
+  "t_wall": "2026-10-14T20:07:46.492+00:00"
  },
  {
-  "seq": 97,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 97,
+  "seq": 94,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 94,
   "type": "budget",
   "data": {
-   "used": 8,
+   "used": 11,
    "limit": 30,
    "turns_left": 31,
    "round": 5,
@@ -2099,12 +2059,12 @@
     "rejected": 2
    }
   },
-  "t_wall": "2026-10-14T11:52:37.713+00:00"
+  "t_wall": "2026-10-14T20:07:46.494+00:00"
  },
  {
-  "seq": 98,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 98,
+  "seq": 95,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 95,
   "type": "validation",
   "data": {
    "ok": true,
@@ -2115,12 +2075,12 @@
    "verifier": null,
    "disputed": []
   },
-  "t_wall": "2026-10-14T11:52:37.713+00:00"
+  "t_wall": "2026-10-14T20:07:46.494+00:00"
  },
  {
-  "seq": 99,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 99,
+  "seq": 96,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 96,
   "type": "draft_report",
   "data": {
    "report": {
@@ -2322,12 +2282,12 @@
     }
    }
   },
-  "t_wall": "2026-10-14T11:52:37.713+00:00"
+  "t_wall": "2026-10-14T20:07:46.494+00:00"
  },
  {
-  "seq": 100,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 100,
+  "seq": 97,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 97,
   "type": "report",
   "data": {
    "report": {
@@ -2555,98 +2515,98 @@
        "via": "headless"
       },
       "reason": "unattended run",
-      "decided_at": "2026-10-14T11:52:37.704+00:00"
+      "decided_at": "2026-10-14T20:07:46.482+00:00"
      }
     ]
    },
    "status": "completed"
   },
-  "t_wall": "2026-10-14T11:52:37.713+00:00"
+  "t_wall": "2026-10-14T20:07:46.494+00:00"
  },
  {
-  "seq": 101,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 101,
+  "seq": 98,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 98,
   "type": "phase",
   "data": {
    "name": "done"
   },
-  "t_wall": "2026-10-14T11:52:37.714+00:00"
+  "t_wall": "2026-10-14T20:07:46.496+00:00"
  },
  {
-  "seq": 102,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 102,
+  "seq": 99,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 99,
   "type": "run_finished",
   "data": {
    "status": "completed",
    "stop_reason": null,
-   "tool_calls": 8,
+   "tool_calls": 11,
    "model_calls": 5,
    "tokens": {
-    "input_tokens": 67189,
-    "output_tokens": 1320,
+    "input_tokens": 70870,
+    "output_tokens": 1398,
     "cache_read": 0,
     "cache_write": 0,
     "reasoning": 0,
     "cost_usd": 0.0,
-    "model_latency_ms": 3.1
+    "model_latency_ms": 3.4
    },
-   "wall_s": 0.045
+   "wall_s": 0.048
   },
-  "t_wall": "2026-10-14T11:52:37.716+00:00"
+  "t_wall": "2026-10-14T20:07:46.497+00:00"
  },
  {
-  "seq": 103,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 103,
+  "seq": 100,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 100,
   "type": "ic_note",
   "data": {
-   "handle": "ic:note/79dfa076",
+   "handle": "ic:note/6cb9353c",
    "text": "Why not the disk itself?",
-   "submitted_at": "2026-10-14T11:52:37.716+00:00",
+   "submitted_at": "2026-10-14T20:07:46.498+00:00",
    "by": "incident commander",
    "call_id": null
   },
-  "t_wall": "2026-10-14T11:52:37.717+00:00"
+  "t_wall": "2026-10-14T20:07:46.499+00:00"
  },
  {
-  "seq": 104,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 104,
+  "seq": 101,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 101,
   "type": "phase",
   "data": {
    "name": "followup",
-   "note": "ic:note/79dfa076",
+   "note": "ic:note/6cb9353c",
    "calls": 5,
    "turns": 7
   },
-  "t_wall": "2026-10-14T11:52:37.717+00:00"
+  "t_wall": "2026-10-14T20:07:46.499+00:00"
  },
  {
-  "seq": 105,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 105,
+  "seq": 102,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 102,
   "type": "thinking_delta",
   "data": {
    "text": "Enough evidence. Submit the report."
   },
-  "t_wall": "2026-10-14T11:52:37.719+00:00"
+  "t_wall": "2026-10-14T20:07:46.501+00:00"
  },
  {
-  "seq": 106,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 106,
+  "seq": 103,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 103,
   "type": "thinking",
   "data": {
    "text": "Enough evidence. Submit the report."
   },
-  "t_wall": "2026-10-14T11:52:37.721+00:00"
+  "t_wall": "2026-10-14T20:07:46.503+00:00"
  },
  {
-  "seq": 107,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 107,
+  "seq": 104,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 104,
   "type": "model_call",
   "data": {
    "node": "agent",
@@ -2654,9 +2614,9 @@
    "attempt": 1,
    "latency_ms": 0.5,
    "usage": {
-    "input_tokens": 14042,
+    "input_tokens": 14836,
     "output_tokens": 497,
-    "total_tokens": 14539,
+    "total_tokens": 15333,
     "input_token_details": {
      "cache_creation": 0,
      "cache_read": 0
@@ -2666,12 +2626,12 @@
    "model": "scripted",
    "cost_usd": 0.0
   },
-  "t_wall": "2026-10-14T11:52:37.721+00:00"
+  "t_wall": "2026-10-14T20:07:46.503+00:00"
  },
  {
-  "seq": 108,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 108,
+  "seq": 105,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 105,
   "type": "tool_call_proposed",
   "data": {
    "call_id": "call_13_submit_report",
@@ -2779,22 +2739,22 @@
     }
    }
   },
-  "t_wall": "2026-10-14T11:52:37.721+00:00"
+  "t_wall": "2026-10-14T20:07:46.503+00:00"
  },
  {
-  "seq": 109,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 109,
+  "seq": 106,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 106,
   "type": "phase",
   "data": {
    "name": "report"
   },
-  "t_wall": "2026-10-14T11:52:37.721+00:00"
+  "t_wall": "2026-10-14T20:07:46.503+00:00"
  },
  {
-  "seq": 110,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 110,
+  "seq": 107,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 107,
   "type": "gate_decision",
   "data": {
    "call_id": "call_13_submit_report",
@@ -2806,26 +2766,26 @@
     "who": "policy",
     "via": "headless"
    },
-   "decided_at": "2026-10-14T11:52:37.721+00:00",
+   "decided_at": "2026-10-14T20:07:46.503+00:00",
    "wait_ms": null
   },
-  "t_wall": "2026-10-14T11:52:37.721+00:00"
+  "t_wall": "2026-10-14T20:07:46.503+00:00"
  },
  {
-  "seq": 111,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 111,
+  "seq": 108,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 108,
   "type": "tool_started",
   "data": {
    "call_id": "call_13_submit_report",
    "tool": "submit_report"
   },
-  "t_wall": "2026-10-14T11:52:37.722+00:00"
+  "t_wall": "2026-10-14T20:07:46.504+00:00"
  },
  {
-  "seq": 112,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 112,
+  "seq": 109,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 109,
   "type": "tool_result",
   "data": {
    "call_id": "call_13_submit_report",
@@ -2838,20 +2798,20 @@
    "native_query": null,
    "window": null,
    "chars": 16,
-   "latency_ms": 0.11,
+   "latency_ms": 0.14,
    "edited_args": null,
    "first_line": "Report accepted."
   },
-  "t_wall": "2026-10-14T11:52:37.722+00:00"
+  "t_wall": "2026-10-14T20:07:46.506+00:00"
  },
  {
-  "seq": 113,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 113,
+  "seq": 110,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 110,
   "type": "budget",
   "data": {
-   "used": 8,
-   "limit": 13,
+   "used": 11,
+   "limit": 16,
    "turns_left": 6,
    "round": 6,
    "board": {
@@ -2863,12 +2823,12 @@
     "rejected": 2
    }
   },
-  "t_wall": "2026-10-14T11:52:37.722+00:00"
+  "t_wall": "2026-10-14T20:07:46.506+00:00"
  },
  {
-  "seq": 114,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 114,
+  "seq": 111,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 111,
   "type": "validation",
   "data": {
    "ok": true,
@@ -2879,12 +2839,12 @@
    "verifier": null,
    "disputed": []
   },
-  "t_wall": "2026-10-14T11:52:37.722+00:00"
+  "t_wall": "2026-10-14T20:07:46.506+00:00"
  },
  {
-  "seq": 115,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 115,
+  "seq": 112,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 112,
   "type": "draft_report",
   "data": {
    "report": {
@@ -3086,35 +3046,35 @@
     }
    }
   },
-  "t_wall": "2026-10-14T11:52:37.722+00:00"
+  "t_wall": "2026-10-14T20:07:46.506+00:00"
  },
  {
-  "seq": 116,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 116,
+  "seq": 113,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 113,
   "type": "followup_finished",
   "data": {
    "n": 1,
-   "note": "ic:note/79dfa076",
+   "note": "ic:note/6cb9353c",
    "notes": [
-    "ic:note/79dfa076"
+    "ic:note/6cb9353c"
    ],
    "round": 5,
    "calls": 5,
-   "calls_until": 13,
+   "calls_until": 16,
    "turns_until": 12,
    "status": "completed",
    "stop_reason": null,
-   "started_at": "2026-10-14T11:52:37.716+00:00",
+   "started_at": "2026-10-14T20:07:46.498+00:00",
    "outcome": "report",
    "ended_round": 6
   },
-  "t_wall": "2026-10-14T11:52:37.723+00:00"
+  "t_wall": "2026-10-14T20:07:46.506+00:00"
  },
  {
-  "seq": 117,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 117,
+  "seq": 114,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 114,
   "type": "report",
   "data": {
    "report": {
@@ -3342,45 +3302,45 @@
        "via": "headless"
       },
       "reason": "unattended run",
-      "decided_at": "2026-10-14T11:52:37.704+00:00"
+      "decided_at": "2026-10-14T20:07:46.482+00:00"
      }
     ]
    },
    "status": "completed"
   },
-  "t_wall": "2026-10-14T11:52:37.723+00:00"
+  "t_wall": "2026-10-14T20:07:46.506+00:00"
  },
  {
-  "seq": 118,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 118,
+  "seq": 115,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 115,
   "type": "phase",
   "data": {
    "name": "done"
   },
-  "t_wall": "2026-10-14T11:52:37.725+00:00"
+  "t_wall": "2026-10-14T20:07:46.508+00:00"
  },
  {
-  "seq": 119,
-  "run_id": "20261014T115237Z-78179c",
-  "agent_seq": 119,
+  "seq": 116,
+  "run_id": "20261014T200746Z-1a965e",
+  "agent_seq": 116,
   "type": "run_finished",
   "data": {
    "status": "completed",
    "stop_reason": null,
-   "tool_calls": 8,
+   "tool_calls": 11,
    "model_calls": 6,
    "tokens": {
-    "input_tokens": 81231,
-    "output_tokens": 1817,
+    "input_tokens": 85706,
+    "output_tokens": 1895,
     "cache_read": 0,
     "cache_write": 0,
     "reasoning": 0,
     "cost_usd": 0.0,
-    "model_latency_ms": 3.6
+    "model_latency_ms": 3.9
    },
-   "wall_s": 0.056
+   "wall_s": 0.06
   },
-  "t_wall": "2026-10-14T11:52:37.726+00:00"
+  "t_wall": "2026-10-14T20:07:46.510+00:00"
  }
 ]

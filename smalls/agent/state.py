@@ -163,7 +163,8 @@ class InvestigationState(TypedDict, total=False):
     restarts: int                                                       # at most one per run (J16)
     restart_pending: bool                                               # the context guard asked the runner for a restart
     carried: dict[str, Any] | None                                      # the earlier look this run was seeded from (J8)
-    swept: list[str]                                                    # the alert streams the sweep showed (J7)
+    swept: list[str]                                                    # the alert streams the run's list_alerts calls showed (J7)
+    fixed_reads: bool                                                   # arm A: the harness's fixed reads follow orientation
     report: dict[str, Any] | None
     report_attempts: int                                                # per submission cycle
     validation: dict[str, Any] | None

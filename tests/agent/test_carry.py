@@ -117,8 +117,8 @@ def test_a_second_checkpoint_run_seeds_from_the_first(cfg):
     # A handle that is here only because it was carried does not count toward "ready": the same board was ready in the first look.
     lines = [e["data"]["line"] for e in read_events(cfg, "second") if e["type"] == "board_status"]
     assert "[board: ready" in [e["data"]["line"] for e in read_events(cfg, "first") if e["type"] == "board_status"][-1]
-    assert lines[0].startswith("[board: not ready: leading h-release has no discriminating evidence")
-    assert "no non-chat support" not in lines[0]        # the opening sweep of this run showed one of its supports again, and that one counts
+    # Nothing in this run's own first round showed the carried supports again, so they do not count yet (E2).
+    assert lines[0].startswith("[board: not ready: leading h-release has no non-chat support, leading h-release has no discriminating evidence")
     # The report keeps one history row per look, and the leading hypothesis rests on a row that became known in between.
     report = Report.model_validate(read("report.json"))
     lead = next(h for h in report.hypotheses if h.id == "h-release")
@@ -214,9 +214,9 @@ def test_a_scripted_run_with_a_low_input_limit_restarts_once_and_keeps_its_ledge
     # The ledger, the board and the budget carry over; only the conversation is new.
     ledger = state["ledger"]
     before = [e for e in ledger if e["by"] == "agent" and e["round"] in (1, 2)]
-    assert [e["tool"] for e in before] == ["search_logs", "search_logs", "update_board", "search_logs", "get_record"] and state["calls_used"] == 4
-    assert [e["call_id"] for e in ledger if e["by"] == "harness"] == ["inventory", "sweep_01_list_alerts", "sweep_02_list_changes", "sweep_03_read_chat",
-                                                                     "sweep_r1_01_list_alerts", "sweep_r1_02_list_changes", "sweep_r1_03_read_chat"]
+    assert [e["tool"] for e in before] == ["list_alerts", "list_changes", "read_chat", "search_logs", "search_logs", "update_board", "search_logs",
+                                           "get_record"] and state["calls_used"] == 7
+    assert [e["call_id"] for e in ledger if e["by"] == "harness"] == ["inventory"]          # nothing is read for the agent, before or after the restart
     assert not [e for e in ledger if e["round"] == 3 and e["by"] == "agent" and e["tool"] != "submit_report"]      # the turn that tripped the guard ran nothing
     assert set(state["hypotheses"]) == {"h-full", "h-dying"} and state["hypotheses"]["h-full"]["history"][0]["round"] == 2      # history and all
     first = str(state["messages"][0].content)
@@ -224,8 +224,8 @@ def test_a_scripted_run_with_a_low_input_limit_restarts_once_and_keeps_its_ledge
     assert "h-full  [leading cause, confidence 0.60, blames worker-01, source derived]  The run failed because its spool volume filled up." in first
     board_text = prior_board(first, "The board of this run as it stands.")
     assert "re-test" not in board_text and "Rows served again for this run" in board_text and "No space left on device" in board_text
-    assert f"{small.call_budget - 4} tool calls, {small.call_budget + small.extra_turns - 3} model turns" in first      # what is left, not what it began with
-    assert sum(isinstance(m, AIMessage) for m in state["messages"]) == 2 and "Opening sweep, run by the harness" in str(state["messages"][1].content)
+    assert f"{small.call_budget - 7} tool calls, {small.call_budget + small.extra_turns - 3} model turns" in first      # what is left, not what it began with
+    assert sum(isinstance(m, AIMessage) for m in state["messages"]) == 2 and isinstance(state["messages"][1], AIMessage)     # the agent's turn follows at once
     # The run then finishes on the new thread, citing what the earlier conversation was shown: nothing it cites is dropped.
     report = Report.model_validate(json.loads((r.dir / "report.json").read_text()))
     assert result["status"] == "completed" and {h.id for h in report.hypotheses} == {"h-full", "h-dying"}

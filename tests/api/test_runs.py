@@ -106,7 +106,8 @@ def test_a_rejection_needs_a_reason_and_the_reason_is_in_the_runs_notes(client):
 def test_the_switch_answers_a_gate_of_reads_and_never_an_action(client):
     chat_id = start(client, auto=False)
     gate = client.get(f"/chats/{chat_id}").json()["pending_gate"]
-    assert [c["tool"] for c in gate["cards"]] == ["list_alerts", "list_changes", "read_chat"]      # off: the sweep asks
+    assert [c["tool"] for c in gate["cards"]] == ["list_alerts", "list_changes", "read_chat", "search_logs", "search_logs"]   # off: the first round asks
+    first = {c["call_id"] for c in gate["cards"]}
     switched = client.put(f"/chats/{chat_id}/auto-approve", json={"on": True}).json()
     assert switched["answered"]["status"] == "resumed"
     view = settle(client, chat_id)
@@ -114,8 +115,8 @@ def test_the_switch_answers_a_gate_of_reads_and_never_an_action(client):
     assert [c["tool"] for c in gate["cards"]] == ["propose_action"] and view["chat"]["auto_approve"] is True
     assert client.put(f"/chats/{chat_id}/auto-approve", json={"on": True}).json()["answered"] is None
     assert settle(client, chat_id)["pending_gate"]["interrupt_id"] == gate["interrupt_id"]           # still the person's
-    sweep = [e["data"] for e in view["events"] if e["type"] == "gate_decision" and e["data"]["call_id"].startswith("sweep_")]
-    assert {d["by"]["who"] for d in sweep} == {"human"}                                              # the standing choice is the commander's
+    answered = [e["data"] for e in view["events"] if e["type"] == "gate_decision" and e["data"]["call_id"] in first]
+    assert len(answered) == 5 and {d["by"]["who"] for d in answered} == {"human"}                     # the standing choice is the commander's
 
 
 def test_run_agent_is_unattended_and_defers_its_action(client):

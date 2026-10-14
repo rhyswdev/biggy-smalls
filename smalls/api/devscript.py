@@ -1,8 +1,8 @@
 """The script the scripted profile plays when the API runs in scripted mode (docs/decisions/ui-build.md section
-6.2): for developing and testing the UI without a key. It knows nothing about any data. It reads the recent
-logs and counts them, writes one open hypothesis citing rows it was shown, proposes one action, and submits an
-inconclusive report with a verdict for every alert stream the opening sweep showed. A follow-up is answered
-in text. It proves the plumbing, never the agent.
+6.2): for developing and testing the UI without a key. It knows nothing about any data. It opens with what is
+alerting, what changed and what people are saying, reads the recent logs and counts them, writes one open
+hypothesis citing rows it was shown, proposes one action, and submits an inconclusive report with a verdict for
+every alert stream its listing showed. A follow-up is answered in text. It proves the plumbing, never the agent.
 
 `draft` is the scripted drafter's script (U8): it writes a message from the packet's suggested stakeholder
 update and the resolution, the same for every audience but for its name.
@@ -37,13 +37,12 @@ def shown(messages: list[BaseMessage], needle: str = "") -> list[str]:
 
 
 def swept_alerts(messages: list[BaseMessage]) -> list[str]:
-    """The alert streams the opening sweep showed: the row handles of its `list_alerts` block."""
+    """The alert streams the run's `list_alerts` calls showed: the row handles."""
+    found: list[str] = []
     for m in messages:
-        if isinstance(m, HumanMessage) and "== list_alerts " in str(m.content):
-            block = str(m.content).split("== list_alerts ", 1)[1].split("\n== ", 1)[0]
-            return list(dict.fromkeys(line.split("  ", 1)[0].strip() for line in block.splitlines()[1:]
-                                      if is_handle(line.split("  ", 1)[0].strip())))
-    return []
+        if isinstance(m, ToolMessage) and m.name == "list_alerts":
+            found += [h for h in (line.split("  ", 1)[0].strip() for line in str(m.content).splitlines()) if is_handle(h) and h not in found]
+    return found
 
 
 def first_kind(tools: list[dict[str, Any]]) -> str | None:
@@ -61,6 +60,12 @@ def turn(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any,
         return ("A scripted answer.", [], {"text": "This is the scripted development profile: it answers every follow-up the same way. "
                                                    "Run the API in live mode for a real answer."})
     k = sum(isinstance(m, AIMessage) for m in messages)
+    if k == 0:      # its own first look: the harness reads nothing before the first turn
+        return "Start with what is alerting, what changed and what people are saying.", [
+            call("list_alerts", 101, ("h-dev", "what is alerting"), since="-2h"),
+            call("list_changes", 102, ("h-dev", "what changed"), since="-24h"),
+            call("read_chat", 103, ("h-dev", "what people are saying"), since="-2h")]
+    k -= 1
     if k == 0:
         return "Read the most recent log records and count them by level.", [
             call("search_logs", 1, ("h-dev", "recent records"), since="-30m", limit=5),

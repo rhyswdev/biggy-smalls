@@ -82,10 +82,9 @@ def test_row1_every_bad_call_is_answered_with_text_and_the_run_goes_on(cfg):
     assert "rationale: an object with `tests` and `expect` is required" in answers["call_93_search_logs"].content
     broken_answer = answers["call_94_read_chat"].content
     assert broken_answer.startswith("read_chat failed inside the tool (ZeroDivisionError).") and "secret" not in broken_answer and "Traceback" not in broken_answer
-    assert "== read_chat" in state["messages"][1].content and "read_chat failed inside the tool" in state["messages"][1].content     # the sweep's own call too
     assert result["status"] == "completed" and state["validation"]["ok"]           # the run went on to a report
     first_round = [e for e in state["ledger"] if e["round"] == 1]
-    assert [e["status"] for e in first_round] == ["error"] * 4 and state["calls_used"] == 10       # a call that ran and failed is charged; the others are not
+    assert [e["status"] for e in first_round] == ["error"] * 4 and state["calls_used"] == 13       # a call that ran and failed is charged; the others are not
 
 
 def test_row1_a_malformed_call_is_answered_before_the_gate_and_shown_only_on_the_third_round_in_a_row(cfg):
@@ -258,13 +257,14 @@ def test_row3_a_repeated_identical_call_returns_a_pointer_and_costs_nothing(cfg)
         k = turns(messages)
         if k == 0:
             return "search", [call("search_logs", 1, ("h", "errors"), terms=["ERROR"], since="-60m"),
-                              call("search_logs", 2, ("h", "bad"), terms=["ERROR"], since="-60m", limit=999)]
+                              call("search_logs", 2, ("h", "bad"), terms=["ERROR"], since="-60m", limit=999),
+                              call("list_alerts", 0, ("h", "what is alerting"), since="-2h")]
         if k == 1:
             return "again, and the same thing three other ways", [
                 call("search_logs", 3, ("h", "the same, said differently"), terms=["ERROR"], since="-1h", until="now", limit=30),
                 call("search_logs", 4, ("h", "another window"), terms=["ERROR"], since="-59m"),
                 call("search_logs", 5, ("h", "the bad one again"), terms=["ERROR"], since="-60m", limit=999),
-                call("list_alerts", 6, ("h", "what the sweep already ran"), since="-2h")]
+                call("list_alerts", 6, ("h", "what the first turn already listed"), since="-2h")]
         return "stop", []
 
     r = runner(cfg, "repeat", script)
@@ -278,8 +278,8 @@ def test_row3_a_repeated_identical_call_returns_a_pointer_and_costs_nothing(cfg)
     assert answer.startswith("Already run in round 1 with the same arguments (call call_01_search_logs)") and "nothing was charged" in answer
     assert by_id["call_04_search_logs"]["status"] == "ok" and by_id["call_04_search_logs"]["repeat_of"] is None      # a different window is a different call
     assert by_id["call_05_search_logs"]["status"] == "error" and by_id["call_05_search_logs"]["repeat_of"] is None  # only a call that ran makes a repeat
-    assert (by_id["call_06_list_alerts"]["status"], by_id["call_06_list_alerts"]["repeat_of"]) == ("repeat", "sweep_01_list_alerts")
-    assert state["calls_used"] == 2                                               # the first search and the different window
+    assert (by_id["call_06_list_alerts"]["status"], by_id["call_06_list_alerts"]["repeat_of"]) == ("repeat", "call_00_list_alerts")
+    assert state["calls_used"] == 3                                               # the first search, the listing and the different window
     calls = {c["call_id"]: c for c in map(json.loads, (r.dir / "calls.jsonl").read_text().splitlines())}
     assert calls["call_03_search_logs"]["repeat_of"] == "call_01_search_logs"
     evidence = {json.loads(line)["call_id"] for line in (r.dir / "evidence.jsonl").read_text().splitlines()}

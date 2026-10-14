@@ -24,7 +24,7 @@ Model names appear only in `spikes/agent/config.toml`.
 ## 1. Summary
 
 **What it is.** One investigator and one bounded verifier, in a custom LangGraph `StateGraph` with explicit phases:
-- orient and sweep (code);
+- orient (code);
 - investigate (model, gated);
 - report (model, validated by code);
 - verify (model);
@@ -60,7 +60,7 @@ Code owns everything deterministic; the model owns judgement.
 2. Actions gate even under auto-approve: **yes**.
 3. Internal tools (`update_board`, `submit_report`) are exempt from gates: **yes**, with every board write validated.
 4. Headless runs: **approve and record, for now**. `deferred` and the scripted-rejection cell stay available as config.
-5. The code-run opening sweep: **yes**.
+5. The code-run opening sweep: **re-ruled no on 2026-10-14.** The agent chooses its own first reads; only the no-tools baseline (arm A) keeps fixed reads, since a fixed input is what makes it a baseline.
 6. IC notes as citable `ic:note/<h8>` handles, classed with chat: **yes**.
 7. `do_not[]`, code-written `proposed_actions[]` and a structured stakeholder update in PLAN 3.1: **yes**, as best practice.
 8. `rationale` with `tests` and `expect` on every gated call: **yes**.
@@ -89,7 +89,7 @@ This is the agent's algorithm. Every rule is generic, because the held-out varia
 
 **The loop.**
 1. **Orient (code).** The first user turn holds `now`, the source inventory (R1), the trigger, and for a later checkpoint the prior board, marked "re-test".
-2. **Opening sweep (code; ruled yes).** The harness runs `list_alerts` and `list_changes` over the trigger window, then reads the incident channel. It goes through the same gate policy as any read, and the ledger records it as `by: harness`.
+2. **First reads (model; re-ruled 2026-10-14).** The harness reads nothing before the first turn. The agent decides where to start, from the trigger and the inventory, and its first turn may hold several reads at once. A fixed opening assumed that alerting covers the fault and works: a service may never have been wired to an alert, the alerting system may be down or late, and a fault can show only in logs, metrics, tickets or chat. Until this date the harness ran `list_alerts` and `list_changes` over the trigger window, then read the incident channel; arm A still does, as its fixed input.
 3. **Hypothesis rounds (model).**
    - Each round the agent names the hypothesis a call tests, and what it expects (`rationale.tests`, `rationale.expect`; ruled yes for every gated call).
    - It runs independent calls in parallel.
@@ -99,7 +99,9 @@ This is the agent's algorithm. Every rule is generic, because the held-out varia
 
 **The opening.**
 
-| | (a) The model picks from turn one | (b) Code runs a fixed, generic sweep (recommended) | (c) A fixed playbook throughout |
+Re-ruled 2026-10-14: (a). The table is the original comparison; (b) was ruled first and replaced because what to look at first is a judgement about the incident in front of the agent, which a fixed sweep makes for it.
+
+| | (a) The model picks from turn one (ruled) | (b) Code runs a fixed, generic sweep (ruled first, replaced) | (c) A fixed playbook throughout |
 |---|---|---|---|
 | Rounds to a first board | +1 or 2 | Fewest | Fewest |
 | Agency | Full | Full after the sweep | None: this is a script |
@@ -368,7 +370,7 @@ A contrarian always proposes something, so "a check was proposed" alone would tr
 **Arms and determinism.**
 - Arms are config: tools on or off, and the context builder (A to E).
 - `now` comes from the runtime context per checkpoint [V-spike].
-- Tools, handles, the first turn, the sweep, the gate policy and the validator are deterministic.
+- Tools, handles, the first turn, the gate policy and the validator are deterministic.
 - Model output is not, because current Anthropic models accept no sampling parameters. Results are therefore a mean with spread over runs (PLAN 6.1).
 
 **Tracing.**
@@ -408,8 +410,7 @@ A contrarian always proposes something, so "a check was proposed" alone would tr
 ```mermaid
 flowchart LR
     H["harness: now, trigger, prior board"] --> O["orient (code)"]
-    O --> S["sweep (code): alerts, changes, incident channel"]
-    S --> A["investigator (model)"]
+    O --> A["investigator (model)"]
     A -->|tool calls| G{"gate (code): policy, interrupt()"}
     G -->|"approved / rejected / deferred"| T["tools (code): run, ledger, evidence, board, status line, validator"]
     T -->|"next round"| A
@@ -588,7 +589,7 @@ record      gate_log + gate_decision{wait_ms, by: {who, via}} + calls.jsonl + re
 | 2 | Actions gate under auto-approve | Yes | Axis 3 policy |
 | 3 | Internal tools exempt from gates | Yes, every board write validated | Axis 3 policy |
 | 4 | Headless answers | Approve and record, for now; can change later | Axis 3, section 4. `--headless defer\|reject` and the scripted-rejection cell stay as config. |
-| 5 | Opening sweep by code | Yes | Section 2.0 |
+| 5 | Opening sweep by code | No: re-ruled 2026-10-14; the agent picks its first reads, and only arm A keeps fixed reads | Section 2.0 |
 | 6 | `ic:note/<h8>` handles | Yes, classed with chat | Section 2.0. The handle goes in `smalls/contracts/handles.py` (build row 4). The scorer rule goes in PLAN 3.2 and 5, implemented by the scorer's session. |
 | 7 | `do_not[]`, code-written `proposed_actions[]`, structured stakeholder update | Yes, as best practice | Section 3, following PagerDuty's open-source incident response guide |
 | 8 | `rationale` (`tests`, `expect`) on gated calls | Yes | Section 2.0 |

@@ -52,8 +52,8 @@ def test_a_run_paused_in_one_process_resumes_in_another_and_prints_what_a_replay
     assert len(printed(replayed)) > 60 and json.loads((tmp_path / "two-procs" / "report.json").read_text())["proposed_actions"][0]["decision"] == "approved"
     # The bar that closes each round is drawn from the round's own event, so the second process draws it right without the first one's memory.
     bars = [line for line in printed(replayed) if " · calls " in line and "round " in line]
-    assert len(bars) >= 5 and "round 0 · no leading hypothesis · 0 open, 0 rejected · calls 0/30" in bars[0]
-    assert any("round 2 · leading h-full 0.60 · 1 open, 0 rejected · calls 4/30" in bar for bar in bars)
+    assert len(bars) >= 4 and "round 1 · no leading hypothesis · 0 open, 0 rejected · calls 5/30" in bars[0]      # no round before the agent's first
+    assert any("round 2 · leading h-full 0.60 · 1 open, 0 rejected · calls 7/30" in bar for bar in bars)
     assert [bar for bar in printed(second) if "leading h-release 0.65 · 0 open, 2 rejected" in bar]
 
 

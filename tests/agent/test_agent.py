@@ -72,7 +72,7 @@ def test_every_tool_call_gets_exactly_one_result(cfg):
     r.close()
     asked = [c["id"] for m in messages if isinstance(m, AIMessage) for c in m.tool_calls]
     answered = [m.tool_call_id for m in messages if isinstance(m, ToolMessage)]
-    assert sorted(asked) == sorted(answered) and len(asked) == 12
+    assert sorted(asked) == sorted(answered) and len(asked) == 15         # the agent's own first look included
 
 
 def test_pause_at_a_gate_then_resume_in_a_new_runner_with_a_rejection(cfg):
@@ -389,7 +389,7 @@ def test_usage_comes_from_state_and_every_call_is_priced(cfg):
     assert len(usage["calls"]) == len(state["usage"]) == 5 and all("cost_usd" in c and c["attempt"] == 1 for c in usage["calls"])
     assert usage["totals"]["input_tokens"] == sum(c["usage"]["input_tokens"] for c in state["usage"]) > 0
     summary = json.loads((r.dir / "summary.json").read_text())
-    assert (summary["status"], summary["model_calls"], summary["tool_calls"], summary["retries"]) == ("completed", 5, 9, 0)
+    assert (summary["status"], summary["model_calls"], summary["tool_calls"], summary["retries"]) == ("completed", 5, 12, 0)
 
 
 def test_the_gate_wait_spans_processes_and_a_payload_cannot_claim_to_be_policy(cfg):

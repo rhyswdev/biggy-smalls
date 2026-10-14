@@ -76,12 +76,12 @@ def test_one_command_runs_arm_c_at_the_second_checkpoint_three_times(tmp_path, s
         run, summary = read(folder, "run.json"), read(folder, "summary.json")
         assert (run["arm"], run["checkpoint"], run["tags"], run["durability"], run["eval_run"], run["bundle"]) == ("C", "1452", True, "exit", True, parity.BUNDLE.name)
         assert run["now"] == golden.ctx(golden.SECOND).now.strftime("%Y-%m-%dT%H:%M:%SZ") and run["trigger"].strip()
-        assert summary["status"] == "completed" and summary["process"]["tool_calls"] == 2 and summary["process"]["model_turns"] == 3
+        assert summary["status"] == "completed" and summary["process"]["tool_calls"] == 5 and summary["process"]["model_turns"] == 3     # its own first look included
         Report.model_validate(read(folder, "report.json"))
     index = read(tmp_path, "reg.matrix.json")
     assert [row["run_id"] for row in index["runs"]] == names and all(row["exit"] == 0 for row in index["runs"])
     assert "arm C at 1452, tags on: 3 runs, 3 completed. Mean, with the lowest and highest run:" in out
-    assert "  tool calls: 2 (2 to 2)" in out and "  model turns: 3 (3 to 3)" in out and all(name in out for name in names)
+    assert "  tool calls: 5 (5 to 5)" in out and "  model turns: 3 (3 to 3)" in out and all(name in out for name in names)
 
 
 def test_the_tags_flag_and_the_arms_are_dimensions_and_a_dry_run_starts_nothing(tmp_path, capsys):
@@ -145,8 +145,12 @@ def test_the_cli_of_arm_a_and_a_normal_run_is_unchanged_by_the_single_call_setti
         baseline.main(["--bundle", BUNDLE, "--now", "14:52"])
     # In a run that is not single-call, a hypothesis the board does not hold cannot appear in the report: the first submission is sent back.
     cfg = load_config(runs_dir=tmp_path)
-    r = Runner(cfg, bundle_toolbox(parity.BUNDLE, False), "normal", script=lambda messages, tools: baseline_script([m for m in messages if not isinstance(m, AIMessage)],
-                                                                                                         [{"name": "submit_report"}]), eval_run=True)
+    def looks_first(messages, tools):       # an agent run reads nothing it has not asked for, so it lists the alerts and reads the chat first
+        if not any(isinstance(m, AIMessage) for m in messages):
+            return "Look first.", [c for c in fixture_script.OPENING if c["name"] in ("list_alerts", "read_chat")]
+        return baseline_script([m for m in messages if not isinstance(m, AIMessage)], [{"name": "submit_report"}])
+
+    r = Runner(cfg, bundle_toolbox(parity.BUNDLE, False), "normal", script=looks_first, eval_run=True)
     r.start("What is happening?", golden.ctx().now)
     r.close()
     validation = read(tmp_path / "normal", "report.json")["validation"]

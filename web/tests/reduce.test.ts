@@ -33,11 +33,12 @@ describe("the first paint equals the browser's fold", () => {
 });
 
 describe("the transcript", () => {
-  it("opens with the commander's turn, then the sweep, then one group per round, and ends with the report", () => {
+  it("opens with the commander's turn, then the agent's own first round, one group per round, and ends with the report", () => {
     const s = fold(fixture("chat-approved"));
     const kinds = s.turns.map((t) => t.kind);
     expect(kinds[0]).toBe("ic");
-    expect(s.turns[1]).toMatchObject({ kind: "group", by: "harness" });
+    expect(s.turns[1]).toMatchObject({ kind: "group", by: "agent" });                 // nothing is read for it first
+    expect(s.turns.some((t) => t.kind === "group" && t.by === "harness")).toBe(false);
     expect(kinds.filter((k) => k === "report")).toHaveLength(1);
     expect(kinds[kinds.length - 1]).toBe("report");
     const rounds = s.turns.filter((t) => t.kind === "group" && t.by === "agent");
@@ -92,7 +93,7 @@ describe("the transcript", () => {
     const firstPause = events.findIndex((e) => e.type === "run_paused");
     const s = fold(events.slice(0, firstPause + 1));
     expect(s.status).toBe("waiting");
-    expect(s.pending?.cards.map((c) => c.tool)).toEqual(["list_alerts", "list_changes", "read_chat"]);
+    expect(s.pending?.cards.map((c) => c.tool)).toEqual(["list_alerts", "list_changes", "read_chat", "search_logs", "search_logs"]);    // the agent's first round
     expect(s.pending?.cards.every((c) => s.rows[c.call_id]?.state === "awaiting")).toBe(true);
   });
 

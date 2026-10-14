@@ -288,7 +288,7 @@ def add_run_commands(sub) -> None:
     run.add_argument("--bundle", default=os.environ.get("SMALLS_BUNDLE"), help="bundle folder (or SMALLS_BUNDLE)")
     run.add_argument("--checkpoint", help="a label for this `now`, kept in the run record")
     run.add_argument("--arm", default="C", help="the eval arm, kept in the run record")
-    run.add_argument("--channel", help="the incident channel the opening sweep reads; all channels when omitted")
+    run.add_argument("--channel", help="the incident channel the no-tools baseline's fixed chat read takes; all channels when omitted")
     run.add_argument("--tags", choices=["on", "off"], help="with or without tags: inputs, labels and the inventory's counts (default: SMALLS_TAGS)")
     run.add_argument("--profile", help="the investigator's profile from config.toml (default: SMALLS_PROFILE, then the set's)")
     run.add_argument("--set", help="the model set: every role's profile and effort (default: SMALLS_SET, then the file's default_set)")

@@ -34,7 +34,7 @@ NOTE = "ic:note/"
 ROW_CHARS = 200
 EARLIER = "The board as it stood at {as_of}, from run {run_id}. Each hypothesis is on your board under the same id and is marked re-test."
 RESTARTED = ("The board of this run as it stands. The conversation was restarted from it to free context: what it holds was established in this run, "
-             "its cited rows were shown in this run and can still be cited, and the opening sweep follows again.")
+             "and its cited rows were shown in this run and can still be cited.")
 RESERVED = "Rows served again for this run, one line each; get_record returns a whole record:"
 DROPPED = "Not carried, and removed from the entries above: {listed}."
 WHY_NOTE, WHY_GONE, WHY_NO_CALL = "an earlier note is not carried", "it no longer resolves", "the call that minted it could not be run again"

@@ -29,15 +29,19 @@ def find(messages: list[BaseMessage], needle: str) -> list[str]:
 
 
 def swept_alerts(messages: list[BaseMessage]) -> list[str]:
-    """The alert streams the opening sweep showed: the row handles of its `list_alerts` block."""
+    """The alert streams the run's `list_alerts` calls showed, its own or a baseline's fixed read: the row handles."""
     found: list[str] = []
     for m in messages:
-        if isinstance(m, HumanMessage) and "== list_alerts " in str(m.content):
+        if isinstance(m, ToolMessage) and m.name == "list_alerts":
+            block = str(m.content)
+        elif isinstance(m, HumanMessage) and "== list_alerts " in str(m.content):
             block = str(m.content).split("== list_alerts ", 1)[1].split("\n== ", 1)[0]
-            for line in block.splitlines()[1:]:
-                first = line.split("  ", 1)[0].strip()
-                if is_handle(first) and first not in found:
-                    found.append(first)
+        else:
+            continue
+        for line in block.splitlines():
+            first = line.split("  ", 1)[0].strip()
+            if is_handle(first) and first not in found:
+                found.append(first)
     return found
 
 
@@ -51,12 +55,20 @@ def action_kind(tools: list[dict[str, Any]]) -> str:
     raise LookupError("the model was not given propose_action")
 
 
+# The script's own first look, chosen by the "model" now that the harness reads nothing before its first turn.
+OPENING = [call("list_alerts", 97, ("h-full", "what is alerting"), since="-2h"),
+           call("list_changes", 98, ("h-release", "what changed"), since="-24h"),
+           call("read_chat", 99, ("h-dying", "what people are saying"), since="-2h")]
+
+
 def turn(messages: list[BaseMessage], tools: list[dict[str, Any]], bad_handle: bool = False) -> tuple[str, list[dict[str, Any]]]:
     k = sum(isinstance(m, AIMessage) for m in messages)
     results = [m for m in messages if isinstance(m, ToolMessage)]
     rejected = [m for m in results if m.name == "propose_action" and str(m.content).startswith("REJECTED")]
     if k == 0:
-        return ("The job failed at 02:10. Start with the job's own log lines and any errors in the last hour, in parallel.", [
+        return ("The job failed at 02:10. Start with what is alerting, what changed and what the channel says, and the job's own "
+                "log lines and any errors in the last hour, all in parallel.", [
+            *OPENING,
             call("search_logs", 1, ("h-full", "a start line and an exit code"), terms=["report-export"], since="-2h"),
             call("search_logs", 2, ("h-full", "the proximate error"), terms=["ERROR"], since="-60m")])
     if k == 1:

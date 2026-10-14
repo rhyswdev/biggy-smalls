@@ -260,8 +260,8 @@ class Runner:
     def reopen(self, note: str | None = None, *, calls: int | None = None) -> dict[str, Any]:
         """Continue a finished run with a follow-up from the incident commander (seam S3). The note becomes a
         citable `ic:note` row and the run goes back to the investigator on the same thread, with the same
-        conversation and board, and `calls` more gated calls (a revision's worth by default). Neither the
-        orientation nor the opening sweep runs again. A turn with no tool call ends the follow-up, and its
+        conversation and board, and `calls` more gated calls (a revision's worth by default). The
+        orientation does not run again. A turn with no tool call ends the follow-up, and its
         text is the answer: the earlier report stands. A report submitted again goes through the validator
         and, when the run is verified, the changed-claims re-check."""
         run = self.record.read_json("run.json")
@@ -439,7 +439,7 @@ class Runner:
     def _restart(self, values: dict[str, Any]) -> None:
         """Restart the conversation from the board (J16): a new thread, `<run_id>.<n>`, seeded with every
         channel except the messages, whose first turn is the first-turn template with the board as it
-        stands. The run enters at the sweep, so the opening sweep follows the first turn as it did before.
+        stands. The run enters after orientation, so the agent's next turn reads the new first turn.
         The ledger, the board, the budget and the usage all carry over; the repeat index starts again."""
         ctx = self._ctx
         n = values.get("restarts", 0) + 1

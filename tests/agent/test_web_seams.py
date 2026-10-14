@@ -260,13 +260,13 @@ def test_s6_the_switch_applies_from_the_next_round_and_never_to_an_action(cfg):
     from dataclasses import replace
     r = runner(replace(cfg, auto_approve=False), "switch", script=turns_it_off_at_turn_three, stop_at_gate=True, attended=True, via="web")
     holder["r"] = r
-    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "paused"                          # off at start: the sweep asks
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "paused"                          # off at start: the first round asks
     r.set_auto_approve(True)                                                           # on while it waits: the asked card still waits
-    assert [c["call_id"] for c in r.state()["pending"]["calls"]][0].startswith("sweep_")
+    assert [c["call_id"] for c in r.state()["pending"]["calls"]][0] == "call_97_list_alerts"
     assert r.resume({c["call_id"]: {"approve": True} for c in r.state()["pending"]["calls"]})["status"] == "paused"
     state = r.state()
     by_call = {g["call_id"]: g["by"]["who"] for g in state["gate_log"]}
-    assert by_call["call_01_search_logs"] == by_call["call_04_search_logs"] == "auto"   # rounds one and two ran on the switch
+    assert by_call["call_01_search_logs"] == "human" and by_call["call_04_search_logs"] == "auto"     # round one was asked, round two ran on the switch
     assert [c["tool"] for c in state["pending"]["calls"]] == ["get_record", "get_record", "search_logs", "search_logs"]   # off: round three asks
     while r.state().get("pending"):
         cards = r.state()["pending"]["calls"]
@@ -292,15 +292,13 @@ def test_s7_read_cards_carry_the_native_query_and_window_before_the_read_runs(tm
     cfg = replace(load_config(runs_dir=tmp_path), auto_approve=False)
     r = Runner(cfg, bundle_toolbox(parity.BUNDLE), "s7", script=script, stop_at_gate=True, attended=True, via="web")
     assert r.start(TRIGGER, golden.ctx().now, checkpoint=golden.SECOND)["status"] == "paused"
-    sweep = r.state()["pending"]["calls"]
-    assert [c["tool"] for c in sweep] == ["list_alerts", "list_changes", "read_chat"]
-    from smalls.tools import windows
-    assert all(c["window"][1] == windows.iso(golden.ctx().store.now) for c in sweep)        # resolved, and clamped to now
-    assert sweep[0]["native_query"].startswith("(no single native query") and sweep[2]["native_query"].startswith("after:")
-    r.resume({c["call_id"]: {"approve": True} for c in sweep})
-    reads = r.state()["pending"]["calls"]
+    first = r.state()["pending"]["calls"]
     events = [e for e in r.record.events() if e.type == "gate_pending"]
     r.close()
-    assert reads[0]["tool"] == "search_logs" and reads[0]["native_query"].startswith("search index=")
-    assert reads[1]["native_query"].endswith("| stats count by level")
-    assert events[-1].data["calls"][0]["native_query"] == reads[0]["native_query"]          # the card the browser is sent carries it
+    assert [c["tool"] for c in first] == ["list_alerts", "list_changes", "read_chat", "search_logs", "search_logs"]     # the agent's own first look
+    from smalls.tools import windows
+    assert all(c["window"][1] == windows.iso(golden.ctx().store.now) for c in first[:3])     # resolved, and clamped to now
+    assert first[0]["native_query"].startswith("(no single native query") and first[2]["native_query"].startswith("after:")
+    reads = first[3:]
+    assert reads[0]["native_query"].startswith("search index=") and reads[1]["native_query"].endswith("| stats count by level")
+    assert events[-1].data["calls"][3]["native_query"] == reads[0]["native_query"]          # the card the browser is sent carries it

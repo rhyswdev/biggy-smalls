@@ -71,3 +71,12 @@ probes:
       p04-rollback-plan-C-1452-tags-r1: {answered_as_asked: true, gives_requested_plan: true, leading: gateway 0.8}
       p04-std-C-1452-tags-r1: {answered_as_asked: true, leading: gateway 0.8}
     status: kept (ff509fb)
+  F-05:
+    kind: harness and prompt
+    layer: method
+    text: eval/findings/F-05.md
+    why: ruled by us on 2026-10-14; a fixed opening assumed that alerting covers the fault and works, and the agent should decide where to start
+    pass: 5
+    review: the finding passed the findings lint and the overfit review (0 of 1 flagged); the installed diff, harness and prompt together, 0 of 19 flagged
+    after: not measured; the next scored runs use another model, so the first-phase numbers are not a baseline for it
+    status: installed with the harness change

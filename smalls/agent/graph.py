@@ -1,11 +1,12 @@
 """The investigator as an explicit StateGraph (docs/research/agent-design.md axis 1 and section 3):
 
-    orient -> sweep -> gate -> [ask] -> tools -> agent -> gate -> [ask] -> tools -> agent ... -> finalize
+    orient -> agent -> gate -> [ask] -> tools -> agent -> gate -> [ask] -> tools -> agent ... -> finalize
 
-- orient (code): the first user turn, from `now`, the source inventory, the trigger and the budget.
-- sweep (code): the opening sweep. What is alerting, what changed and what people are saying is not a
-  judgement call, so code asks. The calls are written to state as proposed calls from the harness and go
-  through the same gate and the same tools node as the model's; their results enter as one user message.
+- orient (code): the first user turn, from `now`, the source inventory, the trigger and the budget. The
+  agent decides what to read first: the harness reads nothing before it (agent-design ruling 5, re-ruled).
+- sweep (code): the no-tools baseline's fixed reads (arm A, a single-call run), and nothing else. Its calls
+  are written to state as proposed calls from the harness and go through the same gate and tools node as
+  the model's; their results enter as one user message.
 - agent (model): one model call with every tool bound. The system prompt and the tool list never change,
   so they are a stable cached prefix, and the message history only grows.
 - gate (code): applies the approval policy to each proposed call and writes the calls that need a person to
@@ -61,7 +62,7 @@ REPEAT = ("Already run in round {round} with the same arguments (call {call_id})
 STUCK = "[stuck: the last {n} reads returned nothing. What exists, from the inventory: {inventory}]"
 REFUSED = "the model declined to continue"
 OUT_OF_TOKENS = "the model ran out of output tokens before it finished a turn"
-NO_VERDICT = "These alert streams from the opening sweep have no verdict: {handles}. Give each one this_incident, other_incident or noise."
+NO_VERDICT = "These alert streams your alert listings showed have no verdict: {handles}. Give each one this_incident, other_incident or noise."
 FOLLOWUP = ("A follow-up from the incident commander, after your report:\n{row}\n"
             "If your report already answers it, answer in text with no tool call, and the report stands as submitted. "
             "If it needs evidence, investigate: you have {calls} more tool calls and {turns} more turns. "
@@ -160,7 +161,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                               "repeat_of": None, "used_tag_input": False, "empty": False, "identity": None}
         update = {"messages": [HumanMessage(first)], "as_of": iso(ctx.now), "checkpoint": ctx.checkpoint, "calls_used": 0,
                   "report_attempts": 0, "revisions": 0, "status": "investigating", "proposed": [], "stop_reason": None,
-                  "ledger": [entry]}
+                  "ledger": [entry], "fixed_reads": ctx.single_call}
         if seeded:
             update.update(hypotheses=seeded["hypotheses"], timeline=seeded["timeline"], open_questions=seeded["open_questions"],
                           ledger=[entry, *seeded["ledger"]], carried=seeded["carried"])
@@ -176,6 +177,11 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         calls: list[Call] = [{"call_id": f"sweep_{again}{n:02d}_{tool}", "tool": tool, "args": args, "rationale": dict(SWEEP_RATIONALE),
                               "by": "harness", "invalid": None} for n, (tool, args) in enumerate(wanted, 1) if tool in tools]
         return {"proposed": calls}
+
+    def route_orient(state: InvestigationState) -> str:
+        """The agent's first turn comes straight after orientation; only the no-tools baseline has fixed reads.
+        Read from state, not the run context: a restart re-enters here outside a run (J16)."""
+        return "sweep" if state.get("fixed_reads") else "agent"
 
     def route_sweep(state: InvestigationState) -> str:
         return "gate" if state.get("proposed") else "agent"
@@ -426,10 +432,10 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                                                                     "native_query", "window", "chars", "latency_ms")},
                     "edited_args": entry.get("edited_args"),
                     "first_line": env.text.split("\n", 1)[0][:200], **({"hidden": True} if call.get("hidden") else {})})
+            if call["tool"] == "list_alerts" and env.status == "ok":     # each stream shown needs a verdict in the report (J7)
+                swept += [h for h in env.shown if h not in swept]
             if entry["by"] == "harness":
                 blocks.append(SWEEP_BLOCK.format(tool=call["tool"], args=json.dumps(call["args"], ensure_ascii=False), text=env.text))
-                if call["tool"] == "list_alerts" and env.status == "ok":
-                    swept += list(env.shown)
             else:
                 out.append(ToolMessage(env.text, tool_call_id=call["call_id"], name=call["tool"],
                                        status="error" if env.status == "error" or entry["status"] == "rejected" else "success"))
@@ -439,7 +445,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         messages: list[Any] = list(out)
         if blocks:
             messages.append(HumanMessage("\n\n".join([SWEEP_HEAD, *blocks])))
-            update["swept"] = swept
+        if swept:
+            known = list(state.get("swept") or [])
+            update["swept"] = [*known, *(h for h in swept if h not in known)]
         all_notes = state.get("ic_notes", [])
         fresh = [n for n in all_notes[state.get("notes_shown", 0):] if not n.get("call_id")]      # a rejection's reason is already in its result
         # Notes the commander added while the run was running (S4). They are only read here: the runner takes
@@ -543,7 +551,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         if unknown or only_listed:
             findings.append(validator.explain(unknown, only_listed))
         unjudged = [h for h in state.get("swept") or [] if h not in {a["handle"] for a in draft["alerts"]}]
-        if unjudged:        # one verdict for every alert stream the sweep showed (J7)
+        if unjudged:        # one verdict for every alert stream the run's alert listings showed (J7)
             findings.append(NO_VERDICT.format(handles=", ".join(unjudged)))
         _, stale_lead = carry.continuity(draft, state.get("carried"), state.get("ledger", []))
         if stale_lead:      # a carried leading hypothesis needs something this run found (J9)
@@ -679,7 +687,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
     g.add_node("verify", verify_node, retry_policy=retry)
     g.add_node("finalize", finalize)
     g.add_edge(START, "orient")
-    g.add_edge("orient", "sweep")
+    g.add_conditional_edges("orient", route_orient, ["sweep", "agent"])
     g.add_conditional_edges("sweep", route_sweep, ["gate", "agent"])
     g.add_conditional_edges("agent", route_agent, ["gate", "finalize", END])
     g.add_conditional_edges("gate", route_gate, ["ask", "tools"])

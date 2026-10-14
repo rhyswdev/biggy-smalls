@@ -89,6 +89,8 @@ Run it:
 ## Next
 Everything that can be built without a live model or a fresh session is built. What is next needs one or the other.
 
+**The agent chooses its own first reads (2026-10-14).** The opening sweep is gone from the agent arm: the first turn holds the clock, the inventory, the trigger, the budget and any earlier board, and the model decides what to read. Only the no-tools baseline (arm A) keeps fixed reads. The alert-verdict rule (J7) now covers every stream the run's own `list_alerts` calls showed. The prompt change is iteration pass 5 (finding F-05, installed unedited, not yet measured); the eval numbers before it are not a baseline for runs after it. Open, for us: the pass's author asked whether, after a context restart, the verdict rule covers listings made before the restart, which the new thread cannot see. What the code does meanwhile: the list carries over with the run's state, and a missing verdict gets the usual retry naming the streams, then `unassessed`.
+
 **The second provider's account is out of credits (2026-10-14).** The default set, `sol`, pauses at its first model call with `APIError` until it is topped up; `SMALLS_SET=claude` runs everything on the first provider. The end-to-end pass of that day ran on `claude` (section 12.4 of `docs/decisions/ui-build.md`).
 
 **Model calls stay on each provider's own API.** On 2026-10-14 we tried moving every call to Amazon Bedrock and dropped it: the account reached no Claude model (Anthropic's use-case form had not taken effect, and the current models and the second provider's answered "not available for this account"), and Bedrock serves the second provider's model on Chat Completions only, not the Responses API our profile uses.

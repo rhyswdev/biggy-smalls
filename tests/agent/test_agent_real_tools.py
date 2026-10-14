@@ -24,7 +24,8 @@ TRIGGER = "Something is wrong with checkout. What is happening?"
 def script(messages, tools):
     k = sum(isinstance(m, AIMessage) for m in messages)
     if k == 0:
-        return "Read the recent logs and count them by level.", [
+        return "Start with what is alerting, what changed and what people say, and read the recent logs and count them by level.", [
+            *fixture_script.OPENING,
             call("search_logs", 1, ("h1", "recent records"), since="-30m", limit=5),
             call("search_logs", 2, ("h1", "a count per level"), since="-30m", group_by="level")]
     logs, counts = fixture_script.find(messages, "  "), fixture_script.find(messages, "count by level")
@@ -60,9 +61,10 @@ def test_a_scripted_run_over_the_real_registry_writes_a_complete_record(tmp_path
     run = json.loads((r.dir / "run.json").read_text())
     assert (run["bundle"], run["tags"], run["registry"], run["checkpoint"]) == (parity.BUNDLE.name, True, "bundle", checkpoint)
     calls = [json.loads(line) for line in (r.dir / "calls.jsonl").read_text().splitlines()]
-    sweep = [c for c in calls if c["by"] == "harness" and c["tool"] != "inventory"]
-    assert [c["tool"] for c in sweep] == ["list_alerts", "list_changes", "read_chat"] and all(c["status"] == "ok" and c["round"] == 0 for c in sweep)
-    assert [a.handle for a in report.alerts] == sweep[0]["shown"] and len(report.alerts) > 5       # a verdict for every swept stream
+    assert not [c for c in calls if c["by"] == "harness" and c["tool"] != "inventory"]        # nothing is read for the agent
+    opening = [c for c in calls if c["round"] == 1 and c["tool"] in ("list_alerts", "list_changes", "read_chat")]
+    assert [c["tool"] for c in opening] == ["list_alerts", "list_changes", "read_chat"] and all(c["status"] == "ok" and c["by"] == "agent" for c in opening)
+    assert [a.handle for a in report.alerts] == opening[0]["shown"] and len(report.alerts) > 5     # a verdict for every stream its listing showed
     rows_call, stats_call = [c for c in calls if c["tool"] == "search_logs"]
     visible = {row["handle"] for row in golden.visible(golden.ctx(checkpoint).store.now, "splunk/raw/")}
     assert len(rows_call["shown"]) == 5 and set(rows_call["shown"]) <= visible                 # every shown handle is a served, visible record

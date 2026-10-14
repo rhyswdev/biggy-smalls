@@ -5,6 +5,7 @@ verdict and packets."""
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,7 @@ import fixture_registry as fx
 import fixture_script
 from smalls.agent import board, gate, internal_tools, validator, verifier
 from smalls.agent.config import load_config
+from smalls.agent.events import read_events
 from smalls.agent.internal_tools import HypothesisFields, HypothesisUpdate
 from smalls.agent.models import provider_tools
 from smalls.agent.models import scripted_call as call
@@ -192,11 +194,27 @@ def test_a_stale_board_makes_the_gate_refuse_reads_and_only_a_board_write_lifts_
     assert state["calls_used"] == 4                                               # a refusal is not charged
 
 
-# -- the opening sweep (J12) -------------------------------------------------------------------------------
+# -- the first reads: the agent's own; fixed reads only for the no-tools baseline (J12, amended) ---------------
 
 
-def test_the_sweep_is_harness_calls_through_the_same_gate_and_one_user_message(cfg):
-    r = runner(cfg, "sweep", fixture_script.turn)
+def test_the_agent_reads_nothing_before_its_first_turn_and_its_own_alert_listing_sets_the_verdicts_owed(cfg):
+    r = runner(cfg, "own-opening", fixture_script.turn)
+    r.start(fx.TRIGGER, fx.NOW)
+    state = r.state()
+    r.close()
+    first, second = state["messages"][:2]
+    assert isinstance(first, HumanMessage) and isinstance(second, AIMessage)       # the model's turn comes straight after the first turn
+    assert not [e for e in state["ledger"] if e["by"] == "harness" and e["tool"] != "inventory"]
+    listing = next(e for e in state["ledger"] if e["tool"] == "list_alerts")
+    assert listing["by"] == "agent" and listing["round"] == 1 and state["swept"] == listing["shown"] and len(state["swept"]) == 3
+    assert state["calls_used"] == 12                                              # the agent's own first reads are charged like any read
+    assert not any(e.type == "phase" and e.data.get("name") == "sweep" for e in read_events(r.dir / "events.jsonl"))
+
+
+def test_the_baselines_fixed_reads_are_harness_calls_through_the_same_gate_and_one_user_message(cfg):
+    single = replace(cfg, call_budget=0, extra_turns=1, verifier={**cfg.verifier, "enabled": False})
+    r = Runner(single, module_toolbox("fixture_registry"), "fixed-reads", script=lambda messages, tools: ("stop", []),
+               single_call=True, offered=("submit_report",))
     r.start(fx.TRIGGER, fx.NOW, channel="ops")
     state = r.state()
     r.close()
@@ -206,22 +224,19 @@ def test_the_sweep_is_harness_calls_through_the_same_gate_and_one_user_message(c
     blocks = second.content.split("\n\n== ")[1:]
     assert [b.split("\n")[0] for b in blocks] == ['list_alerts {"since": "-2h"}', 'list_changes {"since": "-24h"}',
                                                   'read_chat {"since": "-2h", "channel": "ops"}']
-    assert second.content.splitlines()[-1] == "[board: not ready: no leading hypothesis; budget 0/30, 36 turns left]"
-    sweep = [e for e in state["ledger"] if e["by"] == "harness" and e["tool"] != "inventory"]
-    assert [(e["tool"], e["round"], e["status"]) for e in sweep] == [("list_alerts", 0, "ok"), ("list_changes", 0, "ok"), ("read_chat", 0, "ok")]
-    assert all(row in second.content for e in sweep for row in e["shown"])       # the rows as printed
-    assert state["swept"] == sweep[0]["shown"] and len(state["swept"]) == 3
-    assert all(not {"signal", "act", "change_kind"} & set(e["args"]) for e in sweep)       # the sweep never uses a tag filter
+    fixed = [e for e in state["ledger"] if e["by"] == "harness" and e["tool"] != "inventory"]
+    assert [(e["tool"], e["round"], e["status"]) for e in fixed] == [("list_alerts", 0, "ok"), ("list_changes", 0, "ok"), ("read_chat", 0, "ok")]
+    assert all(row in second.content for e in fixed for row in e["shown"])       # the rows as printed
+    assert state["swept"] == fixed[0]["shown"] and len(state["swept"]) == 3
+    assert all(not {"signal", "act", "change_kind"} & set(e["args"]) for e in fixed)       # never a tag filter
     decisions = {g["call_id"]: g for g in state["gate_log"]}
-    assert all(decisions[e["call_id"]]["by"] == {"who": "auto", "via": "headless"} for e in sweep)
-    assert state["calls_used"] == 9                                               # the sweep is not charged to the budget
+    assert all(decisions[e["call_id"]]["by"] == {"who": "auto", "via": "headless"} for e in fixed)
+    assert state["calls_used"] == 0                                               # the fixed reads are not charged
     calls = [json.loads(line) for line in (r.dir / "calls.jsonl").read_text().splitlines()]
     assert [c["by"] for c in calls[:4]] == ["harness"] * 4 and calls[1]["rationale"]["tests"] == "the opening sweep"
-    evidence = {json.loads(line)["call_id"] for line in (r.dir / "evidence.jsonl").read_text().splitlines()}
-    assert {e["call_id"] for e in sweep} <= evidence
 
 
-def test_in_interactive_mode_the_sweep_is_one_card(tmp_path):
+def test_in_interactive_mode_every_card_is_the_agents_and_its_first_holds_its_own_opening(tmp_path):
     cfg = load_config(runs_dir=tmp_path, interactive=True)
     cards_seen: list[list[dict]] = []
 
@@ -232,26 +247,30 @@ def test_in_interactive_mode_the_sweep_is_one_card(tmp_path):
     r = runner(cfg, "card", fixture_script.turn, decider=decide, attended=True)
     r.start(fx.TRIGGER, fx.NOW)
     r.close()
-    assert [c["tool"] for c in cards_seen[0]] == ["list_alerts", "list_changes", "read_chat"] and {c["by"] for c in cards_seen[0]} == {"harness"}
-    assert all(c["by"] == "agent" for cards in cards_seen[1:] for c in cards)
+    assert [c["tool"] for c in cards_seen[0]] == ["list_alerts", "list_changes", "read_chat", "search_logs", "search_logs"]
+    assert all(c["by"] == "agent" for cards in cards_seen for c in cards)
 
 
-def test_a_rejected_sweep_reaches_the_model_as_a_rejection_and_nothing_is_swept(tmp_path):
+def test_a_rejected_alert_listing_reaches_the_model_as_a_rejection_and_owes_no_verdicts(tmp_path):
     cfg = load_config(runs_dir=tmp_path, interactive=True)
 
     def decide(cards):
-        harness = all(c["by"] == "harness" for c in cards)
-        return {c["call_id"]: ({"approve": False, "reason": "not yet"} if harness else {"approve": True}) for c in cards}
+        return {c["call_id"]: ({"approve": False, "reason": "not yet"} if c["tool"] == "list_alerts" else {"approve": True}) for c in cards}
 
-    r = runner(cfg, "nosweep", lambda messages, tools: ("stop", []), decider=decide, attended=True)
+    def script(messages, tools):
+        if not any(isinstance(m, AIMessage) for m in messages):
+            return "what is alerting", [fixture_script.OPENING[0]]
+        return "stop", []
+
+    r = runner(cfg, "no-listing", script, decider=decide, attended=True)
     r.start(fx.TRIGGER, fx.NOW)
     state = r.state()
     r.close()
-    assert state["messages"][1].content.count("REJECTED by human: not yet.") == 3 and state["swept"] == []
-    assert all(e["status"] == "rejected" for e in state["ledger"] if e["call_id"].startswith("sweep_"))
+    answer = next(m for m in state["messages"] if isinstance(m, ToolMessage) and m.name == "list_alerts")
+    assert answer.content.startswith("REJECTED by human: not yet.") and not state.get("swept")
 
 
-def test_a_registry_without_the_sweep_tools_skips_the_sweep(cfg):
+def test_a_run_goes_straight_to_the_model_whatever_the_registry_holds(cfg):
     base = module_toolbox("fixture_registry")
     only_logs = Toolbox({"search_logs": base.read_tools["search_logs"]}, base.inventory, base.context, base.describe)
     r = Runner(cfg, only_logs, "bare", script=lambda messages, tools: ("stop", []))
@@ -293,7 +312,7 @@ def test_a_report_with_a_missing_alert_verdict_gets_its_retry(cfg):
     refusal = next(m for m in state["messages"] if isinstance(m, ToolMessage) and m.name == "submit_report")
     missing = state["swept"][1:]
     assert refusal.status == "error" and refusal.content.startswith("Report not accepted.")
-    assert f"These alert streams from the opening sweep have no verdict: {', '.join(missing)}. Give each one this_incident, other_incident or noise." in refusal.content
+    assert f"These alert streams your alert listings showed have no verdict: {', '.join(missing)}. Give each one this_incident, other_incident or noise." in refusal.content
     assert state["report_attempts"] == 1 and state["validation"]["ok"] is True and state["validation"]["attempts"] == 2
     assert [a["handle"] for a in state["report"]["alerts"]] == state["swept"] and "unassessed" not in json.dumps(state["report"]["alerts"])
 

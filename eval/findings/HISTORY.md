@@ -33,3 +33,12 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 **Change.** The first-turn template says what an answer is for each kind of request: a question gets its answer; a step or plan gets what it would involve and what it would and would not fix; a stated cause gets whether the evidence supports it, and why. The `summary` opens with that plain answer, then the cause and confidence. It never declines or reframes a request in place of answering it, and the recommendation may differ.
 
 **Result: kept.** Afterwards, a stated cause was answered "no" with the reason in the first sentence. A requested plan was given in full, alongside the evidence that it would not help. Stated causes were still tested, not adopted, and the leading hypothesis was unchanged.
+
+## Pass 5: the harness read alerts, changes and chat before the agent's first turn (installed, not yet measured)
+
+**Finding.** The harness ran a fixed opening, the alert streams and changes around the trigger and the recent chat, before the agent's first turn. That assumed alerting covers the fault and works, which it often does not, and it took the choice of where to start away from the agent.
+
+**Change.** The harness now reads nothing first. The system prompt and the first-turn template say the agent decides where to start, from the trigger and the inventory, with independent reads together in its first turn; that alerts, changes and chat are often useful but not assumed; and that a quiet alert list does not mean nothing is wrong. The alert-verdict text asks for a verdict on every stream the agent's own `list_alerts` calls showed.
+
+**Result: installed, not yet measured.** It changes what every run does in its first turn, so the earlier passes' numbers are not a baseline for it.
+

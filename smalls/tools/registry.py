@@ -102,7 +102,7 @@ def registry(*, tags: bool) -> dict[str, ToolSpec]:
 
 
 def call(spec: ToolSpec, raw_args: dict[str, Any], ctx: ToolContext) -> Envelope:
-    """The one path every caller uses: the agent, the sweep, the CLI and the leak test. It validates the
+    """The one path every caller uses: the agent, the baseline's fixed reads, the CLI and the leak test. It validates the
     arguments, runs the tool, renders its parts into an envelope, checks the result against the tool's
     caps and turns any exception into the error text of ruling A2. It never raises."""
     try:
