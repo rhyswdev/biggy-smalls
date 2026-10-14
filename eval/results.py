@@ -31,7 +31,8 @@ LEDGER = ROOT / "eval" / "results" / "runs.jsonl"
 BATCHES = ROOT / "eval" / "results" / "batches.yaml"
 LOG = ROOT / "docs" / "tuning-log.md"
 FRAMING = ROOT / "eval" / "framing"
-ROLE_OF_NODE = {"agent": "investigator", "fallback": "investigator", "verifier_claims": "claims", "verifier_contrarian": "contrarian"}
+ROLE_OF_NODE = {"agent": "investigator", "fallback": "investigator", "verifier_claims": "claims", "verifier_recheck": "claims",
+                "verifier_contrarian": "contrarian"}
 BOARD_REFUSAL = "the board has not changed"
 
 

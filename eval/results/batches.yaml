@@ -62,3 +62,19 @@ batches:
     phase: between
     pass: 4
     what: Two runs by hand on the first provider, one at each checkpoint, with the opening sweep. Each had four reads refused for a quiet board, which led to plan row P1.
+  - name: p3-sol
+    phase: 2
+    pass: 6
+    what: P3's shakedown on the new opening (the agent's own first reads, pass 5) and the quiet-board nudge (pass 6), on sol at medium.
+  - name: p3-luna
+    phase: 2
+    pass: 6
+    what: P3's shakedown on the new opening and the quiet-board nudge, on luna at high (V6).
+  - name: p4-sol
+    phase: 2
+    pass: 6
+    what: P4's baseline on sol at medium, five runs at the second checkpoint and two at the first.
+  - name: p4-luna
+    phase: 2
+    pass: 6
+    what: P4's baseline on luna at high, five runs at the second checkpoint and two at the first.
