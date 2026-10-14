@@ -430,8 +430,9 @@ class Runner:
                 usage = data.get("usage") or {}
                 read = (usage.get("input_token_details") or {}).get("cache_read", 0) or 0
                 ratio = read / usage["input_tokens"] if usage.get("input_tokens") else 0.0
-                if self.cached and data.get("round", 0) >= 2 and ratio < self.cfg.cache_ratio_floor:
-                    self.bus.emit("cache_ratio_low", round=data.get("round"), ratio=round(ratio, 3), floor=self.cfg.cache_ratio_floor)
+                # Only the investigator's own calls: each verifier pass is one call with its own prompt, so it has no cache to read.
+                if self.cached and data.get("node") == "agent" and data.get("round", 0) >= 2 and ratio < self.cfg.cache_ratio_floor:
+                    self.bus.emit("cache_ratio_low", node="agent", round=data.get("round"), ratio=round(ratio, 3), floor=self.cfg.cache_ratio_floor)
                 return
             self.bus.emit(kind, **data)
             return
@@ -496,7 +497,8 @@ class Runner:
                    "gate_wait_ms": round(sum(w["wait_ms"] for w in values.get("gate_waits", [])), 1),   # once per round, across processes
                    "model_calls": len(usage_calls), "retries": sum(1 for c in usage_calls if (c.get("attempt") or 1) > 1),
                    "tool_calls": values.get("calls_used", 0), "calls_by_status": statuses, "gate": decided,
-                   "validation": values.get("validation"), "revisions": values.get("revisions", 0),
+                   # The report's validation is the final one: the verify node adds the verdict and the disputed claims to it.
+                   "validation": (values.get("report") or {}).get("validation") or values.get("validation"), "revisions": values.get("revisions", 0),
                    "tokens": usage_totals(usage_calls), "events": counts,
                    "process": metrics.process(values, usage_calls, counts, budget=self._ctx.budget(values.get("revisions", 0)),
                                               turn_cap=self._ctx.turn_cap(values.get("revisions", 0))) if self._ctx else None,
