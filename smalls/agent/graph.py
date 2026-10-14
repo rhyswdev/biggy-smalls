@@ -399,10 +399,16 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             update["swept"] = swept
         all_notes = state.get("ic_notes", [])
         fresh = [n for n in all_notes[state.get("notes_shown", 0):] if not n.get("call_id")]      # a rejection's reason is already in its result
-        if accepted is None and messages and fresh:     # a note steers; it reaches the model as a citable row
-            rows = "\n".join(NOTE_ROW.format(handle=n["handle"], at=n["submitted_at"], text=n["text"]) for n in fresh)
+        # Notes the commander added while the run was running (S4). They are only read here: the runner takes
+        # them out of its inbox once this update is applied, so a node that runs again loses none.
+        known = {n["handle"] for n in all_notes}
+        arrived = [n for n in (ctx.inbox() if ctx.inbox else []) if n["handle"] not in known]
+        if accepted is None and messages and (fresh or arrived):     # a note steers; it reaches the model as a citable row
+            rows = "\n".join(NOTE_ROW.format(handle=n["handle"], at=n["submitted_at"], text=n["text"]) for n in [*fresh, *arrived])
             messages[-1].content = f"{messages[-1].content}\n{rows}"
-            update["notes_shown"] = len(all_notes)
+            update["notes_shown"] = len(all_notes) + len(arrived)
+            if arrived:
+                update["ic_notes"] = arrived
         reads = [e for e in [*state.get("ledger", []), *ledger] if e["by"] == "agent" and e["kind"] == "read" and e["status"] == "ok"]
         empty_run = next((n for n, e in enumerate(reversed(reads)) if not e["empty"]), len(reads))
         if accepted is None and messages and empty_run >= ctx.stuck_empty and any(e["kind"] == "read" and e["status"] == "ok" for e in ledger):

@@ -110,3 +110,76 @@ def test_s5_a_stop_from_another_thread_lands_while_the_model_streams(cfg):
     again = runner(cfg, "stop-thread", decider=approve)
     assert again.resume()["status"] == "completed"
     again.close()
+
+
+# -- S4: notes while a run is running ----------------------------------------------------------------------------
+
+def test_s4_a_note_added_while_the_run_runs_reaches_the_model_at_the_next_round(cfg):
+    from langchain_core.messages import AIMessage, ToolMessage
+
+    holder: dict[str, Runner] = {}
+    seen: list[str] = []
+
+    def adds_a_note(messages, tools):
+        if sum(isinstance(m, AIMessage) for m in messages) == 1:
+            seen.append(holder["r"].add_note("The disk was replaced last week.")["handle"])
+        return fixture_script.turn(messages, tools)
+
+    r = runner(cfg, "note-live", script=adds_a_note, decider=approve)
+    holder["r"] = r
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "completed"
+    state = r.state()
+    events = r.record.events()
+    r.close()
+    [handle] = seen
+    assert [n["handle"] for n in state["ic_notes"]] == [handle] and r.pending_notes() == []
+    carrying = [m for m in state["messages"] if isinstance(m, ToolMessage) and handle in str(m.content)]
+    assert len(carrying) == 1 and "The disk was replaced last week." in str(carrying[0].content)      # shown once, as a row
+    assert [e.data["handle"] for e in events if e.type == "ic_note"] == [handle]                           # one event, at delivery
+
+
+def test_s4_a_note_no_round_took_is_delivered_by_the_follow_up(cfg):
+    from langchain_core.messages import AIMessage
+
+    holder: dict[str, Runner] = {}
+
+    def adds_a_note_on_the_last_turn(messages, tools):
+        if sum(isinstance(m, AIMessage) for m in messages) == 4:
+            holder["r"].add_note("Is the second worker affected?")
+        return fixture_script.turn(messages, tools)
+
+    r = runner(cfg, "note-late", script=adds_a_note_on_the_last_turn, decider=approve)
+    holder["r"] = r
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "completed"
+    [left] = r.pending_notes()
+    assert left["handle"] not in {n["handle"] for n in r.state()["ic_notes"]}
+
+    r.close()
+
+    def answers(messages, tools):
+        return "Answered.", [], {"text": "No: worker-02 finished its job."}
+
+    again = Runner(cfg, module_toolbox("fixture_registry"), "note-late", script=answers, decider=approve)
+    again._inbox = [left]               # the API keeps its runner; a new one with the same inbox stands in for it here
+    assert again.reopen()["status"] == "completed"
+    state = again.state()
+    again.close()
+    assert state["followups"][-1]["note"] == left["handle"] and state["ic_notes"][-1]["handle"] == left["handle"]
+
+
+def test_s4_notes_from_another_thread_are_all_delivered(cfg):
+    import threading
+    from dataclasses import replace
+
+    slow = replace(cfg, investigator=cfg.investigator.with_params(delay_s=0.005))
+    r = runner(slow, "note-thread", decider=approve)
+    added: list[str] = []
+    timers = [threading.Timer(0.05 * k, lambda k=k: added.append(r.add_note(f"note {k}")["handle"])) for k in range(1, 5)]
+    for t in timers:
+        t.start()
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "completed"
+    for t in timers:
+        t.join()
+    delivered = {n["handle"] for n in r.state()["ic_notes"]} | {n["handle"] for n in r.pending_notes()}
+    r.close()
+    assert len(added) == 4 and set(added) == delivered                                                     # none lost, none twice

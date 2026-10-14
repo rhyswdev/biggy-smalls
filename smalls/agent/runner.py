@@ -150,6 +150,8 @@ class Runner:
         self._carry: dict[str, Any] | None = None
         self._asking = False                    # a person is being asked at a gate
         self._stop = threading.Event()          # set from another thread to stop at the next stream part (S5)
+        self._inbox: list[dict[str, Any]] = []  # notes added while the run runs, until a round takes them (S4)
+        self._inbox_lock = threading.Lock()
 
     def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
         """The verifier's passes, each a model bound to `submit_verdict` with its prompt, and the profile
@@ -237,11 +239,12 @@ class Runner:
         if self.graph.get_state(restarted).values:        # the run was restarted from its board: its live thread is the new one (J16)
             self.config = restarted
         state = self.graph.get_state(self.config)
-        notes = []
+        notes = self._take_inbox()      # notes added while it ran that no round took, then this one
         if note:
             at = gate.now_iso()
-            notes = [{"handle": ic_note_handle(self.run_id, at, note), "text": note, "submitted_at": at, "by": "incident commander", "call_id": None}]
-            self.bus.emit("ic_note", **notes[0])
+            notes.append({"handle": ic_note_handle(self.run_id, at, note), "text": note, "submitted_at": at, "by": "incident commander", "call_id": None})
+        for row in notes:
+            self.bus.emit("ic_note", **row)
         if state.interrupts:
             pending = state.interrupts[0]
             answers = answers or self.decider(pending.value["calls"])
@@ -256,7 +259,7 @@ class Runner:
         self._index("running")
         return self._drive(None)
 
-    def reopen(self, note: str, *, calls: int | None = None) -> dict[str, Any]:
+    def reopen(self, note: str | None = None, *, calls: int | None = None) -> dict[str, Any]:
         """Continue a finished run with a follow-up from the incident commander (seam S3). The note becomes a
         citable `ic:note` row and the run goes back to the investigator on the same thread, with the same
         conversation and board, and `calls` more gated calls (a revision's worth by default). Neither the
@@ -277,19 +280,26 @@ class Runner:
         if values.get("status") not in ("completed", "incomplete") or not values.get("report"):
             raise SystemExit(f"run {self.run_id} has no finished report to follow up on (status {values.get('status')})")
         calls = self.cfg.revision_calls if calls is None else calls
-        at = gate.now_iso()
-        row = {"handle": ic_note_handle(self.run_id, at, note), "text": note, "submitted_at": at, "by": "incident commander", "call_id": None}
+        rows = self._take_inbox()       # notes added while it ran that no round took, then this one (S4)
+        if note:
+            at = gate.now_iso()
+            rows.append({"handle": ic_note_handle(self.run_id, at, note), "text": note, "submitted_at": at, "by": "incident commander", "call_id": None})
+        if not rows:
+            raise SystemExit("a follow-up needs a note")
+        row, at = rows[-1], rows[-1]["submitted_at"]
         round_now, used = rounds(values), values.get("calls_used", 0)
-        followup = {"n": len(values.get("followups") or []) + 1, "note": row["handle"], "round": round_now, "calls": calls,
+        followup = {"n": len(values.get("followups") or []) + 1, "note": row["handle"], "notes": [r["handle"] for r in rows], "round": round_now, "calls": calls,
                     "calls_until": used + calls, "turns_until": round_now + calls + FOLLOWUP_TURNS, "report": values["report"],
                     "status": values["status"], "stop_reason": values.get("stop_reason"), "started_at": at}
-        text = FOLLOWUP.format(row=NOTE_ROW.format(handle=row["handle"], at=at, text=note), calls=calls, turns=calls + FOLLOWUP_TURNS)
-        self.bus.emit("ic_note", **row)
+        text = FOLLOWUP.format(row="\n".join(NOTE_ROW.format(handle=r["handle"], at=r["submitted_at"], text=r["text"]) for r in rows),
+                               calls=calls, turns=calls + FOLLOWUP_TURNS)
+        for r in rows:
+            self.bus.emit("ic_note", **r)
         self.bus.emit("phase", name="followup", note=row["handle"], calls=calls, turns=calls + FOLLOWUP_TURNS)
         # Entered as if the verifier had sent the report back: the next node is the investigator, and the
         # route to it needs no runtime context.
         self.graph.update_state(self.config, {
-            "messages": [HumanMessage(text)], "ic_notes": [row], "notes_shown": len(values.get("ic_notes") or []) + 1, "followup": followup,
+            "messages": [HumanMessage(text)], "ic_notes": rows, "notes_shown": len(values.get("ic_notes") or []) + len(rows), "followup": followup,
             "first_report": values["report"], "report": None, "verify_call": None, "stop_reason": None, "status": "investigating",
             "report_attempts": 0, "proposed": []}, as_node="verify")
         self._investigating = True
@@ -309,7 +319,31 @@ class Runner:
             checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
             sweep=saved.get("sweep", dict(cfg.sweep)), verifier=bool(self.verify) and saved.get("verifier", True),
             single_call=saved.get("single_call", self.single_call), carry=self._carry, evidence=self.record.evidence,
-            read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"))
+            read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"), inbox=self.pending_notes)
+
+    def add_note(self, text: str) -> dict[str, Any]:
+        """A note from the incident commander while the run is running (seam S4). It does not block: the next
+        round's results carry it to the model as a citable row, and the runner emits `ic_note` when it does.
+        A note that no round took before the run paused or finished stays in `pending_notes()`, and a
+        resume or a follow-up delivers it. Safe to call from any thread."""
+        at = gate.now_iso()
+        note = {"handle": ic_note_handle(self.run_id, at, text), "text": text, "submitted_at": at, "by": "incident commander", "call_id": None}
+        with self._inbox_lock:
+            self._inbox.append(note)
+        return note
+
+    def pending_notes(self) -> list[dict[str, Any]]:
+        with self._inbox_lock:
+            return list(self._inbox)
+
+    def _take_inbox(self) -> list[dict[str, Any]]:
+        with self._inbox_lock:
+            taken, self._inbox = self._inbox, []
+        return taken
+
+    def _delivered(self, handles: set[str]) -> None:
+        with self._inbox_lock:
+            self._inbox = [n for n in self._inbox if n["handle"] not in handles]
 
     def request_stop(self) -> None:
         """Ask a running run to stop (seam S5). It is checked between stream parts, so the run stops within a
@@ -542,6 +576,9 @@ class Runner:
                 for note in update.get("ic_notes", []):
                     self.bus.emit("ic_note", **note)
             elif node == "tools":
+                for note in update.get("ic_notes") or []:       # a note from the inbox, now in front of the model
+                    self.bus.emit("ic_note", **note)
+                self._delivered({n["handle"] for n in update.get("ic_notes") or []})
                 if update.get("validation"):
                     self.bus.emit("validation", **update["validation"])
                 if update.get("report"):
