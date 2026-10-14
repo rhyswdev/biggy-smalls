@@ -432,6 +432,8 @@ Medians, with the lowest and highest run. Read:
 - **Wall time is longer with tags off** (240 to 267 s against 183 to 226), including the three tags-off runs that ran after the tags-on matrix had finished, at about the same tokens per run. We have no reading of why; it may be the provider's latency on the day.
 - No ruling on the default (G6): that waits for scores. The matrix now scores each run it makes, so the seven R4 records already hold a `scores.json` from the deterministic checks; the ledger rows' `scores` are left for the scorer session to fill, with the judge.
 
+**R5, the close (2026-10-15).** The ledger has 71 rows; `docs/tuning-log.md` is regenerated from it. The readings in `eval/results/notes.yaml` that the new groups change are updated in plain words (what led, the share of partly shown claims, hypotheses per report, wall time, turns and wasted turns), dated 2026-10-15. The tuning-log page is refreshed: `export` wrote its three files, each was uploaded and its dataset pointed at the new file, and its key now says what the phase label "to score" means. Spend: $5.24 of the $7 (13.4). HANDOFF says what each set showed. Every judgement that needs a score waits for the scorer: the 16 rows of `e4-1440`, `e4-1452`, `e5-off` and `e5-on` have empty `scores`.
+
 ### 13.4 Spend
 
 | Batch | Runs | Cost | Running total |
@@ -441,6 +443,7 @@ Medians, with the lowest and highest run. Read:
 | R2: the carry-forward's first look at 14:40, three runs ($0.43, $0.34, $0.35) | 3 runs | $1.13 | $1.29 |
 | R3: the carry-forward to 14:52, one run from each R2 run ($0.42, $0.38, $0.41) | 3 runs | $1.21 | $2.50 |
 | R4: the tags ablation at 14:52, five runs with tags off ($1.98) and two with tags on ($0.76) | 7 runs | $2.74 | $5.24 |
+| R5: the close, no live calls | none | $0.00 | $5.24 |
 
 ## 14. The scorer (rows S1 to S7, built 2026-10-14)
 
