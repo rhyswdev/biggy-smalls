@@ -68,6 +68,21 @@ def command(cell: dict[str, Any], *, label: str, bundle: str, profile: str | Non
     return out
 
 
+def resolved(*, set_name: str | None = None, roles: list[str] | None = None, profile: str | None = None, effort: str | None = None) -> str:
+    """One line: the set every run uses and what each role resolves to in the config, as a run would resolve it.
+    It reads the config's own sets and profiles, never what a test substitutes, and it names no key."""
+    import tomllib
+
+    from smalls.agent.config import PATH, _spec, resolve_roles
+
+    raw = tomllib.loads(PATH.read_text(encoding="utf-8"))
+    profiles = {n: _spec(n, p) for n, p in raw["profiles"].items()}
+    name, specs = resolve_roles(raw, profiles, set_name=set_name, roles=roles, profile=profile, effort=effort,
+                                model_override=os.environ.get("SMALLS_MODEL"))
+    return f"set {name}: " + ", ".join(f"{role} {spec.profile}@{spec.effort} ({spec.model})" if spec else f"{role} none"
+                                        for role, spec in specs.items())
+
+
 def read_summary(runs_dir: Path, name: str) -> dict[str, Any]:
     """What a run's own record says about it. A run that left no summary is a row that says so."""
     folder = runs_dir / name
@@ -137,6 +152,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.runs_dir:
         env["SMALLS_RUNS_DIR"] = str(Path(args.runs_dir).resolve())
     print(f"matrix {label}: {len(plan)} run{'s' if len(plan) != 1 else ''}, one process each")
+    print(resolved(set_name=args.set, roles=args.role, profile=args.profile, effort=args.effort))
     if args.dry_run:
         for cell in plan:
             print(" ".join(command(cell, label=label, bundle=args.bundle, profile=args.profile, script=args.script, trigger=args.trigger,

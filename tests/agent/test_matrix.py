@@ -88,7 +88,9 @@ def test_the_tags_flag_and_the_arms_are_dimensions_and_a_dry_run_starts_nothing(
     code = matrix.main(["--bundle", BUNDLE, "--arms", "a,C", "--checkpoints", "1440,1452", "--tags", "on,off", "--reps", "2", "--runs-dir", str(tmp_path),
                         "--label", "dry", "--dry-run"])
     out = capsys.readouterr().out.splitlines()
-    assert code == 0 and out[0] == "matrix dry: 16 runs, one process each" and len(out) == 17 and list(tmp_path.iterdir()) == []
+    assert code == 0 and out[0] == "matrix dry: 16 runs, one process each" and len(out) == 18 and list(tmp_path.iterdir()) == []
+    assert out[1].startswith("set ") and "investigator " in out[1] and "drafter " in out[1]       # what each role resolves to, from the config
+    out = [out[0], *out[2:]]
     agent, base = [ln for ln in out[1:] if " -m smalls.agent run " in ln], [ln for ln in out[1:] if " -m eval.baseline " in ln]
     assert len(agent) == len(base) == 8
     assert all("--arm C --eval-run --durability exit" in ln for ln in agent) and sum("--tags off" in ln for ln in out) == 8

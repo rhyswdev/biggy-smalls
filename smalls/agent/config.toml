@@ -43,6 +43,13 @@ claims = "openai@low"                   # claim support is short reading of pack
 overfit = "openai@medium"               # reads diffs against the answer
 drafter = "anthropic-mid"               # the UI's message drafter (U8), not part of the investigation
 
+[sets.luna]                             # V6: the second provider's cheaper tier at high effort, beside sol at medium
+investigator = "openai-luna@high"
+contrarian = "openai-luna@high"
+claims = "openai-luna@low"
+overfit = "openai@medium"               # the overfit reviewer stays on sol, so the grader of a change never moves with the set
+drafter = "anthropic-mid"
+
 [sets.claude]                           # the first provider: the loop's retest (L7) and later benchmarks
 investigator = "anthropic@medium"
 contrarian = "anthropic@medium"
@@ -98,6 +105,17 @@ strict_tools = true
 store = false               # the history carries the reasoning, encrypted, so nothing is kept by the provider
 include = ["reasoning.encrypted_content"]
 
+[profiles.openai-luna]      # the second provider's cheaper tier (V6), tried at high effort; settings as sol's
+provider = "openai"
+model = "gpt-6-luna"
+reasoning = { effort = "high", summary = "auto" }
+use_responses_api = true
+max_input_tokens = 260000   # under the 272k-token threshold where its rates rise, as for sol
+cache = true
+strict_tools = true
+store = false
+include = ["reasoning.encrypted_content"]
+
 # USD per million tokens, for run records. A 5-minute cache write costs 1.25 times the input rate and a
 # 1-hour write twice it. Rates as cached from the provider's reference on 2026-10-06.
 # The second provider caches by prefix on its own and reports what it writes; a write costs 1.25 times the
@@ -109,6 +127,13 @@ output = 10.00
 cache_read = 0.10
 cache_write = 2.50
 cache_write_1h = 2.50
+
+[pricing."gpt-6-luna"]          # from the provider's price page on 2026-10-14; the same 272k long-context threshold
+input = 0.10
+output = 0.50
+cache_read = 0.01
+cache_write = 0.125
+cache_write_1h = 0.125
 
 [pricing."claude-opus-5-5"]
 input = 4.00
