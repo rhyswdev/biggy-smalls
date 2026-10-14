@@ -28,10 +28,12 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.errors import GraphRecursionError
 from langgraph.types import Command
 
-from smalls.agent import gate, metrics, prompts, verifier
+from langchain_core.messages import HumanMessage
+
+from smalls.agent import carry, gate, metrics, prompts, verifier
 from smalls.agent.config import SCRIPTED, Config
 from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
-from smalls.agent.graph import build_graph, iso, partial_report
+from smalls.agent.graph import build_graph, iso, partial_report, rounds
 from smalls.agent.internal_tools import toolset
 from smalls.agent.models import ModelCallError, import_local, input_limit, make_model, provider_tools, reasoning_text
 from smalls.agent.record import RunRecord, RunsIndex, commit, cost, key_names, new_run_id, scrub, sha, usage_totals, versions
@@ -134,6 +136,7 @@ class Runner:
         self.config = {"configurable": {"thread_id": self.run_id}, "recursion_limit": 6 * (cfg.call_budget + cfg.extra_turns) + 40}
         self._ctx: RunContext | None = None
         self._investigating = False
+        self._carry: dict[str, Any] | None = None
 
     def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
         """The verifier's passes, each a model bound to `submit_verdict` with its prompt, and the profile
@@ -175,7 +178,12 @@ class Runner:
 
     # -- entry points --------------------------------------------------------------------------------------
 
-    def start(self, trigger: str, now: datetime, *, checkpoint: str | None = None, arm: str = "C", channel: str | None = None) -> dict[str, Any]:
+    def start(self, trigger: str, now: datetime, *, checkpoint: str | None = None, arm: str = "C", channel: str | None = None,
+              carry_from: str | None = None) -> dict[str, Any]:
+        """`carry_from` names an earlier run of the same incident: this run starts from its board (J8)."""
+        self._carry = carry.load(self.cfg.runs_dir, carry_from) if carry_from else None
+        if self._carry and self._carry["as_of"] >= iso(now):
+            raise SystemExit(f"cannot carry forward from {carry_from}: its board is as of {self._carry['as_of']}, which is not before this run's now")
         self._ctx = self._context(now, checkpoint=checkpoint, channel=channel)
         definitions = [registry.definition(spec) for spec in self.tools.values() if self.offered is None or spec.name in self.offered]
         self.record.write_json("run.json", {
@@ -187,6 +195,7 @@ class Runner:
             "key_variables": key_names(), "runner": os.environ.get("SMALLS_RUNNER", "host"), "eval_run": self.eval_run,
             "durability": self.durability or "async", "read_tools": list(self.toolbox.read_tools), "offered": list(self.offered) if self.offered else None,
             "verifier": self.verifier_profiles or None,
+            "carried_from": {"run_id": self._carry["run_id"], "as_of": self._carry["as_of"]} if self._carry else None,
             "verifier_scripts": {k: v for k, v in self.verifier_scripts.items() if isinstance(v, str)} or None,
             "config": self.cfg.public(),
             "context": {"now": now.isoformat(), "checkpoint": checkpoint, "channel": channel, "call_budget": self._ctx.call_budget,
@@ -211,6 +220,9 @@ class Runner:
         saved = run["context"]
         self._meta = {"checkpoint": run.get("checkpoint"), "arm": run.get("arm"), "now": run.get("now")}
         self._ctx = self._context(datetime.fromisoformat(saved["now"]), saved=saved)
+        restarted = {**self.config, "configurable": {"thread_id": f"{self.run_id}.1"}}
+        if self.graph.get_state(restarted).values:        # the run was restarted from its board: its live thread is the new one (J16)
+            self.config = restarted
         state = self.graph.get_state(self.config)
         notes = []
         if note:
@@ -243,7 +255,7 @@ class Runner:
             auto_approve=saved.get("auto_approve", cfg.auto_approve), via="cli" if self.attended else "headless",
             checkpoint=saved.get("checkpoint", checkpoint), channel=saved.get("channel", channel),
             sweep=saved.get("sweep", dict(cfg.sweep)), verifier=bool(self.verify) and saved.get("verifier", True),
-            single_call=saved.get("single_call", self.single_call), evidence=self.record.evidence,
+            single_call=saved.get("single_call", self.single_call), carry=self._carry, evidence=self.record.evidence,
             read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"))
 
     # -- the loop ------------------------------------------------------------------------------------------
@@ -269,6 +281,9 @@ class Runner:
             finally:
                 self._flush_thinking()
             state = self.graph.get_state(self.config)
+            if not state.interrupts and state.values.get("restart_pending"):
+                inp = self._restart(dict(state.values))
+                continue
             if not state.interrupts:
                 break
             pending = state.interrupts[0]
@@ -281,6 +296,31 @@ class Runner:
                 return {"status": "paused", "run_id": self.run_id}
             inp = Command(resume={pending.id: self.decider(pending.value["calls"])})
         return self._finish(dict(state.values), time.perf_counter() - started)
+
+    def _restart(self, values: dict[str, Any]) -> None:
+        """Restart the conversation from the board (J16): a new thread, `<run_id>.<n>`, seeded with every
+        channel except the messages, whose first turn is the first-turn template with the board as it
+        stands. The run enters at the sweep, so the opening sweep follows the first turn as it did before.
+        The ledger, the board, the budget and the usage all carry over; the repeat index starts again."""
+        ctx = self._ctx
+        n = values.get("restarts", 0) + 1
+        hypotheses = values.get("hypotheses") or {}
+        cited = {h for hyp in hypotheses.values() for name in carry.LISTS for h in hyp.get(name) or []}
+        cited |= {h for row in values.get("timeline") or [] for h in row.get("evidence") or []}
+        rows = {r["handle"]: r["text"].split("\n", 1)[0] for r in self.record.read_jsonl("evidence.jsonl") if r["handle"] in cited}
+        revisions, round_now = values.get("revisions", 0), rounds(values)
+        first = prompts.first_turn(
+            now=iso(ctx.now), inventory=self.toolbox.inventory(ctx.tool_ctx).text, trigger=values.get("trigger", ""),
+            budget=f"{ctx.budget(revisions) - values.get('calls_used', 0)} tool calls, {ctx.turn_cap(revisions) - round_now} model turns",
+            prior_board=carry.render(hypotheses, values.get("timeline") or [], values.get("open_questions") or [], head=carry.RESTARTED, rows=rows))
+        seeded = {k: v for k, v in values.items() if k not in ("messages", "proposed", "decisions", "pending", "restart_pending")}
+        seeded.update(messages=[HumanMessage(first)], hypotheses={hid: {**h, "_seed": True} for hid, h in hypotheses.items()}, restarts=n,
+                      restart_round=round_now, restart_pending=False, proposed=[], status="investigating")
+        thread = f"{self.run_id}.{n}"
+        self.config = {**self.config, "configurable": {"thread_id": thread}}
+        self.graph.update_state(self.config, seeded, as_node="orient")
+        self.bus.emit("restart", thread=thread, round=round_now, reason="the context limit was reached", first_turn_chars=len(first))
+        return None
 
     def _stopped(self, failure: BaseException, wall_s: float) -> dict[str, Any]:
         """A run that stopped on a failure: a provider error after its retries, an interrupt, a fault. The

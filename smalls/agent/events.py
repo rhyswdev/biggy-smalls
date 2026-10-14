@@ -35,6 +35,7 @@ EventType = Literal[
     "hypothesis_update",    # the board changed
     "board_status",         # ready or not, stale ids, budget
     "stuck",                # nothing is coming back; the commander may want to steer
+    "restart",              # the conversation was restarted from the board, on a new thread
     "ic_note",              # a note from the incident commander
     "budget",               # calls used and left
     "draft_report",         # a submitted report, before the verifier

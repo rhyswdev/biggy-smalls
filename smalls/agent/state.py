@@ -38,6 +38,8 @@ class Hypothesis(TypedDict, total=False):
     source: Literal["stated", "derived"]
     discriminating: list[str]
     history: list[dict[str, Any]]       # one row per change: {round, call_id, from, to, because[]}
+    checkpoints: list[dict[str, Any]]   # what earlier looks left: {as_of, status, confidence, because[]}
+    carried: bool                       # seeded from an earlier look's board
 
 
 class Call(TypedDict, total=False):
@@ -106,6 +108,9 @@ def merge_hypotheses(old: dict[str, Hypothesis] | None, new: dict[str, dict[str,
     out = dict(old or {})
     tracked = ("status", "confidence", "role", "support", "against")
     for hid, upd in (new or {}).items():
+        if upd.get("_seed"):        # a whole entry, from a carry-forward or a restart: taken as it is, history and all
+            out[hid] = {k: v for k, v in upd.items() if k != "_seed"}
+            continue
         prev = out.get(hid) or {"entities": [], "changes": [], "support": [], "against": [], "discriminating": [], "history": []}
         merged = {**prev, **{k: v for k, v in upd.items() if k not in ("round", "call_id", "because")}, "id": hid}
         if any(merged.get(k) != prev.get(k) for k in tracked):
@@ -147,6 +152,9 @@ class InvestigationState(TypedDict, total=False):
     notes_shown: int                                                    # how many notes the model has been given
     fallback_used: bool                                                 # the fallback profile is tried once per run
     restart_round: int                                                  # a restart clears the repeat index from here (J4)
+    restarts: int                                                       # at most one per run (J16)
+    restart_pending: bool                                               # the context guard asked the runner for a restart
+    carried: dict[str, Any] | None                                      # the earlier look this run was seeded from (J8)
     swept: list[str]                                                    # the alert streams the sweep showed (J7)
     report: dict[str, Any] | None
     report_attempts: int                                                # per submission cycle
@@ -184,6 +192,7 @@ class RunContext:
     # The no-tools baseline (eval arm A): the model gets one turn with only the report tool, so a hypothesis
     # may be new in the report and the first submission is the one that stands.
     single_call: bool = False
+    carry: dict[str, Any] | None = None                     # an earlier run's board, report history and calls, to seed from (J8)
     evidence: Callable[[str, Any], None] | None = None      # (call_id, envelope rows) -> the evidence file
     read_evidence: Callable[[], list[dict[str, Any]]] | None = None     # the evidence file so far, for the verifier's packets
 

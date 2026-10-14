@@ -83,6 +83,8 @@ class Renderer:
             self.c.print(f"  [bold]board[/] {esc(d['id'])} {esc(str(d.get('role')))} {d['status']} {d['confidence']:.2f}: {esc(d['statement'])}")
         elif t == "board_status":
             self.c.print(f"  [dim]{esc(d['line'])}[/]")
+        elif t == "restart":
+            self.c.print(f"[cyan]── restarted from the board[/] [dim]({esc(str(d.get('reason')))}; thread {esc(str(d.get('thread')))})[/]")
         elif t == "stuck":
             self.c.print(f"  [yellow]stuck[/] the last {d['empty_reads']} reads returned nothing; a note may help")
         elif t == "cache_ratio_low":

@@ -32,7 +32,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 from langgraph.types import RetryPolicy, interrupt
 
-from smalls.agent import board, gate, prompts, validator, verifier
+from smalls.agent import board, carry, gate, prompts, validator, verifier
 from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, HypothesisUpdate, toolset
 from smalls.agent.models import as_model_call_error, provider_tools, retryable
 from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext, merge_hypotheses
@@ -114,17 +114,27 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
     def orient(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
         ctx = runtime.context
         listed = inventory(ctx.tool_ctx)
+        seeded = carry.seed(ctx.carry, read_tools, ctx.tool_ctx, ctx.evidence) if ctx.carry else None
+        earlier = NO_PRIOR_BOARD
+        if seeded:      # a later look: the earlier board, with everything it cites served again at this now (J8)
+            earlier = carry.render(seeded["hypotheses"], seeded["timeline"], seeded["open_questions"], rows=seeded["rows"],
+                                   dropped=seeded["carried"]["dropped"], retest=True,
+                                   head=carry.EARLIER.format(as_of=seeded["carried"]["as_of"], run_id=seeded["carried"]["run_id"]))
         first = prompts.first_turn(now=iso(ctx.now), inventory=listed.text, trigger=state["trigger"],
                                    budget=f"{ctx.call_budget} tool calls, {ctx.turn_cap()} model turns",
-                                   prior_board=NO_PRIOR_BOARD)
+                                   prior_board=earlier)
         # The inventory names handles without showing them, so it enters the ledger as referenced only.
         entry: LedgerEntry = {"call_id": "inventory", "round": 0, "by": "harness", "tool": "inventory", "kind": "internal", "args": {},
                               "rationale": None, "status": "ok", "shown": list(listed.shown), "referenced": list(listed.referenced),
                               "t_known": {}, "native_query": None, "window": None, "chars": len(listed.text), "latency_ms": 0.0,
                               "repeat_of": None, "used_tag_input": False, "empty": False, "identity": None}
-        return {"messages": [HumanMessage(first)], "as_of": iso(ctx.now), "checkpoint": ctx.checkpoint, "calls_used": 0,
-                "report_attempts": 0, "revisions": 0, "status": "investigating", "proposed": [], "stop_reason": None,
-                "ledger": [entry]}
+        update = {"messages": [HumanMessage(first)], "as_of": iso(ctx.now), "checkpoint": ctx.checkpoint, "calls_used": 0,
+                  "report_attempts": 0, "revisions": 0, "status": "investigating", "proposed": [], "stop_reason": None,
+                  "ledger": [entry]}
+        if seeded:
+            update.update(hypotheses=seeded["hypotheses"], timeline=seeded["timeline"], open_questions=seeded["open_questions"],
+                          ledger=[entry, *seeded["ledger"]], carried=seeded["carried"])
+        return update
 
     def sweep(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
         """The fixed, generic opening: alerts and changes over their windows, then the chat. No tag filter,
@@ -132,7 +142,8 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         ctx = runtime.context
         wanted = [("list_alerts", {"since": ctx.sweep.get("alerts", "-2h")}), ("list_changes", {"since": ctx.sweep.get("changes", "-24h")}),
                   ("read_chat", {"since": ctx.sweep.get("chat", "-2h"), **({"channel": ctx.channel} if ctx.channel else {})})]
-        calls: list[Call] = [{"call_id": f"sweep_{n:02d}_{tool}", "tool": tool, "args": args, "rationale": dict(SWEEP_RATIONALE),
+        again = f"r{state['restarts']}_" if state.get("restarts") else ""      # after a restart the sweep runs again, under its own ids
+        calls: list[Call] = [{"call_id": f"sweep_{again}{n:02d}_{tool}", "tool": tool, "args": args, "rationale": dict(SWEEP_RATIONALE),
                               "by": "harness", "invalid": None} for n, (tool, args) in enumerate(wanted, 1) if tool in tools]
         return {"proposed": calls}
 
@@ -178,10 +189,18 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         # The context guard is measured, not estimated: this call's real input plus the room the next
         # answer needs, against the model's input limit.
         if ctx.max_input_tokens and (usage.get("input_tokens") or 0) + ctx.max_tokens >= ctx.context_fraction * ctx.max_input_tokens:
-            update["stop_reason"] = "the context limit was reached"
+            submitting = len(proposed) == 1 and proposed[0]["tool"] == SUBMIT_REPORT
+            if not state.get("restarts") and not submitting and not ctx.single_call and not update.get("stop_reason"):
+                # Once per run the runner restarts the conversation from the board, on a new thread (J16).
+                # This turn's calls are dropped with it: nothing ran, and nothing is charged.
+                update.update(restart_pending=True, proposed=[])
+            else:
+                update["stop_reason"] = "the context limit was reached"
         return update
 
     def route_agent(state: InvestigationState) -> str:
+        if state.get("restart_pending"):
+            return END
         proposed = state.get("proposed") or []
         submitting = len(proposed) == 1 and proposed[0]["tool"] == SUBMIT_REPORT
         if not proposed or (state.get("stop_reason") and not submitting):
@@ -355,9 +374,10 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             messages[-1].content = f"{messages[-1].content}\n{STUCK.format(n=empty_run, inventory=hint)}"
             writer({"type": "stuck", "empty_reads": empty_run, "round": round_now})
         if accepted is None and messages:   # appended once, when the message is created: the history is append-only
-            line = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left)
+            only_carried = carry.carried_only([*state.get("ledger", []), *ledger])      # these do not count toward ready (J2)
+            line = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left, carried=only_carried)
             messages[-1].content = f"{messages[-1].content}\n{line}"
-            writer({"type": "board_status", "line": line, "ready": not board.missing_for_ready(current),
+            writer({"type": "board_status", "line": line, "ready": not board.missing_for_ready(current, only_carried),
                     "stale": board.stale_ids(current, round_now)})
         writer({"type": "budget", "used": used, "limit": limit, "turns_left": turns_left})
         update.update(messages=messages, ledger=ledger, calls_used=used, report_attempts=attempts, proposed=[])
@@ -423,6 +443,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         unjudged = [h for h in state.get("swept") or [] if h not in {a["handle"] for a in draft["alerts"]}]
         if unjudged:        # one verdict for every alert stream the sweep showed (J7)
             findings.append(NO_VERDICT.format(handles=", ".join(unjudged)))
+        _, stale_lead = carry.continuity(draft, state.get("carried"), state.get("ledger", []))
+        if stale_lead:      # a carried leading hypothesis needs something this run found (J9)
+            findings.append(stale_lead + ".")
         findings += [f"{claim}: {what}." for claim, what in validator.structure(draft)]
         if findings and attempts == 0 and not single:
             result.update(attempts=1, validation={"ok": False, "attempts": 1, "findings": findings})
@@ -435,8 +458,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         flagged = sorted({*flagged, *(claim for claim, _ in validator.structure(report))})
         report["alerts"] = [*report["alerts"], *({"handle": h, "verdict": "unassessed"} for h in unjudged)]    # code adds these, never the model
         merged = {hid: {k: ([h for h in v if h not in bad] if isinstance(v, list) else v) for k, v in upd.items()} for hid, upd in merged.items()}
-        validation = {"ok": not (bad or problems or flagged or unjudged), "attempts": attempts + 1, "dropped": bad, "flagged": flagged,
-                      "continuity": None, "verifier": None, "disputed": []}
+        continuity, _ = carry.continuity(report, state.get("carried"), state.get("ledger", []))
+        validation = {"ok": not (bad or problems or flagged or unjudged or continuity == "failed"), "attempts": attempts + 1, "dropped": bad,
+                      "flagged": flagged, "continuity": continuity, "verifier": None, "disputed": []}
         report["validation"] = validation
         result.update(attempts=attempts, validation=validation, merged=merged, report=report)
         return Envelope(" ".join([ACCEPTED, *(n + "." for n in notes)])), result
@@ -533,7 +557,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
     g.add_edge(START, "orient")
     g.add_edge("orient", "sweep")
     g.add_conditional_edges("sweep", route_sweep, ["gate", "agent"])
-    g.add_conditional_edges("agent", route_agent, ["gate", "finalize"])
+    g.add_conditional_edges("agent", route_agent, ["gate", "finalize", END])
     g.add_conditional_edges("gate", route_gate, ["ask", "tools"])
     g.add_edge("ask", "tools")
     g.add_conditional_edges("tools", route_tools, ["agent", "verify", "finalize"])

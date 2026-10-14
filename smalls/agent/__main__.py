@@ -140,7 +140,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                  stop_at_gate=args.stop_at_gate, attended=attended, eval_run=args.eval_run, script=args.script, durability=args.durability,
                  verifier_scripts=dict(pair.split("=", 1) for pair in args.verifier_script or [] if "=" in pair))
     result = run.start(trigger, parse_now(args.now, toolbox.describe.get("bundle") and args.bundle), checkpoint=args.checkpoint,
-                       arm=args.arm, channel=args.channel)
+                       arm=args.arm, channel=args.channel, carry_from=args.carry_from)
     run.close()
     console.print(f"[dim]run record: {run.dir}[/]")
     return 0 if result["status"] in ("completed", "paused") and not result.get("error") else 1
@@ -259,6 +259,7 @@ def add_run_commands(sub) -> None:
                      help="answer gates without asking. Default: ask when a terminal is attached, otherwise defer")
     run.add_argument("--eval-run", action="store_true", help="an eval run: unattended gates approve and record")
     run.add_argument("--run-id")
+    run.add_argument("--carry-from", metavar="RUN_ID", help="an earlier run of this incident: start from its board, with what it cites served again")
     run.add_argument("--durability", choices=["async", "sync", "exit"],
                      help="when the checkpointer writes: exit keeps a matrix run's checkpoint file small (default: async)")
     run.add_argument("--no-thinking", action="store_true")
