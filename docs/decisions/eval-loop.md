@@ -556,6 +556,28 @@ The session sizes it (ruling of 13.3). Expected: the judge's regrade, about 50 j
 **The write-up is the root `README.md`**, which the user started (committed as written on 2026-10-15). Session B finishes it; it does not start a new document and does not reword the user's prose. `requirements.md` asks for a short write-up covering what was built, the architecture, the agentic flow, memory and state, retrieval and tools, the tradeoffs, and what to improve; the user wants it substantial enough to show what was achieved, without padding.
 
 What session B does, in this order:
+0. **Restructure to the brief's headings** (asked for on 2026-10-15), moving the user's text under them word for word, without rewording it:
+
+   ```text
+   # Smalls: an agentic incident investigator      TL;DR · Contents
+   ## 1. Repository                                 the link
+   ## 2. Running it locally                         Quickstart
+   ## 3. Write-up
+   ### What I built                                 + Approach and considerations, The scenario and dataset, UX approach
+   ### The architecture I chose                     + Where the model is used and where code is better
+   ### How the agentic flow works                   + Prompt design, Failure handling; ends with one line pointing to the evals
+   ### How memory and state are handled
+   ### Retrieval, tools, vector search, knowledge graph and RAG
+                                                    + Evidence grounding; answers each of the brief's terms directly
+   ### The tradeoffs I made                         + What I chose not to build
+   ### How I know it works                          the evals, the results, Gate B, the held-out placeholder, the self-evaluation
+   ### What I would improve with more time          + Path to production
+   ### How I used AI in development                 marked as beyond the brief
+   ## 4. Sample output
+   ## Appendix: repo and docs map
+   ```
+
+   The checks inside each run (the validator and the report checker) stay in the agentic flow; the evals that grade finished runs are their own section, placed before the improvements so those follow from what the evals found. The Contents list and its anchors follow the new headings.
 1. **Correct what is out of date**, changing only the facts, in the user's own sentences where possible:
    - Quickstart: the default model set is `sol`, so `make run` needs `OPENAI_API_KEY`; `ANTHROPIC_API_KEY` is for the message drafter and `SMALLS_SET=claude`. The R16 comment is stale (R16 landed). Verify every command from a clean clone (`make demo` with no key, `make run` with one, `make app`, compose).
    - Sample output: the run id and files follow Z3's new demo run (add `scores.json` to the file table).
