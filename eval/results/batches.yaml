@@ -78,3 +78,13 @@ batches:
     phase: 2
     pass: 6
     what: P4's baseline on luna at high, five runs at the second checkpoint and two at the first.
+  - name: p07
+    phase: 2
+    pass: 7
+    finding: F-07
+    result: kept
+    what: Pass 7, the summary naming a link of its account (what set the fault off) that the board did not hold. Three runs at the second checkpoint on sol at medium.
+  - name: p07-guard
+    phase: 2
+    pass: 7
+    what: Pass 7's guard set, the two wrong-cause triggers (eval/framing/), one run each.

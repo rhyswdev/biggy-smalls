@@ -50,3 +50,11 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 
 **Result: installed, not yet measured.** The next runs are on new models, so they are the first measure of it.
 
+## Pass 7: the summary relied on a link the board did not hold (kept)
+
+**Finding.** The summary named what set the fault off, and an open question asked about it, but no hypothesis held that link with the `trigger` role. Runs before pass 4 recorded it; most runs since did not.
+
+**Change.** In the system prompt: the board holds the report's account one link per hypothesis (the cause and, where the account has them, what set it off and what made it worse), each with its rows, and what is unknown about a link is an open question beside it; a supported link that does not lead stays `open`; at ready, a missing link goes on the board before the owner and impact are gathered; and the summary rests on no link the board lacks. The report-summary description says the same.
+
+**Result: kept.** Afterwards every run recorded what set the fault off as a `trigger` hypothesis with non-chat support, against about one run in seven before. The leading cause was unchanged. The account is now split across more hypotheses: the change that made the cause possible appears as its own `contributing` link, and a component that only looked faulty appears as a `symptom`. The share of claims judged partial was a little higher, within the earlier spread, and cost per run rose by about a tenth. Neither wrong-cause trigger steered the conclusion.
+

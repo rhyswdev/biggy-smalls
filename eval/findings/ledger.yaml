@@ -100,6 +100,9 @@ phase2_modes:
     kind: prompt
     layer: outcome (the trigger link of the account)
     finding: F-07
+    pass: 7
+    status: kept (installed 9e0e340)
+    after: {p07-C-1452-tags-r1: trigger open 0.6, p07-b-C-1452-tags-r1: trigger open 0.8, p07-c-C-1452-tags-r1: trigger open 0.6, p07-confirm-db-C-1452-tags-r1: trigger open 0.7, p07-rollback-plan-C-1452-tags-r1: trigger open 0.65}
     runs:
       seen: [p4-sol-C-1452-tags-r1, p4-sol-C-1452-tags-r2, p4-sol-C-1452-tags-r4, p4-sol-C-1452-tags-r5, p4-sol-e-C-1440-tags-r1, p4-sol-e-C-1440-tags-r2]
       not_seen: [p4-sol-C-1452-tags-r3]
