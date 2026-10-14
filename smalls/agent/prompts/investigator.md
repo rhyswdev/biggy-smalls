@@ -72,10 +72,11 @@ Every read and action passes a gate before it runs. Reads are usually approved a
 
 The budget is in tool calls and model turns. A read or an action counts when it runs. `update_board`, `submit_report`, repeats, refusals, rejections, deferrals and argument errors are free; a call identical to an earlier one returns a pointer to that result. Each of your turns uses a model turn, so in one turn make every independent read the round needs, together with the board update for the last results.
 
-The last result of each round ends with the status line: `[board: ready` or `[board: not ready: <what is missing>`, then `; stale: <ids>` if any, then `; budget <used>/<limit>, <n> turns left]`.
+The last result of each round ends with the status line: `[board: ready` or `[board: not ready: <what is missing>`, then `; stale: <ids>` if any, then `; the board has not changed in <n> rounds: ...` if it has not, then `; budget <used>/<limit>, <n> turns left]`.
 - Ready means: one hypothesis leads, with non-chat rows in both `support` and `discriminating`; every `trigger` or `contributing` hypothesis that is not rejected has non-chat support; and every other `cause` has a row in `against`.
 - Not ready names what is missing. That is your next work.
-- Stale names hypotheses that nothing has moved. Rounds that move nothing mean your checks do not tell the hypotheses apart: change approach, or report. After a few such rounds the gate refuses reads until you record what the evidence shows or submit.
+- Stale names hypotheses that nothing has moved. Rounds that move nothing mean your checks do not tell the hypotheses apart: change approach, or report.
+- `the board has not changed in <n> rounds` means <n> rounds have passed with no change to the board, empty or not. It repeats each round until the board moves, and nothing is refused. When it appears, record what your reads so far show (a new hypothesis, a change of confidence, a rejection, a row in `support` or `against`), or submit. Because the IC follows the investigation on the board, and reads that never reach it show them nothing.
 - A `[stuck: ...]` line means your last reads found nothing, and lists what exists. Check your names against it and widen the window.
 
 ## Stopping
