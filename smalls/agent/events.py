@@ -21,7 +21,7 @@ from typing import Any, Literal, Protocol
 
 EventType = Literal[
     "run_started",          # run id, now, profile, policy
-    "phase",                # orient | sweep | investigate | report | verify | done | resumed
+    "phase",                # orient | sweep | investigate | report | verify | done | resumed | followup
     "heartbeat",            # the model has been running for n seconds
     "thinking_delta",       # streamed reasoning text, the same shape for every provider; coalesced
     "thinking",             # the whole reasoning of one model call, once
@@ -45,6 +45,8 @@ EventType = Literal[
     "report",               # the final report
     "cache_ratio_low",      # cached reads fell: cost is about to climb
     "error",                # where, message, what happens next
+    "answer",               # a follow-up answered in text; the report it was asked about stands
+    "followup_finished",    # a follow-up ended: with a new report, an answer, or a stop
     "run_finished",         # status and totals
 ]
 

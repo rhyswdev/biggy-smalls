@@ -34,7 +34,7 @@ from langgraph.types import RetryPolicy, interrupt
 
 from smalls.agent import board, carry, gate, prompts, validator, verifier
 from smalls.agent.internal_tools import SUBMIT_REPORT, UPDATE_BOARD, HypothesisUpdate, toolset
-from smalls.agent.models import as_model_call_error, provider_tools, retryable
+from smalls.agent.models import as_model_call_error, provider_tools, reasoning_text, retryable
 from smalls.agent.state import Call, InvestigationState, LedgerEntry, RunContext, merge_hypotheses
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.handles import ic_note_handle
@@ -59,6 +59,11 @@ STUCK = "[stuck: the last {n} reads returned nothing. What exists, from the inve
 REFUSED = "the model declined to continue"
 OUT_OF_TOKENS = "the model ran out of output tokens before it finished a turn"
 NO_VERDICT = "These alert streams from the opening sweep have no verdict: {handles}. Give each one this_incident, other_incident or noise."
+FOLLOWUP = ("A follow-up from the incident commander, after your report:\n{row}\n"
+            "If your report already answers it, answer in text with no tool call, and the report stands as submitted. "
+            "If it needs evidence, investigate: you have {calls} more tool calls and {turns} more turns. "
+            "Submit the report again only if what you found changes it.")
+FOLLOWUP_TURNS = 2          # turns a follow-up gets beyond its calls: one to answer or submit, one to write the board
 
 
 def iso(t: datetime) -> str:
@@ -68,6 +73,28 @@ def iso(t: datetime) -> str:
 def rounds(state: dict[str, Any]) -> int:
     """Model turns so far. Counted from the usage rows, which a restart carries over; the messages it does not."""
     return sum(1 for row in state.get("usage", []) if row.get("node") == "agent")
+
+
+def call_limit(state: dict[str, Any], ctx: RunContext) -> int:
+    """The gated calls this run may have run by now: the budget, a revision's extra calls, or, during a
+    follow-up, the calls used when it started plus the calls it was given."""
+    followup = state.get("followup")
+    return followup["calls_until"] if followup else ctx.budget(state.get("revisions", 0))
+
+
+def turn_limit(state: dict[str, Any], ctx: RunContext) -> int:
+    """The model turns this run may have taken by now, on the same terms as `call_limit`."""
+    followup = state.get("followup")
+    return followup["turns_until"] if followup else ctx.turn_cap(state.get("revisions", 0))
+
+
+def _latest(verdict: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Each claim's latest verdict: from the first claim-support pass, overlaid by any re-check."""
+    if verdict.get("latest") is not None:
+        return dict(verdict["latest"])
+    rows = {c["id"]: c for c in ((verdict.get("claims") or {}).get("claims") or [])}
+    rows.update({c["id"]: c for c in ((verdict.get("recheck") or {}).get("claims") or [])})
+    return rows
 
 
 def proposals(state: dict[str, Any]) -> list[dict[str, Any]]:
@@ -186,6 +213,11 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             update.update(stop_reason=REFUSED, proposed=[])
         elif row["stop_reason"] == "max_tokens" and not ai.tool_calls:
             update.update(stop_reason=OUT_OF_TOKENS, proposed=[])
+        elif state.get("followup") and not proposed:
+            # A turn with no tool call ends a follow-up, and its text is the answer. A model that wrote only
+            # reasoning is answered by its reasoning, so the commander is never left with nothing.
+            reasoning, text = reasoning_text(ai)
+            update["followup"] = {**state["followup"], "answer": (text.strip() or reasoning.strip())}
         # The context guard is measured, not estimated: this call's real input plus the room the next
         # answer needs, against the model's input limit.
         if ctx.max_input_tokens and (usage.get("input_tokens") or 0) + ctx.max_tokens >= ctx.context_fraction * ctx.max_input_tokens:
@@ -213,8 +245,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         seen = validator.Seen.of(state)
         refuse = None
         if not any(c["tool"] == UPDATE_BOARD for c in calls):
-            refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds)
-        decisions, ask = gate.apply(calls, tools, used=state.get("calls_used", 0), budget=ctx.budget(state.get("revisions", 0)),
+            since = (state.get("followup") or {}).get("round", 0)
+            refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds, since=since)
+        decisions, ask = gate.apply(calls, tools, used=state.get("calls_used", 0), budget=call_limit(state, ctx),
                                     auto_approve=ctx.auto_approve, via=ctx.via, refuse_gated=refuse)
         # An action never reaches a person with evidence no tool showed.
         for card in list(ask):
@@ -355,8 +388,8 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                 out.append(ToolMessage(env.text, tool_call_id=call["call_id"], name=call["tool"],
                                        status="error" if env.status == "error" or entry["status"] == "rejected" else "success"))
 
-        limit = ctx.budget(state.get("revisions", 0))
-        turns_left = ctx.turn_cap(state.get("revisions", 0)) - round_now
+        limit = call_limit(state, ctx)
+        turns_left = turn_limit(state, ctx) - round_now
         messages: list[Any] = list(out)
         if blocks:
             messages.append(HumanMessage("\n\n".join([SWEEP_HEAD, *blocks])))
@@ -502,12 +535,18 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             return {"messages": [answer(ACCEPTED, True)], "usage": usage, "verdict": verdict, "report": final, "verify_call": None}
 
         first = state.get("verdict")
-        if state.get("revisions", 0) and first:         # the re-check: only what the revision added or changed
+        if (state.get("revisions", 0) or state.get("followup")) and first:
+            # The re-check, after a revision or a follow-up: only what the new report added or changed. The
+            # other claims keep the latest verdict they had, so a second re-check builds on the first.
             diff = verifier.changed_claims(state.get("first_report") or {}, report)
             only = set(diff["added"]) | set(diff["changed"])
             again = run(verifier.RECHECK, verifier.user_turn(report, evidence, verifier.RECHECK, only=only)) if only and verifier.RECHECK in verify else None
-            kept = {"claims": [c for c in (first.get("claims") or {}).get("claims", []) if c["id"] not in only]}
-            return stands({**first, "status": "revised", "recheck": again.model_dump() if again else None, "diff": diff}, kept, again)
+            prior = _latest(first)
+            kept = {"claims": [c for cid, c in prior.items() if cid not in only]}
+            latest = {**{cid: c for cid, c in prior.items() if cid not in diff["removed"]},
+                      **{c["id"]: c for c in (again.model_dump()["claims"] if again else [])}}
+            return stands({**first, "status": "revised", "recheck": again.model_dump() if again else None, "diff": diff, "latest": latest},
+                          kept, again)
         claims = run(verifier.CLAIMS, verifier.user_turn(report, evidence, verifier.CLAIMS)) if verifier.CLAIMS in verify else None
         contrarian = (run(verifier.CONTRARIAN, verifier.user_turn(report, evidence, verifier.CONTRARIAN, digest_tokens=verify.get("digest_tokens", 1500)))
                       if verifier.CONTRARIAN in verify else None)
@@ -515,7 +554,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                                    shown={row["handle"] for row in evidence}, now=ctx.now)
         verdict = {"claims": claims.model_dump() if claims else None, "contrarian": contrarian.model_dump() if contrarian else None,
                    "decision": decision, "status": "pass" if (claims or contrarian) else "unverified", "recheck": None, "diff": None}
-        if decision["revise"] and not state.get("revisions", 0) and not state.get("stop_reason"):
+        if decision["revise"] and not state.get("revisions", 0) and not state.get("stop_reason") and not state.get("followup"):
             verdict["status"] = "revise"
             turns = ctx.turn_cap(1) - ctx.turn_cap(0)
             line = board.status_line(state.get("hypotheses") or {}, round=round_now, used=state.get("calls_used", 0), limit=ctx.budget(1),
@@ -534,11 +573,13 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             return "verify"
         if state.get("report") or state.get("stop_reason"):
             return "finalize"
-        if rounds(state) >= runtime.context.turn_cap(state.get("revisions", 0)):   # internal calls are free, so turns are capped too
+        if rounds(state) >= turn_limit(state, runtime.context):   # internal calls are free, so turns are capped too
             return "finalize"
         return "agent"
 
     def finalize(state: InvestigationState, runtime: Runtime[RunContext]) -> dict[str, Any]:
+        if state.get("followup"):
+            return _end_followup(state, runtime.context)
         if state.get("report"):
             report = {**state["report"], "proposed_actions": proposals(state)}
             Report.model_validate(report)
@@ -548,6 +589,20 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         report = partial_report(state, why)
         Report.model_validate(report)
         return {"status": "incomplete", "report": report, "stop_reason": why}
+
+    def _end_followup(state: dict[str, Any], ctx: RunContext) -> dict[str, Any]:
+        """A follow-up ends with a new report, an answer in text, or a stop. Without a new report, the report
+        that stood when it began stands, with its status, and only its code-written proposals are brought up
+        to date from the ledger, since the follow-up may have proposed an action too."""
+        f = state["followup"]
+        stopped = state.get("stop_reason") or ("the follow-up's turn limit was reached" if rounds(state) >= turn_limit(state, ctx) else None)
+        outcome = "report" if state.get("report") else "answered" if f.get("answer") else "stopped"
+        report = {**(state.get("report") or f["report"]), "proposed_actions": proposals(state)}
+        Report.model_validate(report)
+        done = {k: v for k, v in f.items() if k != "report"}
+        done.update(outcome=outcome, stop_reason=stopped if outcome == "stopped" else None, ended_round=rounds(state))
+        return {"status": "completed" if outcome == "report" else f["status"], "report": report, "followup": None, "followups": [done],
+                "stop_reason": None if outcome == "report" else f.get("stop_reason")}
 
     retry = RetryPolicy(max_attempts=2, retry_on=retryable)
     g = StateGraph(InvestigationState, context_schema=RunContext)

@@ -114,10 +114,11 @@ def stale_ids(board: dict[str, dict[str, Any]], round: int) -> list[str]:
     return out
 
 
-def stale_refusal(board: dict[str, dict[str, Any]], round: int, stale_rounds: int) -> str | None:
+def stale_refusal(board: dict[str, dict[str, Any]], round: int, stale_rounds: int, since: int = 0) -> str | None:
     """The reason the gate refuses reads and actions, once `stale_rounds` whole rounds have passed with no
-    change. `round` is the round being gated, so the rounds already finished are the ones before it."""
-    quiet = (round - 1) - last_change(board)
+    change. `round` is the round being gated, so the rounds already finished are the ones before it. `since`
+    is a round the count starts again from: a follow-up on a finished run starts with a quiet board."""
+    quiet = (round - 1) - max(last_change(board), since)
     return STALE.format(n=quiet) if quiet >= stale_rounds else None
 
 

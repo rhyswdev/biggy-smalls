@@ -163,6 +163,10 @@ class InvestigationState(TypedDict, total=False):
     verify_call: str | None                                             # the accepted submit_report call the verifier answers (J13)
     first_report: dict[str, Any] | None                                 # the report a revision was asked of, for the diff
     revisions: int
+    # A follow-up from the incident commander on a finished run (seam S3): the note, the round it started in,
+    # the calls and turns it may use, and the report that stands unless a new one is accepted. One at a time.
+    followup: dict[str, Any] | None
+    followups: Annotated[list[dict[str, Any]], operator.add]           # every finished follow-up and how it ended
     status: Literal["investigating", "verifying", "completed", "incomplete", "paused"]
     stop_reason: str | None                                             # why an incomplete run stopped
 

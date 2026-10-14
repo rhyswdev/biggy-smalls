@@ -34,7 +34,7 @@ from langchain_core.messages import HumanMessage
 from smalls.agent import carry, gate, metrics, prompts, verifier
 from smalls.agent.config import SCRIPTED, Config
 from smalls.agent.events import Bus, JsonlSink, Sink, last_seq, read_events
-from smalls.agent.graph import build_graph, iso, partial_report, rounds
+from smalls.agent.graph import FOLLOWUP, FOLLOWUP_TURNS, NOTE_ROW, build_graph, call_limit, iso, partial_report, rounds, turn_limit
 from smalls.agent.internal_tools import toolset
 from smalls.agent.models import ModelCallError, import_local, input_limit, make_model, provider_tools, reasoning_text
 from smalls.agent.record import RunRecord, RunsIndex, commit, cost, key_names, new_run_id, scrub, sha, usage_totals, versions
@@ -245,6 +245,46 @@ class Runner:
         self._index("running")
         return self._drive(None)
 
+    def reopen(self, note: str, *, calls: int | None = None) -> dict[str, Any]:
+        """Continue a finished run with a follow-up from the incident commander (seam S3). The note becomes a
+        citable `ic:note` row and the run goes back to the investigator on the same thread, with the same
+        conversation and board, and `calls` more gated calls (a revision's worth by default). Neither the
+        orientation nor the opening sweep runs again. A turn with no tool call ends the follow-up, and its
+        text is the answer: the earlier report stands. A report submitted again goes through the validator
+        and, when the run is verified, the changed-claims re-check."""
+        run = self.record.read_json("run.json")
+        saved = run["context"]
+        self._meta = {"checkpoint": run.get("checkpoint"), "arm": run.get("arm"), "now": run.get("now")}
+        self._ctx = self._context(datetime.fromisoformat(saved["now"]), saved=saved)
+        restarted = {**self.config, "configurable": {"thread_id": f"{self.run_id}.1"}}
+        if self.graph.get_state(restarted).values:
+            self.config = restarted
+        state = self.graph.get_state(self.config)
+        values = dict(state.values)
+        if state.interrupts or state.next or state.tasks:
+            raise SystemExit(f"run {self.run_id} has not finished: resume it instead")
+        if values.get("status") not in ("completed", "incomplete") or not values.get("report"):
+            raise SystemExit(f"run {self.run_id} has no finished report to follow up on (status {values.get('status')})")
+        calls = self.cfg.revision_calls if calls is None else calls
+        at = gate.now_iso()
+        row = {"handle": ic_note_handle(self.run_id, at, note), "text": note, "submitted_at": at, "by": "incident commander", "call_id": None}
+        round_now, used = rounds(values), values.get("calls_used", 0)
+        followup = {"n": len(values.get("followups") or []) + 1, "note": row["handle"], "round": round_now, "calls": calls,
+                    "calls_until": used + calls, "turns_until": round_now + calls + FOLLOWUP_TURNS, "report": values["report"],
+                    "status": values["status"], "stop_reason": values.get("stop_reason"), "started_at": at}
+        text = FOLLOWUP.format(row=NOTE_ROW.format(handle=row["handle"], at=at, text=note), calls=calls, turns=calls + FOLLOWUP_TURNS)
+        self.bus.emit("ic_note", **row)
+        self.bus.emit("phase", name="followup", note=row["handle"], calls=calls, turns=calls + FOLLOWUP_TURNS)
+        # Entered as if the verifier had sent the report back: the next node is the investigator, and the
+        # route to it needs no runtime context.
+        self.graph.update_state(self.config, {
+            "messages": [HumanMessage(text)], "ic_notes": [row], "notes_shown": len(values.get("ic_notes") or []) + 1, "followup": followup,
+            "first_report": values["report"], "report": None, "verify_call": None, "stop_reason": None, "status": "investigating",
+            "report_attempts": 0, "proposed": []}, as_node="verify")
+        self._investigating = True
+        self._index("running")
+        return self._drive(None)
+
     def _context(self, now: datetime, *, checkpoint: str | None = None, channel: str | None = None, saved: dict[str, Any] | None = None) -> RunContext:
         cfg, saved = self.cfg, saved or {}
         return RunContext(
@@ -341,10 +381,10 @@ class Runner:
         cited = {h for hyp in hypotheses.values() for name in carry.LISTS for h in hyp.get(name) or []}
         cited |= {h for row in values.get("timeline") or [] for h in row.get("evidence") or []}
         rows = {r["handle"]: r["text"].split("\n", 1)[0] for r in self.record.read_jsonl("evidence.jsonl") if r["handle"] in cited}
-        revisions, round_now = values.get("revisions", 0), rounds(values)
+        round_now = rounds(values)
         first = prompts.first_turn(
             now=iso(ctx.now), inventory=self.toolbox.inventory(ctx.tool_ctx).text, trigger=values.get("trigger", ""),
-            budget=f"{ctx.budget(revisions) - values.get('calls_used', 0)} tool calls, {ctx.turn_cap(revisions) - round_now} model turns",
+            budget=f"{call_limit(values, ctx) - values.get('calls_used', 0)} tool calls, {turn_limit(values, ctx) - round_now} model turns",
             prior_board=carry.render(hypotheses, values.get("timeline") or [], values.get("open_questions") or [], head=carry.RESTARTED, rows=rows))
         seeded = {k: v for k, v in values.items() if k not in ("messages", "proposed", "decisions", "pending", "restart_pending")}
         seeded.update(messages=[HumanMessage(first)], hypotheses={hid: {**h, "_seed": True} for hid, h in hypotheses.items()}, restarts=n,
@@ -454,7 +494,10 @@ class Runner:
                     spec = self.tools.get(call["tool"])
                     self.bus.emit("tool_call_proposed", call_id=call["call_id"], tool=call["tool"], by=call.get("by", "agent"),
                                   kind=spec.kind if spec else "unknown", rationale=call.get("rationale"), args=call["args"])
-                if not proposed or any(call["tool"] == "submit_report" for call in proposed):
+                answer = (update.get("followup") or {}).get("answer")
+                if answer is not None:      # a follow-up answered in text: the report it was asked about stands
+                    self.bus.emit("answer", text=answer, note=update["followup"].get("note"))
+                elif not proposed or any(call["tool"] == "submit_report" for call in proposed):
                     self.bus.emit("phase", name="report")
             elif node in ("gate", "ask"):
                 waits = [w["wait_ms"] for w in update.get("gate_waits", [])]
@@ -470,6 +513,8 @@ class Runner:
                 if update.get("verify_call"):
                     self.bus.emit("phase", name="verify")
             elif node == "finalize":
+                for done in update.get("followups") or []:
+                    self.bus.emit("followup_finished", **done)
                 self.bus.emit("report", report=update["report"], status=update["status"])
 
     # -- the record ----------------------------------------------------------------------------------------
@@ -500,8 +545,8 @@ class Runner:
                    # The report's validation is the final one: the verify node adds the verdict and the disputed claims to it.
                    "validation": (values.get("report") or {}).get("validation") or values.get("validation"), "revisions": values.get("revisions", 0),
                    "tokens": usage_totals(usage_calls), "events": counts,
-                   "process": metrics.process(values, usage_calls, counts, budget=self._ctx.budget(values.get("revisions", 0)),
-                                              turn_cap=self._ctx.turn_cap(values.get("revisions", 0))) if self._ctx else None,
+                   "process": metrics.process(values, usage_calls, counts, budget=call_limit(values, self._ctx),
+                                              turn_cap=turn_limit(values, self._ctx)) if self._ctx else None,
                    "event_bytes": self.record.path("events.jsonl").stat().st_size, "dropped_sinks": self.bus.dropped}
         self.record.write_derived(values, usage_calls, summary)
         return summary

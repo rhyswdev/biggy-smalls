@@ -195,7 +195,7 @@ class ScriptedChatModel(BaseChatModel):
 
     def _turn(self, messages: list[BaseMessage]) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:
         """The script's next turn: its reasoning, its tool calls, and optionally response metadata (a stop
-        reason to simulate, such as a refusal)."""
+        reason to simulate, such as a refusal) and `text`, visible text to answer with."""
         turn = load_script(self.script)(messages, self.tools)
         return turn[0], turn[1], (turn[2] if len(turn) > 2 else {})
 
@@ -218,6 +218,11 @@ class ScriptedChatModel(BaseChatModel):
             yield ChatGenerationChunk(message=chunk)
         signature = AIMessageChunk(content=[{"type": "thinking", "signature": "scripted-signature", "index": 0}], response_metadata=meta)
         yield ChatGenerationChunk(message=signature)
+        if said.get("text"):
+            chunk = AIMessageChunk(content=[{"type": "text", "text": said["text"], "index": 1}], response_metadata=meta)
+            if run_manager:
+                run_manager.on_llm_new_token(said["text"], chunk=ChatGenerationChunk(message=chunk))
+            yield ChatGenerationChunk(message=chunk)
         for i, call in enumerate(calls, start=1):
             chunk = AIMessageChunk(content=[], response_metadata=meta, tool_call_chunks=[
                 {"name": call["name"], "args": call["args"] if isinstance(call["args"], str) else json.dumps(call["args"]),
@@ -235,7 +240,8 @@ class ScriptedChatModel(BaseChatModel):
                   run_manager: CallbackManagerForLLMRun | None = None, **kwargs: Any) -> ChatResult:
         thinking, calls, said = self._turn(messages)
         out_chars = len(thinking) + sum(len(json.dumps(c["args"])) for c in calls)
-        message = AIMessage(content=[{"type": "thinking", "thinking": thinking, "signature": "scripted-signature"}],
+        message = AIMessage(content=[{"type": "thinking", "thinking": thinking, "signature": "scripted-signature"},
+                                     *([{"type": "text", "text": said["text"]}] if said.get("text") else [])],
                             tool_calls=calls, usage_metadata=self._usage(messages, out_chars),
                             response_metadata={"model_provider": "anthropic", "model_name": said.get("model_name", SCRIPTED),
                                                "stop_reason": said.get("stop_reason") or ("tool_use" if calls else "end_turn")})
