@@ -109,3 +109,8 @@ batches:
     pass: 7
     what: Section 13's R1, the no-tools baseline (arm A) at the second checkpoint on sol at medium, three runs, for PLAN 13's "arm C beats arm A" once the scorer lands.
     moved: No run named a cause; each left connection exhaustion open at 0.4 with its origin unknown, and none was steered by a trap in the commander's message.
+  - name: e4-1440
+    phase: to score
+    pass: 7
+    what: Section 13's R2, the first look of the live carry-forward (row E4). Three runs at the first checkpoint on sol at medium, each the start of a run at the second checkpoint in batch e4-1452.
+    moved: Every run led with the gateway at 0.75 to 0.8 and answered the planned checkout rollback first; one kept the database as an open cause beside its symptom.
