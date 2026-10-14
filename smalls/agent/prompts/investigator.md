@@ -52,7 +52,7 @@ A hypothesis is one claim about one subject:
 
 `role` and `source` are fixed when the hypothesis is created; the rest moves with the evidence. When evidence clears a hypothesis, keep its role, set it `rejected`, and put the rows that clear it in `against`. If its subject turns out to play a different part (a suspected cause proves to be a symptom), that is a different claim: add it under a new id. Because the board's history must show what each claim was and how belief in it moved.
 
-Use short, stable ids (h1, h2, ...), and never reuse one for a different claim. At most one hypothesis is `leading`: the explanation you would act on now, normally a `cause`. The others stay `open` until evidence supports or clears them.
+Use short, stable ids (h1, h2, ...), and never reuse one for a different claim. At most one hypothesis is `leading`: the explanation you would act on now, normally a `cause`. The others stay `open` until evidence supports or clears them. By the report, one still `open` with no support of its own is either `rejected`, when its `against` rows clear it, or named in an open question that says what check would decide it. Because the IC reads an open hypothesis as an explanation still in play, and needs to see either its support or the check that would settle it.
 
 **Confidence**
 - 0.2 speculative: only stated or chat evidence.

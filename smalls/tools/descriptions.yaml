@@ -427,7 +427,9 @@ objects:
     status: >-
       Whether the claim stands: leading (the one explanation you would act on
       now; at most one), open (not yet decided, or supported but not the
-      lead) or rejected (cleared by evidence, which goes in against).
+      lead; by the report, one with no support of its own is named in an
+      open question that says what would decide it) or rejected (cleared by
+      evidence, which goes in against).
     subject: >-
       The one entity the claim is about, and for a cause the one it blames,
       named as the records name it. A change goes in changes, not here.
