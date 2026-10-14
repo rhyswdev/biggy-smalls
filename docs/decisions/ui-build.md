@@ -519,6 +519,15 @@ Found and fixed; each fix but E6 has a test that fails without it:
 | E7 | The evidence drawer's header gave the known time without its day, so a record from the day before read as "known 18:42:00 UTC" beside "Nothing after 14:52 UTC is visible". | The header gives the day. | `e2e/drawer.spec.ts`: a known time carries its day |
 | E8 | The agent panel marked a read whose result was an error with ✓, like a read that worked; the chat's receipt said "Error:". | A failed step: ✕, and "Error:" before the line. | `tests/reduce.test.ts` |
 
+Found afterwards, when the commander ran the app by hand, and fixed the same way:
+
+| # | What | Fix | Test |
+|---|---|---|---|
+| E9 | With strict schemas off on the first provider, the model sometimes sent a gated call whose `rationale` was a string carrying a fragment of its own call syntax, with `expect` loose beside it. All four reads of one round failed so; the commander was asked to approve them, they were shown with ✓ and "4 run", and the model fixed them on its next turn. | A read or action whose arguments or rationale fail validation is answered with its error when the model proposes it, before the gate: no card, no charge on the call budget, and a round of nothing else does not count toward the stale-board rule. The model gets the same error text as before. Nobody sees it until `malformed_shown` (3) model turns in a row have had one; then it is shown. A result that is an error shows ✕ and counts as failed. Overfit review: 22 hunks, none flagged. | `tests/agent/test_failures.py`, `tests/agent/test_method.py`, `web/tests/reduce.test.ts` |
+| E10 | The chat showed reasoning only once a model call ended: the reducer folded the whole `thinking` event and ignored `thinking_delta`. | Deltas grow the narrative as they arrive, and the whole text replaces it at the end of the call. The provider often sends a long stretch of summarised reasoning in one piece, so a piece that arrives at once is written out over a moment; first paint, replays and reduced motion show it whole. | `web/tests/reduce.test.ts` |
+
+Strict mode was measured before E9 was chosen, with one request each on the investigator's tools: every tool strict is refused (38 optional inputs, limit 24); the twelve gated tools strict, inside the published limits by making 16 inputs required and nullable, is refused as "compiled grammar is too large"; the six most used reads strict (24 optional inputs) is accepted, with 35 s to compile the schema on first use. We chose the retry over partial strict mode.
+
 Seen and left as they are, each working as designed or waiting on a ruling:
 
 - Markdown shows as literal characters in prose (Q7).

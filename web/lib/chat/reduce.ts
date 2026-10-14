@@ -197,13 +197,16 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
     case "auto_approve":
       state.autoApprove = Boolean(d.on);
       break;
+    case "thinking_delta":
     case "thinking":
     case "text_delta": {
-      // A model call's reasoning (whole, once) and its visible text come just before its model_call event: they
-      // are held in a provisional group until that event says which round they belong to.
+      // A model call's reasoning and its visible text come just before its model_call event: they are held in a
+      // provisional group until that event says which round they belong to. The reasoning grows as its deltas
+      // stream in, and the whole of it, sent once at the end of the call, replaces what the deltas built.
       const i = provisional(state, run, ev.seq);
       const g = group(state, i);
-      patch(state, i, ev.type === "thinking" ? { narrative: str(d.text) } : { text: (g.text ?? "") + str(d.text) });
+      patch(state, i, ev.type === "thinking" ? { narrative: str(d.text) }
+        : ev.type === "thinking_delta" ? { narrative: (g.narrative ?? "") + str(d.text) } : { text: (g.text ?? "") + str(d.text) });
       break;
     }
     case "model_call": {
@@ -222,7 +225,9 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
     }
     case "tool_call_proposed": {
       const kind = str(d.kind);
-      if (kind === "internal") break;
+      // Internal calls are the board's, and a hidden one is a malformed call the agent was told to fix and retried
+      // (malformed_shown): neither is a read the commander sees. Its decision and result find no row and are skipped too.
+      if (kind === "internal" || d.hidden === true) break;
       const by = str(d.by) === "harness" ? "harness" : "agent";
       const last = lastGroup(state, run);
       const i = by === "harness" ? groupFor(state, run, 0, "harness") : last >= 0 ? last : groupFor(state, run, 0, "agent");

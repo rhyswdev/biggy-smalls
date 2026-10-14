@@ -123,14 +123,20 @@ export function GroupView({ chatId, group, rows, pending, schemas, onOpen, onDec
     : <Settled chatId={chatId} rows={calls} board={group.board} onOpen={onOpen} />;
 }
 
+/** A read that was let through and came back as an error: its arguments did not run, or the tool failed. */
+const failedRow = (r: Row) => r.result?.status === "error";
+
 function title(rows: Row[], local: Record<string, Local> = {}): string {
   const reads = rows.length;
   const state = (r: Row) => local[r.call_id]?.state ?? r.state;
-  const ran = rows.filter((r) => ["approved", "auto", "edited"].includes(state(r))).length;
+  const approved = rows.filter((r) => ["approved", "auto", "edited"].includes(state(r)));
+  const failed = approved.filter((r) => failedRow(r)).length;     // approved, then answered with an error
+  const ran = approved.length - failed;
   const rej = rows.filter((r) => ["rejected", "refused"].includes(state(r))).length;
   const sk = rows.filter((r) => state(r) === "skipped").length;
   const noun = rows.every((r) => r.kind === "action") ? (reads === 1 ? "action" : "actions") : reads === 1 ? "read" : "reads";
-  return `${reads} ${noun} · ${[ran ? `${ran} run` : "", rej ? `${rej} rejected` : "", sk ? `${sk} skipped` : ""].filter(Boolean).join(", ") || "decided"}`;
+  return `${reads} ${noun} · ${[ran ? `${ran} run` : "", failed ? `${failed} failed` : "", rej ? `${rej} rejected` : "", sk ? `${sk} skipped` : ""]
+    .filter(Boolean).join(", ") || "decided"}`;
 }
 
 function Settled({ chatId, rows, board, onOpen }: { chatId: string; rows: Row[]; board: BoardChange[]; onOpen: (h: string) => void }) {
@@ -178,8 +184,9 @@ function Receipt({ chatId, row, local, onOpen }: { chatId: string; row: Row; loc
   const [error, setError] = useState<string | null>(null);
   const s = local?.state ?? row.state;
   const ran = ["approved", "auto", "edited"].includes(s) && row.result;
-  const glyph = s === "skipped" ? "–" : s === "rejected" || s === "refused" ? "✕" : "✓";
-  const cls = s === "rejected" || s === "refused" ? "g-no" : s === "skipped" ? "g-skip" : "g-ok";
+  const no = s === "rejected" || s === "refused" || failedRow(row);
+  const glyph = s === "skipped" ? "–" : no ? "✕" : "✓";
+  const cls = no ? "g-no" : s === "skipped" ? "g-skip" : "g-ok";
   const handle = row.result?.shown[0];
   async function toggle() {
     if (!open && !call) {

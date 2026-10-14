@@ -116,3 +116,37 @@ describe("the transcript", () => {
     expect(s.turns.filter((t) => t.kind === "group" && t.by === "agent").length).toBeGreaterThan(fold(fixture("headless")).turns.filter((t) => t.kind === "group" && t.by === "agent").length);
   });
 });
+
+describe("what a person is not shown, and reasoning as it streams", () => {
+  const base = fixture("headless");
+  const at = (n: number, type: string, data: Record<string, unknown>) =>
+    ({ ...base[base.length - 1]!, seq: base[base.length - 1]!.seq + n, type, data }) as (typeof base)[number];
+
+  it("a hidden call, its decision and its result leave no row and no count", () => {
+    const before = fold(base);
+    const call = { call_id: "call_hidden_1", tool: "search_logs", kind: "read", by: "agent", hidden: true };
+    const after = fold([
+      at(1, "tool_call_proposed", { ...call, args: { since: "-1h" }, rationale: "<parameter name=\"tests\">x" }),
+      at(2, "gate_decision", { ...call, decision: "approved", by: { who: "policy", via: "web" } }),
+      at(3, "tool_result", { ...call, status: "error", first_line: "Invalid arguments for search_logs", shown: [], referenced: [], chars: 10 }),
+    ], before);
+    expect(after.rows.call_hidden_1).toBeUndefined();
+    expect(tally(after)).toEqual(tally(before));
+    expect(after.turns).toEqual(before.turns);
+  });
+
+  it("reasoning grows with each delta, and the whole text sent at the end of the call replaces it", () => {
+    let s = fold(base);
+    const narrative = () => {
+      const g = s.turns[s.turns.length - 1]!;
+      return g.kind === "group" ? g.narrative : undefined;
+    };
+    s = fold([at(1, "thinking_delta", { text: "Checking the pool " })], s);
+    expect(narrative()).toBe("Checking the pool ");
+    s = fold([at(2, "thinking_delta", { text: "before the deploy." })], s);
+    expect(narrative()).toBe("Checking the pool before the deploy.");
+    s = fold([at(3, "thinking", { text: "Checking the pool before the deploy, then the gateway." })], s);
+    expect(narrative()).toBe("Checking the pool before the deploy, then the gateway.");
+  });
+});
+

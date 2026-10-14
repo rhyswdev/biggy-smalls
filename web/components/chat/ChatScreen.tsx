@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Button, Handles, Notice, Toggle } from "@/components/ds";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { moreRun, sendNote, setAutoApprove, stopRun } from "@/lib/actions/chats";
@@ -190,11 +190,33 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   );
 }
 
+/** Reasoning that grows while it streams, shown as it grows. The provider often sends a long stretch in one
+ * piece; that piece is written out over a moment instead of landing all at once. Text present at first paint,
+ * a replay and reduced motion are shown whole. */
+function useReveal(text: string): string {
+  const [shown, setShown] = useState(text.length);
+  const latest = useRef(shown);
+  useEffect(() => { latest.current = shown; });
+  useEffect(() => {
+    const whole = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    let at = Math.min(latest.current, text.length);
+    if (at >= text.length) return;
+    let frame = requestAnimationFrame(function step() {
+      at = whole ? text.length : Math.min(text.length, at + Math.max(8, Math.ceil((text.length - at) / 12)));
+      setShown(at);
+      if (at < text.length) frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [text]);
+  return text.slice(0, Math.min(shown, text.length));
+}
+
 function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, onRefused, resolved }: {
   turn: Turn; chat: ChatSummary; card: IncidentCard | null; state: ChatState; schemas: ToolSchema[]; onOpen: (h: string) => void; onResolve?: () => void;
   onRefused: (message: string) => void; resolved: boolean;
 }) {
   const [all, setAll] = useState(false);
+  const narrative = useReveal(turn.kind === "group" ? turn.narrative ?? "" : "");
   switch (turn.kind) {
     case "ic": {
       if ((chat.origin === "headless" || chat.origin === "past") && card?.incident) return <Ticket card={card} text={turn.text} />;
@@ -213,7 +235,7 @@ function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, onRefus
         </div>
       );
     case "group": {
-      const paragraphs = (turn.narrative ?? "").split(/\n\s*\n/).filter(Boolean);
+      const paragraphs = narrative.split(/\n\s*\n/).filter(Boolean);
       return (
         <div className="msg-sm">
           {turn.by === "harness" ? <span className="who"><b>Smalls</b> · the opening sweep: what is alerting, what changed and what people are saying</span>
