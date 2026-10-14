@@ -386,6 +386,53 @@ COLUMNS: list[tuple[str, Callable[[dict[str, Any]], str]]] = [
 ]
 
 
+# The words the log and the published page use, grouped. The page's key is built from this list.
+KEY: list[tuple[str, list[tuple[str, str]]]] = [
+    ("The runs", [
+        ("Arm A", "The no-tools baseline: one model call over the commander's message, the alerts and the chat, with no tools and no second turn. It shows what a model does with only the obvious inputs."),
+        ("Arm C", "The agent, Smalls: it chooses its own reads with eleven tools, keeps a hypothesis board, cites the records it read, and has its report checked before it stands. Every run but arm A's is arm C."),
+        ("Checkpoint", "The moment a run investigates as of: 14:40 or 14:52 on the incident's day. The tools show nothing later."),
+        ("Batch", "A set of live runs made for one purpose; a column on every chart, in the order they ran."),
+        ("Batch names", "The labels along each chart's bottom. p01 to p08 are pass 1 to pass 8's runs, and p07-guard pass 7's wrong-cause triggers. "
+                        "p3-sol, p3-luna, p4-sol and p4-luna are phase 2's plan rows P3 (the shakedown) and P4 (the baseline), one batch per model, "
+                        "not passes 3 and 4. sol-shake and sol-base are phase 1's shakedown and baseline; eff-low and p02-low probe low effort; "
+                        "frame and frame-db-at-time are phase 1's wrong-cause and factual-question triggers, and final two more runs on pass 3's files. "
+                        "c3 is the first live run and cli-claude two runs by hand, both on the first provider. armA is arm A; "
+                        "e4 batches are the carry-forward and e5 batches the tags ablation."),
+        ("Phase", "Phase 1 and phase 2 are the eval loop's two rounds of tuning; build and between are runs made outside them."),
+        ("Pass", "One rewrite of the prompt files to fix one finding, by a fresh author who has never seen the incident, kept or reverted on the runs that follow. Pass 0 is the first blind author's files."),
+        ("Finding", "A failure mode seen across runs, written in terms that hold on any incident (F-01, F-02 and on), which a pass sets out to fix."),
+        ("Kept, reverted", "A pass is kept when its runs still reach the cause, its target moves and nothing else gets worse; otherwise its files are reverted."),
+        ("Set", "The models behind the agent's roles: sol, the second provider's middle tier; luna, its cheaper tier; claude, the first provider. The investigator's column names its profile and effort, such as openai@medium."),
+        ("Effort", "How long the model reasons before each answer: low, medium or high."),
+        ("Trigger kind", "Which message a run was given: standard, the checkpoint's own; framing, a commander asserting a wrong cause, to test whether it steers the agent; or custom, typed by hand."),
+        ("Guard set", "The two framing runs a pass must come through, unsteered, before it is kept."),
+    ]),
+    ("The agent", [
+        ("Hypothesis board", "The agent's running list of explanations, each with a role, a status (leading, open, rejected), a confidence and the records for and against it."),
+        ("Leading hypothesis", "The explanation the report puts first: what the agent says is causing the incident."),
+        ("Roles", "Cause, what is broken and why; trigger, the event that set the cause off; contributing, what made it worse; symptom, an effect, not the origin."),
+        ("Handle", "The id at the start of every record a tool prints, such as log:pay-01/ebfd5293. Reports cite handles, and each opens its native record."),
+        ("Non-chat support", "Evidence from a system's own record (a log, metric, change or ticket), not only what people said in chat."),
+        ("Board-only turn", "A model turn whose only call is a board write, with no reads beside it. Each costs time and tokens."),
+        ("Quiet-board nudge", "A line the model sees after three rounds with no board change, asking it to record what it has found or report."),
+        ("Verifier", "Two checks on each report before it stands: claim support, where a cheaper pass judges each claim against the rows it cites as supported, partial or unsupported; and a contrarian pass that looks for a better explanation."),
+        ("Tags", "Labels a classifier put on records to help searches. A search aid, never evidence."),
+        ("Carry-forward", "A 14:52 run that starts from the 14:40 run's board and must use what changed in between."),
+    ]),
+    ("Scoring", [
+        ("Answer key", "What really happened, written with the data. Only the scorer reads it, never the agent."),
+        ("Scorer", "Code that grades each run against the answer key, plus a judge: a model given a yes-or-no checklist with quotes, at 14:52 only."),
+        ("Reached the cause", "The leading hypothesis blames the real cause, in the cause role, with non-chat support."),
+        ("Hard fail", "A wrong leading hypothesis held with high confidence: the worst outcome, since a commander would act on it."),
+        ("Required facts", "Facts the answer key says a good report must establish at its checkpoint, each counted only when cited from a record a tool showed."),
+        ("Traps", "The misleading theories built into the incident, such as the visible deploy or the full database. A run passes one by rejecting it or placing it inside the real chain."),
+        ("Agent bar", "PLAN 13's conditions for a good run: a valid report, no invented citations, the cause with non-chat support, rivals cleared with evidence, the owner from on-call, a list of what not to do, and a stop within budget."),
+        ("Mechanism items", "The judge's four-item checklist for how the fault works; the report earns one for each it states with support."),
+    ]),
+]
+
+
 def _ordered(rows: list[dict[str, Any]], described: list[dict[str, Any]]) -> list[tuple[dict[str, Any], list[dict[str, Any]]]]:
     """Batches in the order of their first run, each with its description and rows."""
     by_batch: dict[str, list[dict[str, Any]]] = {}
@@ -407,7 +454,10 @@ def render(rows: list[dict[str, Any]], described: list[dict[str, Any]]) -> str:
            "",
            f"{len(rows)} runs in {len(ordered)} batches; ${sum(r.get('cost_usd') or 0 for r in rows):.2f} in all.",
            "",
-           "## What moved", ""]
+           "## Key", ""]
+    for group, terms in KEY:
+        out += [f"**{group}.**", ""] + [f"- _{term}_: {text}" for term, text in terms] + [""]
+    out += ["## What moved", ""]
     out += [f"- **{meta['name']}** (pass {meta.get('pass', '?')}{', ' + str(meta['result']) if meta.get('result') else ''}). {meta['moved']}"
             for meta, _ in ordered if meta.get("moved")]
     out += ["",
