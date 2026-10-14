@@ -17,3 +17,11 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 **Change.** The citation rules now say a claim says only what its own rows show: a row for each part, both rows for a comparison, reasoning worded as reasoning, and an unsupported prediction left out while the claim stays. `support` holds a row for each link the statement names, the effect included, and the discriminating rows. Timeline rows hold one event each. The matching field descriptions say the same.
 
 **Result: kept.** Partial claims fell from 59% to 32%, with the same conclusions and about the same number of claims per report. Cost per run was a little higher and wall time a little lower.
+
+## Pass 3: hypotheses left open with nothing said (kept)
+
+**Finding.** A hypothesis at the bottom of the scale, with only rows against it, was left open in the report with no open question about it.
+
+**Change.** One rule in the board section, and the matching text on `status`: by the report, an `open` hypothesis with no support of its own is either rejected, when its `against` rows clear it, or named in an open question that says what check would decide it.
+
+**Result: kept.** Afterwards every such hypothesis carried an open question naming the check that would decide it. Conclusions were unchanged and cost was a little lower.

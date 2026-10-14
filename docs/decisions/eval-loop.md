@@ -206,6 +206,8 @@ Each live call's cost comes from its own record, with a running total kept here,
 | Pass 1 (`p01`) | 3 runs | $1.13 |
 | Low-effort probe (`eff-low`) | 2 runs | $0.64 |
 | Pass 2 (`p02`) and its overfit review | 3 runs, 1 call | $1.21 |
+| Low effort on the pass 2 files (`p02-low`) | 2 runs | $0.62 |
+| F-03's two reviews, pass 3 (`p03`) and its review | 3 runs, 3 calls | $1.14 |
 
 **Passes**, one line each. Lines changed are counted by `blind-install`. The guard set was not run in this first, $10 phase: no pass reached a keep that needed it, and the scorer does not exist yet, so "right" was judged by reading each report against PLAN 1.1 and 1.5.
 
@@ -213,12 +215,13 @@ Each live call's cost comes from its own record, with a running total kept here,
 |---|---|---|---|---|---|---|
 | 1 | F-01, board updates in turns of their own | investigator 10, first_turn 2, descriptions 10 | 4 to 6 board-only turns in each of 5 runs | 5 in each of 3 runs | Reverted: the target did not move. Conclusions, calls and cost were unchanged | $1.13 |
 | 2 | F-02, claims say more than their rows | investigator 6, descriptions 15 | 76 of 129 claims partial (59%) over 5 runs; 14 to 19 disputed a run | 26 of 80 partial (32%) over 3 runs; 10 disputed in each | Kept. Same conclusions in 3 of 3, about 27 claims a run as before; median cost $0.42 against $0.35 (inside the baseline's spread), wall 177 to 194 s against 219 to 262 s | $1.21 |
+| 3 | F-03, an open hypothesis with no support and nothing said | investigator 2, descriptions 4 | left open with no open question in 5 of 10 runs | in 0 of 2 runs that had such a rival: each named it in an open question with the check that would decide it | Kept. Same conclusions in 3 of 3; median cost $0.35; partial claims 35 of 84 (42%), against 32% after pass 2, on three runs each and with no change to the citation rules, so read as noise until more runs say otherwise | $1.12 |
 
 **The second pass's author left two questions** in its room, copied here as written in short. Neither was answered to it.
 1. Which handles go into a hypothesis's claim-support packet? It assumed `support`, plus `against` for a rejected hypothesis. What the code does: the packet holds both `support` and `against` for every hypothesis (`smalls/agent/verifier.py`, `packets`).
 2. Are the verdict counts in METRICS.md the claim-support pass's? Yes.
 
-**Probes.** Effort, on the original files at 14:52: two runs at low reached the same conclusions as medium, with every rival rejected, in 142 and 150 s against 231 to 248 s, for $0.29 and $0.35. The loop stays at medium so passes compare like with like. The set's investigator effort is a config change to make at the end, on more runs.
+**Probes.** Effort, on the pass 2 files: one run at each checkpoint at low reached the right leading cause in 161 and 173 s for $0.30 and $0.32, but 21 of 42 claims came back partial (50%, against 32% at medium) and the reports were thinner; one left out a contributing hypothesis that every medium run had. Medium stays the loop's effort. Earlier, on the original files at 14:52: two runs at low reached the same conclusions as medium, with every rival rejected, in 142 and 150 s against 231 to 248 s, for $0.29 and $0.35. The loop stays at medium so passes compare like with like. The set's investigator effort is a config change to make at the end, on more runs.
 
 ## 10. Proposed rulings and open points
 

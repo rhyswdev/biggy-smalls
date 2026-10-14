@@ -36,7 +36,9 @@ findings:
       rejected: [p01-C-1452-tags-r1, p01-C-1452-tags-r2]
     review: the first draft named the checkpoint, the confidence values and the row counts, and the overfit reviewer
       flagged it as steering rival dispositions toward the answer; the generic rewrite passed (0 of 1 flagged)
-    status: pass 3 running
+    pass: 3
+    after: {p03-C-1452-tags-r1: open_with_question, p03-C-1452-tags-r2: open_with_question, p03-C-1440-tags-r1: no_such_rival}
+    status: kept (a17e23b)
 probes:
   effort-low:
     what: the investigator at low effort, the rest of the sol set unchanged, on the original five files
@@ -46,3 +48,8 @@ probes:
     against: medium at 14:52 on the same files, five runs, cost 0.33 to 0.43, wall 231 to 248 s, all leading_correct
     note: same conclusions in about 60% of the wall time and slightly less cost; two runs only. The loop stays at medium
       so passes compare like with like; switching the set's investigator effort is a config change for the end of the loop.
+  effort-low-on-pass-2:
+    runs:
+      p02-low-C-1440-tags-r1: {calls: 30, cost_usd: 0.300, wall_s: 161, leading_correct: true, note: no contributing hypothesis for the batch job}
+      p02-low-C-1452-tags-r1: {calls: 29, cost_usd: 0.321, wall_s: 173, leading_correct: true}
+    note: 21 of 42 claims partial (50%) against 32% at medium on the same files; thinner reports. Medium stays.
