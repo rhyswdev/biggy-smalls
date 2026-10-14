@@ -411,6 +411,27 @@ While the scorer session builds S1 to S7, three sets of live runs can be made no
 - **New rows (PLAN 13).** Each cites rows dated between 14:40 and 14:52, every one fetched by a call of its own: 8, 7 and 11 of its 25 to 29 cited handles. Common to all three: the incident record as updated at 14:50:30, Kofi's 14:41 network message, the 14:47:40 chat message, and the host monitor at 14:40:45. r1 and r3 add the F5 log lines of 14:49 and 14:50 and the 14:50 chat message; r1 and r2 the checkout rollback build that finished at 14:42:05; r2 and r3 Elena's 14:47 database paste as the incident record's work note (`snow:jn/…`), the copy of that fact 14.3 finds runs rarely cite; r1 cites the same paste from the chat. Each also cites one or two metric windows that run to 14:52. Only r3 cites a handle it has only through the carry-forward (one).
 - **The board between the looks.** The leading hypothesis is the same one in all three, the gateway holding its connections across the retried calls, at 0.8 (r1 up from 0.75). PayCore stays the `trigger` and the gateway's release a `contributing` link. The two theories the 14:52 message brings are added in all three: pay-03 as a cause rejected at 0.1 with four or five rows against it, and the network as an open `cause` at 0.15 with three or four against (an open cause, which SC6 counts as held). The checkout release, the database as the origin and redis are rejected again, each lower (0.15 or 0.2 to 0.1 or 0.05). r1 adds the reconciler as `contributing` (0.45); r3 raises it from 0.4 to 0.7; r3 still keeps the database as an open `cause` at 0.7 beside the gateway, as at 14:40. Two of the three were nudged once, at round 8, and one of those moved its board in the next round.
 
+**R4, the tags ablation (2026-10-15).** Five runs at the second checkpoint with tags off (batch `e5-off`) and two with tags on (`e5-on`), both on sol at medium, run as two matrices side by side; the tags-on side adds pass 7's three regression runs (`p07`, 2026-10-14). Every run completed with a valid report that the verifier passed.
+
+| | Tags on (`e5-on` and `p07`) | Tags off (`e5-off`) |
+|---|---|---|
+| Leading cause | the gateway, 5 of 5, at 0.8 | the gateway, 5 of 5, at 0.8 (one at 0.85) |
+| What set the fault off on the board as a `trigger` | 5 of 5 | 5 of 5 |
+| Calls that used a tag input | 0 in every run | 0 in every run (none offered) |
+| Tool calls | 30 in every run | 30 in every run |
+| Model turns | 12 (11 to 14) | 13 (12 to 13) |
+| Partial claims | 70 of 151; per run 0.50 (0.33 to 0.53); `e5-on` alone 0.41 and 0.33 | 54 of 154; per run 0.36 (0.29 to 0.40) |
+| Hypotheses per report | 9 in `p07`, 7 in `e5-on` | 8 (7 to 10) |
+| Cost | $0.41 ($0.38 to $0.44) | $0.40 ($0.38 to $0.42) |
+| Wall time | 206 s (183 to 226) | 245 s (240 to 267) |
+
+Medians, with the lowest and highest run. Read:
+- **The agent never uses a tag input.** Not in these five runs with tags on, and not in any of the 63 run records with tags on in `eval/loop-runs/` (no `signal`, `act` or `change_kind` argument, and no `group_by=signal`). With tags on, all they can change is what the model reads: the `[tag …]` labels on rows and the inventory's counts. So this ablation measures those, not tag filters.
+- **The outcome and the shape of the run are the same on both sides**: the same leading cause at the same confidence, the trigger on the board in all ten, every run spending its 30 calls, a turn apart at the median.
+- **Partial claims are lower with tags off**, but most of the gap is the three `p07` runs, made a day earlier: the two tags-on runs made beside the tags-off ones sit at 0.41 and 0.33, inside the tags-off spread. Five a side does not separate it from run-to-run spread.
+- **Wall time is longer with tags off** (240 to 267 s against 183 to 226), including the three tags-off runs that ran after the tags-on matrix had finished, at about the same tokens per run. We have no reading of why; it may be the provider's latency on the day.
+- No ruling on the default (G6): that waits for scores. The matrix now scores each run it makes, so the seven R4 records already hold a `scores.json` from the deterministic checks; the ledger rows' `scores` are left for the scorer session to fill, with the judge.
+
 ### 13.4 Spend
 
 | Batch | Runs | Cost | Running total |
@@ -419,6 +440,7 @@ While the scorer session builds S1 to S7, three sets of live runs can be made no
 | R1: arm A at 14:52, three runs ($0.08, $0.04, $0.04) | 3 runs | $0.16 | $0.16 |
 | R2: the carry-forward's first look at 14:40, three runs ($0.43, $0.34, $0.35) | 3 runs | $1.13 | $1.29 |
 | R3: the carry-forward to 14:52, one run from each R2 run ($0.42, $0.38, $0.41) | 3 runs | $1.21 | $2.50 |
+| R4: the tags ablation at 14:52, five runs with tags off ($1.98) and two with tags on ($0.76) | 7 runs | $2.74 | $5.24 |
 
 ## 14. The scorer (rows S1 to S7, built 2026-10-14)
 
