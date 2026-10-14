@@ -8,26 +8,26 @@ scorer lands, nothing here says whether a run was right: the leading hypothesis 
 PLAN 1.1 and 1.5 are what a reader judges it against. Counts, never percentages. A spread is the median, then the
 lowest and highest run.
 
-31 runs in 15 batches; $13.25 in all.
+45 runs in 17 batches; $15.93 in all.
 
 ## Across batches
 
 One line per measure, batches in the order they ran.
 
-- **Runs.** c3: 1 · sol-shake: 1 · sol-base: 4 · p01: 3 · eff-low: 2 · p02: 3 · p02-low: 2 · p03: 3 · frame: 2 · final: 2 · frame-db-at-time: 1 · p04: 3 · cli-claude: 2 · p3-luna: 1 · p3-sol: 1
-- **Completed.** c3: 1 of 1 · sol-shake: 1 of 1 · sol-base: 4 of 4 · p01: 3 of 3 · eff-low: 2 of 2 · p02: 3 of 3 · p02-low: 2 of 2 · p03: 3 of 3 · frame: 2 of 2 · final: 2 of 2 · frame-db-at-time: 1 of 1 · p04: 3 of 3 · cli-claude: 2 of 2 · p3-luna: 1 of 1 · p3-sol: 1 of 1
-- **Leading hypothesis.** c3: payments-gateway 0.70 ×1 · sol-shake: Payments Gateway 0.80 ×1 · sol-base: Payments Gateway 0.80 ×2; Payments Gateway 0.60 ×1; Payments Gateway 0.75 ×1 · p01: Payments Gateway 0.80 ×3 · eff-low: Payments Gateway 0.80 ×2 · p02: Payments Gateway 0.80 ×3 · p02-low: Payments Gateway 0.80 ×2 · p03: Payments Gateway 0.80 ×3 · frame: Payments Gateway 0.80 ×2 · final: Payments Gateway 0.80 ×2 · frame-db-at-time: Payments Gateway 0.80 ×1 · p04: Payments Gateway 0.80 ×3 · cli-claude: payments-gateway 0.65 ×1; payments-gateway 0.70 ×1 · p3-luna: Payments Gateway 3.8.0 PAY-2231 retry path 0.70 ×1 · p3-sol: Payments Gateway 0.80 ×1
-- **Tool calls.** c3: 19 · sol-shake: 30 · sol-base: 30 · p01: 30 · eff-low: 28.5 (27 to 30) · p02: 29 (28 to 30) · p02-low: 29.5 (29 to 30) · p03: 30 (28 to 30) · frame: 30 · final: 30 · frame-db-at-time: 30 · p04: 30 · cli-claude: 18 · p3-luna: 34 · p3-sol: 30
-- **Model turns.** c3: 8 · sol-shake: 13 · sol-base: 12 (11 to 13) · p01: 12 · eff-low: 11 · p02: 13 (12 to 13) · p02-low: 11.5 (11 to 12) · p03: 11 · frame: 13 (12 to 14) · final: 12 · frame-db-at-time: 14 · p04: 12 · cli-claude: 10.5 (9 to 12) · p3-luna: 9 · p3-sol: 13
-- **Cost per run, USD.** c3: 1.06 · sol-shake: 0.43 · sol-base: 0.34 (0.31 to 0.35) · p01: 0.38 (0.33 to 0.42) · eff-low: 0.32 (0.29 to 0.35) · p02: 0.42 (0.34 to 0.44) · p02-low: 0.31 (0.30 to 0.32) · p03: 0.35 (0.34 to 0.42) · frame: 0.41 (0.35 to 0.46) · final: 0.34 (0.34 to 0.35) · frame-db-at-time: 0.40 · p04: 0.39 (0.38 to 0.46) · cli-claude: 1.06 (0.98 to 1.15) · p3-luna: 0.05 · p3-sol: 0.41
-- **Wall time, s.** c3: 213 · sol-shake: 247 · sol-base: 239 (219 to 262) · p01: 220 (196 to 220) · eff-low: 146 (142 to 150) · p02: 181 (177 to 194) · p02-low: 167 (161 to 173) · p03: 217 (213 to 229) · frame: 251 (227 to 275) · final: 210 (195 to 225) · frame-db-at-time: 203 · p04: 194 (190 to 222) · cli-claude: 228 (191 to 264) · p3-luna: 495 · p3-sol: 203
-- **Cache share.** c3: 0.71 · sol-shake: 0.81 · sol-base: 0.85 (0.81 to 0.85) · p01: 0.83 (0.80 to 0.83) · eff-low: 0.83 (0.80 to 0.85) · p02: 0.80 (0.72 to 0.86) · p02-low: 0.82 (0.82 to 0.82) · p03: 0.80 (0.76 to 0.83) · frame: 0.83 (0.82 to 0.83) · final: 0.85 (0.85 to 0.86) · frame-db-at-time: 0.82 · p04: 0.82 (0.81 to 0.83) · cli-claude: 0.76 (0.76 to 0.77) · p3-luna: 0.77 · p3-sol: 0.79
-- **Partial claims.** c3: 15 of 26 · sol-shake: 15 of 26 · sol-base: 61 of 103 · p01: 48 of 84 · eff-low: 34 of 48 · p02: 26 of 80 · p02-low: 21 of 42 · p03: 35 of 84 · frame: 26 of 51 · final: 24 of 61 · frame-db-at-time: 11 of 24 · p04: 39 of 86 · cli-claude: 14 of 24 · p3-luna: 10 of 23 · p3-sol: 9 of 26
-- **Unsupported claims per run.** c3: 0 · sol-shake: 1 · sol-base: 1.5 (1 to 2) · p01: 1 (0 to 2) · eff-low: 0.5 (0 to 1) · p02: 1 (1 to 2) · p02-low: 0 · p03: 1 · frame: 2.5 (2 to 3) · final: 0.5 (0 to 1) · frame-db-at-time: 0 · p04: 1 · cli-claude: 0 · p3-luna: 2 · p3-sol: 1
-- **Policy refusals per run.** c3: 0 · sol-shake: 0 · sol-base: 0 · p01: 0 · eff-low: 0 · p02: 0 · p02-low: 0.5 (0 to 1) · p03: 0 · frame: 0 · final: 0 · frame-db-at-time: 0 · p04: 0 · cli-claude: 4 · p3-luna: 1 · p3-sol: 0
-- **Board refusals per run.** c3: 0 · sol-shake: 0 · sol-base: 0 · p01: 0 · eff-low: 0 · p02: 0 · p02-low: 0.5 (0 to 1) · p03: 0 · frame: 0 · final: 0 · frame-db-at-time: 0 · p04: 0 · cli-claude: 4 · p3-luna: 0 · p3-sol: 0
-- **Quiet-board nudges per run.** c3: - · sol-shake: - · sol-base: - · p01: - · eff-low: - · p02: - · p02-low: - · p03: - · frame: - · final: - · frame-db-at-time: - · p04: - · cli-claude: - · p3-luna: 0 · p3-sol: 0
-- **Malformed calls retried per run.** c3: - · sol-shake: - · sol-base: - · p01: - · eff-low: - · p02: - · p02-low: - · p03: - · frame: - · final: - · frame-db-at-time: - · p04: - · cli-claude: - · p3-luna: 0 · p3-sol: 0
+- **Runs.** c3: 1 · sol-shake: 1 · sol-base: 4 · p01: 3 · eff-low: 2 · p02: 3 · p02-low: 2 · p03: 3 · frame: 2 · final: 2 · frame-db-at-time: 1 · p04: 3 · cli-claude: 2 · p3-luna: 1 · p3-sol: 1 · p4-luna: 7 · p4-sol: 7
+- **Completed.** c3: 1 of 1 · sol-shake: 1 of 1 · sol-base: 4 of 4 · p01: 3 of 3 · eff-low: 2 of 2 · p02: 3 of 3 · p02-low: 2 of 2 · p03: 3 of 3 · frame: 2 of 2 · final: 2 of 2 · frame-db-at-time: 1 of 1 · p04: 3 of 3 · cli-claude: 2 of 2 · p3-luna: 1 of 1 · p3-sol: 1 of 1 · p4-luna: 7 of 7 · p4-sol: 7 of 7
+- **Leading hypothesis.** c3: payments-gateway 0.70 ×1 · sol-shake: Payments Gateway 0.80 ×1 · sol-base: Payments Gateway 0.80 ×2; Payments Gateway 0.60 ×1; Payments Gateway 0.75 ×1 · p01: Payments Gateway 0.80 ×3 · eff-low: Payments Gateway 0.80 ×2 · p02: Payments Gateway 0.80 ×3 · p02-low: Payments Gateway 0.80 ×2 · p03: Payments Gateway 0.80 ×3 · frame: Payments Gateway 0.80 ×2 · final: Payments Gateway 0.80 ×2 · frame-db-at-time: Payments Gateway 0.80 ×1 · p04: Payments Gateway 0.80 ×3 · cli-claude: payments-gateway 0.65 ×1; payments-gateway 0.70 ×1 · p3-luna: Payments Gateway 3.8.0 PAY-2231 retry path 0.70 ×1 · p3-sol: Payments Gateway 0.80 ×1 · p4-luna: pay-db-01 0.80 ×3; Payments Gateway 0.80 ×2; pay-db-01 0.90 ×1; PayCoreClient 0.60 ×1 · p4-sol: Payments Gateway 0.80 ×4; payments-gateway 0.75 ×2; Payments Gateway 0.60 ×1
+- **Tool calls.** c3: 19 · sol-shake: 30 · sol-base: 30 · p01: 30 · eff-low: 28.5 (27 to 30) · p02: 29 (28 to 30) · p02-low: 29.5 (29 to 30) · p03: 30 (28 to 30) · frame: 30 · final: 30 · frame-db-at-time: 30 · p04: 30 · cli-claude: 18 · p3-luna: 34 · p3-sol: 30 · p4-luna: 30 (28 to 30) · p4-sol: 30
+- **Model turns.** c3: 8 · sol-shake: 13 · sol-base: 12 (11 to 13) · p01: 12 · eff-low: 11 · p02: 13 (12 to 13) · p02-low: 11.5 (11 to 12) · p03: 11 · frame: 13 (12 to 14) · final: 12 · frame-db-at-time: 14 · p04: 12 · cli-claude: 10.5 (9 to 12) · p3-luna: 9 · p3-sol: 13 · p4-luna: 10 (7 to 10) · p4-sol: 12 (12 to 13)
+- **Cost per run, USD.** c3: 1.06 · sol-shake: 0.43 · sol-base: 0.34 (0.31 to 0.35) · p01: 0.38 (0.33 to 0.42) · eff-low: 0.32 (0.29 to 0.35) · p02: 0.42 (0.34 to 0.44) · p02-low: 0.31 (0.30 to 0.32) · p03: 0.35 (0.34 to 0.42) · frame: 0.41 (0.35 to 0.46) · final: 0.34 (0.34 to 0.35) · frame-db-at-time: 0.40 · p04: 0.39 (0.38 to 0.46) · cli-claude: 1.06 (0.98 to 1.15) · p3-luna: 0.05 · p3-sol: 0.41 · p4-luna: 0.03 (0.03 to 0.04) · p4-sol: 0.36 (0.26 to 0.39)
+- **Wall time, s.** c3: 213 · sol-shake: 247 · sol-base: 239 (219 to 262) · p01: 220 (196 to 220) · eff-low: 146 (142 to 150) · p02: 181 (177 to 194) · p02-low: 167 (161 to 173) · p03: 217 (213 to 229) · frame: 251 (227 to 275) · final: 210 (195 to 225) · frame-db-at-time: 203 · p04: 194 (190 to 222) · cli-claude: 228 (191 to 264) · p3-luna: 495 · p3-sol: 203 · p4-luna: 318 (277 to 408) · p4-sol: 178 (160 to 199)
+- **Cache share.** c3: 0.71 · sol-shake: 0.81 · sol-base: 0.85 (0.81 to 0.85) · p01: 0.83 (0.80 to 0.83) · eff-low: 0.83 (0.80 to 0.85) · p02: 0.80 (0.72 to 0.86) · p02-low: 0.82 (0.82 to 0.82) · p03: 0.80 (0.76 to 0.83) · frame: 0.83 (0.82 to 0.83) · final: 0.85 (0.85 to 0.86) · frame-db-at-time: 0.82 · p04: 0.82 (0.81 to 0.83) · cli-claude: 0.76 (0.76 to 0.77) · p3-luna: 0.77 · p3-sol: 0.79 · p4-luna: 0.78 (0.72 to 0.81) · p4-sol: 0.81 (0.80 to 0.85)
+- **Partial claims.** c3: 15 of 26 · sol-shake: 15 of 26 · sol-base: 61 of 103 · p01: 48 of 84 · eff-low: 34 of 48 · p02: 26 of 80 · p02-low: 21 of 42 · p03: 35 of 84 · frame: 26 of 51 · final: 24 of 61 · frame-db-at-time: 11 of 24 · p04: 39 of 86 · cli-claude: 14 of 24 · p3-luna: 10 of 23 · p3-sol: 9 of 26 · p4-luna: 65 of 151 · p4-sol: 75 of 179
+- **Unsupported claims per run.** c3: 0 · sol-shake: 1 · sol-base: 1.5 (1 to 2) · p01: 1 (0 to 2) · eff-low: 0.5 (0 to 1) · p02: 1 (1 to 2) · p02-low: 0 · p03: 1 · frame: 2.5 (2 to 3) · final: 0.5 (0 to 1) · frame-db-at-time: 0 · p04: 1 · cli-claude: 0 · p3-luna: 2 · p3-sol: 1 · p4-luna: 1 (0 to 2) · p4-sol: 1 (0 to 2)
+- **Policy refusals per run.** c3: 0 · sol-shake: 0 · sol-base: 0 · p01: 0 · eff-low: 0 · p02: 0 · p02-low: 0.5 (0 to 1) · p03: 0 · frame: 0 · final: 0 · frame-db-at-time: 0 · p04: 0 · cli-claude: 4 · p3-luna: 1 · p3-sol: 0 · p4-luna: 0 · p4-sol: 0
+- **Board refusals per run.** c3: 0 · sol-shake: 0 · sol-base: 0 · p01: 0 · eff-low: 0 · p02: 0 · p02-low: 0.5 (0 to 1) · p03: 0 · frame: 0 · final: 0 · frame-db-at-time: 0 · p04: 0 · cli-claude: 4 · p3-luna: 0 · p3-sol: 0 · p4-luna: 0 · p4-sol: 0
+- **Quiet-board nudges per run.** c3: - · sol-shake: - · sol-base: - · p01: - · eff-low: - · p02: - · p02-low: - · p03: - · frame: - · final: - · frame-db-at-time: - · p04: - · cli-claude: - · p3-luna: 0 · p3-sol: 0 · p4-luna: 0 (0 to 2) · p4-sol: 0 (0 to 1)
+- **Malformed calls retried per run.** c3: - · sol-shake: - · sol-base: - · p01: - · eff-low: - · p02: - · p02-low: - · p03: - · frame: - · final: - · frame-db-at-time: - · p04: - · cli-claude: - · p3-luna: 0 · p3-sol: 0 · p4-luna: 0 · p4-sol: 0
 
 ## Batches
 
@@ -226,3 +226,39 @@ phase 2; pass 6. Commit `9642e86`; prompt files `826878c1a42e`; set sol.
 | `p3-sol-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.41 | 203 | 0.79 | 16/9/1 | 0 | 0 (0 moved) |
 
 Tool calls: 30; Model turns: 13; Cost per run, USD: 0.41; Wall time, s: 203; Cache share: 0.79; Partial claims: 9 of 26; Unsupported claims per run: 1; Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0; Malformed calls retried per run: 0.
+
+### p4-luna
+
+P4's baseline on luna at high, five runs at the second checkpoint and two at the first.
+
+phase 2; pass 6. Commit `fbab5cb`; prompt files `826878c1a42e`; set luna.
+
+| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p4-luna-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.80 | 3 | 30 | 7 | $0.03 | 277 | 0.72 | 14/4/0 | 0 | 0 (0 moved) |
+| `p4-luna-b-C-1452-tags-r1` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.80 | 2 | 29 | 10 | $0.03 | 318 | 0.80 | 10/11/1 | 0 | 0 (0 moved) |
+| `p4-luna-e-C-1440-tags-r1` | 1440 | standard | openai-luna@high | completed | pay-db-01 0.80 | 1 | 30 | 10 | $0.03 | 294 | 0.81 | 12/6/0 | 0 | 1 (1 moved) |
+| `p4-luna-C-1452-tags-r2` | 1452 | standard | openai-luna@high | completed | pay-db-01 0.90 | 2 | 30 | 8 | $0.04 | 373 | 0.77 | 15/8/1 | 0 | 0 (0 moved) |
+| `p4-luna-e-C-1440-tags-r2` | 1440 | standard | openai-luna@high | completed | Payments Gateway 0.80 | 2 | 30 | 10 | $0.03 | 288 | 0.80 | 8/11/2 | 0 | 2 (1 moved) |
+| `p4-luna-b-C-1452-tags-r2` | 1452 | standard | openai-luna@high | completed | PayCoreClient 0.60 | 2 | 28 | 10 | $0.04 | 374 | 0.78 | 6/14/1 | 0 | 0 (0 moved) |
+| `p4-luna-C-1452-tags-r3` | 1452 | standard | openai-luna@high | completed | Payments Gateway 0.80 | 3 | 30 | 10 | $0.04 | 408 | 0.78 | 15/11/1 | 0 | 0 (0 moved) |
+
+Tool calls: 30 (28 to 30); Model turns: 10 (7 to 10); Cost per run, USD: 0.03 (0.03 to 0.04); Wall time, s: 318 (277 to 408); Cache share: 0.78 (0.72 to 0.81); Partial claims: 65 of 151; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 2); Malformed calls retried per run: 0.
+
+### p4-sol
+
+P4's baseline on sol at medium, five runs at the second checkpoint and two at the first.
+
+phase 2; pass 6. Commit `fbab5cb`; prompt files `826878c1a42e`; set sol.
+
+| Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `p4-sol-C-1452-tags-r1` | 1452 | standard | openai@medium | completed | payments-gateway 0.75 | 2 | 30 | 12 | $0.38 | 199 | 0.81 | 14/12/1 | 0 | 0 (0 moved) |
+| `p4-sol-e-C-1440-tags-r1` | 1440 | standard | openai@medium | completed | Payments Gateway 0.75 | 1 | 30 | 12 | $0.33 | 176 | 0.81 | 14/10/1 | 0 | 0 (0 moved) |
+| `p4-sol-e-C-1440-tags-r2` | 1440 | standard | openai@medium | completed | Payments Gateway 0.60 | 2 | 30 | 12 | $0.26 | 160 | 0.85 | 12/6/1 | 0 | 0 (0 moved) |
+| `p4-sol-C-1452-tags-r2` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.35 | 189 | 0.82 | 12/12/0 | 0 | 0 (0 moved) |
+| `p4-sol-C-1452-tags-r3` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 12 | $0.39 | 194 | 0.80 | 19/9/1 | 0 | 1 (1 moved) |
+| `p4-sol-C-1452-tags-r4` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 3 | 30 | 12 | $0.37 | 178 | 0.80 | 16/11/0 | 0 | 0 (0 moved) |
+| `p4-sol-C-1452-tags-r5` | 1452 | standard | openai@medium | completed | Payments Gateway 0.80 | 2 | 30 | 13 | $0.36 | 176 | 0.82 | 10/15/2 | 0 | 0 (0 moved) |
+
+Tool calls: 30; Model turns: 12 (12 to 13); Cost per run, USD: 0.36 (0.26 to 0.39); Wall time, s: 178 (160 to 199); Cache share: 0.81 (0.80 to 0.85); Partial claims: 75 of 179; Unsupported claims per run: 1 (0 to 2); Policy refusals per run: 0; Board refusals per run: 0; Quiet-board nudges per run: 0 (0 to 1); Malformed calls retried per run: 0.

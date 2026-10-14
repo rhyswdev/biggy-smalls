@@ -295,6 +295,7 @@ Spend in phase 2, one line per batch; cost from each run's `summary.json` and ea
 | P0: one small call to each model | 2 calls | $0.00 | $0.00 |
 | P1: overfit reviews of the harness diff (twice), of F-06, and of the installed prompt | 4 calls | $0.06 | $0.06 |
 | P3: overfit review of the luna profile and set; one shakedown run each of sol at medium ($0.41) and luna at high ($0.05) | 1 call, 2 runs | $0.48 | $0.54 |
+| P4: the baseline, 7 runs on sol at medium ($2.43) and 7 on luna at high ($0.25) | 14 runs | $2.68 | $3.22 |
 
 ### 12.4 What each row showed
 
@@ -311,4 +312,22 @@ Spend in phase 2, one line per batch; cost from each run's `summary.json` and ea
 - Sol: $0.41, 203 s, 13 turns, 30 calls, 79% of input from cache, no refusals, no malformed calls, no nudge. Luna: $0.05, 495 s, 9 turns, 34 calls (30 and a revision's 4), 77% from cache, one refusal (a read after the budget was spent), no malformed calls, no nudge. Luna spent its 30 calls in three turns.
 - Luna is slow because it reasons at length: 23 to 38 s per turn against sol's 5 to 15, one report turn of 172 s and 15,392 reasoning tokens, against sol's longest of 59 s. At a 20th of sol's rates it still costs an eighth as much per run.
 - Neither run was nudged, so neither shows yet whether a nudge moves the board.
+
+**P4 (2026-10-14): the loop's model is sol at medium.** Seven runs on each model on the pass 6 files, five at the second checkpoint and two at the first (`p4-sol` and `p4-luna` in the log), run as five matrices side by side. Judged by reading each report against PLAN 1.1 and 1.5:
+
+| | sol at medium | luna at high |
+|---|---|---|
+| Led with the cause (the gateway holding its transaction through the retried calls), with non-chat support | 7 of 7, at 0.6 to 0.8 | 2 of 7, at 0.8 |
+| Led with something else | none | 4 with the database at 0.8 or 0.9 (the guilty-database trap, so a hard fail under section 7); 1 with the provider's slowdown, the trigger, at 0.6 |
+| Partial claims | 75 of 179; per run 0.30 to 0.56, median 0.41 | 65 of 151; per run 0.22 to 0.67, median 0.41 |
+| Cost per run | $0.26 to $0.39, median $0.36 | $0.03 to $0.04, median $0.03 |
+| Wall time per run | 160 to 199 s, median 178 | 277 to 408 s, median 318 |
+| Model turns, tool calls | 12 or 13; 30 | 7 to 10; 28 to 30 |
+| Cache share | 0.80 to 0.85 | 0.72 to 0.82 |
+| Board refusals, policy refusals, malformed calls | 0, 0, 0 | 0, 0, 0 |
+| Quiet-board nudges | 1 run, round 10; the board moved the next round | 2 runs, rounds 6, and 5 and 6; each board moved the round after its last nudge |
+
+By V6 the loop's model is the cheaper one only if it reaches the cause as often, and luna does not: it reached it in 2 of 7 against 7 of 7. So the loop stays on sol at medium, and the partial-claim test is moot. Luna's runs read widely in their first turn but take the database's exhaustion, which every source shows loudly, for the cause; the runs that got it right read the gateway's own logs and the design note. Whether luna does better on the prompt the loop produces is a benchmark for later (L9), not this phase.
+
+P1's acceptance, from these 16 runs (P3 and P4): no run had a board refusal; three runs were nudged, and in each the board moved in the round after the last nudge. The quiet stretches were short (one or two rounds past the third), so nothing here argues for bringing a refusal back.
 
