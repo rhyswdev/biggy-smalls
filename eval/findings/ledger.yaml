@@ -1,0 +1,25 @@
+# Eval side only: the link from each finding to the runs and calls that show it. Never copied into a room;
+# only the generic text in F-<n>.md and HISTORY.md is (docs/decisions/eval-loop.md, section 8).
+findings:
+  F-01:
+    kind: prompt
+    layer: efficiency
+    text: eval/findings/F-01.md
+    runs:
+      sol-shake-C-1452-tags-r1: {turns: 13, board_only_turns: 5}
+      sol-base-C-1440-tags-r1: {turns: 11, board_only_turns: 4}
+      sol-base-C-1440-tags-r2: {turns: 13, board_only_turns: 6}
+      sol-base-C-1452-tags-r1: {turns: 12, board_only_turns: 5}
+      sol-base-C-1452-tags-r2: {turns: 12, board_only_turns: 5}
+    pass: 1
+    after: {p01-C-1452-tags-r1: {board_only_turns: 5}, p01-C-1452-tags-r2: {board_only_turns: 5}, p01-C-1440-tags-r1: {board_only_turns: 5}}
+    status: reverted (c0fc759 installed, 84592f6 reverted); set aside for a harness-side change
+  F-02:
+    kind: prompt
+    layer: grounding
+    text: eval/findings/F-02.md
+    runs:
+      sol-shake-C-1452-tags-r1: {claims: 26, partial: 15, unsupported: 1}
+      sol-base-C-1440-tags-r1: {claims: 23, partial: 13, unsupported: 1}
+      sol-base-C-1440-tags-r2: {claims: 26, partial: 16, unsupported: 2}
+    status: open
