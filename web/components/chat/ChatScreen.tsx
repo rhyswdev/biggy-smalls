@@ -109,7 +109,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
                 <Link className="lbtn" href="/">Back to dashboard</Link>
               </div>
             ) : null}
-            {state.turns.map((t) => <TurnView key={t.key} turn={t} chat={chat} card={card} state={state} schemas={schemas} onOpen={open} resolved={resolved}
+            {state.turns.map((t) => <TurnView key={t.key} turn={t} chat={chat} card={card} state={state} schemas={schemas} onOpen={open} resolved={resolved} onRefused={setError}
               onResolve={past ? undefined : () => router.push(`/chats/${chat.id}?resolve`, { scroll: false })} />)}
             {shownLocal.map((l) => (
               <div key={l.key} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -169,8 +169,9 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   );
 }
 
-function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, resolved }: {
-  turn: Turn; chat: ChatSummary; card: IncidentCard | null; state: ChatState; schemas: ToolSchema[]; onOpen: (h: string) => void; onResolve?: () => void; resolved: boolean;
+function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, onRefused, resolved }: {
+  turn: Turn; chat: ChatSummary; card: IncidentCard | null; state: ChatState; schemas: ToolSchema[]; onOpen: (h: string) => void; onResolve?: () => void;
+  onRefused: (message: string) => void; resolved: boolean;
 }) {
   const [all, setAll] = useState(false);
   switch (turn.kind) {
@@ -204,7 +205,7 @@ function TurnView({ turn, chat, card, state, schemas, onOpen, onResolve, resolve
             </>
           ) : null}
           {turn.text ? <p className="narr"><Linked text={turn.text} onOpen={onOpen} /></p> : null}
-          <GroupView chatId={chat.id} group={turn} rows={state.rows} pending={state.pending} schemas={schemas} onOpen={onOpen} />
+          <GroupView chatId={chat.id} group={turn} rows={state.rows} pending={state.pending} schemas={schemas} onOpen={onOpen} onRefused={onRefused} />
         </div>
       );
     }

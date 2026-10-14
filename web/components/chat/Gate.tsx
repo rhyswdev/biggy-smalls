@@ -89,15 +89,16 @@ function parsed(values: Record<string, string>, schema: ToolSchema | undefined):
 
 // -- one round of reads: a waiting gate, or its receipts ---------------------------------------------------------
 
-export function GroupView({ chatId, group, rows, pending, schemas, onOpen, onDecided }: {
+export function GroupView({ chatId, group, rows, pending, schemas, onOpen, onDecided, onRefused }: {
   chatId: string; group: Group; rows: Record<string, Row>; pending: Pending | null; schemas: ToolSchema[];
-  onOpen: (handle: string) => void; onDecided?: () => void;
+  onOpen: (handle: string) => void; onDecided?: () => void; onRefused?: (message: string) => void;
 }) {
   const calls = group.calls.map((id) => rows[id]).filter((r): r is Row => Boolean(r));
   const waitingHere = pending && calls.some((r) => pending.cards.some((c) => c.call_id === r.call_id));
   if (!calls.length && !group.board.length) return null;
   return waitingHere
-    ? <WaitingGate key={pending!.interrupt_id} chatId={chatId} rows={calls} pending={pending!} schemas={schemas} onOpen={onOpen} onDecided={onDecided} board={group.board} />
+    ? <WaitingGate key={pending!.interrupt_id} chatId={chatId} rows={calls} pending={pending!} schemas={schemas} onOpen={onOpen} onDecided={onDecided}
+        onRefused={onRefused} board={group.board} />
     : <Settled chatId={chatId} rows={calls} board={group.board} onOpen={onOpen} />;
 }
 
@@ -192,8 +193,9 @@ function Receipt({ chatId, row, local, onOpen }: { chatId: string; row: Row; loc
 
 // -- the gate waiting on the commander -----------------------------------------------------------------------
 
-function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, board }: {
-  chatId: string; rows: Row[]; pending: Pending; schemas: ToolSchema[]; onOpen: (h: string) => void; onDecided?: () => void; board: BoardChange[];
+function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefused, board }: {
+  chatId: string; rows: Row[]; pending: Pending; schemas: ToolSchema[]; onOpen: (h: string) => void; onDecided?: () => void;
+  onRefused?: (message: string) => void; board: BoardChange[];
 }) {
   const [local, setLocal] = useState<Record<string, Local>>({});
   const [mode, setMode] = useState<Record<string, "edit" | "reject" | null>>({});
@@ -224,10 +226,16 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, board 
     }));
     start(async () => {
       const result = await answerGate(chatId, pending.interrupt_id, answers);
-      if (!result.ok) setError(result.status === 409 ? "This gate was already answered, in another tab or by the switch. The run went on with that answer." : result.error ?? "The answer was not taken.");
+      if (!result.ok) {
+        const message = result.status === 409 ? "This gate was already answered, in another tab or by the switch. The run went on with that answer."
+          : result.error ?? "The answer was not taken.";
+        setError(message);
+        onRefused?.(message);           // shown by the chat too: the gate settles as the first answer lands
+        if (result.status !== 409) { sent.current = false; setLocal({}); }
+      }
       onDecided?.();
     });
-  }, [local, asked, chatId, pending.interrupt_id, onDecided]);
+  }, [local, asked, chatId, pending.interrupt_id, onDecided, onRefused]);
 
   useEffect(() => { refocus(); }, []);
 
