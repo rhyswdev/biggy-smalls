@@ -547,6 +547,16 @@ Everything that `agent-v1` will lock is settled here first, then the tag is made
 
 The session sizes it (ruling of 13.3). Expected: the judge's regrade, about 50 judged runs at about $0.05, about $2.50; the contrarian control's run, about $0.40; reviews, cents. About $3, kept as a running total here, one line per batch.
 
+| Batch | Calls | Cost | Running total |
+|---|---|---|---|
+| Z1: the overfit review of `smalls/cli.py` | 1 call | $0.02 | $0.02 |
+
+### 15.5 What each row showed
+
+**Z0 (2026-10-15).** The diff from `9e0e340` over the five blind files is empty, so the installed files are pass 7's. `make test` (735 passed, 2 skipped) and `make lint` (0 errors) pass, and all 71 ledger rows hold scores. `make web-test`'s lint and unit suites pass (44 tests); its browser suite could not start while another session's `make app` held the web folder's dev server (Next allows one per folder), so it is run again before the tag. The judge spend of section 13's scoring, left uncommitted, is committed here: $2.68 of the judge's $5.
+
+**Z1 (2026-10-15).** `smalls tools call` accepts the `rationale` that `smalls tools schema` lists on every read tool: it is checked against `Rationale`, as the graph checks it, and dropped before the call; a malformed one stops the command with the graph's sentence. HANDOFF's command runs; `tests/test_cli.py` pins both cases; `make solve` holds 16 of 16 steps. `smalls/cli.py` is outside the overfit review's guarded paths, so it was reviewed whole (`--file`): 1 hunk, 0 flagged.
+
 ### 15.4 Session B, the write-up
 
 `requirements.md` asks for four deliverables: the repository, instructions to run it locally, a short write-up (its items 1 to 7), and a sample output. Session B writes the README's run-locally section and verifies it from a clean clone (`make demo` with no key, `make run` with one, `make app`, compose), and drafts the write-up: what was built and why, where the model is used and where code is better, how the agent is evaluated (the eval layers, the scorer, the tuning log as the evidence of how it evolved, Gate B), what the results are on the development incident as counts (PLAN 12's wording rules: counts, never percentages, and never "accuracy", "generalises", "robust" or "validated"), what is held out and why, the limits, and how AI coding tools were used. Its tables are generated from the ledger, never typed. The held-out section is left as a placeholder for session D. It never edits agent code, prompts, the scorer or the ledger; it may read everything but the held-out paths.

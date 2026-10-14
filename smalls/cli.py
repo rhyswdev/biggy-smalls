@@ -83,6 +83,15 @@ def tool_arguments(spec, pairs: list[str]) -> dict:
             out[key] = json.loads(value)
         except ValueError:
             out[key] = value
+    if "rationale" in out and spec.kind != "internal":     # `tools schema` lists it on a gated tool: checked as the graph checks it, then dropped
+        from pydantic import ValidationError
+
+        from smalls.contracts.report import Rationale
+
+        try:
+            Rationale.model_validate(out.pop("rationale"))
+        except ValidationError:
+            raise SystemExit("smalls: rationale: an object with `tests` and `expect` is required, as JSON") from None
     return out
 
 

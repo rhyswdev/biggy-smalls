@@ -24,6 +24,16 @@ def test_cli_refuses_a_folder_that_is_not_a_bundle(tmp_path):
         cli.main(["ingest", "--bundle", str(tmp_path)])
 
 
+def test_tools_call_takes_the_rationale_the_schema_lists_and_checks_it(capsys):
+    # `tools schema` marks `rationale` required on every gated tool; the CLI checks it as the graph does and drops it.
+    bundle = str(ROOT / "bundles/larkspur-checkout-2026-10-13")
+    code = cli.main(["tools", "call", "get_oncall", 'service=Checkout - Prod', 'rationale={"tests":"x","expect":"y"}',
+                     "--now", "14:52", "--bundle", bundle])
+    assert code == 0 and "--- status: ok" in capsys.readouterr().out
+    with pytest.raises(SystemExit, match="rationale: an object with `tests` and `expect`"):
+        cli.main(["tools", "call", "get_oncall", "service=Checkout - Prod", 'rationale={"tests":"x"}', "--now", "14:52", "--bundle", bundle])
+
+
 def test_script_entry_is_declared():
     assert 'smalls = "smalls.cli:main"' in (ROOT / "pyproject.toml").read_text()
 
