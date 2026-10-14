@@ -1,0 +1,188 @@
+{
+ "run_id": "20261014T090933Z-5d5522",
+ "status": "completed",
+ "stop_reason": null,
+ "wall_s_total": 212.831,
+ "wall_s_last_segment": 212.826,
+ "gate_wait_ms": 5.0,
+ "model_calls": 10,
+ "retries": 0,
+ "tool_calls": 19,
+ "calls_by_status": {
+  "ok": 26,
+  "error": 2,
+  "deferred": 1
+ },
+ "gate": {
+  "auto:approved": 22,
+  "policy:approved": 5,
+  "policy:deferred": 1
+ },
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": null,
+  "disputed": []
+ },
+ "revisions": 0,
+ "tokens": {
+  "input_tokens": 514766,
+  "output_tokens": 29287,
+  "cache_read": 367933,
+  "cache_write": 146807,
+  "reasoning": 9522,
+  "cost_usd": 1.057586,
+  "model_latency_ms": 212504.7
+ },
+ "events": {
+  "run_started": 1,
+  "phase": 7,
+  "tool_call_proposed": 28,
+  "gate_decision": 28,
+  "tool_started": 27,
+  "tool_result": 28,
+  "board_status": 8,
+  "budget": 9,
+  "thinking_delta": 30,
+  "thinking": 6,
+  "model_call": 10,
+  "hypothesis_update": 12,
+  "text_delta": 2,
+  "gate_pending": 1,
+  "heartbeat": 12,
+  "validation": 1,
+  "draft_report": 1,
+  "cache_ratio_low": 2,
+  "verifier_verdict": 1,
+  "report": 1
+ },
+ "process": {
+  "tool_calls": 19,
+  "calls_by_tool": {
+   "check_status_page": 1,
+   "get_oncall": 1,
+   "get_record": 3,
+   "get_topology": 1,
+   "itsm_query": 1,
+   "query_metrics": 2,
+   "read_chat": 1,
+   "search_logs": 8
+  },
+  "repeated_calls": 0,
+  "empty_results": 0,
+  "error_results": 1,
+  "tag_input_calls": 0,
+  "refused_by_policy": 1,
+  "model_turns": 8,
+  "shown_handles": 139,
+  "cited_handles": 45,
+  "cited_share_of_shown": 0.3237,
+  "tokens_total": 544053,
+  "tokens_per_cited_handle": 12090.1,
+  "budget": {
+   "calls": 30,
+   "calls_used": 19,
+   "hit": false,
+   "turn_cap": 36,
+   "turns_used": 8,
+   "turn_cap_hit": false
+  },
+  "stuck_events": 0,
+  "restarts": 0,
+  "hypotheses": [
+   {
+    "id": "h1",
+    "subject": "checkout-api",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 2,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 38207
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h2",
+    "subject": "pay-03",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 2,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 38207
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h3",
+    "subject": "network",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 2,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 38207
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h4",
+    "subject": "payments-gateway",
+    "role": "cause",
+    "status": "leading",
+    "source": "derived",
+    "changes": 3,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 38207
+    },
+    "first_leading": {
+     "round": 4,
+     "tool_calls_before": 13,
+     "tokens_through": 190387
+    }
+   },
+   {
+    "id": "h5",
+    "subject": "PayCore",
+    "role": "cause",
+    "status": "rejected",
+    "source": "derived",
+    "changes": 2,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 38207
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h6",
+    "subject": "PayCore",
+    "role": "trigger",
+    "status": "open",
+    "source": "derived",
+    "changes": 2,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 13,
+     "tokens_through": 190387
+    },
+    "first_leading": null
+   }
+  ]
+ },
+ "event_bytes": 149194,
+ "dropped_sinks": []
+}

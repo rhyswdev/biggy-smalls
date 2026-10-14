@@ -1,6 +1,6 @@
 # Handoff: where the data phase stands
 
-Updated 2026-10-14, after the tools and agent build: the eleven tools, the agent, the verifier, carry-forward, the matrix runner and the terminal are built and tested offline, on branch `agent-build`, not pushed. No live model run has been made. The first live run is next, and it needs a go-ahead.
+Updated 2026-10-14, after the first live run: the eleven tools, the agent, the verifier, carry-forward, the matrix runner and the terminal are built and tested offline, on branch `agent-build`, not pushed. One live run has been made and committed (row C3), and `make demo` replays it. The live shakedown (row C4) is next, and it needs a go-ahead.
 
 ## Done
 - Step 0: Python 3.12 uv skeleton, packages `smalls` and `smalls_data`, Makefile targets.
@@ -76,8 +76,9 @@ Built row by row from section 8 of `docs/decisions/tools-agent-build.md`, on bra
 ## Next
 Everything that can be built without a live model or a fresh session is built. What is next needs one or the other.
 
+Done: **the first live run** (row C3). Run `20261014T090933Z-5d5522` completed at the second checkpoint in 213 s and 19 of 30 calls, for $1.06; the verifier passed it, and its one proposed action stands deferred, as an unattended run's does. `make demo` replays it with no key, on the host and in the container. Strict tool schemas are off for the investigator: the provider refuses strict mode past 24 optional inputs, and ours have 38 (fact 4 of section 7.5 in the record). Section 13 of the record lists what the run showed that is left for the shakedown.
+
 Waiting for a go-ahead, because it spends money:
-- **The first live run** (row C3): `make run` at the second checkpoint, then commit that run's record and point `make demo` at it. `make demo` is still a stub.
 - **The live shakedown** (row C4): the list in section 7.5 of the record; set the budgets from what is measured and write the numbers into section 6 of `docs/research/agent-design.md`.
 - **The live carry-forward** (row E4) and **the tags ablation** (row E5): `make regress` with tags on and off.
 
