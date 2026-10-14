@@ -9,6 +9,8 @@ batches, so a measure can be followed from pass to pass.
 
     python -m eval.results add <run folder>... --batch <name> [--pass <n>]
     python -m eval.results report [--out docs/tuning-log.md]
+    python -m eval.results rebuild                # every row again from its record, when a row gains a field
+    python -m eval.results export <folder>        # runs.json and batches.json for the published page
 
 A row holds no judgement of right or wrong. Until the scorer lands, `scores` is empty; when it lands it fills
 `scores` for every row, and the log shows them beside the rest.
@@ -65,6 +67,15 @@ def _roles(run: dict[str, Any], key: str) -> dict[str, str | None]:
     return out
 
 
+def _board_only(calls: list[dict[str, Any]]) -> int:
+    """Model turns whose only calls were board writes (the mode of F-01)."""
+    rounds: dict[int, set[str]] = {}
+    for c in calls:
+        if c.get("by") == "agent":
+            rounds.setdefault(c.get("round") or 0, set()).add(c.get("tool"))
+    return sum(1 for tools in rounds.values() if tools == {"update_board"})
+
+
 def trigger_kind(run: dict[str, Any], bundles: Path = ROOT / "bundles") -> str:
     """`standard` when the run was given its checkpoint's own trigger file, `framing:<name>` for a trigger from
     `eval/framing/`, else `custom` (a trigger typed by hand)."""
@@ -117,6 +128,8 @@ def row(folder: Path | str, *, batch: str, pass_: str | int | None, phase: str |
         "cost_usd": tokens.get("cost_usd"), "cost_by_role": {k: round(v, 6) for k, v in sorted(by_role.items())},
         "cache_share": round(tokens["cache_read"] / tokens["input_tokens"], 4) if tokens.get("input_tokens") else None,
         "leading": {"subject": lead.get("subject"), "confidence": lead.get("confidence"), "role": lead.get("role")} if lead else None,
+        "hypotheses": [{k: h.get(k) for k in ("subject", "role", "status", "confidence")} for h in hypotheses],
+        "board_only_turns": _board_only(calls),
         "rejected": [h.get("subject") for h in hypotheses if h.get("status") == "rejected"],
         "open": [h.get("subject") for h in hypotheses if h.get("status") == "open"],
         "verifier": {"status": verdict.get("status"), "claims": len(claims), "supported": claims.count("supported"),
@@ -156,6 +169,60 @@ def add(folders: list[str], *, batch: str, pass_: str | None = None, ledger: Pat
     ids = {r["run_id"] for r in new}
     save([r for r in load(ledger) if r["run_id"] not in ids] + new, ledger)
     return new
+
+
+RECORDS = (ROOT / "eval" / "loop-runs", ROOT / "eval" / "runs")
+
+
+def rebuild(ledger: Path = LEDGER, batches_file: Path = BATCHES, records: tuple[Path, ...] = RECORDS) -> tuple[int, list[str]]:
+    """Build every row again from its run record, keeping its batch and pass: for when a row gains a field.
+    A row whose record is not on this machine is kept as it is, and named."""
+    meta = {b["name"]: b for b in batches(batches_file)}
+    out, missing = [], []
+    for old in load(ledger):
+        folder = next((d / old["run_id"] for d in records if (d / old["run_id"] / "run.json").exists()), None)
+        if folder is None:
+            out.append(old)
+            missing.append(old["run_id"])
+            continue
+        new = row(folder, batch=old["batch"], pass_=old.get("pass"), phase=(meta.get(old["batch"]) or {}).get("phase", old.get("phase")))
+        out.append({**new, "scores": old.get("scores") or {}})
+    save(out, ledger)
+    return len(out), missing
+
+
+def export(folder: Path, rows: list[dict[str, Any]] | None = None, described: list[dict[str, Any]] | None = None) -> list[Path]:
+    """Two flat JSON files for the published tuning-log page: one row per run, and one per batch. Profiles,
+    never models, as in the log."""
+    rows = rows if rows is not None else load()
+    described = described if described is not None else batches()
+    ordered = _ordered(rows, described)
+    batch_rows, run_rows = [], []
+    for i, (meta, rs) in enumerate(ordered, 1):
+        batch_rows.append({"batch": meta["name"], "order": i, "phase": str(meta.get("phase", "")), "pass": str(meta.get("pass", "")),
+                           "finding": meta.get("finding") or "", "result": meta.get("result") or "",
+                           "what": " ".join(str(meta.get("what") or "").split()), "runs": len(rs)})
+        for r in rs:
+            v = r.get("verifier") or {}
+            lead = r.get("leading") or {}
+            hyps = r.get("hypotheses") or []
+            run_rows.append({
+                "run_id": r["run_id"], "batch": r["batch"], "batch_order": i, "created": r.get("created"), "phase": str(r.get("phase") or ""),
+                "pass": str(r.get("pass") or ""), "investigator": (r.get("profiles") or {}).get("investigator") or "", "set": r.get("set") or "",
+                "checkpoint": str(r.get("checkpoint") or ""), "trigger": r.get("trigger") or "", "status": r.get("status") or "",
+                "lead_subject": lead.get("subject") or "", "lead_confidence": lead.get("confidence"),
+                "trigger_on_board": int(any(h.get("role") == "trigger" and h.get("status") != "rejected" for h in hyps)),
+                "hypotheses": len(hyps), "rejected": len(r.get("rejected") or []),
+                "tool_calls": r.get("tool_calls"), "model_turns": r.get("model_turns"), "board_only_turns": r.get("board_only_turns"),
+                "cost_usd": r.get("cost_usd"), "wall_s": r.get("wall_s"), "cache_share": r.get("cache_share"),
+                "claims": v.get("claims"), "partial": v.get("partial"), "unsupported": v.get("unsupported"),
+                "policy_refusals": r.get("policy_refusals"), "board_refusals": r.get("board_refusals"),
+                "nudges": _nudges(r)})
+    folder.mkdir(parents=True, exist_ok=True)
+    paths = [folder / "runs.json", folder / "batches.json"]
+    paths[0].write_text(json.dumps(run_rows, ensure_ascii=False, indent=0), encoding="utf-8")
+    paths[1].write_text(json.dumps(batch_rows, ensure_ascii=False, indent=0), encoding="utf-8")
+    return paths
 
 
 # -- the tuning log ----------------------------------------------------------------------------------------------
@@ -216,9 +283,11 @@ MEASURES: list[tuple[str, Callable[[list[dict[str, Any]]], str]]] = [
     ("Leading hypothesis", _leads),
     ("Tool calls", lambda rs: _spread([r.get("tool_calls") for r in rs])),
     ("Model turns", lambda rs: _spread([r.get("model_turns") for r in rs])),
+    ("Board-only turns", lambda rs: _spread([r.get("board_only_turns") for r in rs])),
     ("Cost per run, USD", lambda rs: _spread([r.get("cost_usd") for r in rs], lambda v: f"{v:.2f}")),
     ("Wall time, s", lambda rs: _spread([r.get("wall_s") for r in rs], lambda v: f"{v:.0f}")),
     ("Cache share", lambda rs: _spread([r.get("cache_share") for r in rs], lambda v: f"{v:.2f}")),
+    ("Trigger on the board", lambda rs: f"{sum(1 for r in rs if any(h.get('role') == 'trigger' and h.get('status') != 'rejected' for h in r.get('hypotheses') or []))} of {len(rs)}"),
     ("Partial claims", _partial),
     ("Unsupported claims per run", lambda rs: _spread([(r.get("verifier") or {}).get("unsupported") for r in rs])),
     ("Policy refusals per run", lambda rs: _spread([r.get("policy_refusals") for r in rs])),
@@ -302,7 +371,17 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("--pass", dest="pass_", help="the pass whose prompt files the runs used (default: the batch's)")
     r = sub.add_parser("report", help="write the tuning log from the ledger")
     r.add_argument("--out", default=str(LOG))
+    sub.add_parser("rebuild", help="build every row again from its run record, keeping its batch and pass")
+    e = sub.add_parser("export", help="write the published page's two JSON files")
+    e.add_argument("folder")
     args = p.parse_args(argv)
+    if args.command == "rebuild":
+        n, missing = rebuild()
+        print(f"rebuilt {n - len(missing)} of {n} rows" + (f"; kept as they were, with no record here: {', '.join(missing)}" if missing else ""))
+        return 0
+    if args.command == "export":
+        print("\n".join(str(path) for path in export(Path(args.folder))))
+        return 0
     if args.command == "add":
         for new in add(args.folders, batch=args.batch, pass_=args.pass_):
             print(f"{new['run_id']}: {new['status']}, {new['tool_calls']} calls, ${new.get('cost_usd') or 0:.2f}, leading {_lead(new)}")

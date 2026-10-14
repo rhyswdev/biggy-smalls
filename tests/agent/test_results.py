@@ -85,3 +85,19 @@ def test_the_log_has_a_table_per_batch_and_a_line_per_measure_across_batches(rec
         assert "base: " in line and "later: " in line                                      # each measure across every batch
     assert text.count("| Run | At |") == 2 and "`fixture-C-1452-tags-r1`" in text and "`later-r1`" in text
     assert "3 runs in 2 batches" in text and "later: Some Service 0.80 ×2" in text           # one subject, however it is written
+
+
+def test_rebuild_keeps_each_rows_batch_and_scores_and_export_writes_the_pages_two_files(record, described, tmp_path):
+    ledger = tmp_path / "runs.jsonl"
+    results.add([str(record)], batch="base", ledger=ledger, batches_file=described)
+    rows = results.load(ledger)
+    results.save([{**rows[0], "scores": {"outcome": 1}, "board_only_turns": None}, {**rows[0], "run_id": "gone", "batch": "base"}], ledger)
+    n, missing = results.rebuild(ledger=ledger, batches_file=described, records=(record.parent,))
+    rebuilt = {r["run_id"]: r for r in results.load(ledger)}
+    assert (n, missing) == (2, ["gone"]) and rebuilt["gone"]["batch"] == "base"                 # a row with no record here is kept
+    assert rebuilt[record.name]["scores"] == {"outcome": 1} and rebuilt[record.name]["board_only_turns"] is not None
+    runs_path, batches_path = results.export(tmp_path / "page", [rebuilt[record.name]], results.batches(described))
+    runs, batch_rows = json.loads(runs_path.read_text()), json.loads(batches_path.read_text())
+    assert [r["run_id"] for r in runs] == [record.name] and runs[0]["investigator"] == "scripted" and runs[0]["batch_order"] == 1
+    assert {"trigger_on_board", "board_only_turns", "cost_usd", "partial", "nudges"} <= set(runs[0])
+    assert batch_rows == [{"batch": "base", "order": 1, "phase": "2", "pass": "6", "finding": "", "result": "", "what": "A fixture batch.", "runs": 1}]
