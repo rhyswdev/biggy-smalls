@@ -1,642 +1,665 @@
 rationale: >-
-  Why you are making this call, written before you see its result. The incident commander reads it when
-  deciding whether to approve the call, and a stated expectation is what lets the result count as a test.
+  Why you are making this call, written before you see the result: the
+  hypothesis it tests and what you expect. The incident commander reads it
+  at the gate, and the run record keeps it.
 tools:
   list_alerts:
     description: >-
-      Lists alert activity in a time window, one row per alert stream. A stream is every firing, recovery and
-      repeat delivery of one alert on one entity, so a flapping or re-delivered alert is one row with a count,
-      not many. It covers every alerting source together: monitors, detected problems, saved-search alerts,
-      network alerts and pages. Each row gives the stream's handle, source, native id, title, the entity
-      exactly as the source wrote it, first seen, last change, state at now, how many times it changed state,
-      and any linked page or saved search. Use it to see what is alerting, since when, and whether an alert
-      began before or after another event. The row's handle is the one to cite, and the one an alert verdict
-      in the report uses. The stream's later records and its definition are listed as pointers, which
-      `get_record` opens. A stream is listed when one of its records falls in the window or it was active at
-      any point in it. Sources name entities their own way, so one component can appear under several names.
-      At most 40 rows, oldest first. The footer says what was cut and how to narrow, and counts the alert
-      definitions that have not fired.
+      List alert streams from every alerting source (monitors, APM problems,
+      log-search alerts, network-monitor alerts, paging incidents) that fired
+      in the window or were active during it. One row per stream: its handle,
+      source, native id, title, the entity as the source wrote it, first
+      seen, last change, state at now, how many times it changed state, and
+      any linked paging incident or saved search. A flapping alert is one row
+      with its count, and a duplicate delivery is one row. The stream's later
+      records and its definition are listed as handles to fetch with
+      get_record; monitors with no state change yet are named in the footer.
+      Use a row's handle for that stream's verdict in the report. Up to 40
+      rows.
     params:
       since: >-
-        Start of the time window; required. An ISO-8601 time, read as UTC unless it carries an offset; or a
-        span counted back from now, such as -30m, -6h or -2d (units s, m, h, d); or the word now. Start well
-        before the incident began when you need a baseline.
+        Start of the window: an ISO-8601 time with Z or an offset (a bare time
+        is UTC), a time relative to now such as -30m, -2h or -1d, or now.
       until: >-
-        End of the time window, in the same forms as `since`, and later than it. Defaults to now. A later
-        time is clamped to now, and the result says so.
+        End of the window, in the same forms as since. Defaults to now, and
+        is clamped to now.
       source: >-
-        Keep only streams from one alerting source, named as the rows name it. An unknown name is answered
-        with the names that exist.
+        Only streams from this alerting source, by the source name rows
+        print. An unknown name is answered with the sources that have
+        streams.
       text: >-
-        Keep only streams whose title or body contains this text. A case-insensitive substring, not a
-        pattern.
+        Only streams whose title or body contains this text, ignoring case.
       state: >-
-        `active` keeps only streams that are firing at now. `all`, the default, also keeps streams that have
-        recovered. A stream from a source that records firings without a state is shown as fired under both.
+        active: only streams alerting at now. all (default): every stream in
+        the window, recovered ones included. Log-search alerts have no state
+        and show as fired under both.
       signal: >-
-        Keep only streams tagged with this kind of signal. A tag is a search aid that a classifier added
-        only where it was confident, never evidence. A stream can carry several tags or none, and a stream
-        with no tag is left out by this filter though it may matter; the value `untagged`, where offered,
-        selects exactly those. The footer says how many streams matched without the filter and how many of
-        them are untagged. Look at them before calling anything absent.
+        Tag filter, a search aid and never evidence: only streams a
+        classifier tagged with this signal (latency, errors, saturation,
+        availability, traffic, change, security, or routine for normal
+        operation), or untagged for those with no signal tag. A stream can
+        carry several tags or none, and tags are applied only when the
+        classifier is confident, so many relevant streams have none. The
+        footer counts the streams that match without the filter and the
+        untagged ones: look at them before calling anything absent.
   get_record:
     description: >-
-      Returns one record whole, as it stood at now, given its handle. Every non-empty field is printed in
-      full, one `path: value` line per field, and empty fields are counted, not printed. This is the call
-      that returns in full whatever another tool showed shortened, so nothing a list view cut is lost. It is
-      also the call that makes a handle citable when another result only listed it as a pointer. A record
-      too large for one result comes in numbered parts, and `part` asks for the next; nothing is dropped.
-      Children and related records, such as the entries under a ticket, the commits under a build or the
-      replies under a thread, are listed as handles to follow and are not shown. A value worked out at now
-      and not stored in the record is marked as derived, and a scheduled time is marked planned. The handle
-      of a count table, a metric window or a commander's note is not a record: the error names the call to
-      run again.
+      Return one record in full, as it stood at now: every non-empty field,
+      nothing clipped, with empty fields counted rather than shown. Values the
+      tool derived at now, such as a state or a count, are on lines starting
+      "derived at now:", and scheduled times are marked (planned). The
+      record's parent and children (an incident's journal entries, a build's
+      commits, a thread's replies, a stream's later records) are listed as
+      handles. Use it to read in full any row another tool shortened, and to
+      make a handle citable that was only listed. A record too large for one
+      result comes in parts, and the result says part 1 of n. Counts, metric
+      reads and notes are minted per call or per run and cannot be fetched:
+      the answer names the call to run again.
     params:
       handle: >-
-        The handle exactly as a row or a pointer printed it, character for character.
+        The handle exactly as a result printed it.
       part: >-
-        Which part of a large record to return, counted from 1. Defaults to 1. The first part says how many
-        parts there are.
+        Which part of a large record to return, from 1 (the default). The
+        first part says how many there are.
   search_logs:
     description: >-
-      Searches raw logs in a time window, in one of two modes. Without `group_by` it returns the total number
-      of matching records, then the records oldest first: handle, UTC time, host, source type and the
-      record's first line. A long line or a stack trace is shortened and marked, and `get_record` returns
-      the whole record. With `group_by` it returns a table of counts, which is the way to see onset, rate,
-      spread and baseline without reading rows; the table has one handle of its own, which is what to cite
-      for the counts. Some sources are sampled: their counts carry the sampling rate and an estimate, and
-      the estimate is the figure to compare across sources. A term is matched against the whole record, so
-      a row can match on a field it does not print, and it says so. The equivalent native search is echoed
-      last. Results are capped: the footer gives the total, what was cut and how to narrow, and rows drop
-      from the newest end, so narrow the window to read later records.
+      Search raw logs in a window. Without group_by it returns matching
+      records, oldest first, up to limit: the total, then for each its
+      handle, UTC time, host, sourcetype and the record's first line as a
+      person reads it, with stack traces folded to 3 frames. A row that
+      matched only in a field it does not print is marked [matched in the
+      full record]; get_record returns the whole record. When the result is
+      cut, the newest rows are the ones left out: narrow the window or add
+      terms. With group_by it returns a count table with one handle for the
+      whole table, including a table of zeros, which is how an absence is
+      cited; a table that depends on a tag has no handle. Counts from sampled
+      sources are estimates and show their sampling rate. The equivalent
+      native search is echoed.
     params:
       terms: >-
-        Up to 8 strings that must all appear in a record. Each is a case-insensitive substring matched
-        against the whole record, not a pattern. Leave out to match every record in the window. Use words
-        the systems themselves write, such as an error text or an identifier.
+        Up to 8 terms; a record must contain every one, as a case-insensitive
+        substring anywhere in the full record. Use the words the source would
+        write: error text, an id, a component name. Leave out to match every
+        record that passes the other filters.
       sourcetype: >-
-        Keep only records of one log source type, named as the inventory and the rows name it. An unknown
-        value is answered with the values that exist.
+        Only records of this sourcetype, as the inventory names it. An unknown
+        value is answered with those that exist.
       host: >-
-        Keep only records from one host, named as the rows name it. An unknown value is answered with the
-        values that exist.
+        Only records from this host, as the inventory names it. An unknown
+        value is answered with those that exist.
       since: >-
-        Start of the time window; required. An ISO-8601 time, read as UTC unless it carries an offset; or a
-        span counted back from now, such as -30m, -6h or -2d (units s, m, h, d); or the word now. Start well
-        before the incident began when you need a baseline.
+        Start of the window: an ISO-8601 time with Z or an offset (a bare time
+        is UTC), a time relative to now such as -30m, -2h or -1d, or now.
       until: >-
-        End of the time window, in the same forms as `since`, and later than it. Defaults to now. A later
-        time is clamped to now, and the result says so.
+        End of the window, in the same forms as since. Defaults to now, and
+        is clamped to now.
       group_by: >-
-        Switches to a count table. `minute` gives one count per time bucket, zeros included, for onset and
-        baseline. `host` and `level` give one count per group, the largest groups first and the rest as one
-        row. `template` groups records by the shape of their message with the variable parts masked, which
-        shows a message that is new or whose rate has changed. `signal`, where offered, counts by tag with a
-        row for untagged records; a count built from tags has no handle and cannot be cited.
+        Return counts instead of rows: minute (a count per time bucket, zeros
+        included), host, level, template (the 20 most common message
+        patterns, with variable parts masked, and an other row), or signal
+        (by tag: this table has no handle and cannot be cited).
       bucket: >-
-        Width of the time bucket when `group_by` is `minute`: `1m`, the default, or `5m`. Ignored otherwise.
-        A window too long for the table is given wider buckets, and the result says so.
+        Bucket width for group_by=minute: 1m (the default) or 5m. A long
+        window widens the bucket and says so.
       limit: >-
-        How many records to return when `group_by` is not set, from 1 to 50. Defaults to 30.
+        Without group_by: how many records to return, 1 to 50, default 30.
       signal: >-
-        Keep only records tagged with this kind of signal. A tag is a search aid that a classifier added
-        only where it was confident, never evidence. A record can carry several tags or none, and many log
-        records carry none: they are left out by this filter though they may matter, and the value
-        `untagged`, where offered, selects exactly those. The footer says how many records matched without
-        the filter and how many of them are untagged. Look at them before calling anything absent.
+        Tag filter, a search aid and never evidence: only records a
+        classifier tagged with this signal (latency, errors, saturation,
+        availability, traffic, change, security, or routine for normal
+        operation), or untagged for those with no signal tag. A record can
+        carry several tags or none, and tags are applied only when the
+        classifier is confident, so many relevant records have none. A count
+        that uses this filter has no handle. The footer counts the records
+        that match without the filter and the untagged ones: look at them
+        before calling anything absent.
   query_metrics:
     description: >-
-      Returns one metric over a time window: up to 4 series, each rolled into at most 45 points, with gaps
-      kept as gaps. A summary gives the minimum, the maximum, runs of missing data and, where a monitor
-      watches exactly this query, the first point that crossed its warning or critical threshold. Use it to
-      see when a measure moved, by how much and against what baseline, so take a window that starts well
-      before the incident began. `metric` and `scope` must together select exactly one of the queries the
-      inventory lists; a miss is answered with the queries that exist for that metric name. The result
-      carries one handle for the series over this window, which is what to cite. Missing data is a finding
-      in its own right and is not the same as zero. A series may show a signal tag, which is a label and
-      not evidence.
+      Read one metric query over a window. Returns up to 4 series, each
+      merged to at most 45 points with missing values kept as gaps; for each
+      series its minimum, maximum, runs of missing data, and the first point
+      past each threshold of any monitor on exactly this query; and one
+      handle for the read. A point past a threshold is one value, not the
+      monitor firing: list_alerts says when a monitor fired. metric and scope
+      must select exactly one query the inventory lists; anything else is
+      answered with the queries that exist. Series beyond the first 4 are
+      named in the footer with their maxima.
     params:
       metric: >-
-        The aggregator and metric name exactly as the inventory prints them.
+        The aggregation and metric name, exactly as the inventory prints
+        them.
       scope: >-
-        The filter that picks the query: comma-separated tags exactly as the inventory prints them, in any
-        order. Adding one group tag selects that single series of a grouped query.
+        The query's tag filter as the inventory prints it, comma-separated.
+        Add a group tag to select a single series.
       since: >-
-        Start of the time window; required. An ISO-8601 time, read as UTC unless it carries an offset; or a
-        span counted back from now, such as -30m, -6h or -2d (units s, m, h, d); or the word now. Start well
-        before the incident began when you need a baseline.
+        Start of the window: an ISO-8601 time with Z or an offset (a bare time
+        is UTC), a time relative to now such as -30m, -2h or -1d, or now.
       until: >-
-        End of the time window, in the same forms as `since`, and later than it. Defaults to now. A later
-        time is clamped to now, and the result says so.
+        End of the window, in the same forms as since. Defaults to now, and
+        is clamped to now.
       rollup: >-
-        How native points are merged into each of the at most 45 points: `avg`, `max`, `min` or `sum`.
-        Defaults to the query's own aggregator, with a percentile merged as `max`. Choose `max` when a short
-        spike matters, because an average over a wide bucket can hide it.
+        How points are merged into buckets: avg, max, min or sum. Defaults to
+        the query's own aggregation, and to max for a percentile. A merged
+        sum is a total per bucket, not a level.
   list_changes:
     description: >-
-      Lists changes in a time window: pipeline builds and change requests side by side, oldest first. Each
-      row gives handle, kind, id, the configuration item or job, summary, version, change ticket, start,
-      end, state at now and requester. Rows are never joined to each other and never ranked, and nothing
-      here says that a change caused anything. Whether a build and a change request describe the same
-      change, and whether a change matters, is yours to establish from the records. A change is listed when
-      its span overlaps the window. One that has not started is marked `planned`, and a planned change has
-      not happened. A build that is still running shows no result. The commits under a build are listed as
-      pointers, which `get_record` opens. At most 30 rows; the footer says what was cut and how to narrow.
+      List pipeline builds and change requests whose span overlaps the
+      window, ordered by start: handle, kind, id, CI or job, summary,
+      version, change ticket, start, end, state at now and requester. A build
+      still running shows no result or duration, and a change that has not
+      started is marked planned. Builds and change requests are listed side
+      by side, never joined or ranked: whether one matters is yours to test,
+      and a change near onset is a candidate, not a cause. A build's commits
+      are listed as handles. Up to 30 rows.
     params:
       since: >-
-        Start of the time window; required. An ISO-8601 time, read as UTC unless it carries an offset; or a
-        span counted back from now, such as -30m, -6h or -2d (units s, m, h, d); or the word now. A change
-        can take effect long after it was made, so start well before the incident began.
+        Start of the window: an ISO-8601 time with Z or an offset (a bare time
+        is UTC), a time relative to now such as -30m, -2h or -1d, or now.
       until: >-
-        End of the time window, in the same forms as `since`, and later than it. Defaults to now. When it is
-        left out, changes scheduled to start after now are listed and marked planned; when it is given, they
-        are only counted in the footer.
+        End of the window, in the same forms as since; defaults to now. Left
+        out, changes planned after now are listed too; given, they are only
+        counted.
       text: >-
-        Keep only changes whose title or body contains this text. A case-insensitive substring, not a
-        pattern.
+        Only changes whose title or body contains this text, ignoring case.
       change_kind: >-
-        Keep only changes tagged with this kind of change. A tag is a search aid that a classifier added
-        only where it was confident, never evidence. A change can carry no tag, and one with no tag is left
-        out by this filter though it may matter; the value `untagged`, where offered, selects exactly those.
-        The footer says how many changes matched without the filter and how many of them are untagged. Look
-        at them before calling anything absent.
+        Tag filter, a search aid and never evidence: only changes a
+        classifier tagged with this kind (release, rollback, config, infra,
+        network, data, job), or untagged for those with no kind tag. Tags are
+        applied only when the classifier is confident, so many relevant
+        changes have none. The footer counts the changes that match without
+        the filter and the untagged ones: look at them before calling
+        anything absent.
   itsm_query:
     description: >-
-      Queries the service-desk tables as they stood at now: `incident` for incident tickets, current and
-      past; `journal` for the work notes and comments written on tickets; `user` and `group` for people and
-      teams. Rows come newest first. Every row prints its number or name, its short description and its
-      state, plus the fields you ask for. A filter is an exact match on a field's display value. Use it to
-      find the ticket for this incident and what has been recorded on it, earlier incidents on the same
-      component, and who a person or a group is. The journal entries under an incident are listed as
-      pointers, which `get_record` opens. The native query is echoed last.
+      Query the service desk as it stood at now: incidents, journal entries
+      (work notes and comments on incidents), users or groups, newest first.
+      Every row prints its number or name, short description and state;
+      fields adds others by name. A journal entry longer than 300 characters
+      is shortened and marked, and get_record returns it whole. An incident's
+      row lists its journal entries as handles. The native query is echoed.
     params:
       table: >-
-        Which table to query: `incident`, `journal`, `user` or `group`.
+        Which table: incident, journal, user or group.
       filters: >-
-        Up to 6 name-and-value pairs that must all hold. Each is an exact match on the field's display
-        value as the rows print it.
+        Up to 6 name and value pairs, all of which must match: a field name
+        and its display value, compared without regard to case. Journal
+        entries can be filtered by number, the number of their incident. An
+        unknown field name is answered with the table's field names.
       text: >-
-        Keep only rows whose title or body contains this text. A case-insensitive substring, not a pattern.
+        Only rows whose title or body contains this text, ignoring case.
       fields: >-
-        Up to 12 field names to print beside the number or name, short description and state, which always
-        print.
+        Up to 12 field names to print beside the defaults. A named field that
+        is empty prints (empty).
       limit: >-
-        How many rows to return, from 1 to 20. Defaults to 20.
+        How many rows to return, 1 to 20, default 20.
       signal: >-
-        Keep only incidents tagged with this kind of signal; it applies to the incident table. A tag is a
-        search aid that a classifier added only where it was confident, never evidence. An incident can
-        carry several tags or none, and one with no tag is left out by this filter though it may matter; the
-        value `untagged`, where offered, selects exactly those. The footer says how many rows matched
-        without the filter and how many of them are untagged. Look at them before calling anything absent.
+        Incidents only. Tag filter, a search aid and never evidence: only
+        incidents a classifier tagged with this signal (latency, errors,
+        saturation, availability, traffic, change, security, or routine for
+        normal operation), or untagged for those with no signal tag. An
+        incident can carry several tags or none, and tags are applied only
+        when the classifier is confident. The footer counts the incidents
+        that match without the filter and the untagged ones: look at them
+        before calling anything absent.
   search_knowledge:
     description: >-
-      Searches runbooks and knowledge pages, and the close notes and work notes of incidents, by keyword.
-      Returns ranked passages: handle, title, last updated and a snippet. A closed incident returns its
-      whole close note with its configuration item, category and close code. Use it for how a component is
-      meant to behave, for a documented procedure, and for whether this has happened before. Ranking is
-      plain keyword ranking: any word of the query can match, and the top hit is the best keyword match,
-      which is not always the right document, so read past it. A snippet is a shortened view, and
-      `get_record` returns the whole page. Two hits on one page share a handle. A page says what someone
-      believed when it was last updated, so check that date before relying on it.
+      Keyword search over runbooks, knowledge pages, and the close notes and
+      work notes of incidents. Returns ranked passages: handle, rank,
+      heading, what kind of passage it is, when it was last updated, and its
+      text. A passage over 600 characters is shown as a marked snippet, and
+      get_record returns the whole record. A closed incident returns its
+      whole close note with its CI, category and close code. Ranking is plain
+      keyword ranking with any word matching, so read past the first hit. A
+      past incident or runbook says where to look, not what happened this
+      time.
     params:
       query: >-
-        Keywords, from 1 to 300 characters. Words are matched one by one, so give the words a page would
-        contain, such as an error text, a component name or a symptom, and not a question.
+        1 to 300 characters. Words are matched one by one, any of them, and
+        punctuation is ignored. Use the words a document would contain:
+        component names, error text, the symptom.
       k: >-
-        How many passages to return, from 1 to 5. Defaults to 5.
+        How many passages to return, 1 to 5, default 5.
   get_topology:
     description: >-
-      Resolves a name to the components it may refer to, and shows what they depend on and who owns them.
-      Sources name the same component differently: a host name, a service name, an address, a monitoring
-      id. Given any such string, it returns the matching configuration items with each alias candidate and
-      the method by which it matched, so you can judge how far to trust the match. A name that matches
-      nothing is shown as unresolved, never guessed. For each matched item it gives the owner and whether
-      that owner is still active, the support group, the operational status and the external ids. Then it
-      gives relationships up to 2 hops: type, direction, status and the source that states each one. The
-      relationships come from several sources that can disagree, and the disagreement is left visible for
-      you to weigh. Use it to turn the entity on an alert or a log line into a component, to find what is
-      upstream and downstream of a suspect, and to find who is responsible for it. Who is on call now is a
-      separate question. At most 40 relationships.
+      Resolve a name to configuration items and walk their relationships.
+      For each match: every alias candidate and how it matched (exact, case,
+      domain stripped, pod suffix stripped, IP address, external id), the
+      owner and whether that owner is active, the support group, operational
+      status and external ids. Then edges up to hops away, each with type,
+      direction, status and the source that states it: CMDB relationships,
+      monitored entities, or service-call tags. A name that matches nothing,
+      or more than one item, stays unresolved and is shown as such. Sources
+      can disagree, and both are shown. Up to 40 edges, nearest first.
     params:
       entity: >-
-        Any name, id or address for the component, exactly as a row printed it.
+        A name as any record writes it: a service, host, pod, IP address, CI
+        name or external id.
       hops: >-
-        How far to follow relationships from the matched item: 1, the default, or 2. Two hops reaches the
-        dependencies of its dependencies and returns more rows.
+        How far to walk: 1 (the default) or 2.
   get_oncall:
     description: >-
-      Shows who is on call at now for one paging service or one escalation policy: the escalation levels in
-      order, the person on call at each, and how long a page waits before it escalates. With neither
-      argument it lists the services and policies that exist. Use it to name the person behind an action or
-      a page, since the owner on record for a component is not always the person on call. The end of a
-      shift is a scheduled time and is marked planned.
+      Who is on call at now. For a paging service or escalation policy: its
+      escalation levels, who holds each level at now, the escalation timeout,
+      and for a service its status derived at now. A level nobody holds is
+      named. With neither service nor policy, lists the services and
+      policies.
     params:
       service: >-
-        A paging service, by its name, id or handle. Give this or `policy`, not both.
+        A paging service by name, id or handle. Give this or policy, not
+        both.
       policy: >-
-        An escalation policy, by its name, id or handle. Give this or `service`, not both.
+        An escalation policy by name, id or handle. Give this or service, not
+        both.
   read_chat:
     description: >-
-      Reads chat messages in a time window: handle, UTC time, display name, the text with mentions resolved
-      to names, and the reply count at now. A message is never shortened. When the window holds more than
-      60 messages the newest are kept, and the footer says how many older ones were left out and how to
-      narrow. A thread's replies are listed as pointers on the message that starts it, and are shown when
-      you pass its `thread_ts`. Chat is where people say what they see, what they suspect and what they
-      did. Treat it as leads to check and as the record of human actions, never as proof of a cause.
+      Read chat messages in a window, oldest to newest: handle, UTC time,
+      display name, text with mentions resolved, and reply count at now. A
+      thread's replies are listed as pointers on its first message, with the
+      thread_ts that shows them. Messages are never shortened; when the
+      result is cut, the oldest messages are the ones left out. Up to 60
+      messages. Chat says what people saw, did and suspected: a lead to test,
+      never a causal link on its own. Times people mention are recollections;
+      the message's own time is the machine's.
     params:
       channel: >-
-        One channel by name, with or without a leading #. Left out, every channel that has a message is
-        read. An unknown name is answered with the channels that exist.
+        One channel by name, with or without #. Left out, every channel is
+        read.
       since: >-
-        Start of the time window; required. An ISO-8601 time, read as UTC unless it carries an offset; or a
-        span counted back from now, such as -30m, -6h or -2d (units s, m, h, d); or the word now.
+        Start of the window: an ISO-8601 time with Z or an offset (a bare time
+        is UTC), a time relative to now such as -30m, -2h or -1d, or now.
       until: >-
-        End of the time window, in the same forms as `since`, and later than it. Defaults to now. A later
-        time is clamped to now, and the result says so.
+        End of the window, in the same forms as since. Defaults to now, and
+        is clamped to now.
       text: >-
-        Keep only messages and replies that contain this text. A case-insensitive substring, not a pattern.
-        A reply that matches is returned as a row of its own.
+        Only messages that contain this text, ignoring case. Replies are
+        matched too, each as its own row.
       thread_ts: >-
-        Show the replies of one thread: the thread's `ts` exactly as printed on the message that starts it.
+        The ts of a thread's first message, as printed: returns that thread's
+        replies.
       act: >-
-        Keep only messages tagged with this kind of statement, such as an observation, a hypothesis or an
-        action someone took. A tag is a search aid that a classifier added only where it was confident,
-        never evidence. A message can carry several tags or none, and one with no tag is left out by this
-        filter though it may matter; the value `untagged`, where offered, selects exactly those, and
-        `automated` marks posts made by bots. The footer says how many messages matched without the filter
-        and how many of them are untagged. Look at them before calling anything absent.
+        Tag filter, a search aid and never evidence: only messages a
+        classifier tagged with this act (observation, hypothesis,
+        action_taken, action_proposed, question, status, social, or automated
+        for posts by bots and integrations), or untagged for those with no
+        act tag. A message can carry several tags or none, and tags are
+        applied only when the classifier is confident, so many relevant
+        messages have none. The footer counts the messages that match without
+        the filter and the untagged ones: look at them before calling
+        anything absent.
   check_status_page:
     description: >-
-      Shows an external provider's public status page as it was last published before now: the overall
-      indicator, its incidents and their updates. With no provider it lists the status pages that exist.
-      Use it to test whether a third party your systems depend on is reporting trouble. Weigh it with care
-      in both directions. A provider's page can lag the provider's trouble, so a healthy page is weak
-      evidence of health; and a provider incident explains yours only if the affected component and the
-      times match.
+      Read an external provider's public status page as last published
+      before now: its overall indicator, the components that are not
+      operational with a count of those that are, incidents with their
+      updates newest first, and scheduled maintenance. Long updates are
+      shortened and marked, and get_record on the snapshot returns the whole
+      page. With no provider, lists the known pages, which become citable
+      once read. A status page is the provider's own account and often lags
+      its problems, so an all-clear is weak evidence of health.
     params:
       provider: >-
-        The provider's name as the listing prints it. Left out, the known status pages are listed.
+        The provider's name or the page's name, ignoring case. Leave out to
+        list the pages.
   propose_action:
     description: >-
-      Proposes one action to the incident commander. It changes nothing. The proposal is shown to the
-      commander with your evidence, the commander approves, rejects or defers it, and the harness records
-      the decision in the report. Approval records a decision and does not mean the action has been carried
-      out, so never report an action as done and never look for its effect. Propose when the evidence on
-      the board supports the action and its target is specific. Every handle in `evidence` must be one a
-      tool has shown you, or the proposal is refused before anyone sees it. Say in the rationale what you
-      expect the action to achieve. A rejection comes back with the commander's reason: treat it as new
-      information, and do not propose the same action again unchanged.
+      Propose an operational step to the incident commander. Nothing is run:
+      the proposal is recorded and put to a person, who approves it, rejects
+      it with a reason, or defers it, and the report lists it with that
+      decision. Propose a step when the evidence supports it and someone
+      should decide on it now. Cite only rows a tool has shown: a proposal
+      citing anything else is refused before anyone sees it. Say in
+      rationale.expect what the step should change.
     params:
       kind: >-
-        The type of action, from a closed list drawn from standard incident-response practice. Choose the
-        most specific kind that fits. If none fits, the step belongs in the report's recommended actions and
-        not in a proposal.
+        The kind of step, from the closed list below; give the specifics in
+        target and params. Each line says when the kind fits and what it
+        costs.
       target: >-
-        The one thing the action applies to, named as the evidence names it: a service, a host, a change,
-        an alert, a ticket, a team or a person.
+        What the step acts on, named as the records name it: a service, host,
+        change, flag, provider, alert stream or team.
       params: >-
-        Whatever the action needs beyond its target, as name-and-value pairs: the version to return to, the
-        new value of a setting, how long, the message to send.
+        The specifics as name and value pairs, such as the version to return
+        to, a setting and its new value, or a duration.
       evidence: >-
-        Handles of the rows that justify the action, exactly as printed. At least one, and every one must
-        have been shown to you by a tool.
+        Handles of shown rows that justify the step.
   update_board:
     description: >-
-      Writes your current belief to the investigation board, which the incident commander watches and the
-      report's hypotheses are read from. Call it whenever a result moves a hypothesis, up or down. It is
-      free of the call budget, needs no approval and can share a turn with other calls. A board that goes
-      several rounds without a change is treated as a stalled investigation, and further reads are refused
-      until you record what the evidence shows or submit. Every write is validated: a handle no tool has
-      shown is refused with the list, a confidence above what the evidence allows is clamped and the result
-      says so, and a second leading hypothesis is refused.
+      Record what you now believe. Free and never gated: use it at the start
+      and whenever evidence moves a hypothesis. Hypotheses merge by id: give
+      only the fields that change, and a list you give replaces that list, so
+      write it as it should now stand. A new id creates a hypothesis and must
+      carry statement, role, status, subject, confidence and source; role and
+      source cannot change afterwards. Timeline rows and open questions are
+      added to the board's. Every handle must have been shown in this run. A
+      write that breaks a rule is refused with the reason, and the result
+      ends with the board's status line.
     params:
       hypotheses: >-
-        Hypotheses to create or change. For an id the board holds, send only the fields that change: a
-        field left out keeps its value, and a list you send replaces the list on the board, so send each
-        list as it should now stand. A new id creates a hypothesis, and must carry its statement, role,
-        status, subject, confidence and source.
+        Hypotheses to create or update, by id.
       timeline: >-
-        Timeline rows to add or correct: the events that matter to the story, each with its UTC time and
-        the rows that show it. Send only what is new or changed; rows already on the board stay.
+        Events to add to the board's timeline.
       open_questions: >-
-        Questions to add to the board: what the evidence so far cannot answer and that would change the
-        conclusion or the next action if answered.
+        Questions to add to the board's list.
   submit_report:
     description: >-
-      Submits the investigation report. It must be the only call in its turn. The report's hypotheses are
-      read from the board, so bring the board up to date first. The harness validates the report: every
-      handle must have been shown by a tool in this run, every claim must cite at least one, a leading
-      hypothesis needs support that is not chat, a rejected hypothesis needs rows against it, and every
-      alert stream the opening sweep listed needs a verdict. Findings come back as the result, with one
-      chance to fix them; after that, bad handles are dropped and the claims they leave bare are flagged.
-      An accepted report goes to an independent verifier. If the verifier asks for a revision, its verdict
-      comes back as this call's result and grants a few more calls before you submit again. The harness
-      adds the time, each hypothesis's source and history, and the record of proposed actions with their
-      decisions.
+      Submit the investigation's report. It ends the investigation, so it
+      must be the only call in its turn. Code checks it: every handle shown
+      in this run; every hypothesis, timeline row, action and do-not item
+      citing at least one handle; the leading hypothesis supported by a row
+      that is not chat; every rejected hypothesis with rows against it; a
+      report with no leading hypothesis carrying an open question. A report
+      that fails comes back once with what to fix. It may then come back once
+      from review, as this call's result, with claims to correct or a check
+      to run.
     params:
       summary: >-
-        What is happening, in a few sentences an incident commander can take in at a glance: what is
-        affected, the most likely cause and how sure you are, and what to do first. Cite handles inline,
-        exactly as printed, beside the statements they support. If there is no leading hypothesis, say so
-        plainly and say what is known.
+        What is happening, what most likely caused it and how sure you are,
+        in a few sentences, with handles inline exactly as printed.
       impact: >-
-        Who and what is affected, and who owns the response. Take every value from evidence. Where the
-        evidence does not say, write `unknown`; a guess here sends the incident to the wrong people.
+        Who and what is affected and who owns it, from the service desk,
+        topology and on-call records.
       hypotheses: >-
-        Last changes to hypotheses already on the board, in the same partial form as a board update: an id
-        the board holds, plus the fields that change. Every hypothesis on the board goes into the report
-        whether it is listed here or not. An id the board does not hold is an error, so create a hypothesis
-        on the board before you submit. Send an empty list when the board already stands as you want it.
+        A last update to the board, applied before the report is read from
+        it: ids the board holds, each with only the fields that change, or an
+        empty list if the board already stands as it should. If submit_report
+        is your only tool, give each hypothesis in full here.
       timeline: >-
-        The events that tell the story, oldest first: when the impact began, the changes, the state
-        changes and the human actions that bear on it, each with its UTC machine time and the rows that
-        show it. Leave out events that do not bear on the story.
+        The incident's key events in time order, written in full: the
+        report's timeline is this list.
       actions: >-
-        The recommendation: what to do now, ranked, most valuable first. Include an action you proposed
-        unless the commander rejected it. When the cause is not established, recommend the checks that
-        would settle it and the steps that are safe whatever the cause.
+        Your ranked recommendation, written in full, whether or not each step
+        was proposed: stop the harm first, then confirm, then fix.
       do_not: >-
-        What not to do, and why: tempting or suggested actions that the evidence argues against, and
-        actions the commander rejected. An empty list is right only when nothing of the kind came up.
+        Steps someone might reasonably take that the evidence says would do
+        harm or waste time.
       alerts: >-
-        One verdict for every alert stream the opening sweep listed, by the stream's handle. This is the
-        answer to which alerts matter. A stream left without a verdict is recorded as unassessed.
+        A verdict for every alert stream the opening sweep listed, and for any
+        other stream you assessed, by the stream row's handle.
       open_questions: >-
-        What is still unknown and would change the conclusion or the next action if answered. Write the
-        list in full as it should stand in the report, leaving out questions answered since. A report with
-        no leading hypothesis needs at least one.
+        What is still unknown, written in full, each a question a person or a
+        call could answer.
       stakeholder_update: >-
-        A status update ready to send to people outside the response. Plain language, no handles and no
-        internal jargon. Say what is known and what is being done, and name a cause only when the leading
-        hypothesis is at least supported, because a retracted cause costs more trust than a late one.
+        An update for people outside the response, in plain words and without
+        handles. State only what is confirmed.
   submit_verdict:
     description: >-
-      Returns a verifier's verdict on a submitted report. It is the only way a verifier pass answers, and
-      it is called once. The claim-support pass fills `claims`. The contrarian pass fills `alternatives`
-      and `ignored`. Both set `overall`.
+      Return your review of the report. Call it once, as your only call.
     params:
       claims: >-
-        One verdict for each claim in the input, by its id. Filled by the claim-support pass and left empty
-        by the contrarian pass.
+        One verdict for each claim id in the packets. Leave empty in the
+        contrarian pass.
       alternatives: >-
-        Up to three alternative explanations that the evidence fits, strongest first. Filled by the
-        contrarian pass and left empty by the claim-support pass.
+        Up to three alternative explanations the evidence fits, strongest
+        first. Leave empty in the claim-support pass.
       ignored: >-
-        Handles of rows that count against the leading hypothesis and that the report neither lists as
-        evidence against it nor explains. Only handles present in the input. Filled by the contrarian pass.
+        Handles of shown rows that cut against the leading hypothesis or
+        support an alternative, and that the report does not address. Leave
+        empty in the claim-support pass.
       overall: >-
-        `revise` when the report should not stand as submitted: a claim or an action of the leading
-        hypothesis is unsupported or contradicted, or an alternative fits the evidence equally well and has
-        a check that would tell the two apart. Otherwise `pass`.
+        revise if the report should go back to the investigator under your
+        pass's rule, otherwise pass. Code applies the rule itself.
 objects:
   Rationale:
     tests: >-
-      The hypothesis this call tests, by its board id, and the question the call answers about it. For a
-      call that tests no hypothesis, such as finding an owner, say what the report needs it for.
+      The hypothesis this call tests, by id, and its claim in a few words; or
+      the open question it answers.
     expect: >-
-      What you expect the result to show if that hypothesis is true, concretely enough that the result
-      could contradict it. For an action, the effect you expect it to have if it is carried out.
+      What the result should show if the claim holds, and what would count
+      against it. For an action, what should change if it works.
   Pair:
     name: >-
-      The name of the field, parameter or argument, spelled exactly as the tool or the record spells it.
+      A field, setting or argument name.
     value: >-
-      Its value, as text. A number or a list is written as its JSON text.
+      Its value as text. A value that is not text, such as a number or a
+      list, as its JSON text.
   HypothesisFields:
     id: >-
-      A short stable identifier that you choose when you create the hypothesis, such as h1. Keep it for the
-      life of the claim, across updates and across later looks at the same incident, and never reuse it
-      for a different claim.
+      A short, stable id such as h1, kept across updates and later looks, and
+      never reused for a different claim.
     statement: >-
-      The claim in one sentence, specific enough to be proved wrong: what happened to which thing, and by
-      what mechanism. Sharpen the wording as you learn more. A claim that turns into a different claim
-      needs a new id.
+      The claim in one sentence: what the subject did and what it led to.
     role: >-
-      The part this hypothesis's subject plays in the incident, as you now judge it. `cause`: the fault
-      that explains the impact. `trigger`: the event that set the cause off when it did. `contributing`: a
-      condition that made the incident possible or worse without causing it alone. `symptom`: an effect of
-      the cause, however alarming it looks. `unrelated`: real, but not part of this incident. Change the
-      role when the evidence changes your judgement.
+      What the claim says the subject is in this incident, fixed when the
+      hypothesis is created: cause (its fault is why the incident happens),
+      trigger (the event that set the cause off), contributing (made it
+      worse, wider or longer), symptom (an effect, not the origin) or
+      unrelated (happening, but not part of this incident).
     status: >-
-      `leading`: the one explanation you would act on now; at most one hypothesis, and it needs support
-      that is not chat. `open`: still standing, either not yet tested or accepted as a link in the story,
-      such as a trigger or a contributing factor. `rejected`: the evidence clears it as an explanation; it
-      needs rows in `against`. Leave no hypothesis leading when none has earned it.
+      Whether the claim stands: leading (the one explanation you would act on
+      now; at most one), open (not yet decided, or supported but not the
+      lead) or rejected (cleared by evidence, which goes in against).
     subject: >-
-      The one entity this hypothesis blames or is about: a service, a host, a change, a dependency, an
-      external provider. Name it as the service inventory names it once the name has been resolved, and
-      until then exactly as the evidence prints it.
+      The one entity the claim is about, and for a cause the one it blames,
+      named as the records name it. A change goes in changes, not here.
     entities: >-
-      Every entity the hypothesis touches, the subject included: what it depends on, what it feeds, what
-      shows its effects. Named the same way as the subject. The whole list as it should now stand.
+      Every entity the claim touches, named as the records name them.
     changes: >-
-      Handles of the change records this hypothesis implicates: builds and change requests. The whole
-      list as it should now stand, and empty when it implicates none. List a change only when its record
-      has been shown to you and it comes before what it is said to explain.
+      Handles of the change or build records the claim implicates.
     confidence: >-
-      How far the evidence on the board supports the statement, from 0 to 1. 0.2 speculative: only stated
-      or chat evidence. 0.4 consistent: machine evidence fits, but nothing discriminating has been
-      checked. 0.6 supported: one discriminating check passed, and the cause comes before the effect. 0.8
-      strong: independent sources agree, and the rivals have evidence against them. Lower it when evidence
-      turns against the claim. A value the evidence does not allow is clamped, and the result says so.
+      0 to 1, by the rubric: 0.2 stated or chat evidence only; 0.4 machine
+      evidence fits; 0.6 a discriminating check passed and time order holds;
+      0.8 independent sources agree and the rivals have rows against them.
+      Clamped to 0.5 without support that is not chat.
     support: >-
-      Handles of rows that count for the statement, exactly as printed. The whole list as it should now
-      stand. Chat messages and notes may be listed, but a hypothesis supported only by them is held at 0.5
-      or below and cannot lead.
+      Handles of shown rows that support the claim, as the list should now
+      stand.
     against: >-
-      Handles of rows that count against the statement, exactly as printed. The whole list as it should
-      now stand. Needed on every rejected hypothesis, and on every rival cause before the board is ready.
-      List evidence against the leading hypothesis here too: the commander should see it from you first.
+      Handles of shown rows that cut against the claim, as the list should
+      now stand. A rejected hypothesis needs at least one.
   HypothesisUpdate:
     source: >-
-      `stated` when someone else put the theory forward, in the trigger, a chat message, a ticket or a
-      note. `derived` when you formed it from the evidence. Set once, when the hypothesis is created; it
-      cannot change afterwards.
+      stated if someone put the claim forward (in the trigger, chat, a ticket
+      or a note); derived if you formed it from the evidence. Fixed when the
+      hypothesis is created.
     because: >-
-      Handles of the rows that caused this change, exactly as printed. They become the reason recorded in
-      the board's history for this update.
+      Handles of the rows that moved the hypothesis in this update.
     discriminating: >-
-      Handles of rows that pass a discriminating check for this hypothesis: evidence you would expect to
-      exist only if it were true, and not under its rivals. List them in `support` as well. The whole list
-      as it should now stand. The leading hypothesis needs at least one that is not chat before the board
-      is ready.
+      Handles of shown rows, not chat, that would exist only if the claim
+      were true: the checks it has passed.
   TimelineRow:
     t_utc: >-
-      When the event happened, as an ISO-8601 UTC time, taken from the machine time on the row that shows
-      it and not from when someone mentioned it.
+      When it happened, as an ISO-8601 UTC time taken from the machine
+      record.
     event: >-
-      What happened, in one line that names the entity. One event per row.
+      What happened, in one line.
     evidence: >-
-      Handles of the rows that show the event at that time, exactly as printed. At least one.
+      Handles of the rows that show it.
   Impact:
     business_service: >-
-      The business service whose users are affected, named as the service inventory names it. `unknown`
-      if the evidence does not say.
+      The business service affected, as the service desk or CMDB names it.
     cis: >-
-      The configuration items affected, named as the service inventory names them: the subject of the
-      leading hypothesis first, then those degraded as a consequence.
+      The configuration items affected, as the CMDB names them.
     priority: >-
-      The priority you suggest for the incident, with the impact and urgency it rests on.
+      The priority you suggest, with the impact and urgency behind it.
     assignment_group: >-
-      The support group that should own the incident: the group responsible for the subject of the leading
-      hypothesis according to the ownership records. It can differ from the group the ticket sits with
-      now. With no leading hypothesis, the group that holds the ticket.
+      The group that should own the incident, as the service desk names it.
     oncall: >-
-      Who is on call now for that group, by name, taken from the on-call schedule at now. `unknown` if
-      you did not look it up.
+      Who is on call for that service or group now, from the on-call
+      records; unknown if you did not look it up.
     customer: >-
-      The effect on customers as the evidence shows it: what they cannot do or what is degraded, and for
-      whom or how many where a record says. `unknown` if no row shows a customer effect.
+      The effect on customers as the evidence shows it, and for whom where a
+      record says.
   Priority:
     suggested: >-
-      The suggested priority, on the scale the incident records in this environment use.
+      The priority you suggest from impact and urgency, on the scale the
+      service desk's own incidents use.
     impact: >-
-      How widely the service is affected, on the scale the incident records use.
+      How widely the business is affected, on the desk's scale, with the
+      reason in a few words.
     urgency: >-
-      How quickly it must be dealt with before the harm grows, on the scale the incident records use.
+      How quickly it must be resolved, on the desk's scale, with the reason
+      in a few words.
   Action:
     rank: >-
-      The order to act in, from 1. Lead with what reduces the impact soonest at least risk: a reversible
-      mitigation ranks above a fix that depends on the cause being confirmed.
+      The order to do it in, from 1.
     action: >-
-      One concrete step on a named target, specific enough to carry out without asking what you meant,
-      with the sign that would show it worked. When the cause is not established, the check that would
-      settle it is a valid action.
+      One concrete step, naming what it acts on.
     owner: >-
-      The team or person who should do it, taken from ownership and on-call evidence. An owner the records
-      mark as inactive cannot act, so name who is on call for the responsible group. `unknown` if the
-      evidence does not say.
+      Who should do it, as the records name them: an assignment group, a
+      team, or the person on call.
     evidence: >-
-      Handles of the rows that justify the action, exactly as printed. At least one.
+      Handles of the rows that justify it.
   DoNot:
     action: >-
-      A tempting or suggested step that should not be taken now: a fix aimed at a symptom or at a rejected
-      hypothesis, a step that would destroy evidence or widen the impact, or one the commander rejected.
+      The step not to take now.
     why: >-
-      What the evidence shows that makes it the wrong step, in one or two sentences.
+      What the evidence says it would do, or why it would not help.
     evidence: >-
-      Handles of the rows that show it, exactly as printed. For an action the commander rejected, the
-      handle of the note that carries the reason.
+      Handles of the rows that show it.
   AlertVerdict:
     handle: >-
-      The alert stream's handle, exactly as the alert listing printed it at the start of the stream's row.
+      The alert stream's handle, as its list_alerts row printed it.
     verdict: >-
-      `this_incident`: the alert is part of the incident under investigation, as its cause or as an effect
-      of it. `other_incident`: a real problem, but a different one, which still needs an owner of its own.
-      `noise`: no real problem behind it now, such as a flapping, stale, duplicate, test or routine alert.
-      Decide from when it began, which entity it is on and whether the leading hypothesis explains it, not
-      from its severity or its title.
+      this_incident: part of this incident, as cause or symptom.
+      other_incident: a real problem, but a separate one. noise: no real
+      problem behind it, such as a routine check, a test or a known false
+      alarm.
   StakeholderUpdate:
     status: >-
-      Where the response stands, in one sentence: for example still investigating, cause identified,
-      mitigation under way, or recovered and being watched.
+      Where the incident stands (investigating, identified, monitoring or
+      resolved) and what that means now, in one line.
     customer_impact: >-
-      What customers are experiencing, in their terms: what does not work or is slow, not which component
-      failed. Say so plainly if no customer effect has been seen.
+      What customers notice, in their terms, and since when.
     scope: >-
-      How far the impact reaches: which services, regions or groups of users, how many where the evidence
-      gives a number, and since when in UTC.
+      Who and what is affected, and what is not.
     changed_since_last: >-
-      What is new since the previous update. On a first look, say that this is the first update. On a
-      later look, say what has changed since the earlier board.
+      What is new since the last update; on a first update, say that it is
+      the first.
     next_steps: >-
-      What the responders are doing next, and what they are waiting on.
+      What the responders are doing next.
     next_update_at: >-
-      When the next update will be sent, as an ISO-8601 UTC time later than now. Sooner for a severe
-      incident with customer impact, later for a contained one.
+      When the next update will go out, as a UTC time after now; commonly 30
+      minutes ahead while customers are affected.
   ClaimVerdict:
     id: >-
-      The claim's id exactly as the input gives it: `h:` for a hypothesis, `t:` for a timeline row, `a:`
-      for an action, `d:` for a do-not item.
+      The claim's id, as the packet gives it.
     verdict: >-
-      `supported`: the cited rows show what the claim says, all of it. `partial`: they show part of it, and
-      the claim goes further than they do in scope, size, timing or cause. `unsupported`: they do not show
-      it, even if they are on the same subject. `contradicted`: a row says otherwise.
+      supported: the cited rows show it. partial: they show part of it, and
+      the rest is inference or missing. unsupported: they do not show it.
+      contradicted: a row shows the opposite.
     quote: >-
-      The words that decide the verdict, copied exactly from a row. For `unsupported`, the closest thing
-      the rows do say. Empty only when the claim cites no row.
+      The shortest exact text from a row that decides the verdict. For
+      unsupported, the words of the claim that no row carries.
     handle: >-
-      The handle of the row the quote comes from, exactly as printed.
+      The handle of the row the quote comes from; left out when the quote is
+      from the claim.
   Alternative:
     statement: >-
-      The alternative explanation in one or two sentences: what it blames, by what mechanism, and what the
-      check would show if it is right.
+      The alternative explanation as one claim, then what the check would
+      show if it were true.
     fit: >-
-      `equal` if nothing in the evidence shown tells this alternative apart from the leading hypothesis.
-      `weaker` if it fits most of the evidence, but a shown row counts against it or it leaves unexplained
-      something the leading hypothesis explains.
+      equal: the rows shown fit it as well as the leading hypothesis. weaker:
+      it fits, but some row favours the leading hypothesis.
     check: >-
-      One read call whose result would differ depending on whether this alternative or the leading
-      hypothesis is true.
+      One read call whose result would tell this alternative from the
+      leading hypothesis.
   Check:
     tool: >-
-      The name of one read tool the investigator can call. Never an action and never a board write.
+      The read tool's name, as the review prompt lists it.
     args: >-
-      The call's arguments as name-and-value pairs, complete enough to run as written: the window, the
-      filters, the handle. Leave out the rationale.
+      Its arguments as name and value pairs, without rationale or tag inputs.
+      A value that is not text, as its JSON text.
 action_kinds:
-  rollback_change: >-
-    Return a release, a configuration change or an infrastructure change to its last known-good state.
-    Fits when one specific change is implicated and reverting it is safe. The target is the change; give
-    the version or state to return to.
   halt_change: >-
-    Pause or cancel a change that is in progress or scheduled: a rollout, a pipeline run, a planned change
-    request, or every change to one component for a time. Fits when a change may be making things worse,
-    or would disturb the investigation.
-  restart_service: >-
-    Restart or recycle the processes or instances of one service. Fits when the fault lies in running
-    state that a restart clears. It destroys in-memory evidence, so collect diagnostics first while the
-    cause is not established.
-  scale_capacity: >-
-    Add capacity to one component: more instances, or larger ones. Fits when legitimate demand exceeds
-    what the component can serve.
-  change_config: >-
-    Apply a forward change to one setting: a limit, a timeout, a pool size, a threshold or a routing rule.
-    Fits when a setting, and not code or capacity, is what is wrong. Give the setting and its new value.
+    Pause or stop a rollout, deployment or scheduled change that has not
+    finished, and hold further changes to the affected components. Fits when
+    a change is in progress or due during the incident. Cheap and reversible;
+    it stops things getting worse but repairs nothing already broken.
+  rollback_change: >-
+    Return a component to its last known good version or configuration by
+    reverting a change. Fits when a change came before onset on the affected
+    component and evidence ties the symptom to it. Often the fastest safe
+    mitigation; name the version to return to, and check the change can be
+    reversed, since some, such as data migrations, cannot.
   toggle_feature_flag: >-
-    Turn one feature flag or kill switch off or on. Fits when a single feature can be disabled to stop the
-    harm without a deployment.
+    Turn a feature flag off or on. Fits when evidence implicates a feature
+    behind a flag. Usually the quickest and most reversible mitigation; name
+    the flag and the state to set.
   failover: >-
-    Move traffic or the active role away from an unhealthy instance, zone, region or primary to a healthy
-    one. Fits when the fault is confined to what is being left and the destination is shown to be healthy.
-  shed_load: >-
-    Reduce demand on one component across the board: limit request rates, queue work, or switch off
-    non-essential work so that essential work survives. Fits when a component is overloaded and capacity
-    cannot be added in time.
-  block_source: >-
-    Block or throttle one identified source of harmful demand: a client, an address, a credential, or a
-    request or query pattern. Fits when the evidence singles that source out.
+    Move traffic or the primary role to a standby, replica, zone or alternate
+    provider. Fits when one instance, zone or provider is failing and a
+    healthy alternative exists. Disruptive and sometimes hard to undo;
+    confirm the target is healthy and current first.
   isolate_component: >-
-    Take one faulty instance, host or node out of service while leaving it running for diagnosis. Fits
-    when the fault is confined to that unit and its peers are healthy.
+    Take one instance, host, node or route out of rotation, keeping it for
+    inspection. Fits when part of a fleet misbehaves and the rest is healthy.
+    Reduces capacity, and keeps the evidence.
+  shed_load: >-
+    Throttle, rate-limit, queue or drop lower-priority traffic or work to
+    protect the core path. Fits when overload is the problem or is making it
+    worse, as with a surge or a retry storm. Deliberately degrades some users
+    to protect the rest; say whom.
+  block_source: >-
+    Block or rate-limit one client, address, token or caller. Fits when a
+    single source sends abusive, malformed or runaway traffic. May block a
+    legitimate customer; cite the rows that identify the source.
   stop_workload: >-
-    Pause or kill one runaway unit of work, such as a job, a query or a batch, without restarting what
-    hosts it. Fits when one workload is consuming a resource that others share.
-  restore_data: >-
-    Restore data to an earlier good state from a backup, a snapshot or a replay. Fits when the data itself
-    is wrong or lost. Give the point to restore to and what would be lost by going back to it.
+    Stop or pause a job, batch, consumer, query or session that is consuming
+    shared resources. Fits when one workload is starving others. Its work
+    must later be resumed or redone; check that it is safe to interrupt.
+  scale_capacity: >-
+    Add instances, resources or headroom to a component. Fits when demand
+    exceeds capacity while each request still behaves normally. Does not fix
+    a defect, and scaling a component that fails for another reason can push
+    more load onto a struggling dependency.
+  restart_service: >-
+    Restart a process, service or its instances. Fits when a component is
+    stuck in a bad state that a fresh start clears, and the cause is not
+    upstream of it. Brief disruption; the symptom returns if the cause lies
+    elsewhere, and a restart destroys in-memory evidence, so collect
+    diagnostics first when the cause is unclear.
+  change_config: >-
+    Change one runtime setting, such as a limit, timeout, size or threshold,
+    without a deploy. Fits when evidence points at a specific setting. Name
+    the setting, its current value and the new one; an untested setting
+    change is itself a change during an incident.
+  clear_cache: >-
+    Clear or invalidate a cache that holds bad or stale data. Fits when wrong
+    data is being served from a cache. Can send a surge of load to the
+    system behind the cache, so stage it where possible.
   renew_credential: >-
-    Renew, rotate or reissue a certificate, a key, a token or a secret. Fits when a credential that has
-    expired, been revoked or leaked is the fault.
+    Renew, rotate or reissue a certificate, secret, key or token that has
+    expired or been revoked. Fits when authentication or TLS failures begin
+    at an expiry or rotation time. Every consumer of the credential must pick
+    up the new one.
+  restore_data: >-
+    Restore or repair data from a backup, a replica or a known good state.
+    Fits when data was lost or corrupted. Slow, may lose recent writes, and
+    needs the data owner's approval.
+  deploy_fix: >-
+    Ship a corrective change forward instead of reverting. Fits only when a
+    rollback is impossible or worse and the fix is small and understood.
+    Slower and riskier than a rollback, because it adds a new change to the
+    incident.
   collect_diagnostics: >-
-    Capture state from a live system that the read tools cannot show and that a mitigation would destroy:
-    a dump, a trace, a snapshot. Fits before a restart or a failover while the cause is not established.
+    Capture evidence that would otherwise be lost, such as thread or heap
+    dumps, process state, verbose logs or packet captures, before a restart
+    or failover. Fits when the cause is unclear and a disruptive mitigation
+    is about to destroy the evidence. Usually cheap; may pause a process
+    briefly.
   run_runbook_step: >-
-    Carry out one step that a runbook or knowledge page prescribes, when no other kind fits. Cite the
-    passage in the evidence and name the step.
+    Carry out a named step from a runbook or knowledge article. Fits when a
+    documented procedure matches this incident's evidence, not just its
+    symptoms. Cite the runbook's handle and name the step.
   page_responder: >-
-    Page or escalate to a person or a team: the on-call owner of the affected component, the next
-    escalation level, or a specialist. Fits when the owner is not yet engaged or a page has gone
-    unanswered.
+    Page or escalate to a person or team. Fits when the owner of the
+    implicated component, a needed specialist or a decision-maker is not yet
+    engaged. Name whom, as the on-call or service desk records name them,
+    and why now.
   contact_provider: >-
-    Open or escalate a case with an external provider or vendor. Fits when the evidence places the fault
-    on their side.
+    Open or escalate a case with an external provider. Fits when evidence
+    implicates a third-party service or its status page reports a problem.
+    Providers answer slowly, so start early and keep mitigating internally
+    in parallel.
   update_incident_record: >-
-    Change the incident's record: its priority, its assignment group, its affected service or its state,
-    or link it to a related record. Fits when the evidence shows the record is wrong, for example when it
-    is assigned to a group that does not own the cause.
+    Change the incident record: its priority, assignment group, affected CIs,
+    or a work note. Fits when the record no longer matches the evidence.
+    Cheap, and keeps routing and reporting right.
   post_status_update: >-
-    Send an update to stakeholders or customers through the incident's communication channel or a public
-    status page. Fits when the impact, the scope or the status has changed since the last update.
+    Publish an update to stakeholders or the status page. Fits when
+    customers or internal stakeholders are affected and the last update is
+    missing, stale or wrong. State only what is confirmed.
   silence_alert: >-
-    Mute one alert for a bounded time. Fits when the alert is established as noise or as a duplicate and
-    is drowning out others. Give the duration, and never silence an alert whose cause is unexplained.
+    Mute an alert stream for a fixed time. Fits only for a stream judged
+    noise or already handled, to cut distraction. Never for a stream tied to
+    this incident; always give an expiry.

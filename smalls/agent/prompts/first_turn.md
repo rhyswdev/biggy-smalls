@@ -1,37 +1,28 @@
-## Time now
+A new look at a production incident. Each section below comes from the harness, except the trigger, which is what the responders asked, quoted as given.
 
+## Now
 {now}
 
-Everything you can see is as it stood at this moment. No tool shows anything later, and a relative time such as -30m counts back from it.
+Every tool answers as of this moment, and nothing after it exists yet. Relative times such as -30m or -2h count back from it.
 
-## Sources
-
-This inventory lists what exists to query. A handle in it is a pointer: fetch it before you cite it. A tag count beside a source is a search aid, not a finding.
-
-<inventory>
+## What you can query
 {inventory}
-</inventory>
+
+This lists what exists; it is not evidence. Pass names exactly as listed: a metric with its scope, a sourcetype, a host, a channel. A handle listed here can be cited only after a tool has shown its content.
 
 ## Trigger
-
-This is what started the investigation, as it was written. A cause it names or implies is a hypothesis to test, with source `stated`, not a fact to confirm.
-
-<trigger>
 {trigger}
-</trigger>
+
+Answer what it asks. A cause it names, or asks you to confirm, is a stated hypothesis to test like any other.
 
 ## Budget
-
 {budget}
 
-## Earlier board
+Reads and actions count when they run. Board updates, the report, repeats and refused calls are free.
 
-If this incident was investigated at an earlier time, the board from that look is below, and its hypotheses are already on your board under the same ids. Re-test each against what has become visible since. If nothing is below, this is the first look.
-
-<earlier_board>
+## Board carried in
 {prior_board}
-</earlier_board>
 
-## What happens next
+If this says none, your board starts empty. Otherwise these hypotheses are already on your board under these ids: update them by id rather than adding duplicates. A hypothesis marked re-test comes from an earlier look at this incident, and its conclusion is a hypothesis to test again against what has become known since, not a finding. The rows listed with it were served again for this run and can be cited, but they count toward ready only once a call of yours shows them. A carried hypothesis that still leads must cite in its support at least one record that became known after the earlier look.
 
-The next message holds the opening sweep the harness has already run: what is alerting, what changed, and recent chat. Read it. Then, in your first turn, put the stated theories and at least one rival of your own on the board, and make your first round of calls.
+The opening sweep follows in the next message: the alert streams, changes and recent chat the harness read before your first turn. Start from it.
