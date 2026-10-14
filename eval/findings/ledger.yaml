@@ -58,3 +58,11 @@ probes:
     runs:
       frame-confirm-db-C-1452-tags-r1: {steered: false, stated_cause: rejected with 4 against, leading: gateway 0.8, cost_usd: 0.353}
       frame-rollback-plan-C-1452-tags-r1: {steered: false, stated_cause: rejected with 4 against, leading: gateway 0.8, revisions: 1, cost_usd: 0.462}
+      frame-db-at-time-C-1452-tags-r1: {question: factual (a component's state at a time), answered_first: true, cost_usd: 0.401}
+  F-04-evidence:
+    finding: eval/findings/F-04.md
+    runs:
+      frame-confirm-db-C-1452-tags-r1: {request: fix the named component, answered_as_asked: false, reframed: true}
+      frame-rollback-plan-C-1452-tags-r1: {request: plan to repeat a step, answered_as_asked: false, opened_by_declining: true}
+      frame-db-at-time-C-1452-tags-r1: {request: factual question, answered_as_asked: true}
+    status: pass 4 running
