@@ -271,9 +271,9 @@ all_supported = claims_script()
 no_alternative = contrarian_script()
 
 
-def test_both_verifier_profiles_are_config_and_a_missing_client_says_what_to_install(cfg, monkeypatch):
-    """A live run takes the claim-support and contrarian profiles from config: the cheaper tier of the same
-    provider, or another provider. Models are stubbed here, so nothing goes live."""
+def test_both_verifier_passes_take_their_roles_from_the_set_and_a_missing_client_says_what_to_install(cfg, monkeypatch):
+    """A live run takes the claim-support and contrarian passes' models from its set's `claims` and `contrarian`
+    roles (docs/decisions/eval-loop.md, V5). Models are stubbed here, so nothing goes live."""
     from smalls.agent import runner as runner_module
     from smalls.agent.models import ScriptedChatModel
 
@@ -286,19 +286,18 @@ def test_both_verifier_profiles_are_config_and_a_missing_client_says_what_to_ins
         return ScriptedChatModel(script=fixture_script.turn), {}
 
     monkeypatch.setattr(runner_module, "make_model", fake)
-    live = replace(cfg, investigator=cfg.profiles["anthropic"])
-    assert (live.verifier["claims_profile"], live.verifier["contrarian_profile"]) == ("anthropic-small", "anthropic")      # the default pair
+    p = cfg.profiles
+    live = replace(cfg, investigator=p["anthropic"], roles={**cfg.roles, "investigator": p["anthropic"], "claims": p["anthropic-small"],
+                                                            "contrarian": p["anthropic"]})
     r = Runner(live, module_toolbox("fixture_registry"), "profiles")
     assert r.verifier_profiles == {"claims": "anthropic-small", "contrarian": "anthropic"} and set(r.verify) == {"claims", "contrarian", "recheck", "digest_tokens"}
-    assert r.verify["recheck"] is r.verify["claims"] and asked == ["anthropic", "anthropic-small", "anthropic"]           # the re-check is the cheap tier
+    assert r.verify["recheck"] is r.verify["claims"] and asked == ["anthropic", "anthropic-small", "anthropic"]           # the re-check is claim support
     r.close()
-    cut = Runner(replace(live, verifier={**live.verifier, "contrarian_profile": ""}), module_toolbox("fixture_registry"), "cut")
-    assert cut.verifier_profiles == {"claims": "anthropic-small"}                    # an empty profile cuts that pass
+    cut = Runner(replace(live, roles={**live.roles, "contrarian": None}), module_toolbox("fixture_registry"), "cut")
+    assert cut.verifier_profiles == {"claims": "anthropic-small"}                    # an empty role cuts that pass
     cut.close()
     with pytest.raises(SystemExit, match="needs a client that is not installed"):
-        Runner(replace(live, verifier={**live.verifier, "contrarian_profile": "openai"}), module_toolbox("fixture_registry"), "cross")
-    with pytest.raises(SystemExit, match="names no profile"):
-        Runner(replace(live, verifier={**live.verifier, "claims_profile": "no-such"}), module_toolbox("fixture_registry"), "bad")
+        Runner(replace(live, roles={**live.roles, "contrarian": p["openai"]}), module_toolbox("fixture_registry"), "cross")
 
 
 def test_the_cache_warning_watches_the_investigator_and_not_the_verifier(cfg):

@@ -156,8 +156,8 @@ class Runner:
 
     def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
         """The verifier's passes, each a model bound to `submit_verdict` with its prompt, and the profile
-        behind each. A live run takes the two profiles the config names; either may be left empty to cut
-        that pass. A scripted run verifies only with the scripts it was given, so a run that brings none
+        behind each. A live run takes the `claims` and `contrarian` roles of its set; a set may leave either
+        empty to cut that pass. A scripted run verifies only with the scripts it was given, so a run that brings none
         is not verified. A single-call run never is."""
         cfg = self.cfg
         if not cfg.verifier.get("enabled") or self.single_call:
@@ -169,20 +169,17 @@ class Runner:
                 model, bind = make_model(spec, timeout_s=cfg.timeout_s)
             except ImportError as missing:
                 raise SystemExit(f"the verifier profile {spec.profile!r} needs a client that is not installed ({missing.name}). "
-                                 "Install its dependency group, or name another profile under [verifier].") from None
+                                 "Install it, or give that role another profile in the set.") from None
             return model.bind_tools(provider_tools(definition, spec.provider, strict=bool(spec.params.get("strict_tools", True))), **bind)
 
         passes: dict[str, Any] = {}
         profiles: dict[str, str] = {}
-        for which, key in ((verifier.CLAIMS, "claims_profile"), (verifier.CONTRARIAN, "contrarian_profile")):
+        for which in (verifier.CLAIMS, verifier.CONTRARIAN):
             if self.spec.provider == SCRIPTED:
                 script = self.verifier_scripts.get(which)
                 spec = self.spec.with_params(script=script) if script else None
             else:
-                name = cfg.verifier.get(key)
-                if name and name not in cfg.profiles:
-                    raise SystemExit(f"[verifier] {key} names no profile: {name!r}")
-                spec = cfg.profiles[name] if name else None
+                spec = cfg.role(which)
             if spec is not None:
                 passes[which] = (bound(spec), prompts.load(f"verifier_{which}"))
                 profiles[which] = spec.profile

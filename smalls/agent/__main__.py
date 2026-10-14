@@ -127,7 +127,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     from smalls.agent.render import Renderer, interactive_decider
     from smalls.agent.runner import Runner
 
-    cfg = load_config(profile=args.profile, interactive=args.interactive)
+    cfg = load_config(profile=args.profile, interactive=args.interactive, set_name=args.set, roles=args.role, effort=args.effort)
     _check_placeholders(cfg.investigator.provider)
     trigger = Path(args.trigger_file).read_text(encoding="utf-8").strip() if args.trigger_file else args.trigger
     if not trigger:
@@ -146,6 +146,18 @@ def cmd_run(args: argparse.Namespace) -> int:
     return 0 if result["status"] in ("completed", "paused") and not result.get("error") else 1
 
 
+def saved_roles(saved: dict[str, Any], profile: str | None) -> dict[str, Any]:
+    """What a resumed run is loaded with: the set and every role its record says it ran on, so a resume never
+    changes model or effort mid-run. A record written before sets names only the investigator's profile."""
+    roles = saved.get("roles") or {}
+    if not roles:
+        return {"roles": {"investigator": profile or saved["profile"]}}
+    given = {name: (f"{r['profile']}@{r['effort']}" if r.get("effort") else r["profile"]) if r else "" for name, r in roles.items()}
+    if profile:
+        given.pop("investigator", None)
+    return {"set_name": saved.get("set") or None, "roles": given}
+
+
 def cmd_resume(args: argparse.Namespace) -> int:
     from rich.console import Console
 
@@ -156,7 +168,7 @@ def cmd_resume(args: argparse.Namespace) -> int:
 
     cfg = load_config(profile=args.profile)
     saved = RunRecord(cfg.runs_dir, args.run_id).read_json("run.json")
-    cfg = load_config(profile=args.profile or saved["profile"], interactive=not saved["context"]["auto_approve"])
+    cfg = load_config(profile=args.profile, interactive=not saved["context"]["auto_approve"], **saved_roles(saved, args.profile))
     console = Console(highlight=False)
     attended = sys.stdin.isatty() and not args.reject and not args.approve
     if args.reject:
@@ -273,7 +285,10 @@ def add_run_commands(sub) -> None:
     run.add_argument("--arm", default="C", help="the eval arm, kept in the run record")
     run.add_argument("--channel", help="the incident channel the opening sweep reads; all channels when omitted")
     run.add_argument("--tags", choices=["on", "off"], help="with or without tags: inputs, labels and the inventory's counts (default: SMALLS_TAGS)")
-    run.add_argument("--profile", help="a model profile from config.toml (default: SMALLS_PROFILE, then the file's default)")
+    run.add_argument("--profile", help="the investigator's profile from config.toml (default: SMALLS_PROFILE, then the set's)")
+    run.add_argument("--set", help="the model set: every role's profile and effort (default: SMALLS_SET, then the file's default_set)")
+    run.add_argument("--role", action="append", metavar="ROLE=PROFILE[@EFFORT]", help="override one role's model; repeatable")
+    run.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"], help="the investigator's reasoning effort")
     run.add_argument("--interactive", action="store_true", help="ask before every read too, not only before actions")
     run.add_argument("--stop-at-gate", action="store_true", help="pause at the first gate and exit; resume later")
     run.add_argument("--headless", choices=["approve", "defer", "reject"],

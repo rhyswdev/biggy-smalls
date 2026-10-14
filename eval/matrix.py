@@ -54,13 +54,16 @@ def run_id(label: str, cell: dict[str, Any]) -> str:
 
 
 def command(cell: dict[str, Any], *, label: str, bundle: str, profile: str | None = None, script: str | None = None,
-            trigger: str | None = None) -> list[str]:
+            trigger: str | None = None, set_name: str | None = None, roles: list[str] | None = None, effort: str | None = None) -> list[str]:
     """The one process a cell runs."""
     module = ["-m", "smalls.agent", "run", "--arm", "C", "--eval-run", "--durability", "exit", "--no-thinking"] if cell["arm"] == "C" else ["-m", "eval.baseline"]
     given = ["--trigger", trigger] if trigger else ["--trigger-file", str(Path(bundle) / "triggers" / f"{cell['checkpoint']}.md")]
     out = [sys.executable, *module, "--bundle", bundle, "--now", clock(cell["checkpoint"]), *given, "--checkpoint", cell["checkpoint"],
            "--run-id", run_id(label, cell), "--tags", "on" if cell["tags"] else "off"]
     out += ["--profile", profile] if profile else []
+    out += ["--set", set_name] if set_name else []
+    out += [arg for role in roles or () for arg in ("--role", role)]
+    out += ["--effort", effort] if effort else []
     out += ["--script", script] if script else []
     return out
 
@@ -111,7 +114,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--checkpoints", default=REGRESSION["checkpoints"], help="comma-separated names of trigger files, each a clock time: 1452 is 14:52")
     p.add_argument("--reps", type=int, default=REGRESSION["reps"])
     p.add_argument("--tags", default="on", help="on, off, or on,off to run every cell both ways")
-    p.add_argument("--profile", help="a model profile from config.toml")
+    p.add_argument("--profile", help="the investigator's profile from config.toml")
+    p.add_argument("--set", help="the model set every run uses (default: SMALLS_SET, then the config's default_set)")
+    p.add_argument("--role", action="append", metavar="ROLE=PROFILE[@EFFORT]", help="override one role's model in every run; repeatable")
+    p.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"], help="the investigator's effort in every run")
     p.add_argument("--script", metavar="MODULE:FUNCTION", help="the script the scripted profile plays")
     p.add_argument("--trigger", help="the trigger as text, in place of the checkpoint's trigger file")
     p.add_argument("--label", help="the prefix of every run id (default: the time the matrix started)")
@@ -133,7 +139,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"matrix {label}: {len(plan)} run{'s' if len(plan) != 1 else ''}, one process each")
     if args.dry_run:
         for cell in plan:
-            print(" ".join(command(cell, label=label, bundle=args.bundle, profile=args.profile, script=args.script, trigger=args.trigger)))
+            print(" ".join(command(cell, label=label, bundle=args.bundle, profile=args.profile, script=args.script, trigger=args.trigger,
+                                   set_name=args.set, roles=args.role, effort=args.effort)))
         return 0
     from smalls.agent.config import load_config
 
@@ -142,7 +149,8 @@ def main(argv: list[str] | None = None) -> int:
     for n, cell in enumerate(plan, 1):
         name = run_id(label, cell)
         started = time.perf_counter()
-        done = subprocess.run(command(cell, label=label, bundle=args.bundle, profile=args.profile, script=args.script, trigger=args.trigger),
+        done = subprocess.run(command(cell, label=label, bundle=args.bundle, profile=args.profile, script=args.script, trigger=args.trigger,
+                                      set_name=args.set, roles=args.role, effort=args.effort),
                               cwd=ROOT, env=env, capture_output=True, text=True)
         summary = read_summary(runs_dir, name)
         rows.append({**cell, "run_id": name, "exit": done.returncode, "summary": summary})

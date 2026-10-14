@@ -5,7 +5,7 @@ committed. Generic practice passes; anything shaped to the answer is flagged.
     python -m smalls_data.overfit --bundle <folder> [--base <ref>]
 
 It takes the diff from `--base` (default `HEAD`) to the working tree over the guarded paths, untracked
-files included, splits it into hunks, and makes one model call with the investigator's profile. The
+files included, splits it into hunks, and makes one model call with the set's `overfit` role. The
 reviewer is given the answer key and PLAN sections 1.1 and 1.5. It prints a verdict per hunk (pass or flag,
 why, and what in the answer it maps to), the call's cost, and exits 1 on any flag, 2 when it cannot review.
 
@@ -139,7 +139,8 @@ def review(found: list[Hunk], answer: str, plan: str, *, profile: str | None = N
     from smalls.agent.record import cost
 
     cfg = load_config(profile=profile)
-    spec = cfg.investigator.with_params(script=script) if cfg.investigator.provider == SCRIPTED else cfg.investigator
+    chosen = cfg.investigator if profile else (cfg.role("overfit") or cfg.investigator)     # the set's `overfit` role
+    spec = chosen.with_params(script=script) if chosen.provider == SCRIPTED else chosen
     model, bind = make_model(spec, timeout_s=cfg.timeout_s)
     bound = model.bind_tools(provider_tools([TOOL], spec.provider, strict=False), **bind)
     try:
@@ -169,7 +170,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m smalls_data.overfit", description=__doc__.split("\n\n")[0])
     p.add_argument("--bundle", required=True, help="the bundle whose answer key the review reads")
     p.add_argument("--base", default="HEAD", help="review the diff from this ref to the working tree (default HEAD)")
-    p.add_argument("--profile", help="a model profile from the agent's config (default: the investigator's)")
+    p.add_argument("--profile", help="a model profile from the agent's config (default: the set's overfit role)")
     p.add_argument("--json", action="store_true", help="print the result as JSON")
     args = p.parse_args(argv)
     found = hunks(diff(args.base))

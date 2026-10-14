@@ -50,6 +50,10 @@ def make_model(spec: ModelSpec, *, timeout_s: float = 600, cache_ttl: str | None
     if cache and spec.provider == "anthropic":
         # Top-level automatic caching: the frozen system prompt and tools, then the growing history.
         bind["cache_control"] = {"type": "ephemeral", **({"ttl": cache_ttl} if cache_ttl else {})}
+    if cache and spec.provider == "openai":
+        # This provider caches by prefix on its own; a stable key per profile routes calls that share the frozen
+        # system prompt and tools to the same cache, within a run and across runs.
+        bind["prompt_cache_key"] = f"smalls-{spec.profile}"
     # The timeout is explicit because the client library's default is none. The provider's own client
     # retries twice; the graph's retry policy sits above that.
     return init_chat_model(spec.model, model_provider=spec.provider, timeout=timeout_s, max_retries=2, **params), bind
@@ -98,14 +102,23 @@ def _all_required(node: Any) -> Any:
     if not isinstance(node, dict):
         return node
     out = {k: _all_required(v) for k, v in node.items() if k not in _BOUNDS}
+    if "$ref" in out and len(out) > 1:      # strict mode takes no keyword beside a $ref, so the reference moves into anyOf
+        out = {"anyOf": [{"$ref": out.pop("$ref")}], **out}
     for key in ("properties", "$defs"):
         if key in node:
             out[key] = {name: _all_required(sub) for name, sub in node[key].items()}
     if "properties" in out:
         required = set(node.get("required", []))
-        out["properties"] = {name: (sub if name in required else {"anyOf": [sub, {"type": "null"}]}) for name, sub in out["properties"].items()}
+        out["properties"] = {name: (sub if name in required else _nullable(sub)) for name, sub in out["properties"].items()}
         out["required"] = list(out["properties"])
     return out
+
+
+def _nullable(sub: dict[str, Any]) -> dict[str, Any]:
+    """An optional property made nullable: null joins an anyOf it already has, else wraps it."""
+    if "anyOf" in sub:
+        return {**sub, "anyOf": [*sub["anyOf"], {"type": "null"}]}
+    return {"anyOf": [sub, {"type": "null"}]}
 
 
 class ModelCallError(Exception):

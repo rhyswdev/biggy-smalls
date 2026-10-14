@@ -1,9 +1,12 @@
 # The agent's configuration. This is the only file in which a model name may appear: code, prompts and
-# docs name a model by its role. Pick a profile with --profile or SMALLS_PROFILE; SMALLS_MODEL overrides
-# the chosen profile's model. Under pytest the profile is always the scripted one unless SMALLS_LIVE=1,
-# so a test never goes live because a key happens to be set.
+# docs name a model by its role. Models are chosen per role by a named set (docs/decisions/eval-loop.md, V5):
+# --set or SMALLS_SET picks the set, --role role=profile[@effort] or SMALLS_ROLES overrides one role, and
+# --effort or SMALLS_EFFORT the investigator's effort; --profile or SMALLS_PROFILE still names the
+# investigator's profile, and SMALLS_MODEL overrides its model. Under pytest every role is the scripted
+# model unless SMALLS_LIVE=1, so a test never goes live because a key happens to be set.
 
-default_profile = "anthropic"
+default_set = "sol"
+default_profile = "anthropic"   # read only by a config that has no [sets]
 
 # Budgets. Starting values, to be re-set after the first measured run.
 call_budget = 30            # gated tool calls (reads and actions) per run
@@ -26,10 +29,24 @@ chat = "-2h"
 changes = "-24h"
 
 [verifier]
-enabled = true
-claims_profile = "anthropic-small"      # claim support is short reading: the cheaper tier of the same provider
-contrarian_profile = "anthropic"        # the contrarian pass needs the strong model
+enabled = true                          # the two passes' models are the `claims` and `contrarian` roles of the set
 digest_tokens = 1500                    # the digest of rows that were shown but not cited
+
+# Sets: every role, as `profile` or `profile@effort`; an empty string cuts a verifier pass. Each role's effort
+# is fixed for a run, because changing it invalidates the prompt cache.
+[sets.sol]                              # the eval loop's set (V2, V4): one model, effort by role
+investigator = "openai@medium"
+contrarian = "openai@medium"            # the contrarian pass needs the strongest reading: the investigator's
+claims = "openai@low"                   # claim support is short reading of packets
+overfit = "openai@medium"               # reads diffs against the answer
+drafter = "anthropic-mid"               # the UI's message drafter (U8), not part of the investigation
+
+[sets.claude]                           # the first provider: the loop's retest (L7) and later benchmarks
+investigator = "anthropic@medium"
+contrarian = "anthropic@medium"
+claims = "anthropic-small@medium"
+overfit = "anthropic@medium"
+drafter = "anthropic-mid"
 
 [profiles.scripted]         # keyless and deterministic; proves the plumbing, not the model
 provider = "scripted"
@@ -68,14 +85,29 @@ cache = false               # one call per audience, run side by side, so no pre
 betas = ["server-side-fallback-2026-07-01"]
 model_kwargs = { fallbacks = "default" }
 
-[profiles.openai]           # the cross-provider verifier profile; needs the optional client group
+[profiles.openai]           # the second provider's strong tier at its middle price (V4)
 provider = "openai"
-model = ""                  # set SMALLS_MODEL
+model = "gpt-6.1-sol"
 reasoning = { effort = "medium", summary = "auto" }
 use_responses_api = true
+max_input_tokens = 260000   # under the 272k-token threshold where its input rate doubles, so the restart guard fires first
+cache = true                # it caches by prefix on its own; this adds a stable cache key per profile
+strict_tools = true
+store = false               # the history carries the reasoning, encrypted, so nothing is kept by the provider
+include = ["reasoning.encrypted_content"]
 
 # USD per million tokens, for run records. A 5-minute cache write costs 1.25 times the input rate and a
 # 1-hour write twice it. Rates as cached from the provider's reference on 2026-10-06.
+# The second provider caches by prefix on its own and reports what it writes; a write costs 1.25 times the
+# input rate, with no separate longer lifetime. Its rates above 272k input tokens per call are higher;
+# max_input_tokens keeps calls under them. From its price page on 2026-10-14.
+[pricing."gpt-6.1-sol"]
+input = 2.00
+output = 10.00
+cache_read = 0.10
+cache_write = 2.50
+cache_write_1h = 2.50
+
 [pricing."claude-opus-5-5"]
 input = 4.00
 output = 20.00

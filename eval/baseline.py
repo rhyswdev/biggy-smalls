@@ -43,8 +43,9 @@ def toolbox(bundle: Path | str, tags: bool | None = None) -> Toolbox:
 
 
 def run(bundle: Path | str, now: str, trigger: str, *, checkpoint: str | None = None, profile: str | None = None, run_id: str | None = None,
-        tags: bool | None = None, script: Any = None, runs_dir: Path | None = None) -> dict[str, Any]:
-    cfg = load_config(profile=profile, runs_dir=runs_dir)
+        tags: bool | None = None, script: Any = None, runs_dir: Path | None = None, set_name: str | None = None,
+        roles: list[str] | None = None, effort: str | None = None) -> dict[str, Any]:
+    cfg = load_config(profile=profile, runs_dir=runs_dir, set_name=set_name, roles=roles, effort=effort)
     cfg = replace(cfg, call_budget=0, extra_turns=1, verifier={**cfg.verifier, "enabled": False})       # no gated call, one model turn
     _check_placeholders(cfg.investigator.provider)
     runner = Runner(cfg, toolbox(bundle, tags), run_id, eval_run=True, script=script, durability="exit", offered=OFFERED, single_call=True)
@@ -63,6 +64,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--trigger-file", metavar="PATH")
     p.add_argument("--checkpoint")
     p.add_argument("--profile")
+    p.add_argument("--set")
+    p.add_argument("--role", action="append", metavar="ROLE=PROFILE[@EFFORT]")
+    p.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"])
     p.add_argument("--run-id")
     p.add_argument("--tags", choices=["on", "off"])
     p.add_argument("--script", metavar="MODULE:FUNCTION", help="the script the scripted profile plays")
@@ -71,7 +75,8 @@ def main(argv: list[str] | None = None) -> int:
     if not trigger:
         raise SystemExit("give the trigger with --trigger <text> or --trigger-file <path>")
     result = run(args.bundle, args.now, trigger, checkpoint=args.checkpoint, profile=args.profile, run_id=args.run_id,
-                 tags=None if args.tags is None else args.tags == "on", script=args.script)
+                 tags=None if args.tags is None else args.tags == "on", script=args.script, set_name=args.set, roles=args.role,
+                 effort=args.effort)
     print(f"arm {ARM}: {result['status']}; run record: {result['dir']}")
     return 0 if result["status"] == "completed" and not result.get("error") else 1
 

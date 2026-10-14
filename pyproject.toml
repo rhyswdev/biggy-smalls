@@ -15,6 +15,8 @@ dependencies = [
     "langchain>=1.4,<1.5",
     "langchain-core>=1.6,<1.7",
     "langchain-anthropic>=1.7,<1.8",
+    # The second provider (docs/decisions/eval-loop.md, V2): the loop's development runs and benchmarks.
+    "langchain-openai>=1.7,<1.8",
     "rich>=13",
 ]
 
@@ -28,8 +30,6 @@ api = ["fastapi>=0.143,<1", "uvicorn>=0.54,<1", "httpx>=0.28,<1"]
 dev = ["pytest>=8.2"]
 # The classifier SDK. Only `smalls tag` imports it; ingest, the tests and the demo never do.
 tagging = ["typesafe-sdk>=0.7.4,<0.8"]
-# The client for the cross-provider verifier profile. Nothing imports it unless a [verifier] profile names that provider.
-verifier-openai = ["langchain-openai>=1.7,<1.8"]
 
 [tool.uv]
 default-groups = ["dev", "api"]
