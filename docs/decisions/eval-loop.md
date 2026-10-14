@@ -296,6 +296,7 @@ Spend in phase 2, one line per batch; cost from each run's `summary.json` and ea
 | P1: overfit reviews of the harness diff (twice), of F-06, and of the installed prompt | 4 calls | $0.06 | $0.06 |
 | P3: overfit review of the luna profile and set; one shakedown run each of sol at medium ($0.41) and luna at high ($0.05) | 1 call, 2 runs | $0.48 | $0.54 |
 | P4: the baseline, 7 runs on sol at medium ($2.43) and 7 on luna at high ($0.25) | 14 runs | $2.68 | $3.22 |
+| P5: overfit reviews of F-07 to F-09 (three rounds, two rewrites) | 3 calls | $0.04 | $3.26 |
 
 ### 12.4 What each row showed
 
@@ -330,4 +331,16 @@ Spend in phase 2, one line per batch; cost from each run's `summary.json` and ea
 By V6 the loop's model is the cheaper one only if it reaches the cause as often, and luna does not: it reached it in 2 of 7 against 7 of 7. So the loop stays on sol at medium, and the partial-claim test is moot. Luna's runs read widely in their first turn but take the database's exhaustion, which every source shows loudly, for the cause; the runs that got it right read the gateway's own logs and the design note. Whether luna does better on the prompt the loop produces is a benchmark for later (L9), not this phase.
 
 P1's acceptance, from these 16 runs (P3 and P4): no run had a board refusal; three runs were nudged, and in each the board moved in the round after the last nudge. The quiet stretches were short (one or two rounds past the third), so nothing here argues for bringing a refusal back.
+
+**P5 (2026-10-14).** Read: sol's seven P4 runs, with the P3 shakedown and the luna runs as context (`eval/findings/ledger.yaml`, `phase2_modes`). Every sol run led with the right cause, rejected the decoys the trigger names, took the owner from on-call and listed the harmful steps in `do_not`, so the first thing wrong in each was not the conclusion. The modes, ranked and classed:
+
+| Rank | Mode | Runs | Class | Finding |
+|---|---|---|---|---|
+| 1 | The summary names what set the fault off, but no hypothesis holds it with the `trigger` role. Every standard run before pass 4 had one (17 of 17); since pass 4, 1 of 9 | 6 of 7 | prompt | F-07 |
+| 2 | An effect of the leading cause kept as a separate open `cause` at 0.6; on luna the same confusion led (4 of 7) | 2 of 7 | prompt | F-08 |
+| 3 | The leading statement chains several links and is judged partial; partial claims 75 of 179 overall, where pass 2 left them | 6 of 7 | prompt | F-09 |
+| 4 | An open rival with no support of its own judged unsupported; pass 3 allows it with an open question, and each had one | 3 of 7 | prompt | none |
+| 5 | Board updates in turns of their own, four a run, the first turn always among them; the right hypothesis leads at round 7 after 20 to 22 calls, against round 5 or 6 with the sweep | 7 of 7 | model limit (pass 1 tried the prompt) | none |
+
+The overfit review flagged all three first drafts: F-07 and F-08 for carrying the incident's shape (F-08's as the guilty-database trap), F-09 for asking that the conclusions stay unchanged. The generic rewrites passed. P6 takes F-07 first, then F-08, then F-09.
 

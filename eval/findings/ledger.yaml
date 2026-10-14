@@ -92,3 +92,47 @@ probes:
     review: the finding passed the findings lint and the overfit review (0 of 1 flagged); the harness diff 0 of 11 flagged; the installed prompt diff 0 of 1 flagged
     after: measured by P3 and P4's ledger rows (board refusals, quiet-board nudges, moves after a nudge)
     status: installed (harness 770c665, prompt eeff055)
+# Phase 2's failure analysis (docs/decisions/eval-loop.md, row P5): sol at medium, the seven P4 runs on the pass 6
+# files, with the P3 shakedown and the luna runs as context. Ranked: outcome, then grounding, then efficiency.
+phase2_modes:
+  - rank: 1
+    mode: the summary names what set the fault off, but no hypothesis holds it with the trigger role
+    kind: prompt
+    layer: outcome (the trigger link of the account)
+    finding: F-07
+    runs:
+      seen: [p4-sol-C-1452-tags-r1, p4-sol-C-1452-tags-r2, p4-sol-C-1452-tags-r4, p4-sol-C-1452-tags-r5, p4-sol-e-C-1440-tags-r1, p4-sol-e-C-1440-tags-r2]
+      not_seen: [p4-sol-C-1452-tags-r3]
+      history: every standard sol run on the files before pass 4 had a trigger hypothesis (17 of 17); on pass 4 to 6 files, 1 of 9 (p04-*, p3-sol, p4-sol)
+    note: each summary names the provider's slow calls and an open question asks why they are slow; the board never holds it
+  - rank: 2
+    mode: an effect of the leading cause kept as a separate open cause at a middle confidence
+    kind: prompt
+    layer: outcome (rivals)
+    finding: F-08
+    runs:
+      seen: {p4-sol-C-1452-tags-r3: database exhaustion open as cause at 0.6, p4-sol-e-C-1440-tags-r1: a statement calling the exhaustion "a downstream mechanism ... rather than the initiating fault" with role cause, open at 0.6}
+      luna: in 4 of 7 P4 luna runs the database's exhaustion led at 0.8 or 0.9 (the guilty-database trap)
+    review: the first draft was flagged as reproducing the guilty-database trap; the generic rewrite passed. A pass on it is ranked after F-07, and its overfit review of the installed diff decides whether it is kept
+  - rank: 3
+    mode: the leading statement chains several links and is judged partial
+    kind: prompt
+    layer: grounding
+    finding: F-09
+    runs:
+      seen: [p4-sol-C-1452-tags-r1, p4-sol-C-1452-tags-r2, p4-sol-C-1452-tags-r3, p4-sol-C-1452-tags-r4, p4-sol-C-1452-tags-r5, p4-sol-e-C-1440-tags-r2]
+      totals: {claims: 179, partial: 75, unsupported: 7, contradicted: 1, by_kind_partial: {hypothesis: 23 of 33, timeline: 21 of 78, action: 16 of 38, do_not: 15 of 30}}
+    review: the first draft was flagged for asking the conclusions to stay unchanged; without that it passed
+  - rank: 4
+    mode: an open rival with no support of its own judged unsupported
+    kind: prompt
+    layer: grounding
+    finding: none; pass 3 allows an open rival with an open question naming the check, and each run had one
+    runs: [p4-sol-C-1452-tags-r1, p4-sol-C-1452-tags-r3, p4-sol-C-1452-tags-r5]
+  - rank: 5
+    mode: board updates in turns of their own, the first turn always among them
+    kind: model limit (prompt tried in pass 1, F-01, reverted)
+    layer: efficiency
+    finding: none; F-01 stands set aside
+    runs: {all seven: 4 board-only turns of 12 or 13, the first turn board-only in every sol run of both phases}
+    cost: the right hypothesis is first written at round 4 after 8 or 9 calls and first leads at round 7 after 20 to 22 (phase 1, with the sweep, round 5 or 6 after 10 to 17); the board first reads ready at round 10 after 27 to 29 calls, so the budget binds
