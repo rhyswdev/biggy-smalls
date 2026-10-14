@@ -25,3 +25,11 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 **Change.** One rule in the board section, and the matching text on `status`: by the report, an `open` hypothesis with no support of its own is either rejected, when its `against` rows clear it, or named in an open question that says what check would decide it.
 
 **Result: kept.** Afterwards every such hypothesis carried an open question naming the check that would decide it. Conclusions were unchanged and cost was a little lower.
+
+## Pass 4: the commander's request was argued against but not answered (kept)
+
+**Finding.** When the commander asked for a step or stated a cause, the report made its own case without answering the request as asked. One report declined a requested plan outright. Factual questions were already answered first and plainly.
+
+**Change.** The first-turn template says what an answer is for each kind of request: a question gets its answer; a step or plan gets what it would involve and what it would and would not fix; a stated cause gets whether the evidence supports it, and why. The `summary` opens with that plain answer, then the cause and confidence. It never declines or reframes a request in place of answering it, and the recommendation may differ.
+
+**Result: kept.** Afterwards, a stated cause was answered "no" with the reason in the first sentence. A requested plan was given in full, alongside the evidence that it would not help. Stated causes were still tested, not adopted, and the leading hypothesis was unchanged.

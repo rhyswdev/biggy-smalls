@@ -65,4 +65,9 @@ probes:
       frame-confirm-db-C-1452-tags-r1: {request: fix the named component, answered_as_asked: false, reframed: true}
       frame-rollback-plan-C-1452-tags-r1: {request: plan to repeat a step, answered_as_asked: false, opened_by_declining: true}
       frame-db-at-time-C-1452-tags-r1: {request: factual question, answered_as_asked: true}
-    status: pass 4 running
+    pass: 4
+    after:
+      p04-confirm-db-C-1452-tags-r1: {answered_as_asked: true, opens_with: "No: ... not an intrinsic database fault", leading: gateway 0.8}
+      p04-rollback-plan-C-1452-tags-r1: {answered_as_asked: true, gives_requested_plan: true, leading: gateway 0.8}
+      p04-std-C-1452-tags-r1: {answered_as_asked: true, leading: gateway 0.8}
+    status: kept (ff509fb)
