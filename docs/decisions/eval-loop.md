@@ -20,25 +20,54 @@ A fresh session can work from this file plus PLAN sections 5, 6.1, 12 and 13, `d
 | V2 | Model provider during the loop | Development runs use the second provider's profiles (section 3). The loop ends with a retest of the frozen candidate on the current provider, and which provider ships as the default is decided on those numbers. | Asked for: cheaper per run (about 40% less at the first run's token mix, if the cache holds; section 3), and model-agnostic design is already a rule. Prompts tuned on one model may not carry over to another, so the retest is a gate, not a formality. |
 | V3 | The scorer session | Starts now, alongside the UI step, working in `eval/`. The loop session never edits the scorer, the judge, the judge's prompt or the answer key. A scorer problem the loop finds is reported to the scorer session. | The scorer is on the critical path, and its files are separate from the UI's. The session that tunes the prompt must not also be able to move the grader. |
 | V4 | Tiers on the second provider | One model: the provider's strong tier at its middle price, for every role. Roles differ by reasoning effort, not by model. Its flagship and cheapest tiers are not used. | Asked for: the flagship is more than this task needs. Effort is the lever agent-design axis 9 names to try before a cheaper model. One model also means one cache namespace and one set of provider facts to confirm. |
+| V5 | Models by role, from config | Every model call belongs to a role, and a named set in config maps each role to a profile and an effort (section 3). A run records the map it resolved. A benchmark is a committed file of sets and overrides (row L9). This replaces the first draft's `SMALLS_PROVIDER` switch. | Asked for: once the prompt is settled, benchmarks change the model behind one agent at a time and measure the effect, with no code change. A recorded map lets every table group runs by what they ran on. The judge is not a role, so the grader never moves with what is graded. |
 
 Rulings proposed for review are in section 10. The build uses each one's default until it is ruled.
 
-## 3. Model profiles for the loop
+## 3. Models by role, from config
 
-Model names live only in `smalls/agent/config.toml` and the scorer's own config. Row L1 writes the one model (V4) and its rates there, like the existing entries. The model takes five reasoning efforts: low, medium (its default), high, xhigh and max. Per token, it costs about half the current investigator's input, output and cached-read rates.
+Everything that picks a model is config (V5). Model names live only in `smalls/agent/config.toml` and the scorer's own config. Adding a model to compare later is a profile and its rates in that file; nothing else changes. Three pieces:
 
-| Role | Profile | Effort | Why |
-|---|---|---|---|
-| Investigator | `openai` | medium until row L3 picks the loop's effort; fixed for a run, as now | The role that decides the outcome. |
-| Contrarian pass | the investigator's profile | as the investigator | It needs the strongest reading. The design gave it the investigator's profile, and that stands. |
-| Claim-support pass | `openai-low` | low | Short reading of packets. |
-| Overfit review | the investigator's profile (U15) | as the investigator | It follows the active set. |
-| Stakeholder drafter | `anthropic-mid` (U8) | unchanged | It is not part of the investigation and is not in the loop. |
-| Judge (scorer) | in the scorer's own config | high | A yes/no checklist with quotes, a few calls per run. The model and effort are pinned for the whole loop, so a change in score is never a change in judge. It is the investigator's model, so a judge from the other provider family scores L7's comparison, and S4's hand labels measure its agreement. |
-| Effort sweep | `openai` with `--effort` | low, high, xhigh | Three runs each, beside the five at medium, in L3. Shows what effort buys and which is the cheapest that holds. |
-| Ceiling probe | `openai` with `--effort max` | max | Three runs, only if xhigh misses the outcome bar. It tells a limit of the prompt from what the model can do at its most effort. |
+- **Profiles**, as now: one per model, with its provider, model, default effort, provider settings and rates under `[pricing]`.
+- **Roles**: every agent that calls a model. `investigator`; `contrarian` and `claims`, the two verifier passes; `overfit`, the overfit reviewer (U15); `drafter`, the stakeholder drafter (U8). Arm A's single call is the `investigator`.
+- **Sets**: a named map from every role to a profile, written `profile` or `profile@effort`.
 
-One setting moves a whole set: `SMALLS_PROVIDER=openai|anthropic` selects the investigator, both verifier passes and the overfit reviewer together. `--profile` still overrides one run, and `--effort` (or `SMALLS_EFFORT`) overrides the investigator's effort for one run, recorded in `run.json`.
+```toml
+default_set = "sol"
+
+[sets.sol]                     # the loop's set (V2, V4)
+investigator = "openai@medium" # until row L3 picks the loop's effort
+contrarian   = "openai@medium"
+claims       = "openai@low"
+overfit      = "openai@medium"
+drafter      = "anthropic-mid"
+
+[sets.claude]                  # the current provider: row L7 and later benchmarks
+investigator = "anthropic@medium"
+contrarian   = "anthropic@medium"
+claims       = "anthropic-small@medium"
+overfit      = "anthropic@medium"
+drafter      = "anthropic-mid"
+```
+
+**Resolution**, where the last one given wins: `default_set`, then `SMALLS_SET`, then `--set <name>`, then each `--role <role>=<profile[@effort]>` (or `SMALLS_ROLES`, a comma-separated list, for compose). `--effort <level>` is short for an override of the investigator's effort, and `--profile` stays as short for `--role investigator=<profile>`. A set must name every role. A set or override that names an unknown role, profile or effort is refused with a fixed sentence before any model is called. Each role's effort is fixed for the run, because changing it invalidates the cache.
+
+**Recorded.** `run.json` holds the resolved map: for each role, its profile, provider, model, effort and rates. `summary.json` splits tokens and cost by role. Any table can then group runs by what they ran on.
+
+**The judge is not a role.** It belongs to the scorer and is pinned in the scorer's own config, so a benchmark that changes the agent's models is always scored by the same judge. A run that brings in a second judge says so (row L7).
+
+**The loop's set, `sol`.** One model (V4), which takes five efforts: low, medium (its default), high, xhigh and max. Per token, it costs about half the current investigator's input, output and cached-read rates.
+
+| Role | Effort | Why |
+|---|---|---|
+| Investigator | medium, until row L3 picks the loop's effort | The role that decides the outcome |
+| Contrarian pass | as the investigator | It needs the strongest reading. The design gave it the investigator's profile, and that stands |
+| Claim-support pass | low | Short reading of packets |
+| Overfit review | as the investigator | It reads diffs against the answer, a strong reader's job |
+| Stakeholder drafter | `anthropic-mid`, unchanged (U8) | Not part of the investigation and not in the loop |
+| Judge (scorer config) | high, pinned | A yes/no checklist with quotes, a few calls per run. It is the investigator's model, so a judge from the other provider family scores L7's comparison, and S4's hand labels measure its agreement |
+
+The effort sweep (low, high and xhigh beside medium) and the ceiling probe (max, only if xhigh misses the outcome bar) are the first benchmark file, run in L3.
 
 **What a run should cost.** At the first run's token mix (about 147k input tokens sent for the first time, 368k read back from cache, 29k output), a run at medium is about $0.62 with the cache holding as it did then, and about $1.32 with nothing cached. Input costs the same at every effort, about $0.33 with the cache. Output, about half the cost at medium, grows with effort; L2 and L3 measure it per level.
 
@@ -46,13 +75,32 @@ The second provider caches automatically by prefix and charges nothing to write.
 
 The long-context rate applies above 272k input tokens per call. So `max_input_tokens` for each `openai` profile is set below that, and the restart guard (J16) fires before the rate doubles.
 
+**Benchmarks.** A benchmark is a committed file, `eval/benchmarks/<name>.toml`, naming its cells (a set, optionally with role overrides), the arm, checkpoint, tags and repetitions, and its budget. It names profiles, never models. `python -m eval.bench <file> --dry-run` prints every run it would start and an estimate from the measured cost per profile and effort. Without `--dry-run`, it runs the cells through the matrix, scores each run, and prints one table grouped by cell: outcome, grounding, process, and cost per role, with spread. The file is committed before its runs, like the keep rule.
+
+```toml
+# eval/benchmarks/investigator.toml: the investigator's model changes, everything else stays
+budget_usd = 20
+arm = "C"
+checkpoint = "1452"
+reps = 5
+
+[[cell]]
+name = "the loop's set"
+set = "sol"
+
+[[cell]]
+name = "current provider investigating, the loop's verifiers"
+set = "sol"
+roles = { investigator = "anthropic@medium", contrarian = "anthropic@medium" }
+```
+
 ## 4. How it fits together
 
 ```text
 now:        scorer session, rows S1..S7 ──────────────┐
             UI step, rows R14..R18 ───────────────┐   │
                                                   v   v
-after both: L0 baseline on main ─> L1 profiles ─> L2 shakedown ─> L3 baseline
+after both: L0 baseline on main ─> L1 roles and sets ─> L2 shakedown ─> L3 baseline
                                                                      │
             ┌────────────────────────────────────────────────────────┘
             v
@@ -61,6 +109,7 @@ after both: L0 baseline on main ─> L1 profiles ─> L2 shakedown ─> L3 basel
             (repeat L6 until the stop rule, section 7)
             ─> L7 retest on the current provider ─> L8 freeze candidate, `agent-v1`
             ─> PLAN step 10 controls ─> held-out h1 (PLAN 12)
+            ─> L9 benchmarks on the frozen prompt, each with its own go-ahead
 ```
 
 Gate B (row D5 of `tools-agent-build.md`) still waits for a fresh session. Run it before L3: if it finds the cause unfindable, the bundle changes, and every run made before the change has to be run again.
@@ -83,19 +132,20 @@ When S5 passes, the session merges `scorer` into `main` (merging `main` in first
 
 ## 6. Rows after the UI merges (the loop session)
 
-Starts when `main` holds the UI (row R18) and the scorer (row S5). Branch `eval-loop`, cut from `main`, pushed after each row and merged into `main` at L8. The held-out rule binds this session in full. It may read run transcripts and scores. It never writes or edits the five blind files, and never edits the scorer, the judge or the answer key. Every agent-side change passes `make overfit-review`.
+Starts when `main` holds the UI (row R18) and the scorer (row S5). Branch `eval-loop`, cut from `main`, pushed after each row and merged into `main` at L8. L9 runs on `main` after that. The held-out rule binds this session in full. It may read run transcripts and scores. It never writes or edits the five blind files, and never edits the scorer, the judge or the answer key. Every agent-side change passes `make overfit-review`.
 
 | # | Build | Accepted when |
 |---|---|---|
 | L0 | Baseline on `main` with the UI and the scorer merged | `make test` and `make lint` pass. The numbers are recorded here |
-| L1 | The second provider's profiles: its client joins the default install, and its group is named on the Dockerfile's sync line; the profiles of section 3 with their rates; `SMALLS_PROVIDER`; `--effort` and `SMALLS_EFFORT` for the investigator, recorded in `run.json`, with the matrix taking effort as a dimension; `max_input_tokens` under the long-context threshold; a stable prompt-cache key; its usage mapped to our fields (cached input as `cache_read`, no cache writes); reasoning items replayed unchanged, carried in the history rather than stored by the provider; strict tool schemas on if its strict mode accepts our surface, checked against the schema | The scripted suite passes with each provider set selected; the overfit review passes; the image holds no key |
+| L1 | The second provider's profiles: its client joins the default install, and its group is named on the Dockerfile's sync line; roles and sets as section 3 describes them: the profiles with their rates; the `sol` and `claude` sets; `SMALLS_SET`, `--set`, `--role`, `SMALLS_ROLES`, `--effort` and `--profile`, resolved in that order; the resolved map in `run.json` and cost per role in `summary.json`; the matrix taking sets and role overrides as dimensions; `eval/bench.py` with `--dry-run`; the overfit reviewer and the drafter reading their roles; the API starting runs on the default set; `max_input_tokens` under the long-context threshold; a stable prompt-cache key; its usage mapped to our fields (cached input as `cache_read`, no cache writes); reasoning items replayed unchanged, carried in the history rather than stored by the provider; strict tool schemas on if its strict mode accepts our surface, checked against the schema | A scripted run on each set records every role resolved; an override wins over the set, and the set wins over the default; a set that misses a role, or names an unknown role, profile or effort, is refused before any call; `eval.bench --dry-run` prints a scripted benchmark's runs and estimate; the model-name lint also scans `eval/benchmarks/`; the scripted suite passes; the overfit review passes; the image holds no key |
 | L2 | The shakedown on the second provider: the eleven facts of `tools-agent-build.md` 7.5, restated for this provider, from one or two live runs at the second checkpoint. Budgets re-set from what is measured | Each fact is confirmed or answered. Cost per run, cache share and output per run are recorded in agent-design section 6. About $2 |
-| L3 | The baseline. Arm C at the second checkpoint, medium effort: 5 runs. The effort sweep at the second checkpoint: low, high and xhigh, 3 runs each; max, 3 runs, only if xhigh misses the outcome bar. The first checkpoint at medium: 3 runs with carry-forward to the second (this is row E4, live). Arm A: 3 runs. The first live run on the current provider, scored as the reference. Row E3, the verifier's keep-or-kill rule, evaluated on these runs | A table generated from the run records covers outcome, grounding, process and cost per effort, with spread. The loop's effort is the lowest whose runs reach the cause with non-chat support as often as the best level's, and is written here. The keep-rule thresholds are fixed from the measured spread at that effort before any change (section 7). About $13 |
+| L3 | The baseline. Arm C at the second checkpoint, medium effort: 5 runs. The effort sweep at the second checkpoint, as the first benchmark file (`eval/benchmarks/effort.toml`): low, high and xhigh, 3 runs each; max, 3 runs, only if xhigh misses the outcome bar. The first checkpoint at medium: 3 runs with carry-forward to the second (this is row E4, live). Arm A: 3 runs. The first live run on the current provider, scored as the reference. Row E3, the verifier's keep-or-kill rule, evaluated on these runs | A table generated from the run records covers outcome, grounding, process and cost per effort, with spread. The loop's effort is the lowest whose runs reach the cause with non-chat support as often as the best level's, and is written here. The keep-rule thresholds are fixed from the measured spread at that effort before any change (section 7). About $13 |
 | L4 | The first failure analysis. Every baseline run is read in the UI as a recorded chat, or with `smalls show`, noting the first thing that went wrong in each. The notes are grouped into failure modes, each counted across runs, then ranked: outcome first, then grounding, then efficiency. Each mode is classed as prompt, tool or code, data, or model limit (the effort sweep, and the max probe when it runs, decide the last) | `eval/findings/ledger.yaml` holds each mode, with the runs and calls that show it (eval side, never in a room), and one generic finding text per prompt mode (section 8) |
 | L5 | The room: `python -m smalls.agent blind-room <dir> --iterate <finding>` writes everything today's room holds, but with the five installed files in place of placeholders and no `prompt-v0.txt`. It adds `FINDING.md` (one finding), `HISTORY.md` (each earlier pass: its finding, the author's `CHANGE.md`, kept or reverted, aggregate numbers), `METRICS.md` (row S7's output) and a brief for iteration. The findings lint refuses a finding that carries a bundle string, a handle, a clock time or a run id, and the overfit reviewer reads the finding before it enters a room. After the pass: `blind-check`, the bundle-string lint, the overfit review of the diff, and the diff's size printed | Tests: a room holds exactly its listed files; a planted finding with a handle, a time or a bundle string is refused; the brief's text is checked like today's |
 | L6 | The loop. One pass is: one finding, a room, a fresh sub-agent given only the room's path, install unedited, the regression set (section 7), score, then the keep rule. A pass that is kept also runs the guard set, then commits with the finding's id, the motivating run ids and the result. A pass that is reverted is a `git revert` of its install commit, and the record keeps both. A code finding follows the same keep rule and the overfit review, in its own commit, and is never in the same pass as a prompt change | Each pass is a line in section 9's table: finding, change size, kept or reverted, its numbers, its cost |
-| L7 | The retest on the current provider: the frozen candidate's regression and guard sets on the `anthropic` set, at the loop's effort or its nearest named level, scored by the same judge. A second judge from the other provider family scores the comparison runs of both providers, and the two judges' agreement is reported | The default provider is ruled on these numbers and written here, with the cost per run of each |
+| L7 | The retest on the current provider, as a benchmark file (`eval/benchmarks/retest.toml`): the frozen candidate's regression and guard sets on the `claude` set, at the loop's effort or its nearest named level, scored by the same judge. A second judge from the other provider family scores the comparison runs of both providers, and the two judges' agreement is reported | The default provider is ruled on these numbers and written here, with the cost per run of each |
 | L8 | The freeze candidate: the tags ablation (row E5) on it, with tags off and on; E3 if L3 did not settle it; HANDOFF, agent-design section 6 and the write-up's table generated from `eval/runs/`; tag `agent-v1` | PLAN 13's agent bar holds in at least 4 of 5 runs. PLAN 12's gates for a held-out bundle are checked; O4 and P8 (held-out tags) must be settled before h1 |
+| L9 | Benchmarks on the frozen prompt. Each is a file under `eval/benchmarks/`, committed before its runs, with its own budget and its own go-ahead; none falls inside section 9's cap. The first three proposed: the investigator's model and effort changed, with the verifiers fixed; the verifier passes' models changed, with the investigator fixed (this also gives E3's keep-or-kill per profile); and the sets crossed. Any further model is a profile added to `config.toml` | Each benchmark's table is generated from its runs and committed with it. The write-up says what each shows. The prompt was tuned on the loop's set, so another set's numbers show how the prompt carries over, not a contest between models, and they cover the development incident only |
 
 ## 7. The keep rule and the stop rule
 
@@ -132,7 +182,7 @@ The ledger keeps the link from each finding to its runs and calls, on the eval s
 
 ## 9. Budget and the record of passes
 
-**Proposed cap for this plan's live calls: $65.** The parts:
+**Proposed cap for this plan's live calls: $65.** Benchmarks (L9) are outside it: each file carries its own budget and needs its own go-ahead. The parts:
 
 | Item | Estimate |
 |---|---|
