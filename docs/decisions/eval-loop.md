@@ -369,6 +369,39 @@ The overfit review flagged all three first drafts: F-07 and F-08 for carrying th
 **P7 (2026-10-14): closed.** Phase 2 spent $7.37 of its $20 (12.3). Section 9's pass table has passes 5 to 8; `eval/findings/HISTORY.md` has passes 6 to 8; the findings ledger has F-06 to F-09 and phase 2's ranked modes; the results ledger has 55 rows and `docs/tuning-log.md` is generated from it. Each row now also holds the report's hypotheses with their roles and the run's board-only turns, so the log follows the trigger on the board and F-01's mode across every batch; `python -m eval.results rebuild` refreshed every row and `export` wrote the page's data. The tuning-log page is published at https://claude.ai/artifact/Kqtg6nS1oDdbC5y4F4VvUQ: what each batch led with, the trigger on the board, partial claims, hypotheses, cost, wall time, model turns and board-only turns, for every batch from the first phase on, with the batch and run tables. `make test` (685 passed, 2 skipped) and `make lint` (0 errors) passed at the close. HANDOFF holds the summary and what is open for us.
 
 
+## 13. Runs to score later (planned 2026-10-14)
+
+While the scorer session builds S1 to S7, three sets of live runs can be made now on the pass 7 files and graded when the scorer lands; the ledger keeps every run scoreable. They are the parts of the freeze step (section 6, L3 and L8) that need no score to run: arm A for PLAN 13's "arm C beats arm A", row E4 (live carry-forward) and row E5 (the tags ablation). Nothing here changes a prompt, the agent or the tools, and nothing is kept or reverted: the runs are measurements of the files in place.
+
+### 13.1 Rules
+
+- Held-out rule in full; the five blind files are not written; the scorer's files (`eval/scorer*`, `eval/table*`, the judge and its prompt, the answer key, the Makefile's `score` target, `_internal/`) are not touched, because the scorer session owns them.
+- The installed prompt files are pass 7's (`9e0e340`; pass 8 was reverted at `eb3da31`). R0 checks it; if they differ, stop and ask.
+- Set `sol` throughout; the investigator at medium. Run records go to `eval/loop-runs/`; every run gets a ledger row in a batch described in `eval/results/batches.yaml` first.
+- A run that fails for a reason in the code is reported, not fixed in this session, unless it blocks every run; a fix then follows U15 (overfit review) in its own commit.
+- Budget: $7 of live calls, kept as a running total in 13.4, one line per batch. Stop and ask before a call that would cross it.
+
+### 13.2 Rows
+
+| # | Build | Accepted when |
+|---|---|---|
+| R0 | Preconditions: `git diff 9e0e340 -- smalls/agent/prompts smalls/tools/descriptions.yaml` is empty; `make test` and `make lint` pass; one small call to sol answers. Ledger rows gain `carried_from` (from `run.json`), with `rebuild` run once and the test extended | The diff is empty, the suites pass, every row has the field |
+| R1 | Arm A, the no-tools baseline: `python -m eval.matrix --arms A --checkpoints 1452 --reps 3 --set sol --label armA --runs-dir eval/loop-runs` | Three valid reports in the ledger (batch `armA`); each run's leading subject and whether it fell for a trap in the commander's message (PLAN 1.5) recorded by reading in 13.3. About $0.30 |
+| R2 | Carry-forward at the first checkpoint: three runs at 14:40 (`--checkpoints 1440 --reps 3 --label e4`) | Three completed runs in batch `e4-1440`. About $1 |
+| R3 | Carry-forward to the second: one run at 14:52 per R2 run, each `python -m smalls.agent run --arm C --eval-run --durability exit --no-thinking --bundle <bundle> --now 14:52 --trigger-file <bundle>/triggers/1452.md --checkpoint 1452 --tags on --set sol --run-id e4-1452-from-r<n> --carry-from e4-C-1440-tags-r<n>` with `SMALLS_RUNS_DIR=eval/loop-runs` | Three runs in batch `e4-1452`, each with `carried_from` set; `validation.continuity` read; whether each cites handles dated between 14:40 and 14:52 (PLAN 13) recorded in 13.3, with what changed on the board between the two looks. About $1.30 |
+| R4 | The tags ablation: five runs with tags off (`--tags off --reps 5 --label e5-off`) and two more with tags on (`--label e5-on --reps 2`), which with pass 7's three regression runs make five a side | Batches `e5-off` and `e5-on`; a table in 13.3 of the two sides: leading cause, trigger on the board, calls that used a tag input, tool calls, turns, partial claims, cost, wall time. No ruling on the default (G6): that waits for scores. About $2.80 |
+| R5 | Close: the log regenerated; the page refreshed (export, upload the three files, update the three datasets, as HANDOFF says); readings added to `eval/results/notes.yaml` for anything the new batches change; 13.4's spend; HANDOFF | The page shows the new batches; HANDOFF says what each set showed and that all of it waits for the scorer |
+
+### 13.3 What the runs showed
+
+**R0 (2026-10-14).** The diff from `9e0e340` over the five blind files is empty, so the installed files are pass 7's. `make test` (685 passed, 3 skipped) and `make lint` (0 errors) pass; one small call to sol's investigator through the agent's own factory answered. Each ledger row now carries `carried_from` (the earlier run and its `as_of`, from `run.json`; null for a fresh look); `rebuild` refreshed all 55 rows and changed no other field; `tests/agent/test_results.py` covers both cases. The runs are made from a worktree whose `eval/loop-runs/` links to the main checkout's, so every record sits in the one local store.
+
+### 13.4 Spend
+
+| Batch | Runs | Cost | Running total |
+|---|---|---|---|
+| R0: one small call to sol | 1 call | $0.00 | $0.00 |
+
 ## 14. The scorer (rows S1 to S7, built 2026-10-14)
 
 Built on branch `scorer`, cut from `main` at pass 8's install, beside phase 2, and merged into `main` once P7 had closed. The files: `eval/key.py` (the key's schema, its validation and the alias table), `eval/scorer.py` (the deterministic checks and the process measures), `eval/judge.py` with `eval/judge/prompt.md` and the scorer's own config `eval/scorer.toml`, `eval/score.py` (`make score RUN=<id>`), `eval/table.py`, `eval/room_metrics.py`, the hand-written reports in `eval/reports/`, the hand labels in `eval/judge/labels.yaml` and the judge's spend in `eval/judge/spend.jsonl`; tests in `tests/eval/`. The matrix scores each run it makes (`--judge` adds the judge). The key's source is `scenario/content/answer_key.yaml`: `make data` re-rendered only `_internal/answer_key.yaml`, every served file stayed byte-identical, and `make lint` has 0 errors. No agent code and no blind file changed.
