@@ -9,3 +9,11 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 **Change.** The board section gained a paragraph saying to send the update first, in the same turn as the round's reads, and never alone, with the reason. The budget paragraph and the first-turn template called board updates "costing no call" instead of "free", and said every turn counts as a model turn. The stopping rule gained a clause for a turn whose update makes the board ready. The `update_board` description said the same.
 
 **Result: reverted.** Afterwards every board update still went in a turn of its own: five such turns in each of three runs, against four to six before. Conclusions, calls used and cost were unchanged. The model alternates reads and board updates turn by turn whatever the wording, so this finding is set aside for a change outside the prompt. A new pass should not restate that rule.
+
+## Pass 2: claims said more than the rows they cite (kept)
+
+**Finding.** Over half of each report's claims were judged `partial`. Timeline rows compared their event with others they did not cite, hypothesis statements named effects no support row showed, and do-not reasons and actions added predictions.
+
+**Change.** The citation rules now say a claim says only what its own rows show: a row for each part, both rows for a comparison, reasoning worded as reasoning, and an unsupported prediction left out while the claim stays. `support` holds a row for each link the statement names, the effect included, and the discriminating rows. Timeline rows hold one event each. The matching field descriptions say the same.
+
+**Result: kept.** Partial claims fell from 59% to 32%, with the same conclusions and about the same number of claims per report. Cost per run was a little higher and wall time a little lower.

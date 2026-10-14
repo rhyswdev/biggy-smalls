@@ -69,9 +69,9 @@ drafter      = "anthropic-mid"
 
 The effort sweep (low, high and xhigh beside medium) and the ceiling probe (max, only if xhigh misses the outcome bar) are the first benchmark file, run in L3.
 
-**What a run should cost.** At the first run's token mix (about 147k input tokens sent for the first time, 368k read back from cache, 29k output), a run at medium is about $0.62 with the cache holding as it did then, and about $1.32 with nothing cached. Input costs the same at every effort, about $0.33 with the cache. Output, about half the cost at medium, grows with effort; L2 and L3 measure it per level.
+**What a run costs.** Planned at the first run's token mix, a run at medium was estimated at about $0.62. That estimate assumed cache writes were free, and they are not: corrected below. Measured on 2026-10-14 over eight runs at medium (section 9), a run costs $0.31 to $0.43, about $0.36 on average. It takes 11 to 14 model turns, uses 30 tool calls and 230 to 260 s, and reads 80 to 85% of its input from cache. This model writes far less output than the first provider's did: about 10k tokens a run against 29k.
 
-The second provider caches automatically by prefix and charges nothing to write. So the saving depends on its cache hit rate, which the shakedown (row L2) measures; without the cache, this provider costs more than the current one. Reasoning tokens bill as output.
+The second provider caches by prefix on its own and reports what it writes. A write costs 1.25 times the input rate ($2.50 per million tokens), which the first draft of this section missed. Its rates above 272k input tokens per call are higher, and `max_input_tokens` keeps calls under them. Reasoning tokens bill as output.
 
 The long-context rate applies above 272k input tokens per call. So `max_input_tokens` for each `openai` profile is set below that, and the restart guard (J16) fires before the rate doubles.
 
@@ -196,7 +196,29 @@ The ledger keeps the link from each finding to its runs and calls, on the eval s
 
 Each live call's cost comes from its own record, with a running total kept here, one line per call. Before a call that could take the total past the cap, the session stops and asks.
 
-Passes, one line each: finding, files changed, lines changed, kept or reverted, regression numbers, guard result, cost, run ids. (Empty until L6.)
+**Spend so far** (2026-10-14, all on the second provider; `cost_usd` from each run's `summary.json`, the reviews' printed cost):
+
+| Item | Runs or calls | Cost |
+|---|---|---|
+| Smoke test of the profile (two small calls) | 2 calls | $0.03 |
+| Overfit reviews: L1, L5, the findings, pass 1, pass 2's inputs and install | 7 calls | $0.11 |
+| First run (`sol-shake`) and baseline (`sol-base`) | 5 runs | $1.77 |
+| Pass 1 (`p01`) | 3 runs | $1.13 |
+| Low-effort probe (`eff-low`) | 2 runs | $0.64 |
+| Pass 2 (`p02`) and its overfit review | 3 runs, 1 call | $1.21 |
+
+**Passes**, one line each. Lines changed are counted by `blind-install`. The guard set was not run in this first, $10 phase: no pass reached a keep that needed it, and the scorer does not exist yet, so "right" was judged by reading each report against PLAN 1.1 and 1.5.
+
+| Pass | Finding | Lines changed | Before | After | Result | Cost |
+|---|---|---|---|---|---|---|
+| 1 | F-01, board updates in turns of their own | investigator 10, first_turn 2, descriptions 10 | 4 to 6 board-only turns in each of 5 runs | 5 in each of 3 runs | Reverted: the target did not move. Conclusions, calls and cost were unchanged | $1.13 |
+| 2 | F-02, claims say more than their rows | investigator 6, descriptions 15 | 76 of 129 claims partial (59%) over 5 runs; 14 to 19 disputed a run | 26 of 80 partial (32%) over 3 runs; 10 disputed in each | Kept. Same conclusions in 3 of 3, about 27 claims a run as before; median cost $0.42 against $0.35 (inside the baseline's spread), wall 177 to 194 s against 219 to 262 s | $1.21 |
+
+**The second pass's author left two questions** in its room, copied here as written in short. Neither was answered to it.
+1. Which handles go into a hypothesis's claim-support packet? It assumed `support`, plus `against` for a rejected hypothesis. What the code does: the packet holds both `support` and `against` for every hypothesis (`smalls/agent/verifier.py`, `packets`).
+2. Are the verdict counts in METRICS.md the claim-support pass's? Yes.
+
+**Probes.** Effort, on the original files at 14:52: two runs at low reached the same conclusions as medium, with every rival rejected, in 142 and 150 s against 231 to 248 s, for $0.29 and $0.35. The loop stays at medium so passes compare like with like. The set's investigator effort is a config change to make at the end, on more runs.
 
 ## 10. Proposed rulings and open points
 

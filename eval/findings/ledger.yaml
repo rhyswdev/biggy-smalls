@@ -22,7 +22,11 @@ findings:
       sol-shake-C-1452-tags-r1: {claims: 26, partial: 15, unsupported: 1}
       sol-base-C-1440-tags-r1: {claims: 23, partial: 13, unsupported: 1}
       sol-base-C-1440-tags-r2: {claims: 26, partial: 16, unsupported: 2}
-    status: open
+      sol-base-C-1452-tags-r1: {}
+      sol-base-C-1452-tags-r2: {}
+    pass: 2
+    after: {p02-C-1452-tags-r1: {disputed: 10}, p02-C-1452-tags-r2: {disputed: 10}, p02-C-1440-tags-r1: {disputed: 10}, all: {claims: 80, partial: 26}}
+    status: kept (020e74b)
 probes:
   effort-low:
     what: the investigator at low effort, the rest of the sol set unchanged, on the original five files
