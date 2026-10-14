@@ -76,3 +76,5 @@ The order of items 2 to 6 is re-cut by `docs/decisions/ingestion-decisions.md`: 
 ## 5. PLAN and research edits implied
 
 PLAN 0 and 4: eleven tools; drop rank-bm25. PLAN 3.2: metric handles per A3; `t_known` defined as re-derivable from served bytes. PLAN 3.4: version snapshots for Dynatrace and Jenkins; leak test scans nested timestamps and future tokens. PLAN 3.5: zones and sampling in `integration.yaml`. PLAN 4: `saved_search=` removed (C3); `group_by=template`; result envelope and error contract. PLAN 6: the build order above. PLAN 9: replace the proposed `t_known >= t_utc` invariant with re-derivation; add the sampling-correlation lint; extend invariant 7's word list. Research doc: decisions 1, 3, 4 and 7 as ruled here.
+
+The envelope of ruling A1 as built, with `rows[]`, `t_known` per row and `meta`, is section 5 of `docs/decisions/tools-agent-build.md`.

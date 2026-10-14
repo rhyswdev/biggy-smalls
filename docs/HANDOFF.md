@@ -1,6 +1,6 @@
 # Handoff: where the data phase stands
 
-Updated 2026-10-13, after step 6a ingestion: the store, the adapters and the tagging pass are built. The tool step (6a-tools) is next.
+Updated 2026-10-14, after the tools and agent build: the eleven tools, the agent, the verifier, carry-forward, the matrix runner and the terminal are built and tested offline, on branch `agent-build`, not pushed. No live model run has been made. The first live run is next, and it needs a go-ahead.
 
 ## Done
 - Step 0: Python 3.12 uv skeleton, packages `smalls` and `smalls_data`, Makefile targets.
@@ -64,24 +64,33 @@ Recorded in `docs/decisions/ingestion-decisions.md`. Every point is ruled except
 - **O5, ruled: taxonomy v1 is three facets, not five.** `signal` (latency, errors, saturation, availability, traffic, change, security, routine, other) on log templates, alert definitions and titles, and incidents; `act` (observation, hypothesis, action_taken, action_proposed, question, status, social, other) on human chat messages, ServiceNow journal entries and PagerDuty notes; `change_kind` (release, rollback, config, infra, network, data, job, other) on change requests, Jenkins builds and commits. `layer` and `resolution` are left out: source, sourcetype and host are already columns, and the agent reads the 11 close notes in one call. `layer` is the first facet to add back if the ablation shows the agent failing to cross layers. A tag is applied only at high confidence: the chosen option's probability must reach a floor that starts at 0.8 and is set for precision (at least 9 in 10 applied tags matching the hand label), and anything else stores nothing. The profiles were read before the first `make tag` and run as shown; a change bumps the profile version. Amended after that run: `act` is asked as yes/no per option, `signal` is asked both pick-one and as yes/no and also covers metric series (both tags are lists), and the measured floor is 0.90 with a tolerance of 0.02 (`docs/DATA.md` 119 to 124). The hand-labelled sample is 134 units.
 - **O6, ruled: of the other candidates, `signal` as yes/no is adopted and the rest are left out.** It was adopted on a test set in advance (at least 9 in 10 stored values matching on a larger sample labelled first; it met 37 of 37) and tags the lines that are two things at once, which pick-one left untagged. `resource` and `fault` are left out (precise and sparse, and their busiest values are this incident's own mechanism), and so is `layer` (it mostly restates the source). Numbers in `docs/research/tagging.md` section 7 and `docs/DATA.md` 124.
 
+## Tools and agent: built
+Built row by row from section 8 of `docs/decisions/tools-agent-build.md`, on branch `agent-build`. That record holds every row's acceptance evidence, and section 13 holds every judgment call. `make test` gives 578 passed and 1 skipped on the host, and the suite passes in the container.
+- **Contracts.** The result envelope (`rows[]` with `t_known`, `referenced[]`, `meta`), the report schema with `subject`, `source`, `alerts[]`, `do_not`, `proposed_actions`, the structured `stakeholder_update` and the code-written `validation`, and `handle_class()`.
+- **The eleven tools** (`smalls/tools/`), each reading only the store's views, with the source inventory, the values derived at `now`, the error sentences and the tag inputs. `smalls tools call|list|schema|smoke`. The tool-output half of the leak test calls all eleven at both checkpoints, with tags off and on, and asserts that every visible record can be reached.
+- **The agent** (`smalls/agent/`): a LangGraph state graph with the opening sweep, the gates, the board, the validator, the verifier with one revision, carry-forward between checkpoints, the restart from the board, failure handling and the run record. `smalls run|resume|replay|show`.
+- **The five blind files** (the four prompts and `smalls/tools/descriptions.yaml`) were written in a blind room by a fresh sub-agent and copied in unedited. Its fourteen questions are in section 11.1 of the record, each with what the code does today; five of them touch work still to come.
+- **Evaluation harness** (`eval/`): the matrix runner with arms A and C and the tags flag as a dimension, process metrics in `summary.json`, the retrieval check (`docs/DATA.md` 127) and the scripted solve path (16 of 16 steps hold).
+- **Commands.** `make test`, `make lint`, `make leak-test`, `make tools-smoke`, `make retrieval`, `make solve`; and, live, `make run`, `make resume RUN=<id>`, `make regress`, `make matrix`. Each also runs as `docker compose run --rm smalls <the same command>`.
+
 ## Next
-Step 6a-tools: the eleven tools, reading only the store, in the order of PLAN section 6 (row 6a-tools), starting with `search_logs`. A session that writes `smalls/tools/` must follow the held-out rule in CLAUDE.md.
+Everything that can be built without a live model or a fresh session is built. What is next needs one or the other.
 
-What the tool step needs to know about the store:
-- **Build and clock.** `store.build(bundle)` returns a `Store`; `store.set_now("14:52")` (or an ISO time, or epoch ms) sets the clock and `clear_now()` unsets it. The harness sets it; `now` is never a tool parameter.
-- **Read the views, never the base tables.** `visible` (one row per record version valid at `now`), `visible_point` (metric buckets closed before `now`), `visible_chunk` joined to `chunk_fts` on `chunk_id` for full text, `ref` (Slack users and channels, metric envelopes; no clock) and `tag_answer`. A test fails any module under `smalls/` other than the store that names `record`, `point` or `chunk` in SQL.
-- **Show `native` only through `store.render_native(native, flags)`**, for `ref` rows too. Never print `valid_to`, or a `t_end` at or after `now`.
-- **Columns.** `kind` and `dataset` are listed in `docs/DATA.md` 100; `sev` in 101; `title` and `body` for logs in 103; `parent` and `stream_key` in 108; `t_native` and `tz_rule` (always the known time as written) in 126. `attrs` holds the parsed vendor fields (sourcetype, level, logger, status and so on) and is queried with JSON1. Times in `attrs` and `native` are as the vendor wrote them: convert a ServiceNow or SolarWinds wall-clock time with `store.integration.parse(source, text)` or `.local(...)` before showing it as UTC.
-- **Logs.** Match terms against `native` as well as `body`: for JSON logs `body` is the message and trace, and fields such as the cart id are in `native` and `attrs`. `group_by=template` groups on `template_id` and shows `masker.mask(title)` of one row. Every count from a sampled source multiplies by `keep_1_in` and says so; `sample_per` is the unit. Class names and patterns are in no column.
-- **Tags.** `store.tags_enabled()` reads `SMALLS_TAGS` (default on, ruling G6). When on, `record.tags` is `{facet: value}`: a list for `signal` and `act` (filter with `json_each`; a row with two values counts under both), one value for `change_kind`. `tag_key` joins `tag_answer`, which holds every option's probability per profile that asked. A metric series carries its `signal` on every `point` row. A tag filter is only ever applied when the agent asks, and its footer says how many rows matched without it and how many of those are untagged (T4): about 1,190 of the 3,989 log records carry no `signal` (`docs/DATA.md` 123).
+Waiting for a go-ahead, because it spends money:
+- **The first live run** (row C3): `make run` at the second checkpoint, then commit that run's record and point `make demo` at it. `make demo` is still a stub.
+- **The live shakedown** (row C4): the list in section 7.5 of the record; set the budgets from what is measured and write the numbers into section 6 of `docs/research/agent-design.md`.
+- **The live carry-forward** (row E4) and **the tags ablation** (row E5): `make regress` with tags on and off.
 
-Carried to the tool step (6a-tools):
-- The tool-output half of the leak test needs a derived-state assertion as well as the timestamp and token scan: Datadog `overall_state` and PagerDuty service `status` (served as configured at 13:45), PagerDuty incident and ServiceNow incident versions (pick the version valid at `now`), Slack `reply_count`/`reply_users`/`latest_reply` and channel `members` (15:30 export values), the existence of a Dynatrace `.v2.json` or finished Jenkins build file before its `valid_from`, and metric response envelopes (`to_date`, `series[].end`) all have to be derived or clamped at `now`.
-- The values derived at `now`, each with the tool that shows it: Datadog monitor state, PagerDuty service status, Slack thread summaries, SolarWinds active state.
-- `search_knowledge` joins its quoted tokens with OR. With every token quoted and implicitly ANDed, 9 of 12 natural-language queries over 41 runbook chunks returned nothing in a throwaway harness; verify when the tool is built.
-- Derived at `now` by the tool, from what ingestion kept: SolarWinds active or reset from `t_end` (the served `ResetDateTime` is withheld); a Slack thread's reply count and repliers from the visible replies (`parent`); the channel list from channels with visible messages, since `ref` rows have no clock and the incident channel is created at 14:35 (`docs/DATA.md` 112).
-- A versioned record is invisible for the instant `now` equals one of its save times (`docs/DATA.md` 112). No checkpoint sits on one; a tool that takes an arbitrary `now` should know it.
-- The rebuild time is now measured with every source loaded (about 215 ms; PLAN section 4 is updated). Ruling D3's "141 ms" and the "4,038" and "4,554" row counts in the decision records are historical.
+Waiting for a fresh session:
+- **Gate B** (row D5): a session with only the CLI and none of this track's context tries to find the cause. `make solve` shows the scripted path a person can follow; it is not that test.
+- **The scorer and the answer key schema** (PLAN 3.3 and 5): owned by a session that does not write the agent. The verifier's keep-or-kill rule (row E3) waits for it.
+
+Waiting for a ruling:
+- **The blind author's questions** (section 11.1 of the record). Question 4, what a hypothesis's `role` means, must be settled before the scorer reads it. A ruling that changes a blind file means a new blind pass, not an edit.
+- **The cross-provider verifier profile.** Its client is an optional dependency group, `verifier-openai`, that the image does not install. One line in the Dockerfile's sync command adds it; this track did not edit that file.
+- **O4 and P8**: how held-out bundles get tags, before any held-out run.
+
+Before a live run, know that: the keys are read from `.env` by `uv run --env-file` and by compose, and never printed; a run record stores the names of key variables, never values; under pytest every profile is the scripted one unless `SMALLS_LIVE=1`; and `python -m eval.matrix --dry-run` prints what a matrix would start without starting it.
 
 Open, not blocking (re-review findings, minor):
 - Same-cart resubmits can be concurrent (29 of 102 gaps under 1 s), because a failed cart joins the resubmit pool when its request arrives, not when it fails; cart ids reuse the 20,000-id range about four times (`smalls_data/gen/model.py`).
@@ -91,11 +100,7 @@ Open, not blocking (re-review findings, minor):
 - The Datadog checkout error curve runs about 1.6 times the stream's gateway failures from 14:31 to 14:40, so log estimates under-read Datadog there.
 - Older, not from the fixes: P-26101362's refusal evidence starts 2 min 42 s before the first 53300; "PSP slow calls" could not have paged in July under a 3 s timeout; webhook rows are the oldest match, where Splunk returns newest first (DATA.md 64).
 
-Open from the final-pass plan review (not applied; to be ruled on before the report schema and scorer are built):
-- a `subject` field per hypothesis (the one entity it blames; `entities` lists everything it touches), with traps matched on `subject`, and `change_any` restored on the checkout trap;
-- an alert-membership check: the report lists `alerts: [{handle, verdict: this_incident | other_incident | noise}]`, scored from a manifest field `incident: this | other | none`.
-
-Step 7 code still open: report schema (3.1, now with `do_not`, `proposed_actions` and the structured `stakeholder_update`), answer key schema (3.3), `itsm_query`, `get_oncall`, `get_topology`, the retrieval eval, the scorer and baseline. The data for them is in the bundle.
+Ruled since (G3 in `docs/decisions/tools-agent-build.md`), agent half done: each hypothesis has a `subject`, and the report lists `alerts: [{handle, verdict}]` with one verdict per alert stream the opening sweep showed. Still open on the scorer and data side: matching traps on `subject`, and the manifest field the alert verdicts are scored from.
 
 ## Rules that still apply
 Raw files stay messy and vendor-native; everything is generated from `scenario/*.yaml`; never hand-edit `bundles/`; stop and report if the plan contradicts itself; do not read the held-out paths listed in CLAUDE.md; commit small and push often; keep the design model-agnostic: the agent model and the classifier version are config values, and code, prompts and docs refer to them by role.

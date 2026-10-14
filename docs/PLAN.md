@@ -352,6 +352,8 @@ One object. The UI renders it, the scorer reads it, the next checkpoint starts f
 
 Note for the agent phase, flagged by a reviewer and to be verified against current API docs before relying on it: produce the final report through structured output or a strict tool the model chooses, not a forced tool call.
 
+**As built (2026-10-14).** The model is `smalls/contracts/report.py` and the schema file is generated from it; section 5 of `docs/decisions/tools-agent-build.md` is the record. Beyond the object above: each hypothesis carries `subject`, the one thing it blames, and `source`, `stated` or `derived`, set when the hypothesis is created; the report carries `alerts[]`, one verdict for every alert stream the opening sweep showed (`this_incident`, `other_incident` or `noise`, and `unassessed`, which only code writes); `proposed_actions` and `validation` are written by code and never by the model, and `validation` holds `ok`, `attempts`, `dropped`, `flagged`, `continuity`, `verifier` and `disputed`; `history` on a hypothesis is one row per checkpoint (`as_of`, `status`, `confidence`, `because`), so a later look adds a row; and a report is inconclusive when no hypothesis is `leading`.
+
 ### 3.2 Handles and the manifest
 
 Tools mint handles and print one at the start of every row. The agent cites handles. The manifest is never served.
@@ -379,6 +381,8 @@ Metric handles follow ruling A3: `metric_handle(query, w0, w1)` and `parse_metri
  "t_utc":"2026-10-13T14:31:07.221Z","t_known":"2026-10-13T14:31:07.221Z","valid_from":null,"valid_to":null,
  "class":"log.hikari_timeout","sig_id":"sig.first_pool_timeout","kind":"signal"}
 ```
+
+`handle_class()` in `smalls/contracts/handles.py` is the one definition of a handle's class: chat (`slack:` and `ic:note/`), aggregate (`q:`), metric or record. The validator, the board and the scorer read it; none keeps a list of its own.
 
 `t_utc` is when it happened; `t_known` is the earliest time an observer could see it, required on every row and re-derivable from the served bytes by a per-source rule (ruling D1; a parity test checks it). They are equal except for backdated records (CHG0031910 raised at 15:09 for a 15:01 deploy; PayCore v2's `started_at` 14:24, published 15:10:22), metric buckets (known when the bucket closes), the closed or finished version of a Dynatrace problem or Jenkins build (known at its end), a k8s event (known at `lastTimestamp`) and a webhook delivery (known at the receipt time in its file name). `smalls_data/parity.py` states the rule per source. `kind` is signal, trap or noise. `class` is a generated line class (`log.psp_retry`, `log.hikari_timeout`, `log.hikari_leak`, `log.health`, `pgsa.idle_in_txn`, `pg.fatal_53300`, ...). `sig_id` is an author-chosen id for hand-written items. The answer key references `sig_id` and `class`, never handles. The report validator rejects unknown handles before scoring and gives the agent one retry.
 
@@ -475,6 +479,8 @@ Eleven tools. Rules for all: `now` injected by the harness; every row starts wit
 
 No tail tool. No full-file read.
 
+**As built (2026-10-14).** Every result is one envelope: `text`, `rows[]` (each a handle, its text and its `t_known`), `referenced[]`, the native query, the window and `meta`. Only a handle in `rows` can be cited; a handle in `referenced` becomes citable once it is fetched. The argument conventions, the values derived at `now` and the error sentences are K1 to K9 in section 6.5 of `docs/decisions/tools-agent-build.md`. A count that depends on a tag mints no handle and cannot be cited. Every tag input also accepts `untagged`. `get_record` returns every character of a record, in parts when it is larger than the cap; a list view may shorten a row and says so (G7).
+
 ---
 
 ## 5. Scorer, minimum viable
@@ -494,6 +500,8 @@ Day 2: state continuity (every status change between checkpoints cites a handle 
 ## 6. Build sequence with gates
 
 No time estimates: we track time against the deadline and call cuts as needed (below).
+
+For row 6a-tools through step 7, section 8 of `docs/decisions/tools-agent-build.md` is the order of work, row by row with its acceptance, and it wins where it differs from the table below. The status line that code appends to each round's last tool result has one form: `[board: ready | not ready: <missing>; stale: <ids>; budget <used>/<limit>, <n> turns left]`.
 
 | Step | Produces | Acceptance |
 |---|---|---|
@@ -742,7 +750,7 @@ Three independent reviews settled this; they were removed once acted on, and the
 
 ## 13. Agent and UI acceptance criteria (stub; the agent plan is a separate document)
 
-Two reviews flagged that this plan had no criteria for the part the assessment weights most. These are the done conditions the data and tool layer must serve. The agent design is settled in `docs/research/agent-design.md`, with its rulings in sections 7 and 8.5; its section 5 is the agent build plan, and `spikes/agent/` is the LangGraph spike it was tested on.
+Two reviews flagged that this plan had no criteria for the part the assessment weights most. These are the done conditions the data and tool layer must serve. The agent design is settled in `docs/research/agent-design.md`, with its rulings in sections 7 and 8.5; its section 5 is the agent build plan, and `spikes/agent/` is the LangGraph spike it was tested on. The build record for the tools and the agent, with every ruling, every judgment call and each row's acceptance evidence, is `docs/decisions/tools-agent-build.md`.
 
 **Agent, done when:** measured through the eval layers in section 6.1, each run recorded in `eval/runs/`: it emits a schema-valid report at 14:52 from trigger 2 with zero fabricated or future citations; the leading hypothesis cites at least one non-chat handle per causal link; it states contradicting evidence for each rejected hypothesis; it names the owner from on-call, not the CMDB; it lists what not to do; it stops on its own within a call budget; carry-forward from 14:40 cites handles dated in the gap. Layer by layer: the regression set (arm C, 14:52, 3 runs) passes the scorer (layer 3) with zero fabricated or future citations (layer 4a); claim support is judged and hand-checked (layer 4b); process metrics show it stops within budget (layer 5); the framing perturbations do not steer it to a wrong leading cause (layer 6); arm C beats arm A (layer 7). The build order is the build plan in `docs/research/agent-design.md` section 5, with the critique fixes in its section 8.4. Every prompt change is committed with the id of the run that motivated it.
 
