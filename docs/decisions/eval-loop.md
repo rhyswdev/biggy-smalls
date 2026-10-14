@@ -242,8 +242,9 @@ Each live call's cost comes from its own record, with a running total kept here,
 | S5: the three hand-written reports (checklist only) | 3 | $0.03 | $0.03 |
 | S4: arm A's run and the five runs that hold the hand-labelled claims | 6 | $0.26 | $0.29 |
 | The ledger: the committed run C3, then every other run at the second checkpoint (five workers side by side) | 39, and the one interrupted | $1.77, with $0.05 estimated for the interrupted call | $2.07 |
+| Section 13's arm A batch (`armA`), once it reached the ledger | 3 | $0.07 | $2.14 |
 
-One call was interrupted when the ledger's batch was split into five parallel workers; its cost was not reported, and an estimate of $0.05 is booked in its place. The arm A run made for S5 (one model call, $0.07) is an agent run, not a judge call, and is counted here beside them: $2.14 in all for the scorer session, of the judge's $5.
+One call was interrupted when the ledger's batch was split into five parallel workers; its cost was not reported, and an estimate of $0.05 is booked in its place. The arm A run made for S5 (one model call, $0.07) is an agent run, not a judge call, and is counted here beside them: $2.21 in all for the scorer session, against the judge's $5.
 
 ## 10. Proposed rulings and open points
 
@@ -396,11 +397,18 @@ While the scorer session builds S1 to S7, three sets of live runs can be made no
 
 **R0 (2026-10-14).** The diff from `9e0e340` over the five blind files is empty, so the installed files are pass 7's. `make test` (685 passed, 3 skipped) and `make lint` (0 errors) pass; one small call to sol's investigator through the agent's own factory answered. Each ledger row now carries `carried_from` (the earlier run and its `as_of`, from `run.json`; null for a fresh look); `rebuild` refreshed all 55 rows and changed no other field; `tests/agent/test_results.py` covers both cases. The runs are made from a worktree whose `eval/loop-runs/` links to the main checkout's, so every record sits in the one local store.
 
+**R1, arm A (2026-10-14).** Three no-tools runs at the second checkpoint on sol at medium (batch `armA`): each completed in one model call and no tool calls, 69 to 73 s, $0.04 to $0.08. Arm A has no verifier pass, so its rows carry no claim counts. Validation passed in 1 of 3: r1 and r2 each cited a chat row under the wrong channel (`inc-checkout-latency` for a row of `sre-oncall`), which the validator dropped, and each kept a PayCore hypothesis with no support, which it flagged. That is the model's output, not a fault in the code, so the runs stand as the baseline. Read against PLAN 1.1 and 1.5:
+- **No run names a cause.** Every hypothesis is `open`, so no row has a leading one. The top hypothesis in each, at 0.4, is the connection exhaustion with "its originating cause unknown", with the gateway as its subject in r1 and the database in r2 and r3; the rest sit at 0.2. None reaches the gateway holding its transaction across the retried calls, and none names the gateway's release; with only the trigger, the chat and the alerts it has nothing that shows either.
+- **The traps in the commander's message did not steer it.** The checkout rollback (the visible deploy), pay-03 (the dead VM) and the network (the concurrent incident) are each an open `cause` at 0.2 with two or three `against` rows, and each appears in `do_not` (no second rollback, no pay-03 restart or replacement on the alerts alone, no shared-network call from the marketing outage). PayCore's green page is not taken to clear it: each run says the page is a reported observation, not a test of the calls. Elena's database finding is read as connection pressure whose origin is open, not as the database at fault, though r2 and r3 name the database as the top hypothesis's subject.
+- **Traps outside the trigger.** r1 and r2 keep redis as an open cause at 0.2 and traffic as an open `contributing` link at 0.2; no run names traffic as the cause. Killing idle sessions is never recommended outright: each run makes it conditional on reading the sessions first, and two put blanket termination in `do_not`.
+- **Owner.** Each names Priya (from her acknowledgement in the chat) and says the on-call records were not available.
+
 ### 13.4 Spend
 
 | Batch | Runs | Cost | Running total |
 |---|---|---|---|
 | R0: one small call to sol | 1 call | $0.00 | $0.00 |
+| R1: arm A at 14:52, three runs ($0.08, $0.04, $0.04) | 3 runs | $0.16 | $0.16 |
 
 ## 14. The scorer (rows S1 to S7, built 2026-10-14)
 
@@ -436,7 +444,7 @@ Built on branch `scorer`, cut from `main` at pass 8's install, beside phase 2, a
 
 ### 14.3 What the scores say across the ledger
 
-Scored on 2026-10-14: every row of the results ledger (55 runs: 47 on sol, at medium or low, and on the first provider; 8 on luna), the arm A run and the three hand-written reports. The 44 runs at the second checkpoint were judged too; the key has a judge checklist only there. The scores are in each ledger row's `scores`, and `docs/tuning-log.md` shows them per batch beside the rest. Read across the ledger:
+Scored on 2026-10-14: every row of the results ledger (58 runs: 47 of arm C on sol, at medium or low, and on the first provider; 8 of arm C on luna; and section 13's 3 of arm A), the scorer's own arm A run and the three hand-written reports. The 47 runs at the second checkpoint were judged too; the key has a judge checklist only there. The scores are in each ledger row's `scores`, and `docs/tuning-log.md` shows them per batch beside the rest. Read across the ledger:
 
 - **Outcome.** All 47 runs on sol and the first provider reached the cause with non-chat support, with no hard fail, and met PLAN 13's agent bar as scored. Luna reached it in 3 of 8, with 4 hard fails (the database leading at 0.8 or 0.9), which is P4's reading.
 - **Grounding.** No run cited a fabricated, future or unseen handle; the validator drops them before a report stands. Claim support over the 38 judged runs on sol and the first provider: 167 supported, 43 partial, 24 unsupported. The unsupported ones are mostly open rivals resting on one chat line, which pass 3 allows when an open question says how to decide them.
@@ -444,6 +452,7 @@ Scored on 2026-10-14: every row of the results ledger (55 runs: 47 on sol, at me
 - **Facts.** 175 of 208 required facts found. 37 of the 38 misses at the second checkpoint are one fact: that the gateway's sessions sit idle in a transaction. The runs cite it from the chat message where it was pasted; the same paste is in the incident record as a work note (a record, SC5), which the runs rarely cite.
 - **Alerts.** 926 of 943 verdicts placed the stream in or out of the incident rightly, and no stream owed a verdict went without one. 25 of the misses, over every model, are one stream: a log-volume anomaly that another team's release set off, called part of this incident.
 - **Recommendations, as the judge read them.** The mechanism: median 3 of 4 items; the item most often missing is that the callers time out waiting on the failing service (absent in 28 of 44 judged runs), then the change to retries or timeouts itself (9). Actions: 3 of 4 in nearly every run; the audit for duplicated payments is missing in 43 of 44. A harmful step among the top three in 3 of 44: two luna runs proposing to kill the idle sessions, and one guard run in which the commander asked for a plan to redo the earlier rollback and the report wrote it out as a step taken only if a check failed, after arguing against it. We read the last as the judge's error: its check does not separate a conditional or requested step from a recommendation.
+- **Arm C against arm A.** The four arm A runs (section 13's three and the scorer's one, all on sol at medium) score cause 0 or 0.5, find 2 of 5 required facts each, pass 1 or 2 of 5 traps, and meet the agent bar in none; the judge finds 0 of 4 mechanism items in each. Every arm C run on sol beats each of them on cause, facts and traps. Section 13.3 reads arm A as not steered by the commander's message because each rival there is an open cause at 0.2 with rows against it; the scorer counts an open `cause` as held (SC6), so those rivals are trap falls here. Both readings describe the same reports.
 - **Process.** Tool calls before the right cause first led: 20 to 29 on P4's sol runs, against 13 to 31 in the first phase, which had the opening sweep.
 
 **Phase 2's keep decisions, re-checked on scores (V8).** Every kept pass (2, 3, 4 and 7) kept the outcome: each of its runs reached the cause with non-chat support, with no hard fail. Pass 2's grounding gain shows in the judge's reading too: partial claims 3 of 12 in the baseline's judged runs and 5 of 12 in pass 1's, then 0 of 12 in pass 2's and in pass 3's. The judge leans lenient on partial (S4), so these counts read low against the verifier's. Pass 8's revert stands on scores: its two trap falls are the effect held as an open cause that the loop read.
@@ -457,6 +466,6 @@ Proposed modes for the next failure analysis, each counted on scores; the loop w
 1. **A fact known only from chat is not looked for in the record.** The one required fact most runs miss is cited only from the chat message that reported it, while the same observation sits in the system of record. 37 of 38 misses.
 2. **The recommendation stops the fault but does not check the harm already done.** No run asks for an audit of transactions duplicated by retries and resubmits. 43 of 44 judged runs.
 3. **The chain stops short of the error users see.** The report explains the failing service but not how its slowness becomes the callers' timeouts. 28 of 44.
-4. **An alert from an unrelated change at the same time is counted as the incident's.** 25 of 55 runs.
+4. **An alert from an unrelated change at the same time is counted as the incident's.** 25 of the 55 arm C runs.
 
 The two blind authors' questions that touched the scorer (3, 4, 6 and 7 of `tools-agent-build.md` 11.3) are ruled in SC1 to SC4 with no change to a blind file. Open for us: whether the judge's harmful-step check should read a step given only on a condition as recommended (a new judge version if it changes), and a checklist for the first checkpoint.
