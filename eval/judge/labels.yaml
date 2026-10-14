@@ -1,0 +1,31 @@
+# Claim support labelled by hand (row S4 of docs/decisions/eval-loop.md), committed before the judge is scored
+# against them. Each label was made by reading the claim's packet as the judge receives it: the statement, and the
+# text of every row it cites (support, or against for a rejected hypothesis), longest showing, cut at the scorer's
+# `claim_chars` keeping head and tail. Run records live in eval/loop-runs/ (local, git-ignored).
+#
+# supported: the rows, read together, show what the statement claims (for a rejected one: show it does not hold).
+# partial: the rows show part of it, and a material part rests on nothing cited.
+# unsupported: the rows do not show it, or contradict it.
+
+claims:
+  - {run: p4-luna-C-1452-tags-r1, id: h1, label: partial, note: "refusals and pool timeouts shown side by side; that the database's slots are what stops the gateway's pool is not (the pool error is the pool at its own maximum)"}
+  - {run: p4-luna-C-1452-tags-r1, id: h2, label: supported, note: "other hosts time out on the same pool error, and latency rose before the load balancer event"}
+  - {run: p4-luna-C-1452-tags-r1, id: h3, label: supported, note: "the marketing outage has its own change; the checkout errors are pool and database errors"}
+  - {run: p4-luna-C-1452-tags-r1, id: h4, label: supported, note: "errors on the old version climb after the rollback"}
+  - {run: sol-base-C-1452-tags-r1, id: h4, label: supported, note: "same thread retries, holds a leaked connection inside the transactional authorize, returns it after 39 s; design note; pool unavailable"}
+  - {run: sol-base-C-1452-tags-r1, id: h5, label: partial, note: "slowness and retries shown; the connection-retention link is not in these rows"}
+  - {run: sol-base-C-1452-tags-r1, id: h6, label: supported, note: "40 reconciler connections in the log count and the session table"}
+  - {run: sol-base-C-1452-tags-r1, id: h3, label: unsupported, note: "one chat question"}
+  - {run: sol-base-C-1452-tags-r1, id: h1, label: supported, note: "slow provider calls and a leaked connection before the checkout deploy started"}
+  - {run: sol-base-C-1452-tags-r1, id: h2, label: supported, note: "the member failed an HTTP health check with a 503; other hosts show the same failures"}
+  - {run: p08-C-1452-tags-r1, id: h3, label: supported, note: "retry and pool-timeout counts, sessions idle in transaction held by the app, the leak trace, the design note"}
+  - {run: p08-C-1452-tags-r1, id: h5, label: supported, note: "slow responses on three hosts and the retry and long-authorize counts"}
+  - {run: p08-C-1452-tags-r1, id: h6, label: supported, note: "the design note states the longer timeout and retries inside the same transaction; the build ships it"}
+  - {run: p08-C-1452-tags-r1, id: h7, label: supported, note: "the job starts at the jump in payments connections; 40 active reconciler sessions"}
+  - {run: p08-C-1452-tags-r1, id: h2, label: unsupported, note: "one chat question"}
+  - {run: p08-C-1452-tags-r1, id: h1, label: supported, note: "failures on every host, not one"}
+  - {run: p08-C-1452-tags-r1, id: h4, label: supported, note: "errors continue on the old version after the rollback"}
+  - {run: p07-C-1452-tags-r1, id: h2, label: unsupported, note: "only the marketing synthetic; nothing on checkout or a network fault"}
+  - {run: p07-C-1452-tags-r1, id: h9, label: partial, note: "the member-down alert and pool-error counts; nothing cited shows the health check failing on the database"}
+  - {run: p07-C-1452-tags-r1, id: h5, label: supported, note: "slow calls before the deploy; the rollback finished and 504s continued"}
+  - {run: p4-sol-C-1452-tags-r3, id: h3, label: partial, note: "slots exhausted and checkout failing are shown; that the one prevents the other is not"}
