@@ -1,61 +1,56 @@
-# What each chart on the published tuning-log page shows, read from the ledger at the close of the eval loop's
-# phase 2 (2026-10-14). `python -m eval.results export` writes them to notes.json for the page. Update a reading
-# when new batches change what its chart shows, and change the date in `as_of`.
+# What each chart on the published tuning-log page shows, in plain English, read from the ledger at the close of the
+# eval loop's phase 2 and the scorer (2026-10-14). `python -m eval.results export` writes them to notes.json for the
+# page. Update a reading when new batches change what its chart shows, and change the date in `as_of`.
 as_of: 2026-10-14, after pass 8 and the scorer
 notes:
   - chart: lead
     reading: >-
-      Every sol run led with the payments gateway, the plan's cause, in both phases: each batch is solid gateway.
-      The exception is luna's baseline, where 2 of 7 runs led with the gateway, 4 with the database (the trap) and
-      1 with the payment provider (the trigger). That is why the loop stayed on sol.
+      Every run on sol, and on Claude, blamed the payments gateway, which is the right answer. The cheaper model, luna,
+      got it right only 2 times in 7. Four times it blamed the database, which is a red herring. That is why we kept sol.
   - chart: trigger
     reading: >-
-      Through pass 3 every standard run recorded what set the fault off as a hypothesis. From pass 4 it dropped to 0
-      of 3 and stayed low (1 of 7 in sol's phase 2 baseline). Pass 7 brought it back to 5 of 5, and it held through
-      pass 8. The framing runs on the pass 3 files had none either, so pass 4 is not the whole explanation.
+      Early on, every report also said what set the problem off (the payment provider slowing down). After the pass 4
+      prompt change, reports mostly stopped saying it. Pass 7 fixed that, and every run since has said it.
   - chart: partial
     reading: >-
-      Before pass 2 more than half of each report's claims were only partly shown by their rows (median 0.58). Pass 2
-      cut that to about 0.32, and it has drifted between 0.4 and 0.5 since. Low effort runs looser (0.5 to 0.7).
-      Pass 7 sits near 0.5 because it adds hypotheses; the reverted pass 8 reached 0.32 but missed its own target.
+      At first, more than half of each report's claims were only partly backed up by the evidence cited. Pass 2 cut that
+      to about a third. It has sat around 40 to 50% since. Pass 7 nudged it up a little because reports now make more
+      claims.
   - chart: hyps
     reading: >-
-      A steady 5 to 6 hypotheses per report until pass 7, which puts each link of the account on the board: a median
-      of 9, with the trigger, the release and a symptom as their own hypotheses. Luna's reports hold fewer (median 4).
+      Reports listed 5 or 6 possible explanations until pass 7. Pass 7 made the agent write each part of the story as
+      its own entry, so reports now list about 9. Luna's reports list about 4.
   - chart: cost
     reading: >-
-      The first provider costs about $1.06 a run, sol about $0.34 to $0.42, luna $0.03 to $0.05. Within sol, pass 7
-      moved the median from $0.36 to $0.41: more hypotheses mean more to write and to verify.
+      A run costs about $1.06 on Claude, $0.34 to $0.42 on sol, and 3 to 5 cents on luna. Pass 7 added about 5 cents a
+      run on sol, because there is more to write and to check.
   - chart: wall
     reading: >-
-      Sol takes 180 to 250 s at medium effort and 150 to 170 s at low. Luna is the slow one, 290 to 490 s, because it
-      reasons at length at high effort. Running several runs side by side in phase 2 did not visibly slow sol.
+      A run takes about 3 to 4 minutes on sol, and a bit under 3 when it thinks less. Luna takes 5 to 8 minutes because
+      it thinks at length before every step.
   - chart: turns
     reading: >-
-      Sol is flat at 11 to 14 turns throughout: the 30-call budget binds before the turns do. Luna uses 7 to 10 and
-      the first provider 8 to 12, because both put more reads in each turn.
+      Sol goes back to the model 11 to 14 times a run, every time, because it runs out of lookups (it is allowed 30)
+      before it runs out of turns. Luna and Claude need fewer, because they ask for more lookups at once.
   - chart: boardonly
     reading: >-
-      Sol spends 4 to 6 turns of every run on board writes alone, in every batch, and pass 1's prompt change did not
-      move it. The first provider does it 0 to 2 times and luna 2 to 4, so it is a habit of the model, not of the
-      prompt, and it is classed as a model limit.
+      Sol wastes 4 to 6 turns a run just updating its notes, and no prompt change has stopped it. Claude barely does
+      this and luna does it less, so it is a habit of the sol model, not something the prompt causes.
   - chart: facts
     reading: >-
-      Agent runs find 4 of the 5 required facts at the second checkpoint in most runs. Nearly every miss is the same
-      fact, that the gateway's sessions sit idle in a transaction: the runs cite it from the chat message that reported
-      it, not from the incident record where the same paste sits (section 14.4, mode 1). Arm A finds 2 of 5.
+      Most runs find 4 of the 5 facts a good report needs. The one they keep missing is that the gateway's database
+      connections sit open doing nothing. They quote it from chat instead of from the incident ticket where the same
+      evidence was pasted, and only the ticket counts. The no-tools baseline finds 2 of 5.
   - chart: traps
     reading: >-
-      Sol and the first provider pass 222 of 226 trap checks. The four falls are the database held as an open cause in
-      two pass 8 runs and one baseline run, and one pass 3 run that left the database unaddressed. Luna falls 4 times
-      in 33 checks, and arm A 11 times in 15.
+      Sol and Claude avoid almost every red herring: 222 of 226. Every miss involved the database: three runs left it on
+      the list as a possible cause, and one never dealt with it. Luna fell for 4 of 33, and the no-tools baseline for 11 of 15.
   - chart: firstcorrect
     reading: >-
-      With the opening sweep, phase 1's runs first led with the right cause after 13 to 31 calls. Without it, sol's
-      phase 2 baseline took 20 to 29. Pass 7's regression runs got there after 14 to 22, and pass 8's after 14 to 25.
+      In phase 1 the agent was handed some starting evidence and found the cause after 13 to 31 lookups. Once it had to
+      choose its own first lookups, it took 20 to 29. Pass 7 brought that down to 14 to 22.
   - chart: mechanism
     reading: >-
-      Of the judge's four mechanism items, sol runs state 3 or 4 in most runs; the item most often missing is that the
-      callers time out waiting on the failing service. Passes 3 and 4 dipped to 2 in some runs. Luna ranges from 0 to
-      4, and arm A states none.
-
+      Most sol runs explain 3 or 4 of the 4 steps of how the failure works. The step most often left out is that the
+      checkout service times out waiting for the gateway. Luna's runs range from none to all four, and the no-tools
+      baseline explains none.

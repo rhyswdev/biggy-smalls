@@ -389,46 +389,45 @@ COLUMNS: list[tuple[str, Callable[[dict[str, Any]], str]]] = [
 # The words the log and the published page use, grouped. The page's key is built from this list.
 KEY: list[tuple[str, list[tuple[str, str]]]] = [
     ("The runs", [
-        ("Arm A", "The no-tools baseline: one model call over the commander's message, the alerts and the chat, with no tools and no second turn. It shows what a model does with only the obvious inputs."),
-        ("Arm C", "The agent, Smalls: it chooses its own reads with eleven tools, keeps a hypothesis board, cites the records it read, and has its report checked before it stands. Every run but arm A's is arm C."),
-        ("Checkpoint", "The moment a run investigates as of: 14:40 or 14:52 on the incident's day. The tools show nothing later."),
-        ("Batch", "A set of live runs made for one purpose; a column on every chart, in the order they ran."),
-        ("Batch names", "The labels along each chart's bottom. p01 to p08 are pass 1 to pass 8's runs, and p07-guard pass 7's wrong-cause triggers. "
-                        "p3-sol, p3-luna, p4-sol and p4-luna are phase 2's plan rows P3 (the shakedown) and P4 (the baseline), one batch per model, "
-                        "not passes 3 and 4. sol-shake and sol-base are phase 1's shakedown and baseline; eff-low and p02-low probe low effort; "
-                        "frame and frame-db-at-time are phase 1's wrong-cause and factual-question triggers, and final two more runs on pass 3's files. "
-                        "c3 is the first live run and cli-claude two runs by hand, both on the first provider. armA is arm A; "
-                        "e4 batches are the carry-forward and e5 batches the tags ablation."),
-        ("Phase", "Phase 1 and phase 2 are the eval loop's two rounds of tuning; build and between are runs made outside them."),
-        ("Pass", "One rewrite of the prompt files to fix one finding, by a fresh author who has never seen the incident, kept or reverted on the runs that follow. Pass 0 is the first blind author's files."),
-        ("Finding", "A failure mode seen across runs, written in terms that hold on any incident (F-01, F-02 and on), which a pass sets out to fix."),
-        ("Kept, reverted", "A pass is kept when its runs still reach the cause, its target moves and nothing else gets worse; otherwise its files are reverted."),
-        ("Set", "The models behind the agent's roles: sol, the second provider's middle tier; luna, its cheaper tier; claude, the first provider. The investigator's column names its profile and effort, such as openai@medium."),
-        ("Effort", "How long the model reasons before each answer: low, medium or high."),
-        ("Trigger kind", "Which message a run was given: standard, the checkpoint's own; framing, a commander asserting a wrong cause, to test whether it steers the agent; or custom, typed by hand."),
-        ("Guard set", "The two framing runs a pass must come through, unsteered, before it is kept."),
+        ("Arm A", "The baseline: the model gets the commander's message, the alerts and the chat in one go and answers once. It can't look anything up. It shows what you'd get without the agent."),
+        ("Arm C", "The agent, Smalls. It decides what to look up, keeps notes on its theories, cites the records it read, and has its report checked. Every run except arm A's is arm C."),
+        ("Checkpoint", "The time the investigation is run as of: 14:40 or 14:52 on the day of the incident. The agent can't see anything later."),
+        ("Batch", "A group of runs made for one purpose. Each one is a column on the charts, in the order they ran."),
+        ("Batch names", "The labels along the bottom of each chart. p01 to p08 are the runs testing prompt changes 1 to 8; p07-guard is the tougher test of change 7. "
+                        "p3 and p4 (with -sol or -luna) are not prompt changes: they are phase 2's first test and baseline, one column per model. "
+                        "sol-shake and sol-base are phase 1's first test and baseline. eff-low and p02-low try the model thinking less. "
+                        "frame and frame-db-at-time give the agent a misleading message on purpose; final is two extra runs. "
+                        "c3 and cli-claude are runs on Claude. armA is the baseline. e4 is the 14:40-then-14:52 test, and e5 the test with search labels off."),
+        ("Phase", "Phase 1 and phase 2 are the two rounds of improving the prompt. build and between are runs made outside those rounds."),
+        ("Pass", "One change to the agent's instructions, aimed at one problem, written by someone who has never seen this incident so it can't be tailored to it. A pass is kept if it helps, and undone if not. Pass 0 is the original instructions."),
+        ("Finding", "A problem seen across several runs (F-01, F-02 and so on), which a pass tries to fix."),
+        ("Kept, reverted", "Kept: the runs still find the right cause, the problem gets better and nothing else gets worse. Reverted: the change is undone."),
+        ("Model (set)", "Which AI model does the work. sol is the second provider's mid-priced model, luna its cheaper one, and claude the first provider's. The investigator column shows the setting, such as openai@medium."),
+        ("Effort", "How long the model thinks before each answer: low, medium or high."),
+        ("Trigger kind", "The message the run started from. standard is the commander's real message. framing is a message that pushes a wrong answer, to check the agent isn't swayed. custom was typed by hand."),
+        ("Guard runs", "The two misleading-message runs a change has to pass before it is kept."),
     ]),
     ("The agent", [
-        ("Hypothesis board", "The agent's running list of explanations, each with a role, a status (leading, open, rejected), a confidence and the records for and against it."),
-        ("Leading hypothesis", "The explanation the report puts first: what the agent says is causing the incident."),
-        ("Roles", "Cause, what is broken and why; trigger, the event that set the cause off; contributing, what made it worse; symptom, an effect, not the origin."),
-        ("Handle", "The id at the start of every record a tool prints, such as log:pay-01/ebfd5293. Reports cite handles, and each opens its native record."),
-        ("Non-chat support", "Evidence from a system's own record (a log, metric, change or ticket), not only what people said in chat."),
-        ("Board-only turn", "A model turn whose only call is a board write, with no reads beside it. Each costs time and tokens."),
-        ("Quiet-board nudge", "A line the model sees after three rounds with no board change, asking it to record what it has found or report."),
-        ("Verifier", "Two checks on each report before it stands: claim support, where a cheaper pass judges each claim against the rows it cites as supported, partial or unsupported; and a contrarian pass that looks for a better explanation."),
-        ("Tags", "Labels a classifier put on records to help searches. A search aid, never evidence."),
-        ("Carry-forward", "A 14:52 run that starts from the 14:40 run's board and must use what changed in between."),
+        ("Notes (the board)", "The agent's running list of possible explanations, each with how sure it is and the evidence for and against."),
+        ("Leading explanation", "The explanation the report puts first: what the agent says is causing the incident."),
+        ("Roles", "Cause: what is actually broken. Trigger: what set it off. Contributing: what made it worse. Symptom: an effect, not the origin."),
+        ("Handle", "The ID at the start of every record the agent can see, such as log:pay-01/ebfd5293. Reports cite these so every claim can be checked."),
+        ("System evidence", "Evidence from logs, metrics, deploys or tickets, rather than only what people said in chat."),
+        ("Wasted turn", "A round where the agent only updated its notes and looked nothing up. It costs time and money for nothing."),
+        ("Nudge", "A reminder the agent gets when its notes haven't changed for three rounds: write down what you've found, or finish."),
+        ("Report check", "Two checks before a report counts. One marks each claim as backed up, partly backed up, or not backed up by the evidence it cites. The other looks for a better explanation."),
+        ("Tags", "Labels attached to records to make searching easier. They help find things but are never treated as evidence."),
+        ("Carry-forward", "A 14:52 run that starts from what the 14:40 run found, and must use what changed in between."),
     ]),
     ("Scoring", [
-        ("Answer key", "What really happened, written with the data. Only the scorer reads it, never the agent."),
-        ("Scorer", "Code that grades each run against the answer key, plus a judge: a model given a yes-or-no checklist with quotes, at 14:52 only."),
-        ("Reached the cause", "The leading hypothesis blames the real cause, in the cause role, with non-chat support."),
-        ("Hard fail", "A wrong leading hypothesis held with high confidence: the worst outcome, since a commander would act on it."),
-        ("Required facts", "Facts the answer key says a good report must establish at its checkpoint, each counted only when cited from a record a tool showed."),
-        ("Traps", "The misleading theories built into the incident, such as the visible deploy or the full database. A run passes one by rejecting it or placing it inside the real chain."),
-        ("Agent bar", "PLAN 13's conditions for a good run: a valid report, no invented citations, the cause with non-chat support, rivals cleared with evidence, the owner from on-call, a list of what not to do, and a stop within budget."),
-        ("Mechanism items", "The judge's four-item checklist for how the fault works; the report earns one for each it states with support."),
+        ("Answer key", "What really happened, written when the incident data was made. Only the scorer sees it; the agent never does."),
+        ("Scorer", "Code that marks each run against the answer key, plus a grading model that ticks a checklist for the 14:52 runs."),
+        ("Found the cause", "The report's main explanation is the real cause, backed by system evidence."),
+        ("Hard fail", "The report confidently blames the wrong thing. It's the worst outcome, because a commander would act on it."),
+        ("Key facts", "The facts a good report must establish, each counted only if it's backed by a record the agent actually saw."),
+        ("Red herrings", "The misleading theories built into the incident, such as the recent deploy or the full database. A run avoids one by ruling it out with evidence."),
+        ("Passed overall", "The plan's checklist for a good run: a valid report, no made-up citations, the right cause with system evidence, wrong theories ruled out with evidence, the right owner, a list of what not to do, and finishing within budget."),
+        ("Failure steps explained", "The grading model's four-point checklist of how the failure works. A report gets a point for each step it explains with evidence."),
     ]),
 ]
 
