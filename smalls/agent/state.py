@@ -76,6 +76,7 @@ class LedgerEntry(TypedDict, total=False):
     used_tag_input: bool
     empty: bool
     identity: str | None                # what makes two calls the same call (J4)
+    edited_args: dict[str, Any] | None  # the arguments the commander approved in place of `args`, which ran (S2)
 
 
 class GateBy(TypedDict):
@@ -91,6 +92,7 @@ class GateDecision(TypedDict, total=False):
     reason_text: str | None             # what the person wrote, for the message that goes back to the model
     by: GateBy
     decided_at: str
+    edited_args: dict[str, Any] | None  # approved with these arguments in place of the proposed ones (S2)
 
 
 class Note(TypedDict):

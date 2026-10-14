@@ -441,8 +441,8 @@ def test_evidence_is_written_at_call_time_for_every_row_a_tool_showed(cfg):
     assert all(row["text"].startswith(row["handle"]) for row in evidence)
     reads = [c for c in calls if c["kind"] == "read"]
     assert {c["by"] for c in calls} == {"agent", "harness"} and all(c["gate"]["by"]["who"] == "auto" for c in reads)
-    assert set(calls[1]) == {"call_id", "round", "by", "tool", "kind", "args", "rationale", "status", "shown", "referenced", "native_query",
-                             "window", "chars", "latency_ms", "repeat_of", "used_tag_input", "gate"}
+    assert set(calls[1]) == {"call_id", "round", "by", "tool", "kind", "args", "edited_args", "rationale", "status", "shown", "referenced",
+                             "native_query", "window", "chars", "latency_ms", "repeat_of", "used_tag_input", "gate"}
     assert calls[0]["tool"] == "inventory" and calls[0]["referenced"] and calls[0]["shown"] == []
 
 

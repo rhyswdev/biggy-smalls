@@ -29,6 +29,9 @@ from smalls.tools.registry import ToolSpec
 REJECTED = "REJECTED by {who}: {reason}. The call was not run. Re-plan; do not repeat it unchanged."
 DEFERRED = ("DEFERRED: the incident commander has not decided. The call was not run. Continue without "
             "assuming it happened.")
+EDITED = "EDITED by the incident commander: the call ran with {edited} in place of the arguments you proposed, {proposed}."
+NOT_EDITABLE = "only a read can be run with edited arguments"
+BAD_EDIT = "the edited arguments are not valid for {tool}: {problem}"
 SUBMIT_NOW = "submit now"
 NOTE_KEY = "__note__"       # in a resume payload: a note from the incident commander, beside the decisions
 OVER_BUDGET = f"the call budget is spent; {SUBMIT_NOW}: call {SUBMIT_REPORT} as the only call in your turn"
@@ -91,6 +94,23 @@ def answer(card: dict[str, Any], reply: dict[str, Any] | None) -> tuple[str, str
     if reply.get("approve"):
         return "approved", who, None
     return "rejected", who, reply.get("reason") or "no reason given"
+
+
+def edited(card: dict[str, Any], reply: dict[str, Any] | None, spec: ToolSpec | None) -> tuple[dict[str, Any] | None, str | None]:
+    """The arguments a person approved a read with in place of the proposed ones (seam S2): (the arguments,
+    None) when they validate against the tool's own argument model, (None, why not) when they do not or the
+    call is not a read, and (None, None) when the answer carries none."""
+    if not reply or not reply.get("approve") or reply.get("args") is None:
+        return None, None
+    if spec is None or card.get("kind") != "read":
+        return None, NOT_EDITABLE
+    args = {k: v for k, v in dict(reply["args"]).items() if k != "rationale"}
+    try:
+        spec.args.model_validate(args)
+    except Exception as problem:
+        first = str(problem).splitlines()
+        return None, BAD_EDIT.format(tool=spec.name, problem=" ".join(first[1:3]).strip() or first[0])
+    return args, None
 
 
 def headless(choice: str):

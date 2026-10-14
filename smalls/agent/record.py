@@ -48,7 +48,7 @@ PACKAGES = ("langgraph", "langgraph-checkpoint-sqlite", "langchain", "langchain-
 FILES = ("run.json", "events.jsonl", "calls.jsonl", "evidence.jsonl", "notes.jsonl", "board.json", "report.json", "verdict.json",
          "usage.json", "summary.json")
 CHECKPOINTS = "checkpoints.sqlite"
-CALL_KEYS = ("call_id", "round", "by", "tool", "kind", "args", "rationale", "status", "shown", "referenced", "native_query",
+CALL_KEYS = ("call_id", "round", "by", "tool", "kind", "args", "edited_args", "rationale", "status", "shown", "referenced", "native_query",
              "window", "chars", "latency_ms", "repeat_of", "used_tag_input")
 
 

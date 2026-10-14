@@ -183,3 +183,63 @@ def test_s4_notes_from_another_thread_are_all_delivered(cfg):
     delivered = {n["handle"] for n in r.state()["ic_notes"]} | {n["handle"] for n in r.pending_notes()}
     r.close()
     assert len(added) == 4 and set(added) == delivered                                                     # none lost, none twice
+
+
+# -- S2: approve with edit ---------------------------------------------------------------------------------------
+
+def interactive(cfg, run_id: str) -> Runner:
+    """A run that asks before every read, paused at its first gate (the opening sweep's card)."""
+    from dataclasses import replace
+
+    r = runner(replace(cfg, auto_approve=False), run_id, stop_at_gate=True, attended=True, via="web")
+    assert r.start(fx.TRIGGER, fx.NOW)["status"] == "paused"
+    return r
+
+
+def answer_until(r: Runner, call_id: str, decide) -> Runner:
+    """Approve every card as proposed until the one named, which `decide` answers; then run to the next stop."""
+    while True:
+        cards = r.state()["pending"]["calls"]
+        answers = {c["call_id"]: (decide(c) if c["call_id"] == call_id else {"approve": True}) for c in cards}
+        result = r.resume(answers)
+        if call_id in answers or result["status"] != "paused":
+            return r
+
+
+def test_s2_an_approved_edit_runs_the_edited_arguments_and_both_are_kept(cfg):
+    import json
+
+    r = interactive(cfg, "edit")
+    answer_until(r, "call_01_search_logs", lambda c: {"approve": True, "args": {**c["args"], "since": "-90m"}})
+    while r.state().get("pending"):
+        r.resume({c["call_id"]: {"approve": True} for c in r.state()["pending"]["calls"]})
+    state = r.state()
+    r.close()
+    entry = next(e for e in state["ledger"] if e["call_id"] == "call_01_search_logs")
+    assert entry["args"]["since"] == "-2h" and entry["edited_args"]["since"] == "-90m" and entry["status"] == "ok"
+    assert entry["window"][0] == "2026-03-02T00:50:00Z"                                                   # ninety minutes before now: the edit ran
+    decision = next(g for g in state["gate_log"] if g["call_id"] == "call_01_search_logs")
+    assert decision["decision"] == "approved" and decision["edited_args"] == entry["edited_args"] and decision["by"] == {"who": "human", "via": "web"}
+    from langchain_core.messages import ToolMessage
+    result = next(m for m in state["messages"] if isinstance(m, ToolMessage) and m.tool_call_id == "call_01_search_logs")
+    assert str(result.content).startswith('EDITED by the incident commander: the call ran with {"terms": ["report-export"], "since": "-90m"}')
+    row = next(json.loads(line) for line in (r.dir / "calls.jsonl").read_text().splitlines() if '"call_01_search_logs"' in line)
+    assert row["args"]["since"] == "-2h" and row["edited_args"]["since"] == "-90m" and row["gate"]["edited_args"]["since"] == "-90m"
+
+
+def test_s2_an_edit_that_does_not_validate_is_not_run(cfg):
+    r = interactive(cfg, "edit-bad")
+    answer_until(r, "call_01_search_logs", lambda c: {"approve": True, "args": {**c["args"], "limit": 100000}})
+    state = r.state()
+    r.close()
+    decision = next(g for g in state["gate_log"] if g["call_id"] == "call_01_search_logs")
+    assert decision["decision"] == "deferred" and decision["reason"].startswith("the edited arguments are not valid for search_logs")
+    assert next(e for e in state["ledger"] if e["call_id"] == "call_01_search_logs")["status"] == "deferred"
+
+
+def test_s2_an_action_cannot_be_approved_with_edits(cfg):
+    from smalls.agent import gate
+
+    card = {"call_id": "c1", "tool": "propose_action", "kind": "action", "args": {}}
+    assert gate.edited(card, {"approve": True, "args": {"target": "x"}}, None) == (None, gate.NOT_EDITABLE)
+    assert gate.edited(card, {"approve": True}, None) == (None, None)

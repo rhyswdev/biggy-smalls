@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import time
+from dataclasses import replace
 from datetime import datetime, timezone
 from typing import Any, Callable
 
@@ -280,12 +281,17 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             reply = (answers or {}).get(card["call_id"])
             verdict, who, reason = gate.answer(card, reply)
             via = "headless" if who == "policy" else person_via
+            args, refused = gate.edited(card, reply, tools.get(card["tool"]))
+            if refused:         # an edit that cannot run is not run: the call is deferred, and the reason says why
+                verdict, reason = "deferred", refused
             handle = None
             if who == "human" and reason and verdict == "rejected":     # a person's reason is a citable note
                 at = decided_at.isoformat(timespec="milliseconds")
                 handle = ic_note_handle(runtime.context.run_id, at, reason)
                 notes.append({"handle": handle, "text": reason, "submitted_at": at, "by": "incident commander", "call_id": card["call_id"]})
             d = gate.decision(card, verdict, who, via, handle or reason, reason)
+            if args is not None:
+                d["edited_args"] = args
             decisions[card["call_id"]] = d
             new.append(d)
         said = (answers or {}).get(gate.NOTE_KEY)
@@ -360,6 +366,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                             update.setdefault("hypotheses", {}).update(result["merged"])
                             current = merge_hypotheses(current, result["merged"])
                 else:
+                    if d.get("edited_args") is not None:     # approved with edits: the edited arguments run (S2)
+                        entry["edited_args"] = d["edited_args"]
+                        call = {**call, "args": d["edited_args"]}
                     entry["identity"] = _identity(spec, call, ctx)
                     earlier = next((e for e in [*state.get("ledger", []), *ledger] if entry["identity"] and e.get("identity") == entry["identity"]
                                     and e["status"] == "ok" and e["round"] >= state.get("restart_round", 0)), None)
@@ -368,6 +377,9 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
                         entry["repeat_of"] = earlier["call_id"]
                     else:
                         env = _run(spec, call, ctx)
+                        if entry.get("edited_args") is not None:     # the result says so on its first line
+                            env = replace(env, text="\n".join([gate.EDITED.format(edited=json.dumps(entry["edited_args"], ensure_ascii=False),
+                                                                                   proposed=json.dumps(entry["args"], ensure_ascii=False)), env.text]))
                         if entry["by"] == "agent" and env.meta.get("error") != "arguments":     # a call counts when it runs; the sweep is free (J5)
                             used += 1
                         if env.status == "ok" and ctx.evidence:
@@ -382,6 +394,7 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             ledger.append(entry)
             writer({"type": "tool_result", **{k: entry[k] for k in ("call_id", "tool", "kind", "by", "status", "shown", "referenced",
                                                                     "native_query", "window", "chars", "latency_ms")},
+                    "edited_args": entry.get("edited_args"),
                     "first_line": env.text.split("\n", 1)[0][:200]})
             if entry["by"] == "harness":
                 blocks.append(SWEEP_BLOCK.format(tool=call["tool"], args=json.dumps(call["args"], ensure_ascii=False), text=env.text))
