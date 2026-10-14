@@ -9,7 +9,7 @@ Docs (all under `docs/`):
 - `PLAN.md`: the plan. `HANDOFF.md`: status and next step; update it when a step lands.
 - `requirements.md`: the assessment we are judged against, and our working priorities.
 - `DATA.md`: data judgment calls, numbered. `schemas.md`: vendor schema authorities and kept deviations.
-- `decisions/`: rulings (`step6-decisions.md`: step 6 tool layer; `ingestion-decisions.md`: step 6a ingestion and tagging; `tools-agent-build.md`: the tools and the agent, with the build order, each row's acceptance evidence and every judgment call). `research/agent-design.md`: the settled agent design and its rulings; `research/ingestion-and-retrieval.md`: the research behind the tool layer; `research/tagging.md`: the research behind the tagging pass.
+- `decisions/`: rulings (`step6-decisions.md`: step 6 tool layer; `ingestion-decisions.md`: step 6a ingestion and tagging; `tools-agent-build.md`: the tools and the agent, with the build order, each row's acceptance evidence and every judgment call; `eval-loop.md`: the scorer, the baseline and the loop that improves the prompt, with its keep and stop rules). `research/agent-design.md`: the settled agent design and its rulings; `research/ingestion-and-retrieval.md`: the research behind the tool layer; `research/tagging.md`: the research behind the tagging pass.
 
 Doc rules: no markdown outside `docs/` unless something reads it (`scenario/content/` is generator input; `spikes/agent/README.md` belongs to the spike; `eval/heldout/` is the held-out session's). Fold a review's findings into PLAN, DATA or a decision record, then delete the review; git keeps it. Write docs as a shared working document: record what was decided and why, in the first person plural, not who said what; name no outside people.
 

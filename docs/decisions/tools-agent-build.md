@@ -130,6 +130,8 @@ Rules the author follows: every rule is generic and would be true on another inc
 
 **After v1.** A prompt change is driven by run records, so it is tuned on the development incident. That is expected, and it is what the held-out runs are for. Each change is one commit that names the run id that motivated it and states the generic failure it fixes.
 
+*Amended 2026-10-14 by V1 in `docs/decisions/eval-loop.md`: after v1, a blind pass starts from the installed five files and one generic finding (the iteration room), not from placeholders; the author's rules, the folder-only rule, the unedited install and the checks stand, with the overfit review added.*
+
 ## 4. Where the work happens
 
 This track runs in the worktree, on `agent-build`. `.claude/worktrees/` is listed in `.git/info/exclude`, which is local and untracked, so the main checkout never sees it.
