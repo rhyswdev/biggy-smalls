@@ -522,7 +522,7 @@ Found and fixed; each fix but E6 has a test that fails without it:
 Seen and left as they are, each working as designed or waiting on a ruling:
 
 - Markdown shows as literal characters in prose (Q7).
-- The working picture's Reads tally counts the reads the agent proposed, not the opening sweep, so it reads 0 while the sweep's three reads wait; the agent run's banner counts every proposed read (25), the chats list the reads that ran (17).
+- The working picture's Reads tally counts the reads the agent proposed, not the opening sweep, so it reads 0 while the sweep's three reads wait, yet its rejected and skipped counts take every row, so a rejected sweep read shows as "0 proposed, 1 rejected"; the agent run's banner counts every proposed read (25), the chats list the reads that ran (17).
 - A recorded run that paused on a provider error is listed as Stopped, the label a live paused chat needs for "Go on".
 - A plain question in a new chat is answered first and well, then investigated as an incident: 14 reads and about two minutes for "who is on call".
 - The support message's "names no internal system" check flags a customer-facing site the draft mentions, because it is a CMDB item one of the report's hypotheses names.
