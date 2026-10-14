@@ -80,3 +80,15 @@ probes:
     review: the finding passed the findings lint and the overfit review (0 of 1 flagged); the installed diff, harness and prompt together, 0 of 19 flagged
     after: not measured; the next scored runs use another model, so the first-phase numbers are not a baseline for it
     status: installed with the harness change
+  F-06:
+    kind: harness and prompt
+    layer: efficiency
+    text: eval/findings/F-06.md
+    why: ruled by us on 2026-10-14 (plan row P1); the stale-board refusal cost a turn and showed the commander refused calls
+    runs:
+      20261014T173259Z-6b8ce8: {board_refusals: 4, refused_round: 5, note: first provider, run by hand at 14:52}
+      20261014T173445Z-4fe561: {board_refusals: 4, refused_round: 5, note: first provider, run by hand at 14:40}
+    pass: 6
+    review: the finding passed the findings lint and the overfit review (0 of 1 flagged); the harness diff 0 of 11 flagged; the installed prompt diff 0 of 1 flagged
+    after: measured by P3 and P4's ledger rows (board refusals, quiet-board nudges, moves after a nudge)
+    status: installed (harness 770c665, prompt eeff055)

@@ -42,3 +42,11 @@ Each pass changed the five files to fix one generic finding, and was kept or rev
 
 **Result: installed, not yet measured.** It changes what every run does in its first turn, so the earlier passes' numbers are not a baseline for it.
 
+## Pass 6: a quiet board was refused, and the prompt said so (installed, not yet measured)
+
+**Finding.** After three rounds with no board change, the harness refused every read of the next round. That cost a turn and showed the commander refused calls. The count also ran while the board was still empty, which is likelier now that the agent chooses its own first reads. The harness now nudges instead: after three quiet rounds, empty board or not, the status line carries one more part before the budget, and nothing is refused.
+
+**Change.** In the system prompt only: the status-line description lists the new part in its place, the stale rule no longer says the gate refuses reads, and one rule says what the part means and what it asks for (record what the reads so far show, or submit), with the reason. The round count is written as `<n>`, as the line prints it, so the prompt cannot drift from the setting again.
+
+**Result: installed, not yet measured.** The next runs are on new models, so they are the first measure of it.
+
