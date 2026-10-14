@@ -105,7 +105,9 @@ def _toolbox(args: argparse.Namespace, saved: dict[str, Any] | None = None):
     bundle = getattr(args, "bundle", None) or os.environ.get("SMALLS_BUNDLE")
     if not bundle:
         raise SystemExit("smalls: name a bundle with --bundle <folder> or SMALLS_BUNDLE")
-    return bundle_toolbox(bundle, saved.get("tags"))
+    # A resumed run keeps the setting it was started with; a new one takes --tags, then SMALLS_TAGS.
+    asked = getattr(args, "tags", None)
+    return bundle_toolbox(bundle, saved["tags"] if saved.get("tags") is not None else (asked == "on" if asked else None))
 
 
 def _check_placeholders(profile_provider: str) -> None:
@@ -243,6 +245,7 @@ def add_run_commands(sub) -> None:
     run.add_argument("--checkpoint", help="a label for this `now`, kept in the run record")
     run.add_argument("--arm", default="C", help="the eval arm, kept in the run record")
     run.add_argument("--channel", help="the incident channel the opening sweep reads; all channels when omitted")
+    run.add_argument("--tags", choices=["on", "off"], help="with or without tags: inputs, labels and the inventory's counts (default: SMALLS_TAGS)")
     run.add_argument("--profile", help="a model profile from config.toml (default: SMALLS_PROFILE, then the file's default)")
     run.add_argument("--interactive", action="store_true", help="ask before every read too, not only before actions")
     run.add_argument("--stop-at-gate", action="store_true", help="pause at the first gate and exit; resume later")

@@ -74,3 +74,50 @@ def test_a_scripted_run_over_the_real_registry_writes_a_complete_record(tmp_path
     first_turn = state["messages"][0].content
     assert "Logs, by sourcetype (" in first_turn and "Chat channels:" in first_turn and run["now"] in first_turn
     assert "Knowledge documents (" in first_turn and "Metric series (" in first_turn and "Tags, a search aid" in first_turn     # the full inventory
+
+
+def tagged_script(messages, tools):
+    """Reads the logs once through the tag input, then says it found nothing conclusive."""
+    k = sum(isinstance(m, AIMessage) for m in messages)
+    if k == 0:
+        return "Read the records tagged as errors.", [call("search_logs", 1, ("h1", "records tagged errors"), since="-30m", limit=3, signal="errors")]
+    return "Nothing conclusive: say so.", [call(
+        "submit_report", 2, summary="Inconclusive.",
+        impact={"business_service": "unknown", "cis": [], "priority": {"suggested": "unknown", "impact": "unknown", "urgency": "unknown"},
+                "assignment_group": "unknown", "oncall": "unknown", "customer": "unknown"},
+        hypotheses=[], timeline=[], actions=[], do_not=[],
+        alerts=[{"handle": h, "verdict": "noise"} for h in fixture_script.swept_alerts(messages)], open_questions=["What changed?"],
+        stakeholder_update={"status": "Investigating.", "customer_impact": "unknown", "scope": "unknown", "changed_since_last": "First update.",
+                            "next_steps": "Keep reading.", "next_update_at": "unknown"})]
+
+
+@pytest.mark.parametrize("tags", [False, True])
+def test_the_tag_flag_is_a_setting_of_the_run_and_a_call_records_whether_it_used_a_tag_input(tmp_path, tags):
+    """Row D9: the flag is a dimension a run is started with. Off, the model is offered no tag input and sees
+    no tag; on, a call through a tag input is recorded as one."""
+    import argparse
+
+    from smalls.agent import __main__ as cli
+
+    picked = cli._toolbox(argparse.Namespace(registry=None, bundle=str(parity.BUNDLE), tags="on" if tags else "off"))
+    assert picked.describe["tags"] is tags
+    assert cli._toolbox(argparse.Namespace(registry=None, bundle=str(parity.BUNDLE), tags="on"), saved={"tags": False, "registry": "bundle"}).describe["tags"] is False
+    cfg = load_config(runs_dir=tmp_path)
+    toolbox = bundle_toolbox(parity.BUNDLE, tags)
+    assert ("signal" in toolbox.read_tools["search_logs"].args.model_fields) is tags
+    r = Runner(cfg, toolbox, f"tags-{tags}", script=tagged_script, eval_run=True)
+    r.start(TRIGGER, golden.ctx().now, checkpoint=golden.SECOND)
+    state = r.state()
+    r.close()
+    run = json.loads((r.dir / "run.json").read_text())
+    calls = [json.loads(line) for line in (r.dir / "calls.jsonl").read_text().splitlines()]
+    mine = next(c for c in calls if c["by"] == "agent" and c["tool"] == "search_logs")
+    first_turn = state["messages"][0].content
+    shown = "\n".join(str(m.content) for m in state["messages"])
+    assert run["tags"] is tags and ("Tags, a search aid" in first_turn) is tags and ("[tag " in shown) is tags
+    if tags:
+        assert mine["status"] == "ok" and mine["used_tag_input"] is True and "[tag filter signal=errors:" in shown
+    else:
+        assert mine["status"] == "error" and mine["used_tag_input"] is False and mine["shown"] == []      # the input does not exist: bad arguments
+    assert all(c["used_tag_input"] is False for c in calls if c["by"] == "harness")                        # the sweep never uses a tag filter
+

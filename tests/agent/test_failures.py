@@ -21,7 +21,7 @@ from smalls.agent.events import Bus, Event, JsonlSink, last_seq, read_events
 from smalls.agent.models import retryable
 from smalls.agent.models import scripted_call as call
 from smalls.agent.record import FILES, RunsIndex, check_run_id, new_run_id, scrub
-from smalls.agent.runner import Runner, Toolbox, module_toolbox
+from smalls.agent.runner import Runner, Toolbox, module_toolbox, resume_hint
 from smalls.contracts.envelope import Envelope
 from smalls.contracts.report import Report
 
@@ -130,7 +130,7 @@ def test_row2_an_injected_provider_timeout_leaves_a_full_record_and_a_resumable_
     assert (error.data["where"], error.data["kind"], error.data["next"]) == ("model", "TimeoutError", "resume")
     assert error.data["message"] == "TimeoutError: the provider did not answer in time"
     paused = events_of(r1)[-1].data
-    assert paused["resume"] == "uv run smalls resume timeout" and "the model failed (TimeoutError)" in paused["reason"]
+    assert paused["resume"] == resume_hint("timeout") and "the model failed (TimeoutError)" in paused["reason"]
     report = json.loads((r1.dir / "report.json").read_text())
     Report.model_validate(report)                                                  # the validated partial
     assert report["summary"].startswith("Incomplete (the model failed (TimeoutError)).") and [h["id"] for h in report["hypotheses"]] == ["h-full", "h-dying"]
