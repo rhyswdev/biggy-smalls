@@ -46,6 +46,7 @@ from smalls.tools.registry import ToolContext, ToolSpec
 
 Decider = Callable[[list[dict[str, Any]]], dict[str, dict[str, Any]]]
 THINKING_FLUSH_S = 0.2      # reasoning deltas are coalesced: one event at most this often, and the whole text once per call
+STOPPED = "the incident commander stopped the run"
 
 
 @dataclass
@@ -148,6 +149,7 @@ class Runner:
         self._investigating = False
         self._carry: dict[str, Any] | None = None
         self._asking = False                    # a person is being asked at a gate
+        self._stop = threading.Event()          # set from another thread to stop at the next stream part (S5)
 
     def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
         """The verifier's passes, each a model bound to `submit_verdict` with its prompt, and the profile
@@ -309,6 +311,13 @@ class Runner:
             single_call=saved.get("single_call", self.single_call), carry=self._carry, evidence=self.record.evidence,
             read_evidence=lambda: self.record.read_jsonl("evidence.jsonl"))
 
+    def request_stop(self) -> None:
+        """Ask a running run to stop (seam S5). It is checked between stream parts, so the run stops within a
+        token or a tool call: the node that was running is dropped and runs again on resume, and the run
+        ends `paused`, with its partial board as the report, resumable from its last checkpoint. Safe to
+        call from any thread, and a no-op on a run that is not running."""
+        self._stop.set()
+
     # -- the loop ------------------------------------------------------------------------------------------
 
     def _heartbeat(self, stop: threading.Event) -> None:
@@ -344,6 +353,8 @@ class Runner:
                 for part in self.graph.stream(inp, self.config, context=self._ctx, stream_mode=["messages", "updates", "custom"],
                                               version="v2", **extra):
                     self._map(part["type"], part["data"])
+                    if self._stop.is_set():
+                        break
             except (Exception, KeyboardInterrupt) as failure:
                 if not isinstance(failure, GraphRecursionError):
                     return self._stopped(failure, time.perf_counter() - started)
@@ -357,6 +368,10 @@ class Runner:
             finally:
                 self._flush_thinking()
             state = self.graph.get_state(self.config)
+            if self._stop.is_set():
+                self._stop.clear()
+                if state.next or state.tasks or state.interrupts:
+                    return self._halted(dict(state.values), time.perf_counter() - started)
             if not state.interrupts and state.values.get("restart_pending"):
                 inp = self._restart(dict(state.values))
                 continue
@@ -403,6 +418,18 @@ class Runner:
         self.graph.update_state(self.config, seeded, as_node="orient")
         self.bus.emit("restart", thread=thread, round=round_now, reason="the context limit was reached", first_turn_chars=len(first))
         return None
+
+    def _halted(self, values: dict[str, Any], wall_s: float) -> dict[str, Any]:
+        """A run the commander stopped: a pause like any other, with the partial board as its report."""
+        values.update(status="paused", stop_reason=STOPPED)
+        values.setdefault("as_of", iso(self._ctx.now))
+        if not values.get("report"):
+            values["report"] = partial_report(values, STOPPED)
+        self.bus.emit("report", report=values["report"], status="paused")
+        summary = self._write_derived(values, wall_s)
+        self._index("paused", values)
+        self.bus.emit("run_paused", resume=resume_hint(self.run_id), reason=STOPPED, stopped=True)
+        return {"status": "paused", "run_id": self.run_id, "report": values["report"], "summary": summary, "stopped": True}
 
     def _stopped(self, failure: BaseException, wall_s: float) -> dict[str, Any]:
         """A run that stopped on a failure: a provider error after its retries, an interrupt, a fault. The
