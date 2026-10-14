@@ -1,7 +1,7 @@
 # What each chart on the published tuning-log page shows, read from the ledger at the close of the eval loop's
 # phase 2 (2026-10-14). `python -m eval.results export` writes them to notes.json for the page. Update a reading
 # when new batches change what its chart shows, and change the date in `as_of`.
-as_of: 2026-10-14, after pass 8
+as_of: 2026-10-14, after pass 8 and the scorer
 notes:
   - chart: lead
     reading: >-
@@ -39,3 +39,23 @@ notes:
       Sol spends 4 to 6 turns of every run on board writes alone, in every batch, and pass 1's prompt change did not
       move it. The first provider does it 0 to 2 times and luna 2 to 4, so it is a habit of the model, not of the
       prompt, and it is classed as a model limit.
+  - chart: facts
+    reading: >-
+      Agent runs find 4 of the 5 required facts at the second checkpoint in most runs. Nearly every miss is the same
+      fact, that the gateway's sessions sit idle in a transaction: the runs cite it from the chat message that reported
+      it, not from the incident record where the same paste sits (section 14.4, mode 1). Arm A finds 2 of 5.
+  - chart: traps
+    reading: >-
+      Sol and the first provider pass 222 of 226 trap checks. The four falls are the database held as an open cause in
+      two pass 8 runs and one baseline run, and one pass 3 run that left the database unaddressed. Luna falls 4 times
+      in 33 checks, and arm A 11 times in 15.
+  - chart: firstcorrect
+    reading: >-
+      With the opening sweep, phase 1's runs first led with the right cause after 13 to 31 calls. Without it, sol's
+      phase 2 baseline took 20 to 29. Pass 7's regression runs got there after 14 to 22, and pass 8's after 14 to 25.
+  - chart: mechanism
+    reading: >-
+      Of the judge's four mechanism items, sol runs state 3 or 4 in most runs; the item most often missing is that the
+      callers time out waiting on the failing service. Passes 3 and 4 dipped to 2 in some runs. Luna ranges from 0 to
+      4, and arm A states none.
+
