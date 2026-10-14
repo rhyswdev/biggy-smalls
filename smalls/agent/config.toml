@@ -12,7 +12,7 @@ default_profile = "anthropic"   # read only by a config that has no [sets]
 call_budget = 30            # gated tool calls (reads and actions) per run
 revision_calls = 5          # extra calls after a verifier asks for a revision
 extra_turns = 6             # model turns allowed beyond the call budget, because internal calls are free
-stale_rounds = 3            # rounds with no board change before the gate says "submit now"
+stale_rounds = 3            # rounds with no board change before the status line nudges the model; nothing is refused
 stuck_empty = 3             # consecutive empty reads before the stuck hint
 malformed_shown = 3         # rounds in a row with a call whose arguments fail validation before those calls are shown;
                             # until then the model is answered with the error and retries, and nobody sees it

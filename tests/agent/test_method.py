@@ -161,12 +161,22 @@ def test_status_line_flag_stale_hypotheses():
     assert "stale: trig;" in board.status_line(b, round=3, used=0, limit=30, turns_left=33)
 
 
-def test_a_round_whose_every_call_was_malformed_does_not_count_toward_a_stale_board():
+def test_a_round_whose_every_call_was_malformed_does_not_count_toward_a_quiet_board():
     b = ready_board()                                                             # every row written in round 1
-    assert board.stale_refusal(b, round=5, stale_rounds=3) is not None            # rounds 2, 3 and 4 were quiet
-    assert board.stale_refusal(b, round=5, stale_rounds=3, skip=[3]) is None      # one of them only retried a malformed call
-    assert board.stale_refusal(b, round=6, stale_rounds=3, skip=[3]) is not None
-    assert board.stale_refusal(b, round=5, stale_rounds=3, skip=[1, 5]) is not None     # only quiet rounds before this one are skipped
+    assert board.quiet_rounds(b, round=4) == 3                                    # rounds 2, 3 and 4 were quiet
+    assert board.quiet_rounds(b, round=4, skip=[3]) == 2                          # one of them only retried a malformed call
+    assert board.quiet_rounds(b, round=5, skip=[3]) == 3
+    assert board.quiet_rounds(b, round=4, skip=[1, 5]) == 3                       # only quiet rounds since the last change, up to this one
+    assert board.quiet_rounds(b, round=4, since=3) == 1                           # a follow-up starts the count again
+    assert board.quiet_rounds({}, round=3) == 3                                   # an empty board is quiet too
+
+
+def test_the_nudge_comes_at_stale_rounds_and_sits_before_the_budget():
+    assert board.nudge(2, 3) is None
+    assert board.nudge(3, 3) == "the board has not changed in 3 rounds: record what the evidence shows with update_board, or submit"
+    line = board.status_line(ready_board(), round=4, used=3, limit=30, turns_left=20, quiet_nudge=board.nudge(3, 3))
+    assert line == ("[board: ready; stale: lead, trig; the board has not changed in 3 rounds: record what the evidence shows with "
+                    "update_board, or submit; budget 3/30, 20 turns left]")
 
 
 def test_status_line_flag_budget_and_turns():
@@ -174,7 +184,7 @@ def test_status_line_flag_budget_and_turns():
     assert board.status_line(ready_board(), round=1, used=3, limit=35, turns_left=12).endswith("; budget 3/35, 12 turns left]")
 
 
-def test_a_stale_board_makes_the_gate_refuse_reads_and_only_a_board_write_lifts_it(cfg):
+def test_a_quiet_board_is_nudged_on_the_status_line_and_no_read_is_refused(cfg):
     def reader(messages, tools):
         k = sum(isinstance(m, AIMessage) for m in messages)
         if k < 5:
@@ -183,15 +193,27 @@ def test_a_stale_board_makes_the_gate_refuse_reads_and_only_a_board_write_lifts_
             return "record", [call("update_board", 9, hypotheses=[{"id": "h", **NEW}]), call("search_logs", 10, ("h", "x"), since="-2h", terms=["disk"])]
         return "stop", []
 
-    r = runner(cfg, "stale", reader)
+    r = runner(cfg, "quiet", reader)
     r.start(fx.TRIGGER, fx.NOW)
     state = r.state()
     r.close()
     decisions = [g for g in state["gate_log"] if g["tool"] == "search_logs"]
-    assert [g["decision"] for g in decisions] == ["approved", "approved", "approved", "rejected", "rejected", "approved"]
-    refused = decisions[3]
-    assert refused["by"]["who"] == "policy" and "the board has not changed in 3 rounds" in refused["reason"] and "submit now" in refused["reason"]
-    assert state["calls_used"] == 4                                               # a refusal is not charged
+    assert [g["decision"] for g in decisions] == ["approved"] * 6                 # a quiet board refuses nothing
+    assert not [g for g in state["gate_log"] if g["by"]["who"] == "policy" and g["decision"] == "rejected"]
+    assert state["calls_used"] == 6
+    told = [m.content for m in state["messages"] if isinstance(m, ToolMessage)]
+    nudged = [n for n, text in enumerate(told, 1) if "the board has not changed in" in text]
+    assert nudged == [3, 4, 5]                                                    # rounds 3 to 5; round 6 wrote the board
+    assert "the board has not changed in 3 rounds: record what the evidence shows with update_board, or submit;" in told[2]
+    assert "the board has not changed in 5 rounds" in told[4]
+    assert state["nudges"] == [3, 4, 5]
+    status = [e.data for e in read_events(r.dir / "events.jsonl") if e.type == "board_status"]
+    assert [e["quiet_rounds"] for e in status] == [1, 2, 3, 4, 5, 0]
+    assert all("has not changed" not in e["line"] for e in status)                # the line a screen shows leaves the nudge out
+    assert [bool(e["nudge"]) for e in status] == [False, False, True, True, True, False]
+    summary = json.loads((r.dir / "summary.json").read_text())
+    assert summary["process"]["quiet_board"] == {"nudged_rounds": [3, 4, 5], "moved_next_round": 1}
+    assert summary["process"]["refused_by_policy"] == 0
 
 
 # -- the first reads: the agent's own; fixed reads only for the no-tools baseline (J12, amended) ---------------

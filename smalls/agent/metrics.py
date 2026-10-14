@@ -67,6 +67,16 @@ def process(values: dict[str, Any], usage_calls: list[dict[str, Any]], events: d
         "budget": {"calls": budget, "calls_used": used, "hit": used >= budget > 0, "turn_cap": turn_cap, "turns_used": turns,
                    "turn_cap_hit": turns >= turn_cap > 0},
         "stuck_events": events.get("stuck", 0),
+        "quiet_board": quiet_board(values),
         "restarts": events.get("restart", 0),
         "hypotheses": hypotheses,
     }
+
+
+def quiet_board(values: dict[str, Any]) -> dict[str, Any]:
+    """The rounds whose status line nudged a quiet board (J14, amended), and how many of those nudges the
+    board answered by moving in the very next round."""
+    nudged = sorted(set(values.get("nudges") or []))
+    changed = {row.get("round") for h in (values.get("hypotheses") or {}).values() for row in h.get("history") or []}
+    return {"nudged_rounds": nudged, "moved_next_round": sum(1 for r in nudged if r + 1 in changed)}
+

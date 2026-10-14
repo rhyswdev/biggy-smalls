@@ -143,7 +143,7 @@ It is append-only, so it costs nothing in cache or thinking, and it moves the va
 
 **Stop rule.**
 - **Ready.** Code signals "ready to report" when the leading hypothesis has non-chat support for each link and one discriminating check, and every rival has `against`.
-- **Forced.** The agent must report when the budget runs out or the board has been stale for 3 rounds. An `inconclusive` report is a valid outcome.
+- **Forced.** The agent must report when the budget runs out. An `inconclusive` report is a valid outcome. *Amended 2026-10-14 (P1 of `docs/decisions/eval-loop.md` section 12): a board quiet for 3 rounds no longer forces a report; the status line nudges the model to record what the evidence shows or submit.*
 
 **Steering by the incident commander (IC).**
 - An `ic_note` adds a note without blocking, and every rejection reason is also a note.
@@ -388,7 +388,8 @@ A contrarian always proposes something, so "a check was proposed" alone would tr
 | Tool error, bad arguments, unparseable JSON | An error ToolMessage per A2; every call id is answered; the run goes on [V-spike] | A red line with the guidance |
 | Provider 429, 5xx, timeout, refusal, `max_tokens` | SDK retries, `RetryPolicy`, then a pause with the checkpoint intact. Refusals use server-side fallbacks, as the reference recommends for the default model [V-ref], or a fallback profile once | Banner, the validated partial and a resume line |
 | A repeated identical call | Returns the earlier result ("already run in round k") without charging the budget | Dimmed line |
-| Stuck: 3 empty results, or a stale board | A hint built from the inventory; a `stuck` event asking the IC to steer | Prompt to add a note |
+| Stuck: 3 empty results | A hint built from the inventory; a `stuck` event asking the IC to steer | Prompt to add a note |
+| A board with no change for 3 rounds (P1, 2026-10-14) | A nudge on the model's status line: record what the evidence shows, or submit. Nothing is refused | Nothing |
 | Call budget, turn cap, recursion limit | The budget is checked per call, and `submit_report` must be alone in its turn. Model turns are capped at budget + 6, because internal calls are free. The runner catches `GraphRecursionError` and renders the partial from state [V-spike]. LangGraph's code default limit is 10,007, not the documented 1,000 [V]. | Budget bar; "incomplete" |
 | Unknown handles in a report or board write | Rejected with the list; a report gets one retry, then the handles are dropped and recorded [V-spike] | Validator line; flagged citations |
 | Verifier fails; any terminal failure | The report stands, marked unverified; a partial passes the same validator | Badge; partial report |

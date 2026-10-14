@@ -9,7 +9,7 @@ interrupts. So changing a flag while a run is paused cannot change what was aske
 | Read                         | approved, by `auto`            | ask         |
 | Action (mock)                | ask                            | ask         |
 | Internal                     | approved, by `policy`          | same        |
-| Over budget, or board stale  | rejected, by `policy`          | same        |
+| Over budget                  | rejected, by `policy`          | same        |
 | Unknown tool                 | rejected, by `policy`          | same        |
 
 An action asks even when reads do not: logs, chat and tickets are untrusted input, so the gate is the
@@ -47,13 +47,13 @@ def decision(call: Call, verdict: str, who: str, via: str, reason: str | None = 
             "by": GateBy(who=who, via=via), "decided_at": now_iso()}
 
 
-def apply(calls: Iterable[Call], tools: dict[str, ToolSpec], *, used: int, budget: int, auto_approve: bool, via: str,
-          refuse_gated: str | None = None) -> tuple[dict[str, GateDecision], list[dict[str, Any]]]:
+def apply(calls: Iterable[Call], tools: dict[str, ToolSpec], *, used: int, budget: int, auto_approve: bool,
+          via: str) -> tuple[dict[str, GateDecision], list[dict[str, Any]]]:
     """Decide every call that policy can decide, and return the rest as cards for a person.
 
     `used` is the number of reads and actions that have run; the count goes up per call here, so a
-    parallel batch cannot overshoot the budget. A call from the harness is never charged (J5).
-    `refuse_gated` is a reason to refuse every read and action this round (a stale board, J14)."""
+    parallel batch cannot overshoot the budget. A call from the harness is never charged (J5). A quiet
+    board refuses nothing: the status line nudges the model instead (J14, amended)."""
     calls = list(calls)
     decisions: dict[str, GateDecision] = {}
     ask: list[dict[str, Any]] = []
@@ -70,8 +70,6 @@ def apply(calls: Iterable[Call], tools: dict[str, ToolSpec], *, used: int, budge
             decisions[call["call_id"]] = decision(call, "rejected", "policy", via, NOT_ALONE)
         elif spec.kind == "internal":
             decisions[call["call_id"]] = decision(call, "approved", "policy", via)
-        elif refuse_gated and call.get("by") == "agent":
-            decisions[call["call_id"]] = decision(call, "rejected", "policy", via, refuse_gated)
         elif call.get("by") == "agent" and used >= budget:
             decisions[call["call_id"]] = decision(call, "rejected", "policy", via, OVER_BUDGET)
         else:

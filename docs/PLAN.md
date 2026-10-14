@@ -501,7 +501,7 @@ Day 2: state continuity (every status change between checkpoints cites a handle 
 
 No time estimates: we track time against the deadline and call cuts as needed (below).
 
-For row 6a-tools through step 7, section 8 of `docs/decisions/tools-agent-build.md` is the order of work, row by row with its acceptance, and it wins where it differs from the table below. The status line that code appends to each round's last tool result has one form: `[board: ready | not ready: <missing>; stale: <ids>; budget <used>/<limit>, <n> turns left]`.
+For row 6a-tools through step 7, section 8 of `docs/decisions/tools-agent-build.md` is the order of work, row by row with its acceptance, and it wins where it differs from the table below. The status line that code appends to each round's last tool result has one form: `[board: ready | not ready: <missing>; stale: <ids>; <nudge>; budget <used>/<limit>, <n> turns left]`, where the nudge appears only after `stale_rounds` rounds with no board change (J14, amended).
 
 | Step | Produces | Acceptance |
 |---|---|---|

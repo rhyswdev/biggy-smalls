@@ -157,6 +157,7 @@ class InvestigationState(TypedDict, total=False):
     calls_used: int                                                     # reads and actions that ran (J5)
     malformed_streak: int                                               # model turns in a row with a malformed call
     malformed_rounds: list[int]                                         # rounds whose every call was malformed (stale rule)
+    nudges: list[int]                                                   # rounds whose status line said the board was quiet (J14)
     notes_shown: int                                                    # how many notes the model has been given
     fallback_used: bool                                                 # the fallback profile is tried once per run
     restart_round: int                                                  # a restart clears the repeat index from here (J4)

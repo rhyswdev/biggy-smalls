@@ -267,16 +267,11 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
         ctx = runtime.context
         calls = list(state.get("proposed") or [])
         seen = validator.Seen.of(state)
-        refuse = None
-        if not any(c["tool"] == UPDATE_BOARD for c in calls):
-            since = (state.get("followup") or {}).get("round", 0)
-            refuse = board.stale_refusal(state.get("hypotheses") or {}, rounds(state), ctx.stale_rounds, since=since,
-                                         skip=state.get("malformed_rounds") or [])
         # The switch is read once per round, here: a change made while the run waits at a gate applies from
         # the next round, and never to a card already asked (S6).
         auto = ctx.auto_approve_now() if ctx.auto_approve_now else ctx.auto_approve
         decisions, ask = gate.apply(calls, tools, used=state.get("calls_used", 0), budget=call_limit(state, ctx),
-                                    auto_approve=auto, via=ctx.via, refuse_gated=refuse)
+                                    auto_approve=auto, via=ctx.via)
         # A read card shows what the read would run, before it runs (S7).
         for card in ask:
             if card["kind"] == "read" and card["tool"] in tools:
@@ -468,10 +463,19 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             writer({"type": "stuck", "empty_reads": empty_run, "round": round_now})
         if accepted is None and messages:   # appended once, when the message is created: the history is append-only
             only_carried = carry.carried_only([*state.get("ledger", []), *ledger])      # these do not count toward ready (J2)
+            # A quiet board is nudged, never refused (J14, amended by P1): the nudge goes to the model on its
+            # status line, and the event keeps it apart from the line a screen shows.
+            quiet = board.quiet_rounds(current, round_now, since=(state.get("followup") or {}).get("round", 0),
+                                       skip=state.get("malformed_rounds") or [])
+            nudge = board.nudge(quiet, ctx.stale_rounds)
             line = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left, carried=only_carried)
-            messages[-1].content = f"{messages[-1].content}\n{line}"
+            told = board.status_line(current, round=round_now, used=used, limit=limit, turns_left=turns_left, carried=only_carried,
+                                     quiet_nudge=nudge)
+            messages[-1].content = f"{messages[-1].content}\n{told}"
             writer({"type": "board_status", "line": line, "ready": not board.missing_for_ready(current, only_carried),
-                    "stale": board.stale_ids(current, round_now)})
+                    "stale": board.stale_ids(current, round_now), "quiet_rounds": quiet, "nudge": nudge})
+            if nudge:
+                update["nudges"] = [*state.get("nudges", []), round_now]
         lead = board.leading(current)
         # The round's closing line: everything a terminal needs to draw it, so a replay draws the same line.
         writer({"type": "budget", "used": used, "limit": limit, "turns_left": turns_left, "round": round_now,

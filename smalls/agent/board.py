@@ -14,7 +14,9 @@ The model writes judgements; code writes the bookkeeping and enforces the caps.
   hypothesis whose role is cause has an `against` handle. A handle that entered the run as carry-forward
   does not count.
 - Stale: a live hypothesis nobody has touched for two rounds is flagged; when nothing on the board has
-  changed for `stale_rounds` rounds the gate stops approving reads and actions.
+  changed for `stale_rounds` rounds, empty or not, the status line says so and what to do. Nothing is
+  refused for a quiet board, and the nudge is for the model only (J14, amended by P1 of
+  docs/decisions/eval-loop.md section 12).
 """
 
 from __future__ import annotations
@@ -26,7 +28,7 @@ from smalls.contracts.handles import handle_class
 CAP_WITHOUT_NON_CHAT = 0.5
 REQUIRED_ON_CREATE = ("statement", "role", "status", "subject", "confidence", "source")
 STALE_FLAG_ROUNDS = 2
-STALE = "the board has not changed in {n} rounds; record what the evidence shows with update_board, or submit now"
+STALE = "the board has not changed in {n} rounds: record what the evidence shows with update_board, or submit"
 
 
 def non_chat(handles: Iterable[str], skip: frozenset[str] = frozenset()) -> list[str]:
@@ -114,25 +116,31 @@ def stale_ids(board: dict[str, dict[str, Any]], round: int) -> list[str]:
     return out
 
 
-def stale_refusal(board: dict[str, dict[str, Any]], round: int, stale_rounds: int, since: int = 0, skip: Iterable[int] = ()) -> str | None:
-    """The reason the gate refuses reads and actions, once `stale_rounds` whole rounds have passed with no
-    change. `round` is the round being gated, so the rounds already finished are the ones before it. `since`
-    is a round the count starts again from: a follow-up on a finished run starts with a quiet board. `skip`
-    holds rounds that do not count: a round whose every call was malformed and answered with its error."""
+def quiet_rounds(board: dict[str, dict[str, Any]], round: int, since: int = 0, skip: Iterable[int] = ()) -> int:
+    """Whole rounds, up to and including `round`, in which nothing on the board changed. `since` is a round the
+    count starts again from: a follow-up on a finished run starts with a quiet board. `skip` holds rounds that
+    do not count: a round whose every call was malformed and answered with its error."""
     base = max(last_change(board), since)
-    quiet = (round - 1) - base - sum(1 for r in set(skip) if base < r < round)
-    return STALE.format(n=quiet) if quiet >= stale_rounds else None
+    return max(0, round - base - sum(1 for r in set(skip) if base < r <= round))
+
+
+def nudge(quiet: int, stale_rounds: int) -> str | None:
+    """The status line's nudge once the board has been quiet for `stale_rounds` rounds, else None."""
+    return STALE.format(n=quiet) if stale_rounds and quiet >= stale_rounds else None
 
 
 def status_line(board: dict[str, dict[str, Any]], *, round: int, used: int, limit: int, turns_left: int,
-                carried: frozenset[str] = frozenset()) -> str:
+                carried: frozenset[str] = frozenset(), quiet_nudge: str | None = None) -> str:
     """The one line code appends to each round's last tool result. It has one form:
-    `[board: ready | not ready: <missing>; stale: <ids>; budget <used>/<limit>, <n> turns left]`."""
+    `[board: ready | not ready: <missing>; stale: <ids>; <nudge>; budget <used>/<limit>, <n> turns left]`,
+    where the nudge is there only after `stale_rounds` quiet rounds."""
     missing = missing_for_ready(board, carried)
     parts = ["board: ready" if not missing else "board: not ready: " + ", ".join(missing)]
     stale = stale_ids(board, round)
     if stale:
         parts.append("stale: " + ", ".join(stale))
+    if quiet_nudge:
+        parts.append(quiet_nudge)
     parts.append(f"budget {used}/{limit}, {turns_left} turns left")
     return "[" + "; ".join(parts) + "]"
 
