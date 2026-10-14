@@ -2,22 +2,17 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Button, Handles, Notice, Toggle } from "@/components/ds";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Button, Notice, Toggle } from "@/components/ds";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { moreRun, sendNote, setAutoApprove, stopRun } from "@/lib/actions/chats";
-import { draftMessages } from "@/lib/actions/messages";
-import { suggestions, type CodeAnswer, type Suggestion } from "@/lib/chat/answers";
 import { startedAt, type ChatState, type Turn } from "@/lib/chat/reduce";
 import { useChatEvents } from "@/lib/events";
 import { clock, day, plural, seconds, stamp, waitingText } from "@/lib/format";
 import { sendKey } from "@/lib/keys";
-import type { ChatSummary, IncidentCard, MessageRow } from "@/lib/types";
-import { specs } from "@/lib/writeup/messages";
-import { DraftAnswer } from "@/components/messages/DraftAnswer";
+import type { ChatSummary, IncidentCard } from "@/lib/types";
 import { AnswerCard } from "./AnswerCard";
 import { answerRestFirst, GroupView, refocus, type ToolSchema } from "./Gate";
-import { Linked } from "./Linked";
 import { Prose } from "./Prose";
 import { ResolveDialog } from "./ResolveDialog";
 import { WorkingPicture } from "./WorkingPicture";
@@ -31,10 +26,7 @@ interface Props {
   children?: React.ReactNode;      // the app bar, rendered on the server
 }
 
-type Local = {
-  key: string; q: string; answer?: CodeAnswer; pending?: { handle: string | null; text: string; delivery: string };
-  drafted?: { row: MessageRow | null; error: string | null };      // "Draft the exec update": null row while it drafts
-};
+type Local = { key: string; q: string; pending: { handle: string | null; text: string; delivery: string } };
 
 const DELIVERY: Record<string, string> = {
   "next round": "Sent. Smalls sees it at its next round.",
@@ -57,39 +49,20 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   const [busy, start] = useTransition();
   const resolving = params.get("resolve") !== null;
   const open = useCallback((h: string) => setDrawer(h), []);
-  const [used, setUsed] = useState<string[]>([]);
 
   const running = state.status === "running" || state.status === "idle";
   const finished = ["completed", "incomplete", "failed"].includes(state.status);
   const waiting = state.pending ? state.pending.cards.length : 0;
   const delivered = new Set(state.turns.flatMap((t) => (t.kind === "note" ? [t.handle] : [])));
-  const shownLocal = local.filter((l) => !l.pending || !l.pending.handle || !delivered.has(l.pending.handle));
-  const offers = useMemo(() => (finished || past ? suggestions(state.report, state.verifier?.checks ?? [], state.verifier?.disputed ?? []) : []), [finished, past, state.report, state.verifier]);
-  const offered = offers.filter((s) => !used.includes(s.id) && (!past || s.kind === "code"));
+  const shownLocal = local.filter((l) => !l.pending.handle || !delivered.has(l.pending.handle));
 
   const { convo, atEnd } = useFollow(running);
-  const pin = useRef(false);      // the person just asked for something: bring it into view, wherever they were
+  const pin = useRef(false);      // the person just sent something: bring it into view, wherever they were
 
   useEffect(() => { if (finishedAtStart !== finished && finished) router.refresh(); }, [finished, finishedAtStart, router]);
   useEffect(() => { if (state.pending) refocus(); }, [state.pending]);
   useEffect(() => { if (pin.current || atEnd.current) toEnd(); pin.current = false; }, [local, atEnd]);
 
-  function pick(s: Suggestion) {
-    setUsed((u) => [...u, s.id]);
-    pin.current = s.kind !== "run";      // a run's note is pinned when it is sent
-    if (s.kind === "code" && s.answer) setLocal((l) => [...l, { key: `${s.id}:${l.length}`, q: s.q, answer: s.answer }]);
-    else if (s.kind === "run" && s.note) send(s.note);
-    else if (s.kind === "draft") draftExec(`${s.id}:${local.length}`, s.q);
-    refocus();
-  }
-  function draftExec(key: string, q: string) {
-    setLocal((l) => [...l, { key, q, drafted: { row: null, error: null } }]);
-    start(async () => {
-      const r = await draftMessages(chat.id, specs(state.report, null, ["exec"]));
-      const row = r.view?.messages.find((m) => m.audience === "exec") ?? null;
-      setLocal((l) => l.map((x) => (x.key === key ? { ...x, drafted: { row, error: row ? null : r.error ?? "The update was not drafted." } } : x)));
-    });
-  }
   function send(text: string) {
     const note = text.trim();
     if (!note) return;
@@ -140,18 +113,8 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
             {state.turns.map((t) => <TurnView key={t.key} turn={t} chat={chat} card={card} state={state} schemas={schemas} onOpen={open} resolved={resolved} onRefused={setError}
               onResolve={past ? undefined : () => router.push(`/chats/${chat.id}?resolve`, { scroll: false })} />)}
             {shownLocal.map((l) => (
-              <div key={l.key} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div className="msg-ic"><span className="who"><b>You</b> · incident commander</span><span style={{ fontSize: 15, lineHeight: "22px", whiteSpace: "pre-line" }}>{l.q}</span>
-                  {l.pending ? <span className="small muted" aria-live="polite">{DELIVERY[l.pending.delivery] ?? DELIVERY["next round"]}</span> : null}</div>
-                {l.drafted ? <DraftAnswer chatId={chat.id} report={state.report} row={l.drafted.row} error={l.drafted.error} resolved={resolved} /> : null}
-                {l.answer ? (
-                  <div className="msg-sm">
-                    <span className="who"><b>Smalls</b> · {l.answer.source}</span>
-                    {l.answer.text.map((p, i) => <p key={i} className="narr"><Linked text={p} onOpen={open} /></p>)}
-                    {l.answer.handles.length ? <Handles ids={l.answer.handles} onOpen={open} /> : null}
-                  </div>
-                ) : null}
-              </div>
+              <div key={l.key} className="msg-ic"><span className="who"><b>You</b> · incident commander</span><span style={{ fontSize: 15, lineHeight: "22px", whiteSpace: "pre-line" }}>{l.q}</span>
+                <span className="small muted" aria-live="polite">{DELIVERY[l.pending.delivery] ?? DELIVERY["next round"]}</span></div>
             ))}
             {running && !state.pending ? (
               <p className="small muted" aria-live="polite">{state.heartbeat ? `Model working, ${state.heartbeat} s` : "Smalls is working…"}</p>
@@ -159,15 +122,9 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
           </div>
           <div className="dock">
             <div className="dock-in">
-              {offered.length ? (
-                <div className="chips">
-                  <span className="label" style={{ marginRight: 4 }}>Ask next</span>
-                  {offered.map((s) => <button key={s.id} type="button" className="fchip" onClick={() => pick(s)}>{s.q}</button>)}
-                </div>
-              ) : null}
               {error ? <Notice tone="error">{error}</Notice> : null}
               {past ? (
-                <p className="small muted" style={{ margin: 0 }}>A recorded run is read-only. The suggested questions above are answered from its report; to investigate again, start a new chat from the dashboard.</p>
+                <p className="small muted" style={{ margin: 0 }}>A recorded run is read-only. To investigate again, start a new chat from the dashboard.</p>
               ) : (
                 <div className="composer">
                   <textarea className="sm-input" rows={2} aria-label="Message Smalls" placeholder={finished ? "Ask Smalls a follow-up" : "Add a note for Smalls"} value={draft}

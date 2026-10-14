@@ -4,7 +4,7 @@ import { API, newChat, until } from "./helpers";
 // Row R14: the stakeholder messages. The scripted drafter's draft goes through the same checks as any text, failing
 // first, updated on each keystroke; Copy writes the clipboard and marks that exact text copied, an edit clears it and a
 // reload keeps it; Restore draft is enabled only after a change; the knowledge-base preview finds the saved entry by
-// its terms; and the chat's "Draft the exec update" uses the same drafter.
+// its terms.
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -94,18 +94,4 @@ test("the knowledge-base entry shows what was saved and is found by its own term
   await expect(page.getByText("What would bring it up")).toBeVisible();
   await expect(page.locator(".term").first()).toBeVisible();
   await expect(page.getByText(/^(First of \d+ match(es)?|Match \d+ of \d+) for these terms/)).toBeVisible();
-});
-
-test("the chat drafts the exec update with the same drafter, checked and ready to copy", async ({ page, request }) => {
-  const id = await finished(request);
-  await page.goto(`/chats/${id}`);
-  await page.getByRole("button", { name: "Draft the exec update" }).click();
-  await expect(page.getByText("Drafted by the scripted profile")).toBeVisible();
-  await expect(page.getByText(/Scripted draft for Executives/)).toBeVisible();
-  await expect(page.getByText(/^! \d+ of \d+ checks$/)).toBeVisible();
-  await page.getByRole("button", { name: "Copy message", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Copied", exact: true })).toBeVisible();
-  // The button turns before the server action that keeps the mark has answered, so the API is read until it has.
-  await expect.poll(async () => (await (await request.get(`${API}/chats/${id}/messages`)).json()).messages[0])
-    .toMatchObject({ audience: "exec", copied: true, drafted_by: "scripted" });
 });

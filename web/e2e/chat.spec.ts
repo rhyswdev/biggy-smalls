@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { API, newChat, until } from "./helpers";
 
-// Row R12: a follow-up after the answer continues the same run, with nothing read again for it; the suggested questions are
-// answered from the report; the headless and blank origins show what started them.
+// Row R12: a follow-up after the answer continues the same run, with nothing read again for it; the headless and blank
+// origins show what started them. Enter sends, and the end of the conversation stays in view while Smalls answers.
 
 test("a free-text follow-up on a finished run continues the same run, below the first answer", async ({ page, request }) => {
   const id = await newChat(request, { origin: "headless" });
@@ -21,17 +21,6 @@ test("a free-text follow-up on a finished run continues the same run, below the 
   const answer = order.findIndex((t) => t.includes("answered from what it already had"));
   expect(report).toBeGreaterThan(-1);
   expect(answer).toBeGreaterThan(report);
-});
-
-test("a suggested question is answered from the report, with no new reads", async ({ page, request }) => {
-  const id = await newChat(request, { origin: "headless" });
-  await until(request, id, ["finished"]);
-  await page.goto(`/chats/${id}`);
-  const before = (await (await request.get(`${API}/chats/${id}`)).json()).events.length;
-  await page.getByRole("button", { name: "What would change your mind?" }).click();
-  await expect(page.getByText("From the report. No new reads.")).toBeVisible();
-  expect((await (await request.get(`${API}/chats/${id}`)).json()).events.length).toBe(before);
-  await expect(page.getByRole("button", { name: "What would change your mind?" })).toHaveCount(0);
 });
 
 test("an agent run's chat opens with its banner and the ticket that started it", async ({ page, request }) => {
