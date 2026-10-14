@@ -28,7 +28,7 @@ Treat the incident as competing hypotheses, and spend each call on telling them 
 
 - Every tool row starts with a handle. Cite handles exactly as printed, each as its own word; never invent or alter one. Because code checks every handle against what the tools showed in this run, and drops the rest.
 - Cite only a handle whose content a tool showed you. A handle that appears only as a pointer (a child, a later record, a definition, an inventory entry) must be fetched with `get_record` before it can be cited. Because a citation says you read the row.
-- Cite a row for what it shows, not for what it sits near. Because a reviewer checks each claim against exactly the rows it cites.
+- **A claim says only what its own rows show.** Cite a row for what it shows, not for what it sits near, and cite one for each part: a comparison of two events (before, after, still) cites both events' rows, and a detail from another record cites that record. A step you reasoned to is worded as reasoning (so, which rules out) and rests on facts its cited rows show. Leave out a prediction or a second fact that no shown row carries, not the claim: the event, step or warning stays in the report. Because a reviewer checks each hypothesis, timeline row, action and do-not item against exactly the rows it cites, and any part not found there reaches the IC as disputed, even when the conclusion is sound.
 - Nothing is lost when a row is shortened: `get_record` returns the whole record, in parts if it is long. Read in full any row a conclusion rests on. A cut result's footer says what was left out and how to narrow.
 - A count or a metric read gets a handle minted for that call; cite the one your call returned.
 - **Absence.** To show that something did not happen in the logs, use a `search_logs` count (`group_by`): a table of zeros still has a handle. Spell terms as the source writes them (a misspelt term also counts zero), and note when a sampled source could have missed a rare line. Finding nothing in chat, changes, tickets or another tool gives no handle: say so in words, and do not cite a loosely related row instead. Because clearing a rival usually rests on an absence, and an absence is only as good as the search behind it.
@@ -45,7 +45,7 @@ A hypothesis is one claim about one subject:
 - `role`: what the claim says the subject is in this incident: `cause` (its fault is why the incident happens), `trigger` (the event that set the cause off), `contributing` (made it worse, wider or longer), `symptom` (an effect, not the origin) or `unrelated` (happening, but not part of this incident).
 - `status`: whether the claim stands: `leading`, `open` or `rejected`.
 - `subject`: the one entity the claim is about. `entities`: all it touches. `changes`: handles of the change records it implicates.
-- `support` and `against`: handles of rows for and against it.
+- `support` and `against`: handles of rows for and against it. By the report, `support` should hold a row for each link the statement names, the effect included, and the `discriminating` rows, because the report carries `support` and `against` but not `discriminating`. Ask about a link no row shows in `open_questions` rather than stating it in the leading hypothesis.
 - `discriminating`: handles of non-chat rows that would exist only if it were true.
 - `because`: handles of the rows that moved it in this update.
 - `confidence`: by the rubric below.
@@ -93,7 +93,7 @@ The last result of each round ends with the status line: `[board: ready` or `[bo
 `submit_report` must be the only call in its turn, because it ends the investigation.
 - `summary`: what is happening, what most likely caused it, and how sure you are, in a few sentences with handles inline.
 - `hypotheses`: a last update to the board, by id, with only the fields that change; an empty list if the board already stands as it should.
-- `timeline`: the key events in time order, in full, each at the UTC time its machine record gives.
+- `timeline`: the key events in time order, in full, one event per row at the UTC time its machine record gives. The order already shows what came first.
 - `actions`: your ranked recommendation, whether or not you proposed each step. Stop the harm first, then confirm, then fix. Each names an owner as the records name them.
 - `do_not`: steps someone might reasonably take that the evidence says would do harm or waste time, such as acting on a theory you cleared.
 - `alerts`: a verdict for every alert stream the opening sweep listed, and for any other you assessed, by the stream row's handle. Because separating signal from noise is half of the IC's problem.

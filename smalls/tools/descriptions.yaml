@@ -442,7 +442,9 @@ objects:
       Clamped to 0.5 without support that is not chat.
     support: >-
       Handles of shown rows that support the claim, as the list should now
-      stand.
+      stand. By the report, it should hold a row for each link the statement
+      names, the effect included, and the discriminating rows, which the
+      report does not carry.
     against: >-
       Handles of shown rows that cut against the claim, as the list should
       now stand. A rejected hypothesis needs at least one.
@@ -461,9 +463,10 @@ objects:
       When it happened, as an ISO-8601 UTC time taken from the machine
       record.
     event: >-
-      What happened, in one line.
+      One event, in one line.
     evidence: >-
-      Handles of the rows that show it.
+      Handles of the rows that show it, and of any other event or record the
+      line mentions.
   Impact:
     business_service: >-
       The business service affected, as the service desk or CMDB names it.
@@ -498,12 +501,14 @@ objects:
       Who should do it, as the records name them: an assignment group, a
       team, or the person on call.
     evidence: >-
-      Handles of the rows that justify it.
+      Handles of the rows that show the problem it addresses on the target it
+      names, and any other fact it states.
   DoNot:
     action: >-
       The step not to take now.
     why: >-
-      What the evidence says it would do, or why it would not help.
+      Why it would do harm or not help, from facts its rows show; a
+      consequence drawn from them is worded as reasoning.
     evidence: >-
       Handles of the rows that show it.
   AlertVerdict:
