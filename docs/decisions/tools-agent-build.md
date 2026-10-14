@@ -39,6 +39,8 @@ G6 has two consequences. The default lives in `store.tags_enabled()`, and the in
 
 **Held-out rule.** Every session on this track writes the agent or `smalls/tools/`, so it never reads or lists `eval/heldout/`, `scenario/variants/` or `bundles/h*/`. Repo-wide searches exclude those paths.
 
+*Amended 2026-10-14 by U15 in `docs/decisions/ui-build.md`: the held-out rule stands; what kept a session that had read answer material, or PLAN sections 1, 2 and 3.3, away from agent code is replaced by an overfit review of every agent-side change (`make overfit-review`).*
+
 **No answer material in agent-side code.** Nothing under `smalls/` imports `smalls_data` or opens `_internal/` or `scenario/`. Tests may read `_internal/manifest.jsonl` for a record's handle, path, locator and times, and compute the rest from served bytes; they never select by the manifest's `class`, `sig_id` or `kind`. Tool code, descriptions and prompts are never shaped by those fields or by the answer key. A build session reads PLAN sections 3.1, 3.2, 3.4, 4, 5, 6 and 13; it has no need of sections 1, 2 or 3.3 and does not read them.
 
 **Blind first prompt (G4).** We split what the model reads into two kinds.
