@@ -1,0 +1,324 @@
+{
+ "as_of": "2026-10-13T14:52:00Z",
+ "summary": "Payments-gateway 3.8.0 (jk:payments-gateway-deploy#412, snow:CHG0031877) added three retries with an 8 s timeout around the PayCore authorize call, inside a database transaction (conf:KB0010502). PayCore's EU edge slowed from 14:24 (dt:P-26101350), so each slow authorization now holds a connection for up to 39 s; the gateway pools hit their limit (spl:alert/891f48a7) and pay-db-01 fills with idle-in-transaction sessions (snow:jn/ec7656f6). checkout-api times out on the gateway, which is the 504s. The checkout rollback changed nothing (jk:checkout-api-deploy#898). Roll the gateway back to 3.7.9 now.",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API",
+   "Payments Gateway"
+  ],
+  "priority": {
+   "suggested": "P1",
+   "impact": "1 - High",
+   "urgency": "1 - High"
+  },
+  "assignment_group": "Payments Engineering",
+  "oncall": "Priya Raman (Payments Engineering level 2, acknowledged pd:oncall/fafc2fbc); the CMDB owner is inactive",
+  "customer": "payment submissions failing or slow; browsing and cart unaffected"
+ },
+ "hypotheses": [
+  {
+   "id": "h-gw",
+   "statement": "payments-gateway 3.8.0 holds a database transaction open across PayCore authorize calls that now retry up to four times with an 8 s timeout, so slow calls exhaust the connection pools.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412"
+   ],
+   "confidence": 0.8,
+   "support": [
+    "jk:payments-gateway-deploy#412",
+    "conf:KB0010502",
+    "spl:alert/891f48a7",
+    "log:pay-02/0c740408",
+    "snow:jn/ec7656f6"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-psp",
+   "statement": "PayCore's EU authorizations slowed from 14:24, which turns the retry path on.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "PayCore",
+   "entities": [
+    "PayCore"
+   ],
+   "changes": [],
+   "confidence": 0.7,
+   "support": [
+    "dt:P-26101350",
+    "log:pay-01/61c1af32"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-recon",
+   "statement": "The 14:30 reconciler run takes 40 connections and brings the ceiling forward.",
+   "role": "contributing",
+   "status": "open",
+   "subject": "payments-reconciler",
+   "entities": [
+    "payments-reconciler"
+   ],
+   "changes": [
+    "jk:payments-reconciler#2311"
+   ],
+   "confidence": 0.6,
+   "support": [
+    "jk:payments-reconciler#2311"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-co",
+   "statement": "The checkout-api 2.14.3 deploy caused the 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "jk:checkout-api-deploy#898"
+   ],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-db",
+   "statement": "pay-db-01 is failing or undersized.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "entities": [
+    "pay-db-01"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [],
+   "against": [
+    "snow:jn/ec7656f6"
+   ],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-pay03",
+   "statement": "pay-03 hardware is failing.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-03",
+   "entities": [
+    "pay-03"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "spl:alert/7ae5d933"
+   ],
+   "source": "derived",
+   "history": []
+  }
+ ],
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T10:19:48Z",
+   "event": "payments-gateway 3.8.0 deployed",
+   "evidence": [
+    "jk:payments-gateway-deploy#412"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:29:00Z",
+   "event": "Dynatrace opens a problem on api.paycore.example",
+   "evidence": [
+    "dt:P-26101350"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:32:01Z",
+   "event": "Gateway pool exhaustion alert",
+   "evidence": [
+    "spl:alert/891f48a7"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Roll payments-gateway back to 3.7.9 (or disable the new retries) now.",
+   "owner": "Priya Raman, Payments Engineering",
+   "evidence": [
+    "jk:payments-gateway-deploy#412",
+    "conf:KB0010502"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Pause the payments-reconciler run to free 40 connections as headroom while the rollback goes out; it is relief, not the fix.",
+   "owner": "Payments Engineering",
+   "evidence": [
+    "jk:payments-reconciler#2311"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Audit authorizations for duplicates from retries and customer resubmits, and update support and customers.",
+   "owner": "Payments Engineering with Support",
+   "evidence": [
+    "dt:P-26101350"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Roll back checkout-api again",
+   "why": "the rollback finished and errors continued",
+   "evidence": [
+    "jk:checkout-api-deploy#898"
+   ]
+  },
+  {
+   "action": "Raise pool sizes or scale gateway pods",
+   "why": "more connections held across slow calls fill the database faster",
+   "evidence": [
+    "spl:alert/891f48a7"
+   ]
+  },
+  {
+   "action": "Kill the idle-in-transaction sessions",
+   "why": "they are held by the gateway's open transactions and refill within minutes",
+   "evidence": [
+    "snow:jn/ec7656f6"
+   ]
+  },
+  {
+   "action": "Page infrastructure for pay-03 hardware",
+   "why": "it fails the health check that pings the database, not ICMP",
+   "evidence": [
+    "spl:alert/7ae5d933"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820515412",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101350",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516603",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516604",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/891f48a7",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517511",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101362",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518073",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/a678ed4b",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/7ae5d933",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "sw:55012",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820017640",
+   "verdict": "noise"
+  },
+  {
+   "handle": "sw:54977",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820508241",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820516885",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820520800",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101377",
+   "verdict": "other_incident"
+  }
+ ],
+ "open_questions": [
+  "Has PayCore acknowledged the EU slowdown?"
+ ],
+ "stakeholder_update": {
+  "status": "identified",
+  "customer_impact": "Payment submissions fail or hang; browsing and cart work.",
+  "scope": "Online Checkout payment submit",
+  "changed_since_last": "Cause identified: the morning payments release under a slow payment provider.",
+  "next_steps": "Roll back the payments gateway; next update 15:07 UTC.",
+  "next_update_at": "2026-10-13T15:07:00Z"
+ },
+ "proposed_actions": [],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": null,
+  "disputed": []
+ }
+}

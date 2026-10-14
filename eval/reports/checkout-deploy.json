@@ -1,0 +1,215 @@
+{
+ "as_of": "2026-10-13T14:52:00Z",
+ "summary": "The checkout-api 2.14.3 deploy (jk:checkout-api-deploy#897) at 14:28 is the cause: the error-rate monitor fired right after it (dd:ev7820516603) and 504s climbed from there. The first rollback (jk:checkout-api-deploy#898) has not taken full effect; roll back again and restart the pods.",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API",
+   "Payments Gateway"
+  ],
+  "priority": {
+   "suggested": "P1",
+   "impact": "1 - High",
+   "urgency": "1 - High"
+  },
+  "assignment_group": "Commerce Platform",
+  "oncall": "Alice Nguyen (Commerce Platform)",
+  "customer": "payment submissions failing or slow; browsing and cart unaffected"
+ },
+ "hypotheses": [
+  {
+   "id": "h-co",
+   "statement": "The checkout-api 2.14.3 release broke submit and causes the 504s.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "confidence": 0.8,
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "dd:ev7820516603"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-psp",
+   "statement": "The payment provider is down.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "PayCore",
+   "entities": [
+    "PayCore"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [],
+   "against": [
+    "dt:P-26101350"
+   ],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-db",
+   "statement": "The database is under load from checkout retries.",
+   "role": "symptom",
+   "status": "open",
+   "subject": "pay-db-01",
+   "entities": [
+    "pay-db-01"
+   ],
+   "changes": [],
+   "confidence": 0.4,
+   "support": [
+    "spl:alert/a678ed4b"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  }
+ ],
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T14:28:05Z",
+   "event": "checkout-api 2.14.3 rollout",
+   "evidence": [
+    "jk:checkout-api-deploy#897"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Roll checkout-api back again and restart all its pods.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "jk:checkout-api-deploy#898"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Scale checkout-api pods to absorb the retry traffic.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "dd:ev7820516603"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Do not change the payments gateway",
+   "why": "it has not changed today in a way that touches checkout",
+   "evidence": [
+    "dt:P-26101350"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820515412",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101350",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516603",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516604",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/891f48a7",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517511",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101362",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518073",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/a678ed4b",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/7ae5d933",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "sw:55012",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820017640",
+   "verdict": "noise"
+  },
+  {
+   "handle": "sw:54977",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820508241",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820516885",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820520800",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101377",
+   "verdict": "other_incident"
+  }
+ ],
+ "open_questions": [],
+ "stakeholder_update": {
+  "status": "identified",
+  "customer_impact": "Payment submissions fail or hang; browsing and cart work.",
+  "scope": "Online Checkout payment submit",
+  "changed_since_last": "The checkout deploy is the cause.",
+  "next_steps": "Second rollback of checkout-api.",
+  "next_update_at": "2026-10-13T15:07:00Z"
+ },
+ "proposed_actions": [],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": null,
+  "disputed": []
+ }
+}

@@ -1,0 +1,222 @@
+{
+ "as_of": "2026-10-13T14:52:00Z",
+ "summary": "pay-db-01 is out of connections: Dynatrace names it the root cause (dt:P-26101362) and Postgres refuses new connections (spl:alert/a678ed4b). The database cannot keep up with traffic; raise max_connections and the gateway pool sizes, kill the idle sessions and scale the gateway.",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API",
+   "Payments Gateway"
+  ],
+  "priority": {
+   "suggested": "P1",
+   "impact": "1 - High",
+   "urgency": "1 - High"
+  },
+  "assignment_group": "Database Engineering",
+  "oncall": "Elena Rossi (Database Engineering); CMDB owner of Payments Gateway is Marcus Okafor",
+  "customer": "payment submissions failing or slow; browsing and cart unaffected"
+ },
+ "hypotheses": [
+  {
+   "id": "h-db",
+   "statement": "pay-db-01 is undersized for today's traffic and has run out of connections.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "pay-db-01",
+   "entities": [
+    "pay-db-01"
+   ],
+   "changes": [],
+   "confidence": 0.85,
+   "support": [
+    "dt:P-26101362",
+    "spl:alert/a678ed4b",
+    "dd:ev7820518073"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-co",
+   "statement": "The checkout deploy caused it.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [],
+   "against": [
+    "jk:checkout-api-deploy#898"
+   ],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-gw",
+   "statement": "The gateway fails because the database refuses connections.",
+   "role": "symptom",
+   "status": "open",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.5,
+   "support": [
+    "spl:alert/891f48a7"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  }
+ ],
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T14:33:00Z",
+   "event": "Dynatrace problem on pay-db-01",
+   "evidence": [
+    "dt:P-26101362"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Raise max_connections on pay-db-01 and the gateway pool sizes.",
+   "owner": "Database Engineering",
+   "evidence": [
+    "spl:alert/a678ed4b"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Kill the idle-in-transaction sessions to free connections.",
+   "owner": "Database Engineering",
+   "evidence": [
+    "snow:jn/ec7656f6"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Scale out gateway instances to spread the load.",
+   "owner": "Marcus Okafor",
+   "evidence": [
+    "dd:ev7820518073"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Do not roll back checkout again",
+   "why": "the rollback did not help",
+   "evidence": [
+    "jk:checkout-api-deploy#898"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820515412",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101350",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516603",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516604",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/891f48a7",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517511",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101362",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518073",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/a678ed4b",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/7ae5d933",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "sw:55012",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820017640",
+   "verdict": "noise"
+  },
+  {
+   "handle": "sw:54977",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820508241",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820516885",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820520800",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101377",
+   "verdict": "other_incident"
+  }
+ ],
+ "open_questions": [],
+ "stakeholder_update": {
+  "status": "identified",
+  "customer_impact": "Payment submissions fail or hang; browsing and cart work.",
+  "scope": "Online Checkout payment submit",
+  "changed_since_last": "The payments database is overloaded.",
+  "next_steps": "Increase database capacity.",
+  "next_update_at": "2026-10-13T15:07:00Z"
+ },
+ "proposed_actions": [],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": null,
+  "disputed": []
+ }
+}
