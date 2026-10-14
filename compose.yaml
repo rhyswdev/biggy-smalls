@@ -1,6 +1,8 @@
-# One service: the app. The store is in-process SQLite, so there is no database service. A later step that
-# needs a server (a UI, an agent service) arrives here as another service.
-#   docker compose run --rm smalls make test
+# The app's services. The store is in-process SQLite, so there is no database service.
+#   docker compose run --rm smalls make test     the tests, in a container
+#   docker compose up --build api web            the app on http://localhost:7317 (docs/decisions/ui-build.md U13)
+# Only `web` publishes a port, on the host's loopback. The API is reachable on the compose network alone, and
+# only it gets the .env: the key never reaches the Node process.
 services:
   smalls:
     build: .
@@ -22,3 +24,42 @@ services:
       - SMALLS_COMMIT
       - SMALLS_LIVE
       - SMALLS_RUNNER=compose
+
+  # The API (smalls/api), from the same image as the tests. Live by default; SMALLS_API_MODE=scripted runs it
+  # without a key, for development.
+  api:
+    image: smalls:dev
+    build: .
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ["make", "api", "SMALLS_API_HOST=0.0.0.0"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - SMALLS_API_MODE
+      - SMALLS_API_DRAFTER
+      - SMALLS_TAGS
+      - SMALLS_PROFILE
+      - SMALLS_MODEL
+      - SMALLS_COMMIT
+    expose:
+      - "7318"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:7318/health', timeout=2)"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+
+  # The web app (web/). No env_file: its only setting is where the API is.
+  web:
+    image: smalls-web:dev
+    build: ./web
+    environment:
+      - SMALLS_API_URL=http://api:7318
+    ports:
+      - "127.0.0.1:${SMALLS_WEB_PORT:-7317}:7317"
+    depends_on:
+      api:
+        condition: service_healthy

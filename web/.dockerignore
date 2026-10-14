@@ -1,0 +1,16 @@
+# The web image's build context is an allowlist: the app's source and its lock file. Tests, build output and
+# installed packages stay out; so does any .env.
+*
+!package.json
+!pnpm-lock.yaml
+!next.config.ts
+!tsconfig.json
+!app/
+!components/
+!lib/
+!styles/
+!scripts/
+.env
+.env.*
+**/.env
+**/.env.*

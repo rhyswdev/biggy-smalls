@@ -94,11 +94,13 @@ BASE ?= HEAD
 SMALLS_WEB_PORT ?= 7317
 SMALLS_API_PORT ?= 7318
 SMALLS_API_URL ?= http://127.0.0.1:$(SMALLS_API_PORT)
+# The API listens on the host's loopback only; compose sets 0.0.0.0, where only the compose network reaches it.
+SMALLS_API_HOST ?= 127.0.0.1
 # live runs the configured profile and needs a key; scripted plays the generic dev script, for development only.
 SMALLS_API_MODE ?= live
 API_ENV = SMALLS_BUNDLE=$(BUNDLE) SMALLS_CHECKPOINT=$(CHECKPOINT) SMALLS_API_MODE=$(SMALLS_API_MODE)
 
-.PHONY: overfit-review api api-types api-fixtures
+.PHONY: overfit-review api api-types api-fixtures app web-deps web-test
 
 # The overfit review (ruling U15): every change under the agent, its tools, its contracts and the drafting
 # prompt since BASE, read against the answer. Live: one model call with the investigator's profile.
@@ -107,7 +109,7 @@ overfit-review:
 
 # The API alone, on 127.0.0.1:SMALLS_API_PORT. Live mode reads the key from .env; nothing is written to disk.
 api:
-	$(API_ENV) $(UV) run --python 3.12 $(ENV) uvicorn smalls.api.app:app --host 127.0.0.1 --port $(SMALLS_API_PORT) --timeout-graceful-shutdown 3
+	$(API_ENV) $(UV) run --python 3.12 $(ENV) uvicorn smalls.api.app:app --host $(SMALLS_API_HOST) --port $(SMALLS_API_PORT) --timeout-graceful-shutdown 3
 
 # The web app's API types: the API's OpenAPI document from the app object (no server needed), then the
 # TypeScript generated from it. A test fails when the committed document differs from the app's.
@@ -118,3 +120,25 @@ api-types:
 # The event logs the web app's reducer tests fold: scripted runs through the API over the made-up fixture incident.
 api-fixtures:
 	$(PY) tests/api/make_fixtures.py
+
+# The app on the host: the API and the web app together, on http://localhost:SMALLS_WEB_PORT. Both ports are
+# checked first, so nothing starts when one is taken. Ctrl-C stops both. The key stays with the API.
+app: web-deps
+	@$(PY) -m smalls_data.ports SMALLS_WEB_PORT=$(SMALLS_WEB_PORT) SMALLS_API_PORT=$(SMALLS_API_PORT)
+	@echo "Smalls: http://localhost:$(SMALLS_WEB_PORT) (API on 127.0.0.1:$(SMALLS_API_PORT), $(SMALLS_API_MODE) mode)"
+	@trap 'kill 0' INT TERM; \
+	$(MAKE) --no-print-directory api & \
+	SMALLS_API_URL=$(SMALLS_API_URL) SMALLS_WEB_PORT=$(SMALLS_WEB_PORT) pnpm --dir web dev & \
+	wait
+
+# The web app's packages, installed once from the lock file.
+web-deps:
+	@test -d web/node_modules || pnpm --dir web install --frozen-lockfile
+
+# The web app's checks: the boundary rules, types and lint, the unit tests, then the browser suites (which start
+# their own API in scripted mode and a web server, on ports of their own). Needs `pnpm --dir web exec playwright
+# install chromium` once.
+web-test: web-deps
+	pnpm --dir web lint
+	pnpm --dir web test
+	pnpm --dir web e2e

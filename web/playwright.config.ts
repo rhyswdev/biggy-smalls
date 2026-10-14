@@ -5,6 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
 // messages are drafted by the scripted drafter, so a draft takes the model's path through the adapter.
 const API_PORT = process.env.E2E_API_PORT ?? "7338";
 const WEB_PORT = process.env.E2E_WEB_PORT ?? "7337";
+// E2E_BASE_URL points the suites at an app that is already running, such as `docker compose up`; nothing is started.
+const EXTERNAL = process.env.E2E_BASE_URL;
 
 export default defineConfig({
   testDir: "e2e",
@@ -14,9 +16,9 @@ export default defineConfig({
   workers: 1,
   retries: 0,
   reporter: [["list"]],
-  use: { baseURL: `http://127.0.0.1:${WEB_PORT}`, trace: "retain-on-failure" },
+  use: { baseURL: EXTERNAL ?? `http://127.0.0.1:${WEB_PORT}`, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1000 } } }],
-  webServer: [
+  webServer: EXTERNAL ? [] : [
     {
       command: `make -C .. api SMALLS_API_MODE=scripted SMALLS_API_DRAFTER=scripted SMALLS_API_PORT=${API_PORT} SMALLS_API_SCRIPT_DELAY=${process.env.E2E_DELAY ?? "0.05"}`,
       url: `http://127.0.0.1:${API_PORT}/health`,
