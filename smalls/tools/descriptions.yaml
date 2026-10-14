@@ -324,17 +324,15 @@ tools:
         Handles of shown rows that justify the step.
   update_board:
     description: >-
-      Record what you now believe. It costs no call and is never gated: use
-      it at the start and whenever evidence moves a hypothesis, as the first
-      call of a turn that also carries your next reads and never alone,
-      since the status line that ends the round reflects it. Hypotheses
-      merge by id: give
+      Record what you now believe. Free and never gated: use it at the start
+      and whenever evidence moves a hypothesis. Hypotheses merge by id: give
       only the fields that change, and a list you give replaces that list, so
       write it as it should now stand. A new id creates a hypothesis and must
       carry statement, role, status, subject, confidence and source; role and
       source cannot change afterwards. Timeline rows and open questions are
       added to the board's. Every handle must have been shown in this run. A
-      write that breaks a rule is refused with the reason.
+      write that breaks a rule is refused with the reason, and the result
+      ends with the board's status line.
     params:
       hypotheses: >-
         Hypotheses to create or update, by id.

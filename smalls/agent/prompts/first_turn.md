@@ -18,7 +18,7 @@ Answer what it asks. A cause it names, or asks you to confirm, is a stated hypot
 ## Budget
 {budget}
 
-Reads and actions count as calls when they run; board updates, the report, repeats and refused calls do not. Every turn counts as a model turn, whatever it holds.
+Reads and actions count when they run. Board updates, the report, repeats and refused calls are free.
 
 ## Board carried in
 {prior_board}
