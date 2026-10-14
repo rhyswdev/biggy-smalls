@@ -288,5 +288,13 @@ On `main`, pushed after each row. The held-out rule binds this session in full; 
 | P6, about five passes | about $12 |
 | Total | under $20 |
 
-Spend so far in phase 2: none.
+Spend in phase 2, one line per batch; cost from each run's `summary.json` and each review's printed cost.
+
+| Batch | Calls or runs | Cost | Running total |
+|---|---|---|---|
+| P0: one small call to each model | 2 calls | $0.00 | $0.00 |
+
+### 12.4 What each row showed
+
+**P0 (2026-10-14).** The provider's model list holds `gpt-6.1-sol` and `gpt-6-luna`; there is no 6.1 luna, so luna is `gpt-6-luna`. Its price page gives luna $0.10 input, $0.01 cached input, $0.125 cache writes and $0.50 output per million tokens, doubled-ish above 272k input tokens (long-context $0.20, $0.02, $0.25, $0.75); sol's rates are unchanged. Luna's model page gives a 1,050,000-token window (922,000 input), efforts `none` to `max` with `medium` the default, the Responses API, function calling and prompt caching. One small call to each model through the agent's own factory answered, so the account has credit. `make test` and `make lint` passed (680 passed, 2 skipped; 0 errors). Two test faults were found and fixed: the port check's test listened with a backlog of one, so a probe could find the queue full and call the port free (it failed about half the time; 0 of 15 after); and the browser test of the chat's exec draft read the API before the server action that keeps the "Copied" mark had answered (it failed 3 of 3; 12 of 12 after, by polling). `make web-test` then passed in full. A running `make app` holds the web folder's dev-server lock, so the browser suite cannot run beside it.
 

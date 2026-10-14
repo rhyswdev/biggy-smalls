@@ -105,6 +105,7 @@ test("the chat drafts the exec update with the same drafter, checked and ready t
   await expect(page.getByText(/^! \d+ of \d+ checks$/)).toBeVisible();
   await page.getByRole("button", { name: "Copy message", exact: true }).click();
   await expect(page.getByRole("button", { name: "Copied", exact: true })).toBeVisible();
-  const r = await request.get(`${API}/chats/${id}/messages`);
-  expect((await r.json()).messages[0]).toMatchObject({ audience: "exec", copied: true, drafted_by: "scripted" });
+  // The button turns before the server action that keeps the mark has answered, so the API is read until it has.
+  await expect.poll(async () => (await (await request.get(`${API}/chats/${id}/messages`)).json()).messages[0])
+    .toMatchObject({ audience: "exec", copied: true, drafted_by: "scripted" });
 });

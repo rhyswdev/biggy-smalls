@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 def listening() -> socket.socket:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(("127.0.0.1", 0))
-    s.listen(1)
+    s.listen(16)         # each probe leaves a connection nobody accepts; a backlog of one can fill and refuse the next
     return s
 
 
