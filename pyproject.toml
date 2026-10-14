@@ -22,11 +22,17 @@ dependencies = [
 smalls = "smalls.cli:main"
 
 [dependency-groups]
+# The web UI's API service (docs/decisions/ui-build.md): the server, and the client its tests and the web
+# app's server-side calls use. Installed by default, so `make test` runs the API's tests too.
+api = ["fastapi>=0.143,<1", "uvicorn>=0.54,<1", "httpx>=0.28,<1"]
 dev = ["pytest>=8.2"]
 # The classifier SDK. Only `smalls tag` imports it; ingest, the tests and the demo never do.
 tagging = ["typesafe-sdk>=0.7.4,<0.8"]
 # The client for the cross-provider verifier profile. Nothing imports it unless a [verifier] profile names that provider.
 verifier-openai = ["langchain-openai>=1.7,<1.8"]
+
+[tool.uv]
+default-groups = ["dev", "api"]
 
 [build-system]
 requires = ["hatchling"]

@@ -89,10 +89,22 @@ heldout:
 # -- The UI step (docs/decisions/ui-build.md) ----------------------------------------------------------
 # The ref the overfit review diffs from: make overfit-review BASE=<ref>. The working tree is what is reviewed.
 BASE ?= HEAD
+# The ports the app listens on, away from the usual development defaults. The web app reaches the API at
+# SMALLS_API_URL, which follows the API's port unless set.
+SMALLS_WEB_PORT ?= 7317
+SMALLS_API_PORT ?= 7318
+SMALLS_API_URL ?= http://127.0.0.1:$(SMALLS_API_PORT)
+# live runs the configured profile and needs a key; scripted plays the generic dev script, for development only.
+SMALLS_API_MODE ?= live
+API_ENV = SMALLS_BUNDLE=$(BUNDLE) SMALLS_CHECKPOINT=$(CHECKPOINT) SMALLS_API_MODE=$(SMALLS_API_MODE)
 
-.PHONY: overfit-review
+.PHONY: overfit-review api
 
 # The overfit review (ruling U15): every change under the agent, its tools, its contracts and the drafting
 # prompt since BASE, read against the answer. Live: one model call with the investigator's profile.
 overfit-review:
 	$(UV) run --python 3.12 $(ENV) python -m smalls_data.overfit --bundle $(BUNDLE) --base $(BASE)
+
+# The API alone, on 127.0.0.1:SMALLS_API_PORT. Live mode reads the key from .env; nothing is written to disk.
+api:
+	$(API_ENV) $(UV) run --python 3.12 $(ENV) uvicorn smalls.api.app:app --host 127.0.0.1 --port $(SMALLS_API_PORT)
