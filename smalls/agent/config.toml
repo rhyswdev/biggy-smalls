@@ -17,6 +17,7 @@ auto_approve = true         # reads run without asking; --interactive turns this
 timeout_s = 600             # per model call; set explicitly because the client library's default is none
 fallback_profile = ""       # a profile to ask once when the model declines to continue; none by default
 cache_ratio_floor = 0.5     # from the second model call, a cached share of the input below this raises an event
+heartbeat_s = 10            # with nothing to show for this long, the terminal says the run is still working
 runs_dir = "eval/runs"
 
 [sweep]                     # the opening sweep's windows, relative to now

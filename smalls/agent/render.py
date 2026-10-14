@@ -2,6 +2,14 @@
 
 Every string that came from a tool, a log line, a chat message or the model is rendered as text: it is
 escaped before it reaches the console, so markup inside evidence is never interpreted.
+
+The renderer keeps nothing between events but whether it is in the middle of a line of reasoning. What a
+round's closing bar shows, the board's leading hypothesis and the budget, is carried by the event that
+closes the round. So a run that pauses in one process and resumes in another prints what a replay of its
+record prints.
+
+A report's handles are numbered in the order it first cites them, and listed under it. `show` prints the
+row behind a number or a handle, as the run was shown it.
 """
 
 from __future__ import annotations
@@ -17,6 +25,7 @@ from rich.table import Table
 
 from smalls.agent.events import Event
 from smalls.agent.gate import NOTE_KEY
+from smalls.contracts.handles import is_handle
 
 MARK = {"approved": "[green]✓[/]", "rejected": "[red]✗[/]", "deferred": "[yellow]…[/]"}
 COLOUR = {"ok": "green", "error": "red", "rejected": "red", "deferred": "yellow", "repeat": "dim"}
@@ -24,6 +33,42 @@ COLOUR = {"ok": "green", "error": "red", "rejected": "red", "deferred": "yellow"
 
 def who(by: dict[str, Any] | None) -> str:
     return f"{by['who']} via {by['via']}" if by else "nobody"
+
+
+def citations(report: dict[str, Any]) -> list[str]:
+    """A report's handles, in the order it first cites them: the summary, then each hypothesis, the
+    timeline, the actions, the do-not list and the alert verdicts."""
+    found: list[str] = []
+    for token in str(report.get("summary") or "").split():
+        word = token.strip("()[]{}<>,.;:!?\"'`")
+        found.append(word if is_handle(word) else word.rstrip(":"))
+    found = [h for h in found if is_handle(h)]
+    for h in report.get("hypotheses") or []:
+        found += [*(h.get("support") or []), *(h.get("against") or [])]
+    for name in ("timeline", "actions", "do_not"):
+        for row in report.get(name) or []:
+            found += row.get("evidence") or []
+    found += [a["handle"] for a in report.get("alerts") or []]
+    return list(dict.fromkeys(found))
+
+
+def show(folder: Any, wanted: str, console: Console | None = None) -> int:
+    """Print the row behind a handle, or behind a number of the report's citation list, as the run was shown it."""
+    c = console or Console(highlight=False)
+    read = lambda name: (folder / name).read_text(encoding="utf-8") if (folder / name).is_file() else ""      # noqa: E731
+    report = json.loads(read("report.json") or "null") or {}
+    numbered = citations(report)
+    handle = numbered[int(wanted) - 1] if wanted.isdigit() and 0 < int(wanted) <= len(numbered) else wanted
+    rows = [json.loads(line) for line in read("evidence.jsonl").splitlines() if line.strip()]
+    mine = [row for row in rows if row["handle"] == handle]
+    if not mine:
+        raise SystemExit(f"{wanted}: no tool result in this run showed that" + (f" (the report cites {len(numbered)} handles)" if wanted.isdigit() else ""))
+    row = mine[-1]
+    number = f"[{numbered.index(handle) + 1}] " if handle in numbered else ""
+    c.print(f"[bold]{esc(number)}{esc(handle)}[/]  [dim]shown by {esc(row['call_id'])}, known {esc(str(row.get('t_known')))}"
+            + (f", and by {len(mine) - 1} other call(s)" if len(mine) > 1 else "") + "[/]")
+    c.print(esc(row["text"]), soft_wrap=True)
+    return 0
 
 
 class Renderer:
@@ -83,6 +128,15 @@ class Renderer:
             self.c.print(f"  [bold]board[/] {esc(d['id'])} {esc(str(d.get('role')))} {d['status']} {d['confidence']:.2f}: {esc(d['statement'])}")
         elif t == "board_status":
             self.c.print(f"  [dim]{esc(d['line'])}[/]")
+        elif t == "heartbeat":
+            self.c.print(f"[dim]… still working: nothing new for {d.get('seconds')} s[/]")
+        elif t == "budget":
+            b = d.get("board")
+            if b is not None:       # the bar that closes a round, drawn from this event alone
+                lead = b.get("leading")
+                leading = f"leading {esc(lead['id'])} {float(lead.get('confidence') or 0):.2f}" if lead else "no leading hypothesis"
+                self.c.rule(f"[dim]round {d.get('round')} · {leading} · {b.get('open')} open, {b.get('rejected')} rejected · "
+                            f"calls {d.get('used')}/{d.get('limit')} · {d.get('turns_left')} turns left[/]", style="dim")
         elif t == "restart":
             self.c.print(f"[cyan]── restarted from the board[/] [dim]({esc(str(d.get('reason')))}; thread {esc(str(d.get('thread')))})[/]")
         elif t == "stuck":
@@ -108,17 +162,27 @@ class Renderer:
 
     def _report(self, r: dict[str, Any], status: str | None) -> None:
         self.c.print(Panel(esc(r["summary"]), title=f"report as of {esc(str(r['as_of']))} ({esc(str(status))})"))
+        numbered = citations(r)
+        cite = lambda handles: " ".join(f"[{numbered.index(h) + 1}]" for h in handles or [] if h in numbered)      # noqa: E731
         table = Table(show_header=True, header_style="bold")
         for column in ("id", "role", "status", "conf", "statement", "support", "against"):
             table.add_column(column)
         for h in r["hypotheses"]:
             table.add_row(esc(h["id"]), esc(h["role"]), esc(h["status"]), f"{h['confidence']:.2f}", esc(h["statement"]),
-                          esc("\n".join(h["support"])), esc("\n".join(h["against"])))
+                          esc(cite(h["support"])), esc(cite(h["against"])))
         self.c.print(table)
+        for row in r.get("timeline", []):
+            self.c.print(f"  [dim]{esc(str(row.get('t_utc')))}[/] {esc(str(row.get('event')))} [dim]{esc(cite(row.get('evidence')))}[/]")
         for a in r.get("actions", []):
-            self.c.print(f"  {a['rank']}. {esc(a['action'])} [dim]({esc(a['owner'])}; {esc(', '.join(a['evidence']))})[/]")
+            self.c.print(f"  {a['rank']}. {esc(a['action'])} [dim]({esc(a['owner'])}) {esc(cite(a['evidence']))}[/]")
         for row in r.get("do_not", []):
-            self.c.print(f"  [red]do not[/] {esc(row['action'])}: {esc(row['why'])}")
+            self.c.print(f"  [red]do not[/] {esc(row['action'])}: {esc(row['why'])} [dim]{esc(cite(row.get('evidence')))}[/]")
+        for a in r.get("alerts", []):
+            self.c.print(f"  [dim]alert {esc(cite([a['handle']]))} {esc(str(a.get('verdict')))}[/]")
+        if numbered:
+            self.c.print("  [dim]citations (show <run> <number> prints the row):[/]")
+            for n, handle in enumerate(numbered, 1):
+                self.c.print(f"  [dim]{esc(f'[{n}]')} {esc(handle)}[/]")
         for p in r.get("proposed_actions", []):
             self.c.print(f"  proposal {esc(p['tool'])} {esc(json.dumps(p['args'], ensure_ascii=False))}: [bold]{p['decision']}[/] by {who(p['by'])}"
                          + (f" ({esc(str(p['reason']))})" if p.get("reason") else ""))

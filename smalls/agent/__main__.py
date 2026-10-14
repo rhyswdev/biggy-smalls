@@ -196,6 +196,16 @@ def cmd_replay(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_show(args: argparse.Namespace) -> int:
+    from smalls.agent.config import load_config
+    from smalls.agent.render import show
+
+    folder = Path(args.run_id) if Path(args.run_id).is_dir() else load_config().runs_dir / args.run_id
+    if not (folder / "evidence.jsonl").is_file():
+        raise SystemExit(f"no run record at {folder}")
+    return show(folder, args.handle)
+
+
 def cmd_blind(args: argparse.Namespace) -> int:
     """The mechanical side of the blind prompt pass. Nothing here writes prose."""
     from smalls.agent import blind
@@ -242,7 +252,11 @@ def parser() -> argparse.ArgumentParser:
 
 
 def add_run_commands(sub) -> None:
-    """`run`, `resume` and `replay`. The `smalls` command adds the same three, so there is one definition."""
+    """`run`, `resume`, `replay` and `show`. The `smalls` command adds the same ones, so there is one definition."""
+    shown = sub.add_parser("show", help="print the row behind a handle, or a number of a report's citation list, as the run was shown it")
+    shown.add_argument("run_id", help="a run id, or the folder of a run record")
+    shown.add_argument("handle", help="a handle, or a citation number from the report")
+    shown.set_defaults(run=cmd_show)
     run = sub.add_parser("run", help="investigate: one run at one `now`")
     run.add_argument("--now", required=True, help="the replay clock: an ISO time, or HH:MM on the bundle's day")
     run.add_argument("--trigger", help="the incident commander's question, as text")

@@ -12,6 +12,7 @@ crashed run leaves behind and exactly the run someone wants to replay.
 from __future__ import annotations
 
 import json
+import threading
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
@@ -93,18 +94,23 @@ class Bus:
         self.seq = start_seq
         self.counts: dict[str, int] = {}
         self.dropped: list[str] = []         # sinks removed after they raised
+        self.last_news = time.monotonic()    # when anything but a heartbeat was last shown
+        self._lock = threading.Lock()        # the heartbeat emits from its own thread
 
     def emit(self, event_type: str, /, **data: Any) -> Event:       # positional only: an event's data may hold any key
-        self.seq += 1
-        ev = Event(type=event_type, data=data, run_id=self.run_id, seq=self.seq)
-        self.counts[event_type] = self.counts.get(event_type, 0) + 1
-        for sink in list(self.sinks):
-            try:
-                sink.emit(ev)
-            except Exception as error:      # a renderer that breaks must not take the run with it
-                self.sinks.remove(sink)
-                self.dropped.append(f"{type(sink).__name__}: {type(error).__name__}: {error}")
-        return ev
+        with self._lock:
+            self.seq += 1
+            ev = Event(type=event_type, data=data, run_id=self.run_id, seq=self.seq)
+            self.counts[event_type] = self.counts.get(event_type, 0) + 1
+            if event_type != "heartbeat":
+                self.last_news = time.monotonic()
+            for sink in list(self.sinks):
+                try:
+                    sink.emit(ev)
+                except Exception as error:      # a renderer that breaks must not take the run with it
+                    self.sinks.remove(sink)
+                    self.dropped.append(f"{type(sink).__name__}: {type(error).__name__}: {error}")
+            return ev
 
 
 def read_events(path: Path) -> list[Event]:

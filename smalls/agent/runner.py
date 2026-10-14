@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -137,6 +138,7 @@ class Runner:
         self._ctx: RunContext | None = None
         self._investigating = False
         self._carry: dict[str, Any] | None = None
+        self._asking = False                    # a person is being asked at a gate
 
     def _verifier(self) -> tuple[dict[str, Any] | None, dict[str, str]]:
         """The verifier's passes, each a model bound to `submit_verdict` with its prompt, and the profile
@@ -260,7 +262,32 @@ class Runner:
 
     # -- the loop ------------------------------------------------------------------------------------------
 
+    def _heartbeat(self, stop: threading.Event) -> None:
+        """While the run is working and has shown nothing for `heartbeat_s`, say so, and again each time
+        that long passes. Never while a person is being asked: the silence is theirs then."""
+        every = self.cfg.heartbeat_s
+        if every <= 0:
+            return
+        last_beat = None        # the last heartbeat of the silence that is going on now
+        while not stop.wait(min(every / 4, 1.0)):
+            quiet = time.monotonic() - self.bus.last_news
+            if self._asking or quiet < every:
+                last_beat = None
+            elif last_beat is None or time.monotonic() - last_beat >= every:
+                last_beat = time.monotonic()
+                self.bus.emit("heartbeat", seconds=round(quiet))
+
     def _drive(self, inp: Any) -> dict[str, Any]:
+        stop = threading.Event()
+        beat = threading.Thread(target=self._heartbeat, args=(stop,), daemon=True)
+        beat.start()
+        try:
+            return self._drive_loop(inp)
+        finally:
+            stop.set()
+            beat.join(timeout=2)
+
+    def _drive_loop(self, inp: Any) -> dict[str, Any]:
         started = time.perf_counter()
         extra = {"durability": self.durability} if self.durability else {}
         while True:
@@ -294,7 +321,13 @@ class Runner:
                 self._index("paused", values)
                 self.bus.emit("run_paused", interrupt_id=pending.id, resume=resume_hint(self.run_id))
                 return {"status": "paused", "run_id": self.run_id}
-            inp = Command(resume={pending.id: self.decider(pending.value["calls"])})
+            self._asking = True
+            try:
+                answers = self.decider(pending.value["calls"])
+            finally:
+                self._asking = False
+                self.bus.last_news = time.monotonic()
+            inp = Command(resume={pending.id: answers})
         return self._finish(dict(state.values), time.perf_counter() - started)
 
     def _restart(self, values: dict[str, Any]) -> None:

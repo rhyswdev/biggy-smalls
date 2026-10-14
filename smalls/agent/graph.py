@@ -379,7 +379,12 @@ def build_graph(model: BaseChatModel, read_tools: dict[str, ToolSpec], inventory
             messages[-1].content = f"{messages[-1].content}\n{line}"
             writer({"type": "board_status", "line": line, "ready": not board.missing_for_ready(current, only_carried),
                     "stale": board.stale_ids(current, round_now)})
-        writer({"type": "budget", "used": used, "limit": limit, "turns_left": turns_left})
+        lead = board.leading(current)
+        # The round's closing line: everything a terminal needs to draw it, so a replay draws the same line.
+        writer({"type": "budget", "used": used, "limit": limit, "turns_left": turns_left, "round": round_now,
+                "board": {"leading": {"id": lead["id"], "confidence": lead.get("confidence")} if lead else None,
+                          "open": sum(1 for h in current.values() if h.get("status") == "open"),
+                          "rejected": sum(1 for h in current.values() if h.get("status") == "rejected")}})
         update.update(messages=messages, ledger=ledger, calls_used=used, report_attempts=attempts, proposed=[])
         if accepted is not None:
             update["report"] = accepted
