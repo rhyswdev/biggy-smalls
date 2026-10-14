@@ -343,3 +343,103 @@ def test_a_count_by_signal_prints_untagged_and_is_not_citable():
     filtered = golden.run("search_logs", ctx, since="-1h", signal="errors", group_by="minute")
     assert filtered.rows == () and "[not citable" in filtered.text and "[tag filter signal=errors:" in filtered.text
     assert golden.run("search_logs", ctx, since="-1h", group_by="minute").shown != ()                  # no tag, so citable
+
+
+# -- count by template (row D4): the top-N cut, the "other" row, and counts labelled when sampled ----------
+
+
+def template_lines(env) -> list[tuple[str, int, int | None, str]]:
+    """(masked line, records, estimate or None, example handle) per template line. Read from the right: a
+    masked line may itself hold two spaces."""
+    out = []
+    for line in env.text.splitlines():
+        if "  example " not in line:
+            continue
+        rest, example = line.rsplit("  example ", 1)
+        cells = rest.rsplit("  ", 2 if env.meta["sampled"] else 1)
+        out.append((cells[0], int(cells[1]), int(cells[2]) if env.meta["sampled"] else None, example))
+    return out
+
+
+def template_groups(ctx, since: int, sourcetype: str | None = None, term: str | None = None) -> tuple[dict[str, tuple[int, int]], dict[str, str]]:
+    """Each template's record count and sampled estimate over the window, and each log handle's template."""
+    rows = ctx.store.conn.execute("SELECT handle, coalesce(template_id, '(none)'), coalesce(keep_1_in, 1), json_extract(attrs, '$.sourcetype'), "
+                                  "native, coalesce(body, '') FROM visible WHERE kind = 'log' AND t_known >= ?", (since,)).fetchall()
+    groups: dict[str, list[int]] = {}
+    for _, template, rate, st, native, body in rows:
+        if (sourcetype is None or st == sourcetype) and (term is None or term in (native + body).lower()):
+            count = groups.setdefault(template, [0, 0])
+            count[0], count[1] = count[0] + 1, count[1] + rate
+    return {k: (n, est) for k, (n, est) in groups.items()}, {h: t for h, t, *_ in rows}
+
+
+@pytest.mark.parametrize("checkpoint", CHECKPOINTS)
+def test_count_by_template_cuts_to_the_top_twenty_and_sums_the_rest_in_an_other_row(checkpoint):
+    ctx = golden.ctx(checkpoint)
+    groups, template_of = template_groups(ctx, ctx.store.now - 2 * 3_600_000)
+    env = golden.run("search_logs", ctx, since="-2h", group_by="template")
+    lines = template_lines(env)
+    ranked = sorted((n for n, _ in groups.values()), reverse=True)
+    assert len(groups) > 20 and len(lines) == 20 and [n for _, n, _, _ in lines] == ranked[:20]      # the twenty largest, largest first
+    # Each line's example is a record of the template the line counts, and no two lines share a template.
+    assert [groups[template_of[example]][0] for *_, example in lines] == [n for _, n, _, _ in lines]
+    assert len({template_of[example] for *_, example in lines}) == 20
+    other = next(line for line in env.text.splitlines() if line.startswith("other (")).split("  ")
+    assert other[0] == f"other ({len(groups) - 20} more groups)" and int(other[1]) == sum(ranked[20:])
+    assert sum(n for _, n, _, _ in lines) + int(other[1]) == env.meta["total"] == sum(ranked) == total_of(golden.run("search_logs", ctx, since="-2h"))
+    assert env.text.splitlines().index(next(ln for ln in env.text.splitlines() if ln.startswith("other ("))) > env.text.splitlines().index(
+        next(ln for ln in env.text.splitlines() if "  example " in ln))                 # the "other" row closes the table
+    # The table is one row with a handle minted for the call; an example is a pointer, since a masked line is not its content.
+    assert len(env.rows) == 1 and env.shown[0].startswith("q:") and list(env.referenced) == [example for *_, example in lines]
+    assert env.text.splitlines()[-1].endswith("| stats count by punct")
+    # With a term, only the records that hold it are grouped.
+    narrowed, _ = template_groups(ctx, ctx.store.now - 2 * 3_600_000, term="error")
+    with_term = golden.run("search_logs", ctx, since="-2h", group_by="template", terms=["error"])
+    assert with_term.meta["total"] == sum(n for n, _ in narrowed.values()) < env.meta["total"]
+    assert sorted((n for _, n, _, _ in template_lines(with_term)), reverse=True) == sorted((n for n, _ in narrowed.values()), reverse=True)[:20]
+
+
+@pytest.mark.parametrize("checkpoint", CHECKPOINTS)
+def test_a_table_of_twenty_templates_or_fewer_has_no_other_row(checkpoint):
+    ctx = golden.ctx(checkpoint)
+    small = []
+    for sourcetype in SOURCETYPE.values():
+        groups, _ = template_groups(ctx, ctx.store.now - 86_400_000, sourcetype)
+        if not 0 < len(groups) <= 20:
+            continue
+        small.append(sourcetype)
+        env = golden.run("search_logs", ctx, since="-24h", group_by="template", sourcetype=sourcetype)
+        lines = template_lines(env)
+        assert len(lines) == len(groups) and "other (" not in env.text
+        assert sum(n for _, n, _, _ in lines) == env.meta["total"] == sum(n for n, _ in groups.values())
+        assert all(label.startswith(f"{sourcetype}: ") for label, *_ in lines)        # a line names its sourcetype, then the masked text
+    assert small
+
+
+@pytest.mark.parametrize("checkpoint", CHECKPOINTS)
+def test_template_counts_are_labelled_when_the_source_is_sampled(checkpoint):
+    ctx = golden.ctx(checkpoint)
+    since = ctx.store.now - 3_600_000
+    rates = dict(ctx.store.conn.execute("SELECT json_extract(attrs, '$.sourcetype'), max(coalesce(keep_1_in, 1)) FROM visible WHERE kind = 'log' AND t_known >= ? "
+                                        "GROUP BY 1", (since,)))
+    sampled = [st for st, rate in rates.items() if rate > 1]
+    assert sampled
+    for sourcetype in sampled:
+        groups, template_of = template_groups(ctx, since, sourcetype)
+        env = golden.run("search_logs", ctx, since="-1h", group_by="template", sourcetype=sourcetype)
+        title = env.text.splitlines()[0]
+        estimate = sum(est for _, est in groups.values())
+        assert env.meta["sampled"] is True and "group  records  estimated" in env.text
+        assert re.search(rf"count by template: {sum(n for n, _ in groups.values())} log records \(sampled 1:\d+( to 1:\d+)? per [a-z ]+, estimated {estimate}\)", title)
+        lines = template_lines(env)
+        assert all((n, est) == groups[template_of[example]] for _, n, est, example in lines) and any(est > n for _, n, est, _ in lines)
+        other = [line.split("  ") for line in env.text.splitlines() if line.startswith("other (")]
+        assert sum(est for _, _, est, _ in lines) + sum(int(cells[2]) for cells in other) == estimate    # the "other" row is estimated too
+    # A source that is not sampled gets no estimate column and no sampled label.
+    plain = next(st for st, rate in rates.items() if rate == 1)
+    env = golden.run("search_logs", ctx, since="-1h", group_by="template", sourcetype=plain)
+    assert env.meta["sampled"] is False and "estimated" not in env.text and "sampled" not in env.text and "group  records\n" in env.text
+    # Sampled and unsampled sources together: the estimate column stays, and an unsampled template's estimate is its count.
+    mixed = golden.run("search_logs", ctx, since="-1h", group_by="template")
+    groups, template_of = template_groups(ctx, since)
+    assert mixed.meta["sampled"] is True and all((n, est) == groups[template_of[example]] for _, n, est, example in template_lines(mixed))
