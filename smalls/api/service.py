@@ -29,10 +29,11 @@ from typing import Any, Callable
 
 from smalls.agent.config import Config, load_config
 from smalls.agent.graph import iso
-from smalls.agent.record import new_run_id
+from smalls.agent.record import RunRecord, new_run_id
 from smalls.agent.runner import Runner, Toolbox, bundle_toolbox, module_toolbox
 from smalls.api.db import Database, dumps, loads
 from smalls.api.problems import Problem
+from smalls.api.reader import Reader
 from smalls.api.settings import Settings
 from smalls.api.sink import AppDbSink
 
@@ -64,6 +65,7 @@ class Service:
         self.guard = threading.Lock()
         self.loop: asyncio.AbstractEventLoop | None = None
         self.listeners: dict[str, set[asyncio.Event]] = {}
+        self.readers: dict[str, Reader] = {}            # one toolbox per `now`, for the API's own reads
         self.closing = False
 
     # -- capabilities and the stream's listeners -------------------------------------------------------------
@@ -79,6 +81,31 @@ class Service:
             return
         for event in list(self.listeners.get(chat_id, ())):
             loop.call_soon_threadsafe(event.set)
+
+    # -- reads -----------------------------------------------------------------------------------------------
+
+    def reader(self, now: datetime | str | None = None) -> Reader:
+        when = now if isinstance(now, datetime) else datetime.fromisoformat(now.replace("Z", "+00:00")) if now else self.now
+        key = iso(when)
+        with self.guard:
+            if key not in self.readers:
+                self.readers[key] = Reader(self.toolbox(), when)
+            return self.readers[key]
+
+    def incident(self) -> dict[str, Any]:
+        return self.reader().incident(self.settings.trigger(), named=self.settings.incident)
+
+    def records(self, chat_id: str) -> list[RunRecord]:
+        return [RunRecord(None, run["run_id"], backend=self.db.records) for run in self.runs(chat_id)]
+
+    def report(self, chat_id: str) -> dict[str, Any] | None:
+        """The chat's latest report, as its last `report` event carried it."""
+        row = self.db.row("SELECT data FROM event WHERE chat_id = ? AND type = 'report' ORDER BY seq DESC LIMIT 1", (chat_id,))
+        return (loads(row["data"]) or {}).get("report") if row else None
+
+    def events(self, chat_id: str, after: int = 0) -> list[dict[str, Any]]:
+        return [{**e, "data": loads(e["data"])} for e in
+                self.db.rows("SELECT seq, run_id, agent_seq, type, data, t_wall FROM event WHERE chat_id = ? AND seq > ? ORDER BY seq", (chat_id, after))]
 
     # -- chats -----------------------------------------------------------------------------------------------
 

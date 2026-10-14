@@ -10,7 +10,7 @@ from typing import Any, AsyncIterator
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from smalls.api import models
+from smalls.api import models, reader
 from smalls.api.db import loads
 from smalls.api.problems import Problem
 from smalls.api.service import Service
@@ -69,9 +69,7 @@ def create_chat(body: models.NewChat, request: Request) -> dict[str, Any]:
 def get_chat(chat_id: str, request: Request, after: int = 0) -> dict[str, Any]:
     s = service(request)
     chat = s.chat(chat_id)
-    events = [{**e, "data": loads(e["data"])} for e in
-              s.db.rows("SELECT seq, run_id, agent_seq, type, data, t_wall FROM event WHERE chat_id = ? AND seq > ? ORDER BY seq", (chat_id, after))]
-    return {"chat": summary(s, chat), "runs": s.runs(chat_id), "events": events, "pending_gate": s.pending_gate(chat_id),
+    return {"chat": summary(s, chat), "runs": s.runs(chat_id), "events": s.events(chat_id, after), "pending_gate": s.pending_gate(chat_id),
             "notes": s.db.rows("SELECT handle, text, submitted_at, delivered_at, run_id FROM note WHERE chat_id = ? ORDER BY id", (chat_id,))}
 
 
@@ -143,6 +141,41 @@ def auto_approve(chat_id: str, body: models.Switch, request: Request) -> dict[st
 @router.post("/chats/{chat_id}/runs", status_code=202)
 def more_runs(chat_id: str, body: models.MoreRun, request: Request) -> dict[str, Any]:
     return service(request).another_run(chat_id, resume=body.resume)
+
+
+@router.get("/incident")
+def incident(request: Request) -> dict[str, Any]:
+    """The incident card: the incident as it stands at `now` and the commander's note. No derived fact."""
+    return service(request).incident()
+
+
+@router.get("/chats/{chat_id}/calls/{call_id}")
+def call(chat_id: str, call_id: str, request: Request, run_id: str | None = None) -> dict[str, Any]:
+    s = service(request)
+    s.chat(chat_id)
+    events = s.events(chat_id)
+    for record in reversed(s.records(chat_id)):
+        if run_id and record.run_id != run_id:
+            continue
+        view = reader.call_view(record, [e for e in events if e["run_id"] == record.run_id], call_id)
+        if view is not None:
+            return {**view, "run_id": record.run_id}
+    raise not_found(f"No call {call_id} in this chat.")
+
+
+@router.get("/chats/{chat_id}/evidence/{handle:path}")
+def evidence(chat_id: str, handle: str, request: Request) -> dict[str, Any]:
+    s = service(request)
+    chat = s.chat(chat_id)
+    found = reader.evidence(s.reader(chat["now"]), s.records(chat_id), s.report(chat_id), handle)
+    if found is None:
+        raise not_found(f"Nothing in this chat or in the data at its now has the handle {handle}.")
+    return found
+
+
+@router.get("/tools/schemas")
+def tool_schemas(request: Request) -> list[dict[str, Any]]:
+    return service(request).reader().schemas()
 
 
 def not_found(what: str) -> Problem:

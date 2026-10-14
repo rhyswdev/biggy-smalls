@@ -8,6 +8,7 @@
 | SMALLS_API_RUNS       | the committed run records loaded at start (default `eval/runs`)                  |
 | SMALLS_API_REGISTRY   | a module with `registry()` and `inventory()`, in place of the bundle's tools     |
 | SMALLS_API_SCRIPT     | the script the scripted profile plays (default the generic dev script)           |
+| SMALLS_INCIDENT       | the incident number the card shows, when served data cannot say which it is      |
 
 Nothing here names a bundle, an incident or a model: the Makefile passes the bundle and the checkpoint.
 """
@@ -38,6 +39,7 @@ class Settings:
     tags: bool | None = None
     load_scripted: bool = False         # load committed runs of the scripted provider too; tests only (R5)
     clock: str | None = None            # an ISO time in place of the checkpoint's clock: for a fixture registry with its own day
+    incident: str | None = None         # the incident number, when served data cannot say which incident the trigger belongs to
     db_name: str = field(default_factory=lambda: f"smalls-{uuid.uuid4().hex[:12]}")
 
     @classmethod
@@ -50,7 +52,8 @@ class Settings:
             raise SystemExit("the API needs SMALLS_BUNDLE and SMALLS_CHECKPOINT; `make api` passes both")
         return cls(bundle=Path(bundle), checkpoint=checkpoint, mode=mode,  # type: ignore[arg-type]
                    runs_dir=Path(os.environ.get("SMALLS_API_RUNS") or ROOT / "eval" / "runs"),
-                   registry=os.environ.get("SMALLS_API_REGISTRY") or None, script=os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT)
+                   registry=os.environ.get("SMALLS_API_REGISTRY") or None, script=os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT,
+                   incident=os.environ.get("SMALLS_INCIDENT") or None)
 
     @property
     def uri(self) -> str:
