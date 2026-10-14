@@ -48,6 +48,11 @@ def list_calls(ctx) -> dict[str, list[dict]]:
                           for q in derive.metric_queries(ctx) for extra in ([], *(s["tag_set"] for s in q["series"] if s["tag_set"]))
                           for since in (WIDEST, "-30m")],
         "check_status_page": [{}, *({"provider": p} for p in providers(ctx))],      # each provider, and none
+        "itsm_query": [{"table": t} for t in ("incident", "journal", "user", "group")],     # every table
+        # every service and policy, and neither
+        "get_oncall": [{}, *({"service": s} for s in named(ctx, "services")), *({"policy": p} for p in named(ctx, "escalation_policies"))],
+        # every CMDB item and every monitored entity, at 2 hops
+        "get_topology": [{"entity": name, "hops": 2} for name in topology_names(ctx)],
         "get_record": [],       # every handle in the store, below
     }
     if ctx.tags:
@@ -55,7 +60,16 @@ def list_calls(ctx) -> dict[str, list[dict]]:
         calls["list_alerts"] += [{"since": WIDEST, "signal": "untagged"}]
         calls["list_changes"] += [{"since": WIDEST, "change_kind": "untagged"}]
         calls["read_chat"] += [{"since": WIDEST, "act": "untagged"}]
+        calls["itsm_query"] += [{"table": "incident", "signal": "untagged"}]
     return calls
+
+
+def named(ctx, dataset: str) -> list[str]:
+    return [t for (t,) in ctx.store.conn.execute("SELECT title FROM visible WHERE dataset = ? ORDER BY 1", (dataset,))]
+
+
+def topology_names(ctx) -> list[str]:
+    return [t for (t,) in ctx.store.conn.execute("SELECT DISTINCT title FROM visible WHERE kind IN ('ci', 'entity') ORDER BY 1")]
 
 
 def providers(ctx) -> list[str]:
@@ -112,7 +126,7 @@ def test_every_built_tool_has_a_call_set():
         ctx = golden.ctx(golden.SECOND, tags)
         built = registry.registry(tags=tags)
         assert set(built) == set(list_calls(ctx)), "a tool was built without a call set in the leak test"
-        assert len(built) >= 5
+        assert len(built) == 11
 
 
 @pytest.mark.parametrize("checkpoint,tags", ARMS)
@@ -161,15 +175,7 @@ def test_get_record_on_every_handle_in_the_store(checkpoint, tags):
 
 # What no call lists yet, by source and dataset, with the row of the build plan that will list it. This
 # shrinks as tools land, and what stays must have a reason of its own.
-NOT_LISTED_YET = {
-    ("servicenow", "incident"): "itsm_query, row D7", ("servicenow", "sys_journal_field"): "itsm_query, row D7",
-    ("servicenow", "sys_audit"): "an incident's children once itsm_query lists incidents, row D7",
-    ("servicenow", "cmdb_ci"): "get_topology, row D7", ("servicenow", "cmdb_rel_ci"): "get_topology, row D7",
-    ("servicenow", "sys_user"): "itsm_query, row D7", ("servicenow", "sys_user_group"): "itsm_query, row D7",
-    ("dynatrace", "entities"): "get_topology, row D7",
-    ("pagerduty", "services"): "get_oncall, row D7", ("pagerduty", "escalation_policies"): "get_oncall, row D7",
-    ("pagerduty", "oncalls"): "get_oncall, row D7",
-}
+NOT_LISTED_YET: dict[tuple[str | None, str | None], str] = {}       # empty since row D7: all eleven tools are built
 
 
 def is_pending(source: str, dataset: str) -> bool:
@@ -224,6 +230,7 @@ def test_every_visible_record_can_be_reached_from_some_result(checkpoint, tags):
     assert missing == []
     pending = {(s, d) for h, s, d, _ in rows if h not in reached}
     assert len({h for h, *_ in rows} & reached) > 2000 and len(pending) <= len(NOT_LISTED_YET)
+    assert {h for h, *_ in rows} <= reached                                       # every visible record, with all eleven tools built
     # An incident's audit rows are among its children, and a synthetic test is referenced from its monitor's row.
     synthetics = [h for h, s, d, _ in rows if d == "synthetics"]
     assert synthetics and set(synthetics) <= reached

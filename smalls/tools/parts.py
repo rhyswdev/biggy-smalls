@@ -7,7 +7,7 @@ and writes the lines every result shares: the clamped-window note, the footer of
 the native query echo, which comes last.
 
 Caps count tokens as characters over 4. Rows drop from the end until the result fits, or from the start
-for a tool that keeps the newest (`keep="newest"`).
+for a tool that lists oldest first and keeps the newest (`keep="newest"`).
 """
 
 from __future__ import annotations
@@ -50,7 +50,9 @@ class Parts:
     hidden_span: tuple[int, int] | None = None      # first and last known time of the rows the tool's own limit left out
     aggregate: bool = False                 # a count table: `total` is what it counted, and no row is ever cut from it
     what: str = "rows"
-    keep: str = "oldest"                    # which end survives a cut: "oldest", "newest", or "best" for a ranked result
+    # Which rows survive a cut, by how the rows are ordered: "oldest" (oldest first), "newest" (oldest first, cut from the
+    # start), "newest_first", "best" (ranked) or "nearest" (by distance). All but "newest" cut from the end.
+    keep: str = "oldest"
     narrow: str = "Narrow the window or add a filter."
     empty_hint: str = "Widen the window or drop a filter."
     sampled: bool = False
@@ -80,9 +82,11 @@ def _assemble(parts: Parts, rows: list[Line], total: int, cut: str | None) -> st
 def _cut_range(parts: Parts, dropped: list[Line], hidden: int) -> str:
     """What a truncated result leaves out, in words the model can narrow on."""
     n = len(dropped) + hidden
-    which = {"oldest": "the newest", "newest": "the oldest", "best": "the lower-ranked"}[parts.keep]
+    which = {"oldest": "the newest", "newest": "the oldest", "newest_first": "the oldest", "best": "the lower-ranked",
+             "nearest": "the farthest"}[parts.keep]
     times = [row.t_known for row in dropped if row.t_known is not None] + list(parts.hidden_span or ())
-    span = f", from {iso(min(times))} to {iso(max(times))}" if times and (parts.hidden_span or not hidden) and parts.keep != "best" else ""
+    timed = parts.keep not in ("best", "nearest")          # a rank or a distance has no time range to name
+    span = f", from {iso(min(times))} to {iso(max(times))}" if times and (parts.hidden_span or not hidden) and timed else ""
     return f"{which} {n}{span}"
 
 
