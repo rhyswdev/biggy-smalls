@@ -88,3 +88,9 @@ batches:
     phase: 2
     pass: 7
     what: Pass 7's guard set, the two wrong-cause triggers (eval/framing/), one run each.
+  - name: p08
+    phase: 2
+    pass: 8
+    finding: F-09
+    result: reverted
+    what: Pass 8, the leading statement chaining links that its rows do not each show. Five runs at the second checkpoint on sol at medium (three, then two more, since the first three sat inside the spread).
