@@ -515,3 +515,38 @@ Proposed modes for the next failure analysis, each counted on scores; the loop w
 4. **An alert from an unrelated change at the same time is counted as the incident's.** 25 of the 55 arm C runs.
 
 The two blind authors' questions that touched the scorer (3, 4, 6 and 7 of `tools-agent-build.md` 11.3) are ruled in SC1 to SC4 with no change to a blind file. Open for us: whether the judge's harmful-step check should read a step given only on a condition as recommended (a new judge version if it changes), and a checklist for the first checkpoint.
+
+## 15. The freeze and the road to the held-out run (planned 2026-10-15)
+
+Everything that `agent-v1` will lock is settled here first, then the tag is made. PLAN 12's gates say a held-out bundle is built only after `v1-submittable`, which needs a committed sample output, a README verified from a clean clone and a write-up draft; so the write-up runs as its own session beside the freeze. Time is short, so the approaches eval (arms B, D and E) is left as designed, not run.
+
+### 15.1 The sequence
+
+| Session | What | Starts |
+|---|---|---|
+| A, the freeze (rows Z0 to Z7 below) | The last fixes, the judge's fix and the regrade, the sample output, the cheap controls, tag `agent-v1` | Now |
+| B, the write-up (section 15.4) | README verified from a clean clone, the write-up draft with its tables generated from the ledger, the four deliverables of `requirements.md` | Now, beside A |
+| Both done | Tag `v1-submittable` (whichever session finishes second) | After A and B |
+| C, held-out authoring | A separate session that never reads agent code, prompts or run transcripts builds h1 from its card (PLAN 12, `eval/heldout/README.md`), runs `make data`, `make lint` and the tagging pass on it (ruling of 13.3) | After `v1-submittable` |
+| D, the held-out run | `make heldout` on h1 with the controls (arm A, the contrarian control, the framing triggers), scored by the frozen scorer; the write-up's held-out table | After C |
+
+### 15.2 Rows for session A
+
+| # | Build | Accepted when |
+|---|---|---|
+| Z0 | Preconditions: the five blind files equal pass 7's (`git diff 9e0e340 -- smalls/agent/prompts smalls/tools/descriptions.yaml` empty); `make test`, `make lint` and `make web-test` pass; every ledger row is scored | All hold |
+| Z1 | The tool CLI accepts `rationale` (HANDOFF, "Small fixes"): `smalls tools call` checks it against `Rationale` as the graph does and drops it before the call. Tool code, so the overfit review | The command in HANDOFF runs; a test in `tests/test_cli.py`; `make solve` and `make test` pass; the overfit review passes |
+| Z2 | The judge's harmful-step check (ruling of 13.3): a step given only on a condition, or written out because the commander asked for it, is not read as recommended. A new judge version, so `python -m eval.score --rejudge` over every judged run, then `--ledger`. The judge's budget in `eval/scorer.toml` is raised to cover it. This session changes no prompt, so V3 does not bar it from the judge | The hand-labelled agreement (S4) is re-run and reported; the guard run 14.3 named is no longer marked harmful; the regrade's spend is in 15.3 |
+| Z3 | The sample output (`requirements.md` deliverable 4): the best-scored pass 7 run at the second checkpoint, copied into `eval/runs/` and committed, with `DEMO_RUN` pointing at it; the old demo run stays | `make demo` replays it with no key; the UI opens it as a recorded chat; it scores cause 1 and meets the bar |
+| Z4 | The cheap controls of PLAN 12 that need no held-out data: the bundle-string lint extended to read every bundle's `facts.yaml` it finds (built here, run by session C on h1, since this session never reads a held-out path); a proximity baseline, a script that ranks the day's changes by time window and shared CI the way change-correlation tools do, run on the development bundle to show each decoy ranks first | The lint passes on the development bundle and its test plants a string from a second facts file; the baseline prints its ranking, committed with its output |
+| Z5 | The contrarian control: a throwaway prompt outside `smalls/agent/prompts/` with the development incident's discriminators written as rules (PLAN 1.5), runnable as an arm. One run on the development bundle | It reaches the development cause; session D runs it on h1, where it must fail or the variant tests nothing |
+| Z6 | Tag `agent-v1` on `main` after Z1 to Z5, covering prompts, tools, loop, report schema, scorer, judge prompt and criteria (PLAN 12). The commit of the held-out cards is recorded beside it, without reading them (`git log --format=%H -- eval/heldout/cards` names the commit) | The tag is pushed; HANDOFF records it and the cards' commit |
+| Z7 | Close: HANDOFF; the tuning-log page refreshed with the regraded scores; session C's prompt written (it reads only `eval/heldout/README.md` and the brief, never agent code) | Done |
+
+### 15.3 Budget and spend
+
+The session sizes it (ruling of 13.3). Expected: the judge's regrade, about 50 judged runs at about $0.05, about $2.50; the contrarian control's run, about $0.40; reviews, cents. About $3, kept as a running total here, one line per batch.
+
+### 15.4 Session B, the write-up
+
+`requirements.md` asks for four deliverables: the repository, instructions to run it locally, a short write-up (its items 1 to 7), and a sample output. Session B writes the README's run-locally section and verifies it from a clean clone (`make demo` with no key, `make run` with one, `make app`, compose), and drafts the write-up: what was built and why, where the model is used and where code is better, how the agent is evaluated (the eval layers, the scorer, the tuning log as the evidence of how it evolved, Gate B), what the results are on the development incident as counts (PLAN 12's wording rules: counts, never percentages, and never "accuracy", "generalises", "robust" or "validated"), what is held out and why, the limits, and how AI coding tools were used. Its tables are generated from the ledger, never typed. The held-out section is left as a placeholder for session D. It never edits agent code, prompts, the scorer or the ledger; it may read everything but the held-out paths.
