@@ -41,7 +41,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   const past = chat.origin === "past";
   const finishedAtStart = ["completed", "incomplete", "failed"].includes(initial.status);
   const state = useChatEvents(chat.id, initial, !past);
-  const [drawer, setDrawer] = useState<string | null>(null);
+  const [drawer, setDrawer] = useState<string | null>(params.get("evidence"));      // ?evidence=<handle> opens a record directly
   const [local, setLocal] = useState<Local[]>([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
