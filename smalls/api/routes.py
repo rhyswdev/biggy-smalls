@@ -3,9 +3,12 @@ limits; every error is a problem response."""
 
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+import json
+from typing import Any, AsyncIterator
 
 from fastapi import APIRouter, Request
+from fastapi.responses import StreamingResponse
 
 from smalls.api import models
 from smalls.api.db import loads
@@ -70,6 +73,51 @@ def get_chat(chat_id: str, request: Request, after: int = 0) -> dict[str, Any]:
               s.db.rows("SELECT seq, run_id, agent_seq, type, data, t_wall FROM event WHERE chat_id = ? AND seq > ? ORDER BY seq", (chat_id, after))]
     return {"chat": summary(s, chat), "runs": s.runs(chat_id), "events": events, "pending_gate": s.pending_gate(chat_id),
             "notes": s.db.rows("SELECT handle, text, submitted_at, delivered_at, run_id FROM note WHERE chat_id = ? ORDER BY id", (chat_id,))}
+
+
+KEEP_ALIVE_S = 15.0
+PAGE = 500
+STREAM_HEADERS = {"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no", "Connection": "keep-alive"}
+
+
+def sse(row: dict[str, Any]) -> str:
+    """One stored event as the agent's protocol sends it (`Event.to_sse`), numbered per chat."""
+    body = {"seq": row["seq"], "run_id": row["run_id"], "agent_seq": row["agent_seq"], "type": row["type"],
+            "data": json.loads(row["data"]), "t_wall": row["t_wall"]}
+    return f"id: {row['seq']}\nevent: {row['type']}\ndata: {json.dumps(body, ensure_ascii=False)}\n\n"
+
+
+@router.get("/chats/{chat_id}/events")
+async def events(chat_id: str, request: Request, after: int = 0) -> StreamingResponse:
+    """The chat's events (6.3): every stored one after `Last-Event-ID` (or `after`), then each as it is written,
+    with a comment line every 15 s so proxies keep the connection open."""
+    s = service(request)
+    s.chat(chat_id)
+    given = request.headers.get("last-event-id", "")
+    start = int(given) if given.strip().isdigit() else max(after, 0)
+    query = "SELECT seq, run_id, agent_seq, type, data, t_wall FROM event WHERE chat_id = ? AND seq > ? ORDER BY seq LIMIT ?"
+
+    async def stream() -> AsyncIterator[str]:
+        cursor, wake = start, asyncio.Event()
+        s.listeners.setdefault(chat_id, set()).add(wake)
+        try:
+            yield "retry: 2000\n\n"
+            while True:
+                wake.clear()        # cleared before the read, so an event written after it is never missed
+                rows = await asyncio.to_thread(s.db.rows, query, (chat_id, cursor, PAGE))
+                for row in rows:
+                    yield sse(row)
+                    cursor = row["seq"]
+                if rows:
+                    continue
+                try:
+                    await asyncio.wait_for(wake.wait(), timeout=KEEP_ALIVE_S)
+                except TimeoutError:
+                    yield ": keep-alive\n\n"
+        finally:
+            s.listeners.get(chat_id, set()).discard(wake)
+
+    return StreamingResponse(stream(), media_type="text/event-stream", headers=STREAM_HEADERS)
 
 
 @router.post("/chats/{chat_id}/gate", status_code=202)

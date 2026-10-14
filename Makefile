@@ -107,4 +107,4 @@ overfit-review:
 
 # The API alone, on 127.0.0.1:SMALLS_API_PORT. Live mode reads the key from .env; nothing is written to disk.
 api:
-	$(API_ENV) $(UV) run --python 3.12 $(ENV) uvicorn smalls.api.app:app --host 127.0.0.1 --port $(SMALLS_API_PORT)
+	$(API_ENV) $(UV) run --python 3.12 $(ENV) uvicorn smalls.api.app:app --host 127.0.0.1 --port $(SMALLS_API_PORT) --timeout-graceful-shutdown 3
