@@ -81,6 +81,16 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
     if (was.current !== state.status && !running) router.refresh();       // the chats list catches up
     was.current = state.status;
   }, [state.status, running, router]);
+  // The panel scrolls inside the card. While the run goes it follows the newest read, unless the commander has
+  // scrolled up to an earlier one; once it has finished, the answer in brief is at the top.
+  const anchor = useRef<HTMLSpanElement>(null);
+  const lines = steps(state).length;
+  useEffect(() => {
+    const box = anchor.current?.closest<HTMLElement>(".inc-side-in");
+    if (!box) return;
+    if (!running) box.scrollTop = 0;
+    else if (box.scrollHeight - box.scrollTop - box.clientHeight < 120) box.scrollTop = box.scrollHeight;
+  }, [lines, running]);
 
   if (running || state.status === "waiting") {
     const list = steps(state);
@@ -88,6 +98,7 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
     const at = PHASES.indexOf(phase);
     return (
       <>
+        <span ref={anchor} hidden />
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
           <StatusTag status="running">Agent running</StatusTag>
           <span className="time">{now && state.startedAt ? elapsed(now - Date.parse(state.startedAt)) : "0:00"}</span>
@@ -129,6 +140,7 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
   const hyps = [...(report?.hypotheses ?? [])].sort((a, b) => (a.status === "rejected" ? 1 : 0) - (b.status === "rejected" ? 1 : 0) || b.confidence - a.confidence);
   return (
     <>
+      <span ref={anchor} hidden />
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
         <StatusTag status={state.status === "stopped" ? "skipped" : state.status === "completed" ? "ok" : "error"}>
           {state.status === "completed" ? "Finished" : state.status === "stopped" ? "Stopped" : state.status === "incomplete" ? "Incomplete" : "Failed"}

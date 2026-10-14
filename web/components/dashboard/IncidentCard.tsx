@@ -40,7 +40,7 @@ export function IncidentCard({ card, resolved, children }: { card: Card; resolve
           <p className="note-text">{card.note.text}</p>
         </div>
       </div>
-      <div className="inc-side" aria-live="polite">{children}</div>
+      <div className="inc-side"><div className="inc-side-in" aria-live="polite">{children}</div></div>
     </article>
   );
 }
