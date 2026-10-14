@@ -1,0 +1,64 @@
+# What each batch of live runs was for (docs/decisions/eval-loop.md, ruling V7). `python -m eval.results add`
+# refuses a batch that is not described here, and the tuning log prints these words above each batch's table.
+# `pass` is the iteration pass whose prompt files the runs used: 0 is the first blind pass's files (row C2b).
+batches:
+  - name: c3
+    phase: build
+    pass: 0
+    what: The first live run (row C3), on the first provider, with the opening sweep. It is the committed run that `make demo` replays.
+  - name: sol-shake
+    phase: 1
+    pass: 0
+    what: The shakedown on the second provider's strong tier at medium effort (row L2).
+  - name: sol-base
+    phase: 1
+    pass: 0
+    what: The first phase's baseline, two runs at each checkpoint.
+  - name: p01
+    phase: 1
+    pass: 1
+    finding: F-01
+    result: reverted
+    what: Pass 1, board updates sent in turns of their own. The target did not move.
+  - name: eff-low
+    phase: 1
+    pass: 0
+    what: A probe of the investigator at low effort on the original files.
+  - name: p02
+    phase: 1
+    pass: 2
+    finding: F-02
+    result: kept
+    what: Pass 2, claims that say more than the rows they cite.
+  - name: p02-low
+    phase: 1
+    pass: 2
+    what: A probe of the investigator at low effort on the pass 2 files.
+  - name: p03
+    phase: 1
+    pass: 3
+    finding: F-03
+    result: kept
+    what: Pass 3, a hypothesis left open with no support and nothing said.
+  - name: frame
+    phase: 1
+    pass: 3
+    what: The guard set's two wrong-cause triggers (eval/framing/), one run each, on the pass 3 files.
+  - name: final
+    phase: 1
+    pass: 3
+    what: Two more runs at the second checkpoint on the pass 3 files.
+  - name: frame-db-at-time
+    phase: 1
+    pass: 3
+    what: A factual question as the trigger, which became the evidence for F-04.
+  - name: p04
+    phase: 1
+    pass: 4
+    finding: F-04
+    result: kept
+    what: Pass 4, the commander's request argued against but not answered. Two framing triggers and the standard one.
+  - name: cli-claude
+    phase: between
+    pass: 4
+    what: Two runs by hand on the first provider, one at each checkpoint, with the opening sweep. Each had four reads refused for a quiet board, which led to plan row P1.

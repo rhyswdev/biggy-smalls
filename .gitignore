@@ -16,3 +16,6 @@ eval/runs/index.sqlite*
 .env
 .env.*
 !.env.example
+
+# live run records of the eval loop: kept local; each has a committed row in eval/results/runs.jsonl
+eval/loop-runs/
