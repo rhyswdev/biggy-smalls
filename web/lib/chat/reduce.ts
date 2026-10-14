@@ -71,7 +71,7 @@ export interface BoardEntry {
 export interface Step {
   call_id: string;
   tool: string;
-  state: "done" | "running" | "queued";
+  state: "done" | "failed" | "running" | "queued";
   text: string;
 }
 
@@ -390,8 +390,8 @@ export function steps(state: ChatState): Step[] {
     .filter((r) => r.by === "agent" && r.kind === "read")
     .map((r) => ({
       call_id: r.call_id, tool: r.tool,
-      state: r.result ? "done" : r.running || r.state === "approved" || r.state === "auto" || r.state === "edited" ? "running" : "queued",
-      text: short(r.result ? r.result.first_line : r.rationale?.tests ?? "", 140),
+      state: r.result ? (r.result.status === "ok" ? "done" : "failed") : r.running || r.state === "approved" || r.state === "auto" || r.state === "edited" ? "running" : "queued",
+      text: short(r.result ? `${r.result.status === "error" ? "Error: " : ""}${r.result.first_line}` : r.rationale?.tests ?? "", 140),
     }));
 }
 

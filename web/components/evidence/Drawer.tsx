@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, EvidenceRecord, Handle, Notice } from "@/components/ds";
 import { readEvidence } from "@/lib/actions/reads";
-import { clock } from "@/lib/format";
+import { clock, day } from "@/lib/format";
 import type { EvidenceView } from "@/lib/types";
 
 const CLAIM: Record<string, string> = { support: "Supports", against: "Against", evidence: "Evidence", cited: "Cited" };
@@ -49,7 +49,7 @@ export function EvidenceDrawer({ chatId, handle, onClose }: { chatId: string; ha
         background: "var(--surface-raised)", boxShadow: "var(--shadow-drawer)", outline: "none" }}>
       <div style={{ position: "sticky", top: 0, zIndex: 1, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "12px 16px", background: "var(--surface-raised)", borderBottom: "1px solid var(--line)" }}>
         <span className="label">Evidence</span>
-        <span className="time" style={{ color: "var(--ink-muted)" }}>{when ? `known ${clock(when, true)} UTC` : ""}</span>
+        <span className="time" style={{ color: "var(--ink-muted)" }}>{when ? `known ${day(when)} ${clock(when, true)} UTC` : ""}</span>
         <span style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
           {trail.length > 1 ? <Button variant="quiet" size="sm" onClick={back}>← {trail[trail.length - 2]}</Button> : null}
           <Button size="sm" onClick={onClose} aria-label="Close evidence drawer">Close</Button>

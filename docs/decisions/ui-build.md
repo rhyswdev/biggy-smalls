@@ -506,7 +506,7 @@ Budget $10 (section 3). One line per live call, its cost from its own record or 
 
 A pass from the data to the browser on fresh data: `make data` (byte-identical to the commit), lint, ingest, a fresh tag cache and fresh stability repeats into a scratch path (`SMALLS_TAG_CACHE`; 490 of 490 decided tags equal the committed cache), live CLI runs at both checkpoints, and the app in live mode on the `claude` set driven in a browser through every origin: Investigate in chat, Run agent, a new chat, a recorded run, Stop, follow-ups, resolve, summary, knowledge base and messages. The second provider's account had no credits, so the default set paused at its first model call with `APIError`; the failure path held (paused, partial report, resume command).
 
-Found and fixed, each with a test that fails without the fix:
+Found and fixed; each fix but E6 has a test that fails without it:
 
 | # | What | Fix | Test |
 |---|---|---|---|
@@ -516,6 +516,8 @@ Found and fixed, each with a test that fails without the fix:
 | E4 | Every page logged a console 404 for `/favicon.ico`. | `app/icon.svg`. | `e2e/dashboard.spec.ts`: no failed request and no console error |
 | E5 | With an action waiting, the composer's hint said "1 read is waiting for you above". | The hint names reads, actions or both (`waitingText`). | `e2e/gate.spec.ts`, `tests/writeup.test.ts` |
 | E6 | The recorded-run banner read "Nothing here calls a model; Below is…". | A full stop. | none |
+| E7 | The evidence drawer's header gave the known time without its day, so a record from the day before read as "known 18:42:00 UTC" beside "Nothing after 14:52 UTC is visible". | The header gives the day. | `e2e/drawer.spec.ts`: a known time carries its day |
+| E8 | The agent panel marked a read whose result was an error with ✓, like a read that worked; the chat's receipt said "Error:". | A failed step: ✕, and "Error:" before the line. | `tests/reduce.test.ts` |
 
 Seen and left as they are, each working as designed or waiting on a ruling:
 

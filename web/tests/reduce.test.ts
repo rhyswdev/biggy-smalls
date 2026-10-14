@@ -70,6 +70,15 @@ describe("the transcript", () => {
     expect(steps(s).every((x) => x.state === "done")).toBe(true);
   });
 
+  it("a read whose result is an error is a failed step, not a done one", () => {
+    const s = fold(fixture("headless"));
+    const [first] = Object.values(s.rows).filter((r) => r.kind === "read" && r.by === "agent" && r.result);
+    const failed = { ...s, rows: { ...s.rows, [first!.call_id]: { ...first!, result: { ...first!.result!, status: "error", first_line: "Invalid arguments" } } } };
+    const step = steps(failed).find((x) => x.call_id === first!.call_id)!;
+    expect(step.state).toBe("failed");
+    expect(step.text).toBe("Error: Invalid arguments");
+  });
+
   it("the working picture keeps where each claim started, and rules out rejected ones", () => {
     const s = fold(fixture("chat-approved"));
     const board = Object.values(s.board);

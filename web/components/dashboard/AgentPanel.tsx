@@ -104,7 +104,9 @@ function Live({ chatId, initial }: Props & { chatId: string; initial: ChatState 
         <div>
           {list.length ? list.map((s) => (
             <div className="step" key={s.call_id}>
-              <span className={`g ${s.state === "done" ? "g-ok" : s.state === "running" ? "g-run" : "g-q"}`} aria-hidden="true">{s.state === "done" ? "✓" : s.state === "running" ? "›" : "○"}</span>
+              <span className={`g ${s.state === "done" ? "g-ok" : s.state === "failed" ? "g-no" : s.state === "running" ? "g-run" : "g-q"}`} aria-hidden="true">
+                {s.state === "done" ? "✓" : s.state === "failed" ? "✕" : s.state === "running" ? "›" : "○"}
+              </span>
               <span className="tool">{s.tool}</span>
               <span style={{ flex: "1 1 200px", minWidth: 0 }}>{s.text}</span>
             </div>

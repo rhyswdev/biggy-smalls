@@ -21,6 +21,9 @@ test("every handle in a finished chat opens its record, and none shows a time af
     await expect(drawer.getByText("Cited by")).toBeVisible();
     await expect(drawer.locator(".sm-notice-error")).toHaveCount(0);
     expect((await drawer.boundingBox())!.width).toBeLessThanOrEqual(560);
+    // A known time carries its day, so a record from the day before never reads as later than now. A computed
+    // result has none.
+    await expect(drawer.locator(".time").first()).toHaveText(/^(known \d{1,2} [A-Z][a-z]{2} \d\d:\d\d(:\d\d)? UTC)?$/);
     const text = (await drawer.innerText()).replace(/planned \S+/g, "");
     for (const m of text.matchAll(ISO)) expect(Date.parse(m[1]!), `${handle}: ${m[1]}`).toBeLessThanOrEqual(now);
     await page.keyboard.press("Escape");
