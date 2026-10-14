@@ -1,0 +1,46 @@
+Proximity baseline at 14:52: 19 changes and builds, 36 incidents and alerts started in the last 45 min, 7 alerting CMDB items.
+Each item's changes ranked by tier (same item, CMDB neighbour, time only), then by how near the item's first alert (up to 10 min after it).
+
+Checkout API: first alert 10-13 14:27:10 (dd:ev7820515412, [Warn] p99 latency on payments-gw)
+  look back  1 h: 1. snow:CHG0031902 [Checkout API, same item, 20 s after]; 2. jk:payments-reconciler#2311 [no item, time only, 2 min after]; 3. snow:CHG0031880 [Marketing Website, time only, 8 min after]
+  look back  2 h: 1. snow:CHG0031902 [Checkout API, same item, 20 s after]; 2. jk:payments-reconciler#2311 [no item, time only, 2 min after]; 3. snow:CHG0031880 [Marketing Website, time only, 8 min after]
+  look back  6 h: 1. snow:CHG0031902 [Checkout API, same item, 20 s after]; 2. jk:payments-reconciler#2311 [no item, time only, 2 min after]; 3. snow:CHG0031880 [Marketing Website, time only, 8 min after]
+  look back 24 h: 1. snow:CHG0031902 [Checkout API, same item, 20 s after]; 2. jk:payments-reconciler#2311 [no item, time only, 2 min after]; 3. snow:CHG0031880 [Marketing Website, time only, 8 min after]
+
+Payments Gateway: first alert 10-13 14:29:00 (dt:P-26101350, Response time degradation)
+  look back  1 h: 1. jk:payments-reconciler#2311 [no item, time only, 1 min after]; 2. snow:CHG0031902 [Checkout API, time only, 1 min before]; 3. snow:CHG0031880 [Marketing Website, time only, 7 min after]
+  look back  2 h: 1. jk:payments-reconciler#2311 [no item, time only, 1 min after]; 2. snow:CHG0031902 [Checkout API, time only, 1 min before]; 3. snow:CHG0031880 [Marketing Website, time only, 7 min after]
+  look back  6 h: 1. snow:CHG0031877 [Payments Gateway, same item, 250 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 1 min after]; 3. snow:CHG0031902 [Checkout API, time only, 1 min before]
+  look back 24 h: 1. snow:CHG0031877 [Payments Gateway, same item, 250 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 1 min after]; 3. snow:CHG0031902 [Checkout API, time only, 1 min before]
+
+pay-02: first alert 10-13 14:32:00 (spl:alert/891f48a7, Payments pool exhaustion)
+  look back  1 h: 1. jk:payments-reconciler#2311 [no item, time only, 2 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 4 min after]; 3. snow:CHG0031902 [Checkout API, time only, 4 min before]
+  look back  2 h: 1. jk:payments-reconciler#2311 [no item, time only, 2 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 4 min after]; 3. snow:CHG0031902 [Checkout API, time only, 4 min before]
+  look back  6 h: 1. snow:CHG0031877 [Payments Gateway, CMDB neighbour, 253 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 2 min before]; 3. snow:CHG0031880 [Marketing Website, time only, 4 min after]
+  look back 24 h: 1. snow:CHG0031877 [Payments Gateway, CMDB neighbour, 253 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 2 min before]; 3. snow:CHG0031880 [Marketing Website, time only, 4 min after]
+
+pay-db-01: first alert 10-13 14:33:30 (dd:ev7820518073, [Triggered on host:pay-db-01] Postgres can_connect on pay-db)
+  look back  1 h: 1. snow:CHG0031880 [Marketing Website, time only, 2 min after]; 2. jk:payments-reconciler#2311 [no item, time only, 3 min before]; 3. snow:CHG0031902 [Checkout API, time only, 6 min before]
+  look back  2 h: 1. snow:CHG0031880 [Marketing Website, time only, 2 min after]; 2. jk:payments-reconciler#2311 [no item, time only, 3 min before]; 3. snow:CHG0031902 [Checkout API, time only, 6 min before]
+  look back  6 h: 1. snow:CHG0031880 [Marketing Website, time only, 2 min after]; 2. jk:payments-reconciler#2311 [no item, time only, 3 min before]; 3. snow:CHG0031902 [Checkout API, time only, 6 min before]
+  look back 24 h: 1. snow:CHG0031880 [Marketing Website, time only, 2 min after]; 2. jk:payments-reconciler#2311 [no item, time only, 3 min before]; 3. snow:CHG0031902 [Checkout API, time only, 6 min before]
+
+cdn.larkspur.com: first alert 10-13 14:40:00 (dt:P-26101377, Availability: synthetic monitor failing)
+  look back  1 h: 1. snow:CHG0031880 [Marketing Website, CMDB neighbour, 4 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 10 min before]; 3. snow:CHG0031902 [Checkout API, time only, 12 min before]
+  look back  2 h: 1. snow:CHG0031880 [Marketing Website, CMDB neighbour, 4 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 10 min before]; 3. snow:CHG0031902 [Checkout API, time only, 12 min before]
+  look back  6 h: 1. snow:CHG0031880 [Marketing Website, CMDB neighbour, 4 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 10 min before]; 3. snow:CHG0031902 [Checkout API, time only, 12 min before]
+  look back 24 h: 1. snow:CHG0031880 [Marketing Website, CMDB neighbour, 4 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 10 min before]; 3. snow:CHG0031902 [Checkout API, time only, 12 min before]
+
+pay-03: first alert 10-13 14:40:45 (sw:55012, Application Component down)
+  look back  1 h: 1. snow:CHG0031880 [Marketing Website, time only, 4 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 10 min before]; 3. snow:CHG0031902 [Checkout API, time only, 13 min before]
+  look back  2 h: 1. snow:CHG0031880 [Marketing Website, time only, 4 min before]; 2. jk:payments-reconciler#2311 [no item, time only, 10 min before]; 3. snow:CHG0031902 [Checkout API, time only, 13 min before]
+  look back  6 h: 1. snow:CHG0031877 [Payments Gateway, CMDB neighbour, 261 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 4 min before]; 3. jk:payments-reconciler#2311 [no item, time only, 10 min before]
+  look back 24 h: 1. snow:CHG0031877 [Payments Gateway, CMDB neighbour, 261 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 4 min before]; 3. jk:payments-reconciler#2311 [no item, time only, 10 min before]
+
+Online Checkout: first alert 10-13 14:41:20 (snow:INC0048812, Payment spinner never finishes at checkout)
+  look back  1 h: 1. snow:CHG0031902 [Checkout API, CMDB neighbour, 13 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 5 min before]; 3. jk:payments-reconciler#2311 [no item, time only, 11 min before]
+  look back  2 h: 1. snow:CHG0031902 [Checkout API, CMDB neighbour, 13 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 5 min before]; 3. jk:payments-reconciler#2311 [no item, time only, 11 min before]
+  look back  6 h: 1. snow:CHG0031902 [Checkout API, CMDB neighbour, 13 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 5 min before]; 3. jk:payments-reconciler#2311 [no item, time only, 11 min before]
+  look back 24 h: 1. snow:CHG0031902 [Checkout API, CMDB neighbour, 13 min before]; 2. snow:CHG0031880 [Marketing Website, time only, 5 min before]; 3. jk:payments-reconciler#2311 [no item, time only, 11 min before]
+
+Started in the window but name no CMDB item, so not ranked: dd:ev7820508241 (kube_cronjob:search-indexer), pd:8811 (Platform), dd:ev7820509040 (cluster:redis-sessions), dd:ev7820510301 (host:node-east-14), dt:P-26101288 (node-east-14.larkspur.internal), pd:8812 (Payments - Prod), pd:8813 (Database - Prod), pd:8814 (Checkout - Prod), dd:ev7820518915 (no entity), pd:8815 (Checkout - Prod), spl:alert/7ae5d933 (lb-int-01.larkspur.internal), dd:ev7820519966 (host:node-east-14), dd:ev7820520800 (site:marketing), dd:ev7820521221 (cluster:redis-sessions)

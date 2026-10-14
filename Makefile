@@ -14,13 +14,18 @@ ENV := $(if $(wildcard .env),--env-file .env)
 # The commit a run record carries. A container has no git, so the host passes it in.
 export SMALLS_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 
-.PHONY: data lint ingest tag docker-test leak-test tools-smoke retrieval solve score demo run resume regress matrix heldout test schemas
+.PHONY: data lint lint-every-bundle ingest tag docker-test leak-test tools-smoke retrieval solve score demo run resume regress matrix heldout test schemas
 
 data:
 	$(PY) -m smalls_data.build
 
 lint:
 	$(PY) -m smalls_data.lint
+
+# Invariants 16 and 17 against the strings of every facts.yaml found, held-out bundles' included (PLAN 12's
+# controls). Run by the session that authors a held-out bundle; an agent session runs `make lint` only.
+lint-every-bundle:
+	$(PY) -m smalls_data.prompt_lint --every-bundle
 
 test:
 	$(UV) run --python 3.12 pytest -q

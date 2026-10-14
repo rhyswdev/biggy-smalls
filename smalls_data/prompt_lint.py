@@ -5,6 +5,10 @@ the words a request uses for a record's kind); the agent's prompts join the list
 The bundle strings are built from `scenario/facts.yaml`: the company, people, groups, entities with every
 alias, hosts and addresses, and the named or versioned parameters, plus the strings the repo rule names
 outright. The lint lives on the generator side because only the generator may read facts.yaml.
+
+`python -m smalls_data.prompt_lint --every-bundle` (`make lint-every-bundle`) checks the same texts, and the UI's,
+against the strings of every `facts.yaml` it finds, so a held-out bundle's names are caught too (PLAN 12). The
+session that authors a held-out bundle runs it; an agent session runs `make lint`, which reads no other facts.
 """
 
 from __future__ import annotations
@@ -98,3 +102,43 @@ def find(texts: list[tuple[str, str]], strings: list[str] | None = None) -> list
         found = sorted({s for s, pattern in patterns if pattern.search(text)})
         hits += [f"{where} contains the bundle string {s!r}" for s in found]
     return hits
+
+
+def facts_files(root: Path | None = None) -> list[Path]:
+    """Every `facts.yaml` under `scenario/` and `bundles/`: the development bundle's and any other bundle's.
+    Only `--every-bundle` reads them; plain `make lint` reads the development facts alone, so a session under
+    the held-out rule never opens a file it may not read."""
+    root = root or Path(__file__).resolve().parent.parent
+    return sorted({p for base in ("scenario", "bundles") if (root / base).is_dir() for p in (root / base).rglob("facts.yaml")})
+
+
+def every_bundle_strings(root: Path | None = None) -> tuple[list[str], list[Path]]:
+    """The bundle strings of every facts file found, joined, and the files they came from (PLAN 12's controls)."""
+    files = facts_files(root)
+    out: set[str] = set()
+    for path in files:
+        out |= set(bundle_strings(yaml.safe_load(path.read_text(encoding="utf-8"))))
+    return sorted(out), files
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    from smalls_data import ui_lint
+
+    p = argparse.ArgumentParser(prog="python -m smalls_data.prompt_lint", description="No bundle string on the agent side or in the UI.")
+    p.add_argument("--every-bundle", action="store_true", required=True,
+                   help="check against the strings of every facts.yaml found, not only the development bundle's")
+    p.parse_args(argv)
+    strings, files = every_bundle_strings()
+    hits = find(prompt_texts(), strings) + ui_lint.find(ui_lint.ui_texts(), strings)
+    print(f"bundle strings: {len(strings)} from {len(files)} facts files; {len(hits)} found on the agent side or in the UI")
+    for hit in hits:
+        print("  FAIL", hit)
+    return 1 if hits else 0
+
+
+if __name__ == "__main__":
+    import sys
+
+    sys.exit(main())
