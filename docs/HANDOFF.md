@@ -87,6 +87,13 @@ Run it:
 - Needs `uv`, Node 20.9 or later with `pnpm` (`corepack enable`), and Docker for compose.
 
 ## Next
+
+**Roadmap from 2026-10-14**, one session each; the plan page holds a prompt for each.
+1. **The eval loop, phase 2** (`docs/decisions/eval-loop.md` section 12, rows P0 to P7, $20): the second provider topped up first; stale-board refusals settled before any eval run (P1); a committed results ledger and a generated tuning log that show the agent evolving (P2); luna at high effort against sol at medium (P3, P4); then failure analysis and blind passes until the stop rule.
+2. **The scorer** (section 5, rows S1 to S7), which may run beside phase 2 in its own worktree; when it lands, it scores every ledger row.
+3. **Gate B** (row D5 of `tools-agent-build.md`): a fresh session with only the CLI tries to find the cause at 14:52. This repo's CLAUDE.md names bundle strings, so it works from a folder holding only the bundle's served files and the CLI. Before the freeze, ideally before P4.
+4. **Scored baseline and freeze**: phase 2's keeps re-checked on scores; E3 (the verifier's keep-or-kill), E4 (live carry-forward), E5 (the tags ablation); Q7 of `ui-build.md` (markdown in prose) ruled; L7's retest on the first provider is optional, since the second provider's model ships; the tag `agent-v1`; PLAN step 10's controls; O4 and P8, then the held-out run h1 (PLAN 12). Its budget is asked for then.
+5. **Tidy and write-up**: the four deliverables of `requirements.md` (repository, instructions to run locally, the write-up, a sample output), the tuning log as the evidence of how the agent evolved, the open minor items of `ui-build.md` 12.4, stale worktrees and branches, and a last `make test`, `make lint`, `make web-test` and `make docker-test`.
 Everything that can be built without a live model or a fresh session is built. What is next needs one or the other.
 
 **The agent chooses its own first reads (2026-10-14).** The opening sweep is gone from the agent arm: the first turn holds the clock, the inventory, the trigger, the budget and any earlier board, and the model decides what to read. Only the no-tools baseline (arm A) keeps fixed reads. The alert-verdict rule (J7) now covers every stream the run's own `list_alerts` calls showed. The prompt change is iteration pass 5 (finding F-05, installed unedited, not yet measured); the eval numbers before it are not a baseline for runs after it. The pass's author asked whether, after a context restart, the verdict rule covers listings made before it, which the new thread cannot see. Ruled: it does, and the restart's first turn shows each owed stream again, one line each (J16 amended), so the agent is never held to what it cannot see.

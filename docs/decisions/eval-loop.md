@@ -247,3 +247,46 @@ Each live call's cost comes from its own record, with a running total kept here,
 ## 11. What this plan does not change
 
 The author rules of G4 (every rule generic, no entity or vendor-specific heuristic, tools described by what they do); the held-out rule; U15; the eval layers and their order; PLAN 12's wording rules for the write-up (counts, never percentages, and never "accuracy", "generalises", "robust" or "validated"); and the rule that development evals are not held-out evidence.
+
+## 12. Phase 2 (planned 2026-10-14)
+
+Since the first phase: an end-to-end pass fixed eight bugs in the web app (`docs/decisions/ui-build.md` 12.4); a call whose arguments fail validation is answered before the gate and retried out of sight (E9); the agent chooses its own first reads, with no opening sweep (pass 5, F-05, and agent-design ruling 5 re-ruled); and a restart shows the alert streams the report still owes a verdict. Every run now does something different in its first turn, so the first phase's numbers are not a baseline. The second provider's account ran out of credit on 2026-10-14; it is topped up before P0.
+
+### 12.1 Rulings (2026-10-14)
+
+| # | Point | Ruling | Why |
+|---|---|---|---|
+| V6 | A second model on the second provider | Amends V4. The provider's cheaper tier, luna, is tried at high effort beside sol at medium. The loop's model is the cheaper of the two whose baseline runs reach the cause with non-chat support as often, with a partial-claim share inside the other's spread. Model ids and rates come from the provider's own model list and price page, into `config.toml` only. | Asked for: a cheap test of whether high effort on the cheaper tier does what the middle tier does, since every pass pays for a regression set. |
+| V7 | The record of tuning over time | Every live run gets a row in a committed results ledger, `eval/results/runs.jsonl`, written from its run record by `python -m eval.results add`. `docs/tuning-log.md` is generated from it by `python -m eval.results report`: one table per batch, each tied to its pass and commit, with the measures across batches. Scores are added to the rows when the scorer lands. Run records stay local, in a git-ignored `eval/loop-runs/`, so the UI's recorded chats are not flooded. The first phase's 26 records survive only in the `eval-loop` worktree; they are copied in (read only from there) and backfilled, with the committed run and this session's four CLI runs. A page published from the log at the end of each session shows the evolution. | Asked for. The passes are recorded as prose (HISTORY.md), per-finding numbers (ledger.yaml) and section 9's table, but the runs behind them are not committed and nothing shows a measure moving across passes. The write-up should show how the agent evolved. |
+| V8 | Order | Phase 2 runs before the scorer exists and is judged by reading, as the first phase was: the leading cause with non-chat support (PLAN 1.1 and 1.5), the verifier's partial and unsupported claim counts, and calls, turns, cost and wall time. The scorer session (section 5) may start now, in parallel, in its own worktree. When it lands it scores every ledger row, and phase 2's keep decisions are re-checked on the scores. | Asked for: models now, scoring next. Both at once loses nothing, because the ledger keeps every run scoreable. |
+| V9 | Budget | $20 of live calls for phase 2; the judge's calls are the scorer's (S4, $5). A running total in 12.3, one line per batch. The session stops and asks before a call that would cross it. | Asked for. |
+
+### 12.2 Rows
+
+On `main`, pushed after each row. The held-out rule binds this session in full; it never writes the five blind files; every agent-side change passes `make overfit-review`.
+
+| # | Build | Accepted when |
+|---|---|---|
+| P0 | Preconditions: the second provider's account has credit (one small call to each model); `make test`, `make lint` and `make web-test` pass on `main`. | Both models answer and the suites pass. With no credit, the session stops here and says so |
+| P1 | **Stale-board refusals, before any eval run.** Seen in two chats run by hand on 2026-10-14: the model read for three rounds before its first board write, or between writes, and rule J14 refused the fourth round's reads ("the board has not changed in 3 rounds"), costing a turn and showing the commander rows marked ✕. One of the quiet rounds was a round of malformed calls, which no longer counts (E9). The rule also counts rounds while the board is still empty, which is likelier now that there is no opening sweep. Measure first: refusals per run in the surviving records and in two scripted runs. Then choose, generically: rounds before the first board write do not count (or count one fewer); `stale_rounds` goes up; or the status line warns one round before the gate refuses. A test pins the behaviour chosen; overfit review | The cause is written here with its counts. The change, or the reason for none, is committed with its test. P3's runs show no refusal the board did not earn |
+| P2 | The record (V7): `eval/results/`, `eval.results add` and `report`, `eval/loop-runs/` ignored, the backfill and `docs/tuning-log.md`. A row holds: run id, date, batch, pass, commit, prompt and tools hashes, the resolved role map (model and effort per role), arm, checkpoint, tags, trigger (standard or framing), status, wall time, model turns, tool calls, policy refusals, malformed retries, cost, cache share, the leading hypothesis (subject and confidence), rejected subjects, the verifier's verdict and claim counts, and `scores`, empty until the scorer | A test builds a row from a fixture run record. Every surviving live run has a row; the log renders a table per batch and a line per measure across batches |
+| P3 | Luna (V6): its profile and rates, and a `luna` set (investigator and contrarian luna at high, claims luna at low; the overfit reviewer stays on sol at medium; the drafter unchanged), shown by `--dry-run`. Then the shakedown on the new opening: one run each of sol at medium and luna at high, at the second checkpoint | Each model's first turn holds its own reads; both reports validate; cost, cache share, refusals and retries are in the ledger. About $1 |
+| P4 | The baseline: at the second checkpoint, 5 runs of sol at medium and 5 of luna at high; at the first, 2 of each. The loop's model is picked by V6 and written here | A table per batch in the log; the pick and its reason. About $5 |
+| P5 | Failure analysis (L4) on the picked model's P4 runs: the first thing wrong in each, grouped into modes, counted, ranked (outcome, then grounding, then efficiency) and classed (prompt, tool or code, data, model limit) | The modes in `eval/findings/ledger.yaml`; one generic finding per prompt mode, through the findings lint and the overfit review |
+| P6 | Passes (L6) until the stop rule of section 7 or the budget: one finding, the iteration room, a fresh author given only the room's path, install unedited, a regression set of 3 runs on the picked model (5 when the change sits inside the spread), section 7's keep rule judged by reading until scores exist, and for a pass that would be kept, the guard set (the two framing triggers, one run each). A code finding goes in its own commit under the overfit review | Each pass is a line in section 9's table and a batch in the log. About $12 |
+| P7 | Close: 12.3's spend, section 9's pass table, HISTORY.md, the ledger, the log regenerated, the tuning-log page published, HANDOFF | The page shows each measure across every pass, the first phase's included |
+
+### 12.3 Budget and spend
+
+| Item | Estimate |
+|---|---|
+| P0, two small calls | about $0.05 |
+| P1, scripted; a live run only to confirm | up to $1 |
+| P3, the shakedown | about $1 |
+| P4, the baseline | about $5 |
+| P5, overfit reviews of the findings | about $0.30 |
+| P6, about five passes | about $12 |
+| Total | under $20 |
+
+Spend so far in phase 2: none.
+
