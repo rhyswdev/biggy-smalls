@@ -231,7 +231,8 @@ def cmd_blind(args: argparse.Namespace) -> int:
 
     if args.command == "blind-room":
         placeholders = descriptions.skeleton({name: spec.args for name, spec in surface(tags=True).items()}, gated=Rationale)
-        files = blind.write_room(args.folder, schema_document(tags=True, texts=placeholders), placeholders)
+        files = blind.write_room(args.folder, schema_document(tags=True, texts=placeholders), placeholders,
+                                 finding=args.iterate, history=args.history, metrics=args.metrics)
         print(f"wrote {len(files)} files to {Path(args.folder).resolve()}:")
         print("\n".join(f"  {name}" for name in files))
         return 0
@@ -241,7 +242,8 @@ def cmd_blind(args: argparse.Namespace) -> int:
         if findings:
             print("\n".join(findings))
             raise SystemExit("not installed: the checks above failed")
-        print("\n".join(f"installed {name}" for name in blind.install(folder)))
+        changed = blind.changed_lines(folder)
+        print("\n".join(f"installed {name} ({changed[Path(name).name]} lines changed)" for name in blind.install(folder)))
         return 0
     findings = blind.check(folder, skeleton())      # with no folder, the files as installed
     print("\n".join(findings) if findings else "placeholder gate, slot check, descriptions coverage and tool list: all pass")
@@ -254,6 +256,9 @@ def parser() -> argparse.ArgumentParser:
     add_run_commands(sub)
     room = sub.add_parser("blind-room", help="write the prompt author's folder; it must be outside the repository")
     room.add_argument("folder")
+    room.add_argument("--iterate", metavar="FINDING", help="an iteration room: the installed files and this generic finding (V1)")
+    room.add_argument("--history", metavar="FILE", help="with --iterate: the earlier passes, for HISTORY.md")
+    room.add_argument("--metrics", metavar="FILE", help="with --iterate: aggregate numbers, for METRICS.md")
     room.set_defaults(run=cmd_blind)
     check = sub.add_parser("blind-check", help="run the checks that need nothing from the dataset, on a folder or on the installed files")
     check.add_argument("folder", nargs="?")

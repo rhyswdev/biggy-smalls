@@ -170,3 +170,28 @@ def test_the_installed_files_are_all_placeholders_or_pass_every_check():
     assert findings == [] or findings == [f"placeholder gate: {name}" for name in blind.TARGETS]
     assert prompts.slot_problems() == []
     assert prompts.first_turn(now="N", inventory="I", trigger="T", budget="B", prior_board="P").count("N") >= 1
+
+
+ITERATE_FILES = ["BRIEF.md", "FINDING.md", "HISTORY.md", "agent-design.md", "descriptions.yaml", "first_turn.md", "investigator.md",
+                 "requirements.md", "schema.json", "tools-agent-build.md", "verifier_claims.md", "verifier_contrarian.md"]
+
+
+def test_an_iteration_room_holds_the_installed_files_and_one_finding_and_no_earlier_prompt(tmp_path: Path, capsys):
+    """Ruling V1 in docs/decisions/eval-loop.md: after v1 a pass starts from what is installed, not placeholders."""
+    finding = tmp_path / "finding.md"
+    finding.write_text("F-01 · prompt · seen in 2 of 3 runs\nWhat happened: a generic failure.\n")
+    folder = tmp_path / "iter"
+    assert cli.main(["blind-room", str(folder), "--iterate", str(finding)]) == 0
+    capsys.readouterr()
+    assert sorted(p.name for p in folder.iterdir()) == ITERATE_FILES
+    assert (folder / "FINDING.md").read_text() == finding.read_text()
+    assert "revision" in (folder / "BRIEF.md").read_text() and "None: this is the first." in (folder / "HISTORY.md").read_text()
+    for name, path in blind.installed().items():
+        assert (folder / name).read_bytes() == path.read_bytes()
+    assert blind.check(folder, cli.skeleton()) == [] and set(blind.changed_lines(folder).values()) == {0}
+    (folder / "investigator.md").write_text((folder / "investigator.md").read_text() + "One added line.\n")
+    assert blind.changed_lines(folder)["investigator.md"] == 1
+
+
+def test_the_iteration_brief_names_no_bundle_string():
+    assert prompt_lint.find([("ITERATE_BRIEF", blind.ITERATE_BRIEF)]) == []

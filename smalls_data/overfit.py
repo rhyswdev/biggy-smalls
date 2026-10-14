@@ -88,6 +88,12 @@ def hunks(text: str) -> list[Hunk]:
     return found
 
 
+def file_hunks(paths: list[str]) -> list[Hunk]:
+    """Whole files as new text, one hunk each: a finding is reviewed before it enters an iteration room."""
+    return [Hunk(n, path, "(whole file)", "\n".join("+" + line for line in Path(path).read_text(encoding="utf-8").splitlines()))
+            for n, path in enumerate(paths, 1)]
+
+
 def plan_sections(plan: Path = ROOT / "docs" / "PLAN.md") -> str:
     """PLAN sections 1.1 (the true chain) and 1.5 (the traps), cut by their headings."""
     text, out = plan.read_text(encoding="utf-8"), []
@@ -172,8 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--base", default="HEAD", help="review the diff from this ref to the working tree (default HEAD)")
     p.add_argument("--profile", help="a model profile from the agent's config (default: the set's overfit role)")
     p.add_argument("--json", action="store_true", help="print the result as JSON")
+    p.add_argument("--file", action="append", help="review this file whole as new text, in place of the diff (a finding); repeatable")
     args = p.parse_args(argv)
-    found = hunks(diff(args.base))
+    found = file_hunks(args.file) if args.file else hunks(diff(args.base))
     if not found:
         print(f"overfit-review: no change under {', '.join(GUARDED)} since {args.base}; nothing to review")
         return 0
