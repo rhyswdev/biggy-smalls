@@ -43,6 +43,61 @@
     "title": "Answer",
     "type": "object"
    },
+   "AudienceSpec": {
+    "additionalProperties": false,
+    "description": "One audience as the web app defines it (U8): who, where, what they need, the checks its draft must pass,\nwith their values filled from the report, and the code-rendered draft kept when no model drafts it.",
+    "properties": {
+     "channel": {
+      "default": "",
+      "maxLength": 120,
+      "title": "Channel",
+      "type": "string"
+     },
+     "checks": {
+      "items": {
+       "maxLength": 400,
+       "type": "string"
+      },
+      "maxItems": 12,
+      "title": "Checks",
+      "type": "array"
+     },
+     "fallback": {
+      "maxLength": 4000,
+      "title": "Fallback",
+      "type": "string"
+     },
+     "guide": {
+      "default": "",
+      "maxLength": 300,
+      "title": "Guide",
+      "type": "string"
+     },
+     "key": {
+      "enum": [
+       "exec",
+       "support",
+       "status",
+       "eng"
+      ],
+      "title": "Key",
+      "type": "string"
+     },
+     "name": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "name",
+     "fallback"
+    ],
+    "title": "AudienceSpec",
+    "type": "object"
+   },
    "GateAnswer": {
     "additionalProperties": false,
     "properties": {
@@ -92,6 +147,40 @@
      }
     },
     "title": "HTTPValidationError",
+    "type": "object"
+   },
+   "MessageText": {
+    "additionalProperties": false,
+    "properties": {
+     "text": {
+      "maxLength": 4000,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "MessageText",
+    "type": "object"
+   },
+   "MessagesDraft": {
+    "additionalProperties": false,
+    "properties": {
+     "audiences": {
+      "items": {
+       "$ref": "#/components/schemas/AudienceSpec"
+      },
+      "maxItems": 4,
+      "minItems": 1,
+      "title": "Audiences",
+      "type": "array"
+     }
+    },
+    "required": [
+     "audiences"
+    ],
+    "title": "MessagesDraft",
     "type": "object"
    },
    "MoreRun": {
@@ -734,6 +823,230 @@
      }
     },
     "summary": "Answer Gate"
+   }
+  },
+  "/chats/{chat_id}/messages": {
+   "get": {
+    "operationId": "messages_chats__chat_id__messages_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Messages Chats  Chat Id  Messages Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Messages"
+   }
+  },
+  "/chats/{chat_id}/messages/draft": {
+   "post": {
+    "operationId": "draft_messages_chats__chat_id__messages_draft_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessagesDraft"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Draft Messages Chats  Chat Id  Messages Draft Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Draft Messages"
+   }
+  },
+  "/chats/{chat_id}/messages/{audience}": {
+   "put": {
+    "operationId": "edit_message_chats__chat_id__messages__audience__put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "audience",
+      "required": true,
+      "schema": {
+       "enum": [
+        "exec",
+        "support",
+        "status",
+        "eng"
+       ],
+       "title": "Audience",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessageText"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Edit Message Chats  Chat Id  Messages  Audience  Put",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Message"
+   }
+  },
+  "/chats/{chat_id}/messages/{audience}/copied": {
+   "post": {
+    "operationId": "copied_message_chats__chat_id__messages__audience__copied_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "chat_id",
+      "required": true,
+      "schema": {
+       "title": "Chat Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "audience",
+      "required": true,
+      "schema": {
+       "enum": [
+        "exec",
+        "support",
+        "status",
+        "eng"
+       ],
+       "title": "Audience",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MessageText"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Copied Message Chats  Chat Id  Messages  Audience  Copied Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Copied Message"
    }
   },
   "/chats/{chat_id}/notes": {

@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // The browser suites run the real app: the API in scripted mode over the real bundle with the generic dev
-// script (no key), and the web app pointed at it. Their own ports keep them clear of a running `make app`.
+// script (no key), and the web app pointed at it. Their own ports keep them clear of a running `make app`. The
+// messages are drafted by the scripted drafter, so a draft takes the model's path through the adapter.
 const API_PORT = process.env.E2E_API_PORT ?? "7338";
 const WEB_PORT = process.env.E2E_WEB_PORT ?? "7337";
 
@@ -17,7 +18,7 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 1000 } } }],
   webServer: [
     {
-      command: `make -C .. api SMALLS_API_MODE=scripted SMALLS_API_PORT=${API_PORT} SMALLS_API_SCRIPT_DELAY=${process.env.E2E_DELAY ?? "0.05"}`,
+      command: `make -C .. api SMALLS_API_MODE=scripted SMALLS_API_DRAFTER=scripted SMALLS_API_PORT=${API_PORT} SMALLS_API_SCRIPT_DELAY=${process.env.E2E_DELAY ?? "0.05"}`,
       url: `http://127.0.0.1:${API_PORT}/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

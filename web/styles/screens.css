@@ -325,3 +325,10 @@
 /* Evidence -> .v-ev */
 .v-ev a{color:var(--action)}
 .v-ev a:hover{color:var(--ink)}
+.v-msg .lbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border-radius:4px;font-size:13px;font-weight:500;text-decoration:none;white-space:nowrap;box-sizing:border-box;border:1px solid var(--line-strong);background:var(--surface-raised);color:var(--ink)}
+.v-msg .lbtn:hover{background:var(--surface-sunken);color:var(--ink)}
+.v-msg .lbtn:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.v-msg .chk.open .chk-g{color:var(--ink-muted)}
+.v-msg .chk.open .chk-t{color:var(--ink)}
+.v-msg .st-none{color:var(--ink-muted);font-style:italic}
+.v-msg .kb-text{white-space:pre-line}

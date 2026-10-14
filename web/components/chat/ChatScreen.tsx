@@ -6,11 +6,14 @@ import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
 import { Button, Handles, Notice, Toggle } from "@/components/ds";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { moreRun, sendNote, setAutoApprove, stopRun } from "@/lib/actions/chats";
+import { draftMessages } from "@/lib/actions/messages";
 import { suggestions, type CodeAnswer, type Suggestion } from "@/lib/chat/answers";
 import { startedAt, type ChatState, type Turn } from "@/lib/chat/reduce";
 import { useChatEvents } from "@/lib/events";
 import { clock, day, plural, seconds, stamp } from "@/lib/format";
-import type { ChatSummary, IncidentCard } from "@/lib/types";
+import type { ChatSummary, IncidentCard, MessageRow } from "@/lib/types";
+import { specs } from "@/lib/writeup/messages";
+import { DraftAnswer } from "@/components/messages/DraftAnswer";
 import { AnswerCard } from "./AnswerCard";
 import { GroupView, refocus, type ToolSchema } from "./Gate";
 import { Linked } from "./Linked";
@@ -26,7 +29,10 @@ interface Props {
   children?: React.ReactNode;      // the app bar, rendered on the server
 }
 
-type Local = { key: string; q: string; answer?: CodeAnswer; pending?: { handle: string | null; text: string; delivery: string } };
+type Local = {
+  key: string; q: string; answer?: CodeAnswer; pending?: { handle: string | null; text: string; delivery: string };
+  drafted?: { row: MessageRow | null; error: string | null };      // "Draft the exec update": null row while it drafts
+};
 
 const DELIVERY: Record<string, string> = {
   "next round": "Sent. Smalls sees it at its next round.",
@@ -66,7 +72,16 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
     setUsed((u) => [...u, s.id]);
     if (s.kind === "code" && s.answer) setLocal((l) => [...l, { key: `${s.id}:${l.length}`, q: s.q, answer: s.answer }]);
     else if (s.kind === "run" && s.note) send(s.note);
+    else if (s.kind === "draft") draftExec(`${s.id}:${local.length}`, s.q);
     refocus();
+  }
+  function draftExec(key: string, q: string) {
+    setLocal((l) => [...l, { key, q, drafted: { row: null, error: null } }]);
+    start(async () => {
+      const r = await draftMessages(chat.id, specs(state.report, null, ["exec"]));
+      const row = r.view?.messages.find((m) => m.audience === "exec") ?? null;
+      setLocal((l) => l.map((x) => (x.key === key ? { ...x, drafted: { row, error: row ? null : r.error ?? "The update was not drafted." } } : x)));
+    });
   }
   function send(text: string) {
     const note = text.trim();
@@ -115,6 +130,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
               <div key={l.key} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div className="msg-ic"><span className="who"><b>You</b> · incident commander</span><span style={{ fontSize: 15, lineHeight: "22px", whiteSpace: "pre-line" }}>{l.q}</span>
                   {l.pending ? <span className="small muted" aria-live="polite">{DELIVERY[l.pending.delivery] ?? DELIVERY["next round"]}</span> : null}</div>
+                {l.drafted ? <DraftAnswer chatId={chat.id} report={state.report} row={l.drafted.row} error={l.drafted.error} resolved={resolved} /> : null}
                 {l.answer ? (
                   <div className="msg-sm">
                     <span className="who"><b>Smalls</b> · {l.answer.source}</span>

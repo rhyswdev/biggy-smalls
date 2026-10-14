@@ -4,11 +4,16 @@ logs and counts them, writes one open hypothesis citing rows it was shown, propo
 inconclusive report with a verdict for every alert stream the opening sweep showed. A follow-up is answered
 in text. It proves the plumbing, never the agent.
 
+`draft` is the scripted drafter's script (U8): it writes a message from the packet's suggested stakeholder
+update and the resolution, the same for every audience but for its name.
+
 Like every script, it chooses each turn from the conversation so far, so it survives a pause and a resume.
 """
 
 from __future__ import annotations
 
+import json
+import re
 from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
@@ -79,3 +84,17 @@ def turn(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any,
         alerts=[{"handle": h, "verdict": "noise"} for h in swept_alerts(messages)], open_questions=["What changed? (scripted)"],
         stakeholder_update={"status": "Investigating (scripted).", "customer_impact": UNKNOWN, "scope": UNKNOWN,
                             "changed_since_last": "First update.", "next_steps": "Run the API in live mode.", "next_update_at": UNKNOWN})]
+
+
+def draft(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:
+    turn = str(next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""))
+    found = re.search(r"```json\n(.*?)\n```", turn, re.S)
+    pk = json.loads(found.group(1)) if found else {}
+    name = (re.search(r"^Name: (.+)$", turn, re.M) or [None, "everyone"])[1]
+    update = pk.get("stakeholder_update") or {}
+    said = [update.get("customer_impact"), update.get("status")]
+    if pk.get("resolution"):
+        said.append(f"Resolved at {pk['resolution']['resolved_at']} UTC.")
+    said.append(f"Next update: {update.get('next_update_at') or UNKNOWN}.")
+    text = " ".join(str(s).strip() for s in said if s and s != UNKNOWN) + f" (Scripted draft for {name}.)"
+    return "Write it from the packet's stakeholder update.", [], {"text": text}

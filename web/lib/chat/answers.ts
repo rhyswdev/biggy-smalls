@@ -58,5 +58,7 @@ export function suggestions(report: Report | null, checks: Check[] = [], dispute
       },
     });
   }
+  // The U8 drafter writes this one, for executives only; the chat shows it with its checks and a Copy button.
+  out.push({ id: "exec-update", q: "Draft the exec update", kind: "draft" });
   return out;
 }

@@ -6,6 +6,7 @@ export interface Capabilities {
   checkpoint: string;
   now: string;
   profile: string;
+  drafter: string;
   seams: Record<string, boolean>;
   last_recorded: RecordedRun | null;
 }
@@ -180,3 +181,24 @@ export interface EvidenceView {
   referenced_by: string[];
   claims: { claim: string; as: string; text: string }[];
 }
+
+// -- stakeholder messages (U8) ---------------------------------------------------------------------------------
+
+export interface MessageRow {
+  audience: "exec" | "support" | "status" | "eng";
+  draft: string;
+  text: string;
+  copied: boolean;
+  drafted_by: string;           // the drafter's profile, or "code"
+  why_code: string | null;      // why code wrote it when a model was to
+  cost_usd: number | null;
+  drafted_at: string;
+}
+
+export interface MessagesView {
+  drafter: string;
+  messages: MessageRow[];
+  entry: { title: string; body: string; terms: string; saved_at: string } | null;
+}
+
+export interface KbHit { id: number; chat_id: string; title: string; terms: string; saved_at: string; snippet?: string; score?: number }

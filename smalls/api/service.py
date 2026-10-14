@@ -15,11 +15,14 @@ How a run goes:
 - The auto-approve switch is the chat's. A run reads it at every round (S6); turned on while a gate of
   reads waits, it answers that gate as the commander's standing choice. An action is never answered by
   the switch (U6).
+- Stakeholder messages are drafted per audience by the drafter (U8), side by side, and kept with who wrote
+  each one. "Copied" belongs to the exact text copied: the row keeps that text's hash, so any edit clears it.
 """
 
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import threading
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -35,9 +38,11 @@ from pathlib import Path
 from smalls.agent.record import FILES, RunRecord, new_run_id
 from smalls.agent.runner import Runner, Toolbox, bundle_toolbox, module_toolbox
 from smalls.api.db import Database, dumps, loads
+from smalls.api.drafter import Drafter, packet
+from smalls.api.models import AUDIENCES
 from smalls.api.problems import Problem
 from smalls.api.reader import Reader, note_of
-from smalls.api.settings import Settings
+from smalls.api.settings import CODE, Settings
 from smalls.api.sink import AppDbSink
 
 # Every seam of section 8 is built (rows R0c), so the UI shows each feature that stands on one.
@@ -62,6 +67,10 @@ def stamp() -> str:
     return utcnow().isoformat(timespec="milliseconds")
 
 
+def digest(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 class Service:
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -78,6 +87,8 @@ class Service:
         self.loop: asyncio.AbstractEventLoop | None = None
         self.listeners: dict[str, set[asyncio.Event]] = {}
         self.readers: dict[str, Reader] = {}            # one toolbox per `now`, for the API's own reads
+        drafter = settings.drafter_profile
+        self.drafter: Drafter | None = None if drafter == CODE else Drafter(self.cfg, drafter, settings.draft_script)
         self.closing = False
         self.recorded = self.load_recorded()
 
@@ -86,7 +97,8 @@ class Service:
     def capabilities(self) -> dict[str, Any]:
         latest = next((self.recorded_summary(f"run-{run_id}"[:64]) for run_id in reversed(self.recorded)), None)
         return {"mode": self.settings.mode, "checkpoint": self.settings.checkpoint, "now": iso(self.now),
-                "profile": self.cfg.investigator.profile, "seams": {k: True for k in SEAMS}, "seam_names": SEAMS,
+                "profile": self.cfg.investigator.profile, "drafter": self.settings.drafter_profile,
+                "seams": {k: True for k in SEAMS}, "seam_names": SEAMS,
                 "last_recorded": latest}
 
     def notify(self, chat_id: str) -> None:
@@ -512,6 +524,70 @@ class Service:
         match = " OR ".join(f'"{w}"' for w in words)
         return self.db.rows("SELECT k.id, k.chat_id, k.title, k.terms, k.saved_at, snippet(kb_fts, 1, '', '', ' … ', 24) AS snippet, bm25(kb_fts) AS score "
                             "FROM kb_fts JOIN kb_entry k ON k.id = kb_fts.rowid WHERE kb_fts MATCH ? ORDER BY score LIMIT 20", (match,))
+
+    # -- stakeholder messages (U8) ---------------------------------------------------------------------------
+
+    def messages(self, chat_id: str) -> dict[str, Any]:
+        """The chat's drafts in audience order, whether each one's text is the text last copied, who drafts, and
+        the saved knowledge-base entry."""
+        self.chat(chat_id)
+        order = {k: i for i, k in enumerate(AUDIENCES)}
+        rows = sorted(self.db.rows("SELECT * FROM message WHERE chat_id = ?", (chat_id,)), key=lambda r: order.get(r["audience"], len(order)))
+        entry = self.db.row("SELECT title, body, terms, saved_at FROM kb_entry WHERE chat_id = ?", (chat_id,))
+        return {"drafter": self.settings.drafter_profile, "messages": [self._message_view(r) for r in rows], "entry": entry}
+
+    @staticmethod
+    def _message_view(row: dict[str, Any]) -> dict[str, Any]:
+        return {"audience": row["audience"], "draft": row["draft"], "text": row["text"], "copied": row["copied_hash"] == digest(row["text"]),
+                "drafted_by": row["drafted_by"], "why_code": row["why_code"], "cost_usd": row["cost_usd"], "drafted_at": row["drafted_at"]}
+
+    def draft_messages(self, chat_id: str, audiences: list[dict[str, Any]]) -> dict[str, Any]:
+        """Draft each audience named, replacing its draft, its text and its copied mark. One model call per audience,
+        side by side; an audience whose call fails keeps the code-rendered draft the request carries, and says why."""
+        chat = self.chat(chat_id)
+        if chat["origin"] == "past":
+            raise Problem(409, "Read-only", "A recorded run is read-only.")
+        report = self.report(chat_id)
+        if report is None:
+            raise Problem(409, "No report", "There is no report to draft from yet.")
+        data = self.writeup(chat_id)
+        kept = (data["writeup"] or {}).get("kept") or []
+        pk = packet(chat.get("incident"), report, data["resolution"], [data["rows"][h] for h in kept if h in data["rows"]])
+        drafter = self.drafter
+        if drafter is None:
+            results: list[dict[str, Any]] = [{"text": None, "error": None} for _ in audiences]
+        else:
+            with ThreadPoolExecutor(max_workers=len(audiences), thread_name_prefix="smalls-draft") as pool:
+                results = list(pool.map(lambda a: drafter.draft(pk, a), audiences))
+        with self.db.write() as conn:
+            for spec, got in zip(audiences, results):
+                by_model = drafter is not None and bool(got.get("text"))
+                text = got["text"] if by_model else spec["fallback"]
+                why = None if by_model or drafter is None else f"The {drafter.profile} drafter failed ({got.get('error')}), so code wrote this draft."
+                conn.execute("INSERT OR REPLACE INTO message (chat_id, audience, draft, text, copied_hash, drafted_by, why_code, usage, cost_usd, drafted_at) "
+                             "VALUES (?, ?, ?, ?, NULL, ?, ?, ?, ?, ?)",
+                             (chat_id, spec["key"], text, text, drafter.profile if by_model and drafter else CODE, why,
+                              dumps(got["usage"]) if got.get("usage") else None, got.get("cost_usd"), stamp()))
+        return self.messages(chat_id)
+
+    def _drafted(self, chat_id: str, audience: str) -> None:
+        self.chat(chat_id)
+        if not self.db.row("SELECT 1 AS found FROM message WHERE chat_id = ? AND audience = ?", (chat_id, audience)):
+            raise Problem(404, "Not drafted", f"This chat has no {audience} draft yet.")
+
+    def edit_message(self, chat_id: str, audience: str, text: str) -> dict[str, Any]:
+        """The commander's text. The copied mark stays only if this is the exact text they copied."""
+        self._drafted(chat_id, audience)
+        with self.db.write() as conn:
+            conn.execute("UPDATE message SET text = ? WHERE chat_id = ? AND audience = ?", (text, chat_id, audience))
+        return self._message_view(self.db.row("SELECT * FROM message WHERE chat_id = ? AND audience = ?", (chat_id, audience)) or {})
+
+    def copied_message(self, chat_id: str, audience: str, text: str) -> dict[str, Any]:
+        """Mark this exact text copied."""
+        self._drafted(chat_id, audience)
+        with self.db.write() as conn:
+            conn.execute("UPDATE message SET text = ?, copied_hash = ? WHERE chat_id = ? AND audience = ?", (text, digest(text), chat_id, audience))
+        return self._message_view(self.db.row("SELECT * FROM message WHERE chat_id = ? AND audience = ?", (chat_id, audience)) or {})
 
     # -- shutdown --------------------------------------------------------------------------------------------
 

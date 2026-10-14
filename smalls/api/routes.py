@@ -201,6 +201,26 @@ def save_writeup(chat_id: str, body: models.WriteupSave, request: Request) -> di
     return service(request).save_writeup(chat_id, body.version, body.title, body.body, body.terms)
 
 
+@router.get("/chats/{chat_id}/messages")
+def messages(chat_id: str, request: Request) -> dict[str, Any]:
+    return service(request).messages(chat_id)
+
+
+@router.post("/chats/{chat_id}/messages/draft")
+def draft_messages(chat_id: str, body: models.MessagesDraft, request: Request) -> dict[str, Any]:
+    return service(request).draft_messages(chat_id, [a.model_dump() for a in body.audiences])
+
+
+@router.put("/chats/{chat_id}/messages/{audience}")
+def edit_message(chat_id: str, audience: models.Audience, body: models.MessageText, request: Request) -> dict[str, Any]:
+    return service(request).edit_message(chat_id, audience, body.text)
+
+
+@router.post("/chats/{chat_id}/messages/{audience}/copied")
+def copied_message(chat_id: str, audience: models.Audience, body: models.MessageText, request: Request) -> dict[str, Any]:
+    return service(request).copied_message(chat_id, audience, body.text)
+
+
 @router.get("/kb")
 def kb(request: Request, q: str = "") -> list[dict[str, Any]]:
     return service(request).kb(q[:500])

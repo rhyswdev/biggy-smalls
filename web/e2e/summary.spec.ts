@@ -62,7 +62,7 @@ test("saving puts it in the knowledge base, any edit unsaves it, and Regenerate 
   await expect(page.locator(".label", { hasText: "draft 1" })).toBeVisible();
   await page.getByRole("button", { name: "Save to knowledge base" }).click();
   await expect(page.getByText("✓ Saved to the knowledge base")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Draft stakeholder messages" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Draft stakeholder messages" })).toBeVisible();
   await page.locator(".rail input[type=checkbox]").first().uncheck();
   await expect(page.getByRole("button", { name: "Save to knowledge base" })).toBeVisible();
   await page.getByRole("button", { name: "Regenerate" }).click();

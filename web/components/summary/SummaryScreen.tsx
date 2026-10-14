@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Button, Handle, Handles } from "@/components/ds";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { editWriteup, regenerateWriteup, saveWriteup } from "@/lib/actions/chats";
+import { draftMessages } from "@/lib/actions/messages";
+import { specs } from "@/lib/writeup/messages";
 import { render, type WriteupData } from "@/lib/writeup/render";
 
 /** The write-up beside its evidence (section 4, Summary): untick a record and a signal that rested on it drops
@@ -18,6 +21,8 @@ export function SummaryScreen({ chatId, data, children }: { chatId: string; data
   const [drawer, setDrawer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [drafting, setDrafting] = useState(false);
+  const router = useRouter();
   const w = useMemo(() => render(data, kept, note), [data, kept, note]);
   const own = data.resolution?.path === "own";
 
@@ -147,7 +152,11 @@ export function SummaryScreen({ chatId, data, children }: { chatId: string; data
                 <strong style={{ color: "var(--ok)" }}>✓ Saved to the knowledge base</strong>
                 <span className="small muted">Searchable alongside past incidents and runbooks. Any edit here unsaves it until you save again.</span>
               </div>
-              <Link className="lbtn primary" href={`/chats/${chatId}/messages`}>Draft stakeholder messages</Link>
+              <Button variant="primary" disabled={drafting} onClick={() => { setDrafting(true); setError(null); start(async () => {
+                // Drafts only the audiences not drafted yet, so coming back here never replaces an edited message.
+                const r = await draftMessages(chatId, specs(data.report, data.resolution), true);
+                if (r.ok) router.push(`/chats/${chatId}/messages`); else { setError(r.error ?? "The messages were not drafted."); setDrafting(false); }
+              }); }}>{drafting ? "Drafting the messages…" : "Draft stakeholder messages"}</Button>
             </>
           ) : (
             <>

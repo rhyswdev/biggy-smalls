@@ -10,6 +10,9 @@
 | SMALLS_API_SCRIPT     | the script the scripted profile plays (default the generic dev script)           |
 | SMALLS_INCIDENT       | the incident number the card shows, when served data cannot say which it is      |
 | SMALLS_API_SCRIPT_DELAY | scripted mode only: seconds per streamed word, so a run can be watched          |
+| SMALLS_API_DRAFTER    | the profile that drafts the stakeholder messages (U8), or `code`; by default the |
+|                       | mid-tier profile in live mode and code in scripted mode                          |
+| SMALLS_API_DRAFT_SCRIPT | the script a `scripted` drafter plays (default the generic dev drafter)        |
 
 Nothing here names a bundle, an incident or a model: the Makefile passes the bundle and the checkpoint.
 """
@@ -21,11 +24,14 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 MODES = ("live", "scripted")
 DEV_SCRIPT = "smalls.api.devscript:turn"
+DEV_DRAFTER = "smalls.api.devscript:draft"
+DRAFTER = "anthropic-mid"               # U8: the mid-tier profile in the agent's config
+CODE = "code"
 
 
 @dataclass(frozen=True)
@@ -42,6 +48,8 @@ class Settings:
     clock: str | None = None            # an ISO time in place of the checkpoint's clock: for a fixture registry with its own day
     incident: str | None = None         # the incident number, when served data cannot say which incident the trigger belongs to
     script_delay: float = 0.0           # scripted mode: seconds per streamed word, to watch a run unfold
+    drafter: str | None = None          # a profile name, or `code`; None picks by mode (`drafter_profile`)
+    draft_script: Any = DEV_DRAFTER     # "module:function"; a test may pass the callable itself
     db_name: str = field(default_factory=lambda: f"smalls-{uuid.uuid4().hex[:12]}")
 
     @classmethod
@@ -56,7 +64,13 @@ class Settings:
                    runs_dir=Path(os.environ.get("SMALLS_API_RUNS") or ROOT / "eval" / "runs"),
                    registry=os.environ.get("SMALLS_API_REGISTRY") or None, script=os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT,
                    incident=os.environ.get("SMALLS_INCIDENT") or None,
-                   script_delay=float(os.environ.get("SMALLS_API_SCRIPT_DELAY") or 0))
+                   script_delay=float(os.environ.get("SMALLS_API_SCRIPT_DELAY") or 0),
+                   drafter=os.environ.get("SMALLS_API_DRAFTER") or None, draft_script=os.environ.get("SMALLS_API_DRAFT_SCRIPT") or DEV_DRAFTER)
+
+    @property
+    def drafter_profile(self) -> str:
+        """Who drafts the messages: the named profile, else the mid-tier one in live mode and code without a key."""
+        return self.drafter or (DRAFTER if self.mode == "live" else CODE)
 
     @property
     def uri(self) -> str:

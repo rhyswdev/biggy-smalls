@@ -51,7 +51,7 @@ CREATE TABLE writeup (
 );
 CREATE TABLE message (
   chat_id TEXT NOT NULL, audience TEXT NOT NULL, draft TEXT NOT NULL, text TEXT NOT NULL, copied_hash TEXT, drafted_by TEXT NOT NULL,
-  usage TEXT, cost_usd REAL, PRIMARY KEY (chat_id, audience)
+  why_code TEXT, usage TEXT, cost_usd REAL, drafted_at TEXT NOT NULL, PRIMARY KEY (chat_id, audience)
 );
 CREATE TABLE kb_entry (
   id INTEGER PRIMARY KEY, chat_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, terms TEXT NOT NULL, saved_at TEXT NOT NULL

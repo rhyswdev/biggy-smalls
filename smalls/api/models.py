@@ -3,13 +3,17 @@ limit, so the API never takes more than a person would type."""
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 TEXT = 8000         # a trigger or a pasted note
 NOTE = 4000
 REASON = 2000
+MESSAGE = 4000      # one stakeholder message
+
+AUDIENCES = ("exec", "support", "status", "eng")
+Audience = Literal["exec", "support", "status", "eng"]
 
 
 class Closed(BaseModel):
@@ -84,3 +88,30 @@ class WriteupSave(Closed):
     title: str = Field(min_length=1, max_length=300)
     body: str = Field(min_length=1, max_length=40000)
     terms: list[str] = Field(max_length=100)
+
+
+class AudienceSpec(Closed):
+    """One audience as the web app defines it (U8): who, where, what they need, the checks its draft must pass,
+    with their values filled from the report, and the code-rendered draft kept when no model drafts it."""
+
+    key: Audience
+    name: str = Field(min_length=1, max_length=80)
+    channel: str = Field("", max_length=120)
+    guide: str = Field("", max_length=300)
+    checks: list[Annotated[str, Field(max_length=400)]] = Field(default_factory=list, max_length=12)
+    fallback: str = Field(max_length=MESSAGE)
+
+
+class MessagesDraft(Closed):
+    audiences: list[AudienceSpec] = Field(min_length=1, max_length=len(AUDIENCES))
+
+    @model_validator(mode="after")
+    def once_each(self) -> "MessagesDraft":
+        keys = [a.key for a in self.audiences]
+        if len(set(keys)) != len(keys):
+            raise ValueError("each audience is drafted once per request")
+        return self
+
+
+class MessageText(Closed):
+    text: str = Field(max_length=MESSAGE)
