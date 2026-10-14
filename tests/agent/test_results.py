@@ -100,4 +100,5 @@ def test_rebuild_keeps_each_rows_batch_and_scores_and_export_writes_the_pages_tw
     runs, batch_rows = json.loads(runs_path.read_text()), json.loads(batches_path.read_text())
     assert [r["run_id"] for r in runs] == [record.name] and runs[0]["investigator"] == "scripted" and runs[0]["batch_order"] == 1
     assert {"trigger_on_board", "board_only_turns", "cost_usd", "partial", "nudges"} <= set(runs[0])
-    assert batch_rows == [{"batch": "base", "order": 1, "phase": "2", "pass": "6", "finding": "", "result": "", "what": "A fixture batch.", "runs": 1}]
+    assert batch_rows == [{"batch": "base", "order": 1, "phase": "2", "pass": "6", "finding": "", "result": "", "what": "A fixture batch.",
+                           "moved": "", "runs": 1}]

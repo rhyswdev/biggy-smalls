@@ -201,7 +201,8 @@ def export(folder: Path, rows: list[dict[str, Any]] | None = None, described: li
     for i, (meta, rs) in enumerate(ordered, 1):
         batch_rows.append({"batch": meta["name"], "order": i, "phase": str(meta.get("phase", "")), "pass": str(meta.get("pass", "")),
                            "finding": meta.get("finding") or "", "result": meta.get("result") or "",
-                           "what": " ".join(str(meta.get("what") or "").split()), "runs": len(rs)})
+                           "what": " ".join(str(meta.get("what") or "").split()), "moved": " ".join(str(meta.get("moved") or "").split()),
+                           "runs": len(rs)})
         for r in rs:
             v = r.get("verifier") or {}
             lead = r.get("leading") or {}
@@ -337,6 +338,10 @@ def render(rows: list[dict[str, Any]], described: list[dict[str, Any]]) -> str:
            "",
            f"{len(rows)} runs in {len(ordered)} batches; ${sum(r.get('cost_usd') or 0 for r in rows):.2f} in all.",
            "",
+           "## What moved", ""]
+    out += [f"- **{meta['name']}** (pass {meta.get('pass', '?')}{', ' + str(meta['result']) if meta.get('result') else ''}). {meta['moved']}"
+            for meta, _ in ordered if meta.get("moved")]
+    out += ["",
            "## Across batches", "",
            "One line per measure, batches in the order they ran.", ""]
     for name, measure in MEASURES:
@@ -349,6 +354,8 @@ def render(rows: list[dict[str, Any]], described: list[dict[str, Any]]) -> str:
         out += [f"### {meta['name']}", ""]
         if meta.get("what"):
             out += [str(meta["what"]).strip(), ""]
+        if meta.get("moved"):
+            out += [f"What moved: {str(meta['moved']).strip()}", ""]
         facts = [f"phase {meta.get('phase', '?')}", f"pass {meta.get('pass', '?')}"]
         if meta.get("finding"):
             facts.append(f"finding {meta['finding']}")

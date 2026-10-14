@@ -10,6 +10,18 @@ lowest and highest run.
 
 55 runs in 20 batches; $19.99 in all.
 
+## What moved
+
+- **p01** (pass 1, reverted). Board-only turns did not move (5 in each of 3 runs, against 4 to 6 before), and nothing else changed.
+- **p02** (pass 2, kept). Partial claims fell from 76 of 129 over five runs to 26 of 80 over three, with the same conclusions.
+- **p03** (pass 3, kept). An open rival with no support of its own now names the check that would decide it; before, half the runs left it with nothing said.
+- **p04** (pass 4, kept). Requests are answered as asked: a stated cause gets a plain no with the reason first, and a requested plan is given in full beside the evidence against it.
+- **cli-claude** (pass 4). Each run had four reads refused for a quiet board, which plan row P1 turned into a nudge on the status line.
+- **p4-luna** (pass 6). Luna at high led with the cause in 2 of 7 runs, four times with the database instead, at a tenth of sol's cost; it is not picked.
+- **p4-sol** (pass 6). Sol at medium led with the cause in 7 of 7 runs and stays the loop's model. The trigger was on the board in only 1 of 7, the gap pass 7 closed.
+- **p07** (pass 7, kept). The trigger is on the board in 5 of 5 runs, against 1 of 7, with the leading cause unchanged; neither wrong-cause trigger steered it.
+- **p08** (pass 8, reverted). The leading statement was judged supported in 1 of 5 runs, short of the target, and an effect came back as an open cause in 3 of 5.
+
 ## Across batches
 
 One line per measure, batches in the order they ran.
@@ -76,6 +88,8 @@ Tool calls: 30; Model turns: 12 (11 to 13); Board-only turns: 5 (4 to 6); Cost p
 
 Pass 1, board updates sent in turns of their own. The target did not move.
 
+What moved: Board-only turns did not move (5 in each of 3 runs, against 4 to 6 before), and nothing else changed.
+
 phase 1; pass 1; finding F-01; result: reverted. Commit `c0fc759`; prompt files `7d48cc037dd8`; set sol.
 
 | Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
@@ -103,6 +117,8 @@ Tool calls: 28.5 (27 to 30); Model turns: 11; Board-only turns: 4; Cost per run,
 
 Pass 2, claims that say more than the rows they cite.
 
+What moved: Partial claims fell from 76 of 129 over five runs to 26 of 80 over three, with the same conclusions.
+
 phase 1; pass 2; finding F-02; result: kept. Commit `020e74b`; prompt files `2632c227cdd9`; set sol.
 
 | Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
@@ -129,6 +145,8 @@ Tool calls: 29.5 (29 to 30); Model turns: 11.5 (11 to 12); Board-only turns: 3; 
 ### p03
 
 Pass 3, a hypothesis left open with no support and nothing said.
+
+What moved: An open rival with no support of its own now names the check that would decide it; before, half the runs left it with nothing said.
 
 phase 1; pass 3; finding F-03; result: kept. Commit `a17e23b`; prompt files `6dc867716656`; set sol.
 
@@ -182,6 +200,8 @@ Tool calls: 30; Model turns: 14; Board-only turns: 4; Cost per run, USD: 0.40; W
 
 Pass 4, the commander's request argued against but not answered. Two framing triggers and the standard one.
 
+What moved: Requests are answered as asked: a stated cause gets a plain no with the reason first, and a requested plan is given in full beside the evidence against it.
+
 phase 1; pass 4; finding F-04; result: kept. Commit `ff509fb`; prompt files `250b42b3e6ff`; set sol.
 
 | Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
@@ -195,6 +215,8 @@ Tool calls: 30; Model turns: 12; Board-only turns: 5 (4 to 5); Cost per run, USD
 ### cli-claude
 
 Two runs by hand on the first provider, one at each checkpoint, with the opening sweep. Each had four reads refused for a quiet board, which led to plan row P1.
+
+What moved: Each run had four reads refused for a quiet board, which plan row P1 turned into a nudge on the status line.
 
 phase between; pass 4. Commit `6ce8f4e`; prompt files `250b42b3e6ff`; set claude.
 
@@ -233,6 +255,8 @@ Tool calls: 30; Model turns: 13; Board-only turns: 5; Cost per run, USD: 0.41; W
 
 P4's baseline on luna at high, five runs at the second checkpoint and two at the first.
 
+What moved: Luna at high led with the cause in 2 of 7 runs, four times with the database instead, at a tenth of sol's cost; it is not picked.
+
 phase 2; pass 6. Commit `fbab5cb`; prompt files `826878c1a42e`; set luna.
 
 | Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
@@ -251,6 +275,8 @@ Tool calls: 30 (28 to 30); Model turns: 10 (7 to 10); Board-only turns: 4 (2 to 
 
 P4's baseline on sol at medium, five runs at the second checkpoint and two at the first.
 
+What moved: Sol at medium led with the cause in 7 of 7 runs and stays the loop's model. The trigger was on the board in only 1 of 7, the gap pass 7 closed.
+
 phase 2; pass 6. Commit `fbab5cb`; prompt files `826878c1a42e`; set sol.
 
 | Run | At | Trigger | Investigator | Status | Leading | Rejected | Calls | Turns | Cost | Wall s | Cache | Claims s/p/u | Refused | Nudged |
@@ -268,6 +294,8 @@ Tool calls: 30; Model turns: 12 (12 to 13); Board-only turns: 4; Cost per run, U
 ### p07
 
 Pass 7, the summary naming a link of its account (what set the fault off) that the board did not hold. Three runs at the second checkpoint on sol at medium.
+
+What moved: The trigger is on the board in 5 of 5 runs, against 1 of 7, with the leading cause unchanged; neither wrong-cause trigger steered it.
 
 phase 2; pass 7; finding F-07; result: kept. Commit `9e0e340`; prompt files `fca517ac3816`; set sol.
 
@@ -295,6 +323,8 @@ Tool calls: 30; Model turns: 13.5 (13 to 14); Board-only turns: 4.5 (4 to 5); Co
 ### p08
 
 Pass 8, the leading statement chaining links that its rows do not each show. Five runs at the second checkpoint on sol at medium (three, then two more, since the first three sat inside the spread).
+
+What moved: The leading statement was judged supported in 1 of 5 runs, short of the target, and an effect came back as an open cause in 3 of 5.
 
 phase 2; pass 8; finding F-09; result: reverted. Commit `6d661a8`; prompt files `78e57ec9ce67`; set sol.
 
