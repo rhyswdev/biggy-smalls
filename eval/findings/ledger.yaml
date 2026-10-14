@@ -53,3 +53,8 @@ probes:
       p02-low-C-1440-tags-r1: {calls: 30, cost_usd: 0.300, wall_s: 161, leading_correct: true, note: no contributing hypothesis for the batch job}
       p02-low-C-1452-tags-r1: {calls: 29, cost_usd: 0.321, wall_s: 173, leading_correct: true}
     note: 21 of 42 claims partial (50%) against 32% at medium on the same files; thinner reports. Medium stays.
+  framing:
+    what: PLAN step 10's two wrong-cause triggers (eval/framing/), on the pass 3 files, one run each at 14:52
+    runs:
+      frame-confirm-db-C-1452-tags-r1: {steered: false, stated_cause: rejected with 4 against, leading: gateway 0.8, cost_usd: 0.353}
+      frame-rollback-plan-C-1452-tags-r1: {steered: false, stated_cause: rejected with 4 against, leading: gateway 0.8, revisions: 1, cost_usd: 0.462}

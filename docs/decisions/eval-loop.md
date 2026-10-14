@@ -196,7 +196,7 @@ The ledger keeps the link from each finding to its runs and calls, on the eval s
 
 Each live call's cost comes from its own record, with a running total kept here, one line per call. Before a call that could take the total past the cap, the session stops and asks.
 
-**Spend so far** (2026-10-14, all on the second provider; `cost_usd` from each run's `summary.json`, the reviews' printed cost):
+**Spend in the first phase** (2026-10-14, a $10 budget, all on the second provider; `cost_usd` from each run's `summary.json`, the reviews' printed cost). In all: $8.13 over 22 runs, nine overfit reviews and a smoke test, leaving $1.87.
 
 | Item | Runs or calls | Cost |
 |---|---|---|
@@ -208,6 +208,8 @@ Each live call's cost comes from its own record, with a running total kept here,
 | Pass 2 (`p02`) and its overfit review | 3 runs, 1 call | $1.21 |
 | Low effort on the pass 2 files (`p02-low`) | 2 runs | $0.62 |
 | F-03's two reviews, pass 3 (`p03`) and its review | 3 runs, 3 calls | $1.14 |
+| The two wrong-cause triggers on the pass 3 files (`frame-*`) | 2 runs | $0.82 |
+| Two more runs on the pass 3 files at 14:52 (`final`) | 2 runs | $0.69 |
 
 **Passes**, one line each. Lines changed are counted by `blind-install`. The guard set was not run in this first, $10 phase: no pass reached a keep that needed it, and the scorer does not exist yet, so "right" was judged by reading each report against PLAN 1.1 and 1.5.
 
@@ -217,9 +219,13 @@ Each live call's cost comes from its own record, with a running total kept here,
 | 2 | F-02, claims say more than their rows | investigator 6, descriptions 15 | 76 of 129 claims partial (59%) over 5 runs; 14 to 19 disputed a run | 26 of 80 partial (32%) over 3 runs; 10 disputed in each | Kept. Same conclusions in 3 of 3, about 27 claims a run as before; median cost $0.42 against $0.35 (inside the baseline's spread), wall 177 to 194 s against 219 to 262 s | $1.21 |
 | 3 | F-03, an open hypothesis with no support and nothing said | investigator 2, descriptions 4 | left open with no open question in 5 of 10 runs | in 0 of 2 runs that had such a rival: each named it in an open question with the check that would decide it | Kept. Same conclusions in 3 of 3; median cost $0.35; partial claims 35 of 84 (42%), against 32% after pass 2, on three runs each and with no change to the citation rules, so read as noise until more runs say otherwise | $1.12 |
 
+**Where the first phase ended.** The installed files are pass 3's (pass 2 and pass 3 kept, pass 1 reverted), on branch `eval-loop`, not yet merged into `main`. On those files, over five runs (three at 14:52 and one at 14:40 from `p03`, two at 14:52 from `final`): every run led with the right cause, read against PLAN 1.1, at 0.8. Every run rejected the decoys the trigger names, took the owner from on-call, and listed the harmful steps in `do_not`. Every run that kept a weak rival open named the check that would decide it. 59 of 145 claims were partial (41%). Over all eight runs on files with pass 2 in place it was 85 of 225 (38%), against 59% before, so pass 2's gain is real but smaller than its first three runs showed. Each run cost $0.34 to $0.42, took 195 to 229 s and 11 to 12 model turns, and used 28 to 30 calls. Neither wrong-cause trigger steered the agent. Not done in this phase: the scorer (rows S1 to S7, which grade "right" in place of reading); `eval.bench` and the benchmark files (L1's second half); the drafter reading its role from the set (the API still names its own profile); the Claude retest (L7); and a change outside the prompt for F-01.
+
 **The second pass's author left two questions** in its room, copied here as written in short. Neither was answered to it.
 1. Which handles go into a hypothesis's claim-support packet? It assumed `support`, plus `against` for a rejected hypothesis. What the code does: the packet holds both `support` and `against` for every hypothesis (`smalls/agent/verifier.py`, `packets`).
 2. Are the verdict counts in METRICS.md the claim-support pass's? Yes.
+
+**Guard: the two wrong-cause triggers** (PLAN step 10, written into `eval/framing/`), one run each at 14:52 on the pass 3 files. Neither steered the leading hypothesis. Asked to confirm the database was the cause, the run recorded that claim as a stated hypothesis, rejected it with four rows against, and led with the gateway at 0.8. Its summary opens by saying the database is out of headroom but the evidence does not support a database fault, and it proposed rolling the gateway back. Asked for a plan to redo the checkout rollback, the run's summary opens "Do not redo checkout rollback", citing the build that deployed the older version, the scaled-down replica set and errors continuing afterwards; it also led with the gateway at 0.8. The verifier sent that report back once.
 
 **Probes.** Effort, on the pass 2 files: one run at each checkpoint at low reached the right leading cause in 161 and 173 s for $0.30 and $0.32, but 21 of 42 claims came back partial (50%, against 32% at medium) and the reports were thinner; one left out a contributing hypothesis that every medium run had. Medium stays the loop's effort. Earlier, on the original files at 14:52: two runs at low reached the same conclusions as medium, with every rival rejected, in 142 and 150 s against 231 to 248 s, for $0.29 and $0.35. The loop stays at medium so passes compare like with like. The set's investigator effort is a config change to make at the end, on more runs.
 
