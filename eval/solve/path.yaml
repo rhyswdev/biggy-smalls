@@ -1,0 +1,86 @@
+# The scripted solve path for the development bundle at its second checkpoint (build row D5 of
+# docs/decisions/tools-agent-build.md). Sixteen tool calls, in the order a person would make them, each
+# with why it is made and the words its result must hold. `python -m eval.solve.run` runs them.
+#
+# It exists to show that the tool layer makes the incident solvable in about fifteen calls. It names this
+# bundle's hosts, people and tickets, so it is never near a prompt: nothing under smalls/ reads this folder.
+#
+# It was written by the build session from tool results alone. The build session does not read the answer
+# key, so "reaches" below is what the evidence shows, and is ours to check against the key.
+bundle: larkspur-checkout-2026-10-13
+now: "14:52"
+reaches: >
+  From 14:24 calls from the payments gateway to the external payment provider are slow. The gateway
+  release deployed that morning raised the provider timeout from 3 s to 8 s and added three retries
+  inside the database transaction that records the attempt, so each slow authorization now holds a
+  database connection for tens of seconds. The gateway's connection pool empties, its sessions sit idle
+  in transaction on the payments database, its health checks fail and the load balancer drops and
+  restores its members in turn, and checkout's 10 s calls to the gateway time out as 504s. The checkout
+  release of 14:27 is not the cause: latency rose before it, the old version was already failing, and
+  the rollback changed nothing. The marketing site is a separate change. The provider's status page
+  says all is well and has not been updated since the morning.
+steps:
+  - tool: list_alerts
+    args: {since: "-2h"}
+    why: What is alerting, and what alerted first. The earliest signal on the checkout path is latency towards the payments gateway, before any error alert.
+    expect: ["dd:ev7820515412", "p99 latency on payments-gw", "first 2026-10-13T14:27:10Z", "dt:P-26101350", "sw:55012"]
+  - tool: get_record
+    args: {handle: "dt:P-26101350"}
+    why: The monitoring platform's own problem record names the entity it holds responsible.
+    expect: ["rootCauseEntity.name: api.paycore.example", "affectedEntities[0].name: PaymentsGateway"]
+  - tool: query_metrics
+    args: {metric: "p99:trace.http.request.duration", scope: "env:prod,peer.service:payments-gw,service:checkout-api", since: "-45m"}
+    why: When latency towards the gateway began to rise, to the minute.
+    expect: ["14:23 2.695", "14:24 3.998", "first point > 8 (warning) at 2026-10-13T14:26:00Z"]
+  - tool: list_changes
+    args: {since: "-6h"}
+    why: What changed today. The checkout release the trigger blames started after latency rose; the gateway was released that morning.
+    expect: ["snow:CHG0031902", "start 2026-10-13T14:27:30Z", "jk:checkout-api-deploy#898", "jk:payments-gateway-deploy#412", "snow:CHG0031880"]
+  - tool: query_metrics
+    args: {metric: "sum:trace.servlet.request.errors", scope: "env:prod,service:checkout-api", since: "-40m"}
+    why: Errors by version. The old version was already failing before the new one took traffic, and fails as much after the rollback.
+    expect: ["series version:2.14.2", "14:28 63", "14:46 875", "series version:2.14.3"]
+  - tool: search_logs
+    args: {terms: ["timed out"], since: "-40m", group_by: template}
+    why: What is timing out, by kind of log line. The gateway's calls to the provider, then its own database pool, then checkout's calls to the gateway.
+    expect: ["RetryPolicy - authorize attempt <*> timed out after <*>", "Connection is not available, request timed out after <*>", "PaymentsGatewayClient - POST"]
+  - tool: search_logs
+    args: {terms: ["timed out"], since: "2026-10-13T14:20:00Z", until: "2026-10-13T14:31:00Z", limit: 5}
+    why: The first of those lines, in order. One authorization is tried four times, 8 s each, while checkout gives up after 10 s.
+    expect: ["log:pay-01/61c1af32", "authorize attempt 1/4 timed out after 8000ms", "authorize attempt 3/4 timed out after 8000ms", "timed out after 10000ms"]
+  - tool: get_record
+    args: {handle: "jk:payments-gateway-deploy#412"}
+    why: What the morning's gateway release contained.
+    expect: ["PAY-2231 PSP client resilience", "VERSION"]
+  - tool: search_knowledge
+    args: {query: "PSP client resilience retries timeout transaction", k: 3}
+    why: What that change did, and how the gateway behaved in an earlier provider outage before it.
+    expect: ["conf:KB0010502", "from 3000 to 8000", "the same transaction still writes the `authorization_attempt` row", "snow:INC0045210"]
+  - tool: itsm_query
+    args: {table: journal, filters: [{name: number, value: INC0048811}], limit: 5}
+    why: What the people on the incident have written into it, the database engineer among them.
+    expect: ["snow:jn/ec7656f6", "by elena.rossi"]
+  - tool: get_record
+    args: {handle: "snow:jn/ec7656f6"}
+    why: Her note in full. The database is not slow; the gateway is holding its connections open inside transactions.
+    expect: ["idle in transaction |   133", "insert into authorization_attempt", "the app is holding connections open, not the db"]
+  - tool: query_metrics
+    args: {metric: "sum:postgresql.connections", scope: "host:pay-db-01", since: "-40m"}
+    why: The same thing from the database's own numbers. Connections to the payments database climb, then the series stops reporting.
+    expect: ["series db:payments", "nulls"]
+  - tool: search_logs
+    args: {terms: ["pool"], sourcetype: "f5:bigip:ltm", since: "-30m", limit: 6}
+    why: The load balancer. More than one gateway member goes down and comes back, which is a failing health check, not one dying host.
+    expect: ["10.20.4.33:8443 monitor status down", "10.20.4.31:8443 monitor status down", "monitor status up"]
+  - tool: get_topology
+    args: {entity: PaymentsGateway, hops: 1}
+    why: What the gateway depends on. Monitoring records a call to the external provider that the CMDB has no item for.
+    expect: ["PaymentsGateway -[calls]-> api.paycore.example", "api.paycore.example: no CMDB item matched", "owner Marcus Okafor (inactive)"]
+  - tool: check_status_page
+    args: {provider: paycore}
+    why: What the provider says about itself. Its page says all is well and was last updated in the morning, hours before the slowness began.
+    expect: ["indicator none: All Systems Operational", "page updated 2026-10-13T10:33:00Z"]
+  - tool: get_oncall
+    args: {service: "Payments - Prod"}
+    why: Who owns the gateway now.
+    expect: ["escalation policy Payments Engineering", "on call at now  level 1"]

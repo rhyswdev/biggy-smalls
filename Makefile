@@ -12,7 +12,7 @@ ENV := $(if $(wildcard .env),--env-file .env)
 # The commit a run record carries. A container has no git, so the host passes it in.
 export SMALLS_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 
-.PHONY: data lint ingest tag docker-test leak-test tools-smoke retrieval score demo run resume regress matrix heldout test schemas
+.PHONY: data lint ingest tag docker-test leak-test tools-smoke retrieval solve score demo run resume regress matrix heldout test schemas
 
 data:
 	$(PY) -m smalls_data.build
@@ -53,6 +53,10 @@ tools-smoke:
 # The retrieval check for search_knowledge: recall@1 and mean reciprocal rank over a dozen questions. A sanity check.
 retrieval:
 	$(PY) -m eval.retrieval.run --bundle $(BUNDLE) --now $(NOW)
+
+# The scripted solve path: about fifteen tool calls from the trigger to the cause, each checked. No key, no network.
+solve:
+	$(PY) -m eval.solve.run --bundle $(BUNDLE)
 
 score:
 	@echo "score: stub until step 7 (scorer)"
