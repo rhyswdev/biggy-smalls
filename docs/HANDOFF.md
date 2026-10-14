@@ -1,6 +1,6 @@
 # Handoff: where the data phase stands
 
-Updated 2026-10-14, after the first live run: the eleven tools, the agent, the verifier, carry-forward, the matrix runner and the terminal are built and tested offline, on branch `agent-build`, not pushed. One live run has been made and committed (row C3), and `make demo` replays it. The live shakedown (row C4) is next, and it needs a go-ahead.
+Updated 2026-10-14, after the UI step: the web app, its API and the agent's eight seams are built and tested on branch `ui-build` and merged into `main` (section "UI: built"); `make app` runs it. Before that, the eleven tools, the agent, the verifier, carry-forward, the matrix runner and the terminal were built, and one live run was made and committed (row C3), which `make demo` replays. The live shakedown (row C4) is still next, and it needs a go-ahead.
 
 ## Done
 - Step 0: Python 3.12 uv skeleton, packages `smalls` and `smalls_data`, Makefile targets.
@@ -73,6 +73,19 @@ Built row by row from section 8 of `docs/decisions/tools-agent-build.md`, on bra
 - **Evaluation harness** (`eval/`): the matrix runner with arms A and C and the tags flag as a dimension, process metrics in `summary.json`, the retrieval check (`docs/DATA.md` 127) and the scripted solve path (16 of 16 steps hold).
 - **Commands.** `make test`, `make lint`, `make leak-test`, `make tools-smoke`, `make retrieval`, `make solve`; and, live, `make run`, `make resume RUN=<id>`, `make regress`, `make matrix`. Each also runs as `docker compose run --rm smalls <the same command>`.
 
+## UI: built
+Built row by row from `docs/decisions/ui-build.md` (rows R0 to R18) on branch `ui-build`. That record holds the plan and its rulings, each row's evidence (section 12.1), every judgment call (12.2) and every live model call with its cost (12.3: $1.78 in all, of a $10 budget).
+- **Seams** (row R0c): eight small additions to the agent, so a person can drive a run from a browser: decisions recorded as made on the web (S1), approve with edited arguments (S2), a follow-up continues the finished run (S3), notes while it runs (S4), stop (S5), auto-approve changed mid-run (S6), the native query shown before a read (S7), run records in the database (S8). Each passed the overfit review (`make overfit-review`, ruling U15) with nothing flagged.
+- **API** (`smalls/api/`): FastAPI over one in-memory SQLite database that holds the app's state, the run records and LangGraph's checkpoints, so a restart leaves nothing behind. Runs execute on a worker pool; a gate is answered once (a second answer gets 409); the event stream is server-sent events, resumable; reads for calls, evidence and tool schemas; committed live runs open as recorded chats; the write-up and knowledge base; the stakeholder messages, drafted per audience by the mid-tier profile `anthropic-mid` (ruling U8) and checked by code.
+- **Web app** (`web/`): Next.js App Router. Pages render on the server and hold no client logic; mutations go through server actions; the event stream reaches the browser through a rewrite; there is no API route, and no key or API address reaches the browser (checked after every build). Screens: the dashboard, the chat with its approval gate and keyboard model, the evidence drawer, the answer card and follow-ups, the resolve dialog, the summary, the messages and the knowledge-base entry.
+- **Checked.** `make test` (the API's tests among them), `make lint` (invariant 17: no bundle string in `smalls/api/` or `web/`), `make web-test` (boundary rules, types, ESLint, Vitest, and Playwright over every screen, the gate's keys, axe in both themes and the whole flow with the keyboard alone). One live investigation through the API completed in 201 s for $0.99, and its four drafted messages passed every check.
+
+Run it:
+- `make app`: the API on `127.0.0.1:7318` and the web app on http://localhost:7317, on the host. Live by default, reading the key from `.env`. Without a key the dashboard still opens and the committed live run opens in full as a recorded investigation; `make app SMALLS_API_MODE=scripted` runs investigations with the scripted model and drafts messages by code, for development. It refuses to start when a port is taken and says which; `SMALLS_WEB_PORT` and `SMALLS_API_PORT` pick others. Ctrl-C stops both.
+- `docker compose up --build api web`: the same in containers, on http://localhost:7317. Only `web` publishes a port, and only `api` gets `.env`.
+- `make web-test` (once before it: `pnpm --dir web exec playwright install chromium`); `make api` (the API alone); `make api-types` (the web app's API types from the app's schema); `make api-fixtures` (the reducer tests' event logs); `make overfit-review` (live, one model call).
+- Needs `uv`, Node 20.9 or later with `pnpm` (`corepack enable`), and Docker for compose.
+
 ## Next
 Everything that can be built without a live model or a fresh session is built. What is next needs one or the other.
 
@@ -85,6 +98,10 @@ Waiting for a go-ahead, because it spends money:
 Waiting for a fresh session:
 - **Gate B** (row D5): a session with only the CLI and none of this track's context tries to find the cause. `make solve` shows the scripted path a person can follow; it is not that test.
 - **The scorer and the answer key schema** (PLAN 3.3 and 5): owned by a session that does not write the agent. The verifier's keep-or-kill rule (row E3) waits for it.
+
+Open from the UI step (section 11 of `docs/decisions/ui-build.md`), each with the answer the build uses meanwhile:
+- **Q3**: PLAN 13's timeline and the 14:40 to 14:52 difference are shown through the report's timeline, the confidence ticks and the "Findings updated" strip, not a screen of their own.
+- **Q6**: the report has no "mechanism" role, so the summary's chain shows contributing hypotheses in that place; adding a role is a report-schema change and a new blind pass.
 
 Waiting for a ruling:
 - **The second blind author's questions** (section 11.3 of the record). Each choice agrees with the code; 3, 4, 6 and 7 (confidence above 0.8, whether the leading hypothesis must be a `cause`, "unknown" in an impact field, how `subject` is named) are for the scorer session to confirm. A ruling that changes a blind file means a new blind pass, not an edit.
