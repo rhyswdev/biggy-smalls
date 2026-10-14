@@ -21,9 +21,14 @@ def listening() -> socket.socket:
 
 
 def free() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
+    """A port the check itself finds free: the system's pick for IPv4 can be one a service holds on IPv6."""
+    for _ in range(50):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", 0))
+            port = s.getsockname()[1]
+        if not ports.taken(port):
+            return port
+    raise RuntimeError("no free port found")
 
 
 def test_a_listening_port_is_taken_and_a_free_one_is_not():
