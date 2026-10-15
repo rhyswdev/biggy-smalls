@@ -2,7 +2,7 @@
 
 <!-- One sentence: what it is and who it is for. Name origin in a clause if you want it. -->
 
-**Repo:** LINK · **Try it:** [Quickstart](#quickstart) · **See it:** [Sample output](#sample-output)
+**Repo:** [github.com/rhyswdev/biggy-smalls](https://github.com/rhyswdev/biggy-smalls) · **Try it:** [Running it locally](#2-running-it-locally) · **See it:** [Sample output](#4-sample-output)
 
 ## TL;DR
 
@@ -10,43 +10,44 @@
 
 ## Contents
 
-**Run it**
-- [Quickstart](#quickstart) ★
-- [Sample output](#sample-output) ★
+**1. [Repository](#1-repository)** ★
 
-**The thinking**
-- [Approach and considerations](#approach-and-considerations)
-- [The scenario and dataset](#the-scenario-and-dataset)
+**2. [Running it locally](#2-running-it-locally)** ★
 
-**The system**
+**3. [Write-up](#3-write-up)** ★
 - [What I built](#what-i-built) ★
-- [Architecture](#architecture) ★
+  - [Approach and considerations](#approach-and-considerations)
+  - [The scenario and dataset](#the-scenario-and-dataset)
+  - [UX approach](#ux-approach)
+- [The architecture I chose](#the-architecture-i-chose) ★
   - [Where the model is used and where code is better](#where-the-model-is-used-and-where-code-is-better)
-- [The agentic flow](#the-agentic-flow) ★
+- [How the agentic flow works](#how-the-agentic-flow-works) ★
   - [Prompt design](#prompt-design)
   - [Failure handling](#failure-handling)
-- [Memory and state](#memory-and-state) ★
-- [Retrieval and tools](#retrieval-and-tools) ★
-- [Evidence grounding](#evidence-grounding)
-- [UX approach](#ux-approach)
-- [Decisions and tradeoffs](#decisions-and-tradeoffs) ★
+- [How memory and state are handled](#how-memory-and-state-are-handled) ★
+- [Retrieval, tools, vector search, knowledge graph and RAG](#retrieval-tools-vector-search-knowledge-graph-and-rag) ★
+  - [Evidence grounding](#evidence-grounding)
+- [The tradeoffs I made](#the-tradeoffs-i-made) ★
   - [What I chose not to build](#what-i-chose-not-to-build)
-
-**Does it work**
 - [How I know it works](#how-i-know-it-works)
-- [Self-evaluation](#self-evaluation)
-
-**Looking back and forward**
-- [How I used AI in development](#how-i-used-ai-in-development)
-- [With more time](#with-more-time) ★
+  - [Self-evaluation](#self-evaluation)
+- [What I would improve with more time](#what-i-would-improve-with-more-time) ★
   - [Path to production](#path-to-production)
-- [Appendix: repo and docs map](#appendix-repo-and-docs-map)
+- [How I used AI in development](#how-i-used-ai-in-development) (beyond the brief)
+
+**4. [Sample output](#4-sample-output)** ★
+
+**[Appendix: repo and docs map](#appendix-repo-and-docs-map)**
 
 ★ Asked for in the brief.
 
 ---
 
-## Quickstart
+## 1. Repository
+
+https://github.com/rhyswdev/biggy-smalls
+
+## 2. Running it locally
 
 You need Python 3.12 and [uv](https://docs.astral.sh/uv/). The web app also needs Node 20.9+ and pnpm. Docker is optional. You can look around without an API key.
 
@@ -73,21 +74,20 @@ docker compose run --rm smalls make demo
 
 <!-- Verify `make app` and the compose web service once ui-build row R16 lands. -->
 
-## Sample output
+## 3. Write-up
 
-The committed sample is a live run at the 14:52 checkpoint, in `eval/runs/20261014T090933Z-5d5522/`. `make demo` replays it in the terminal exactly as it was shown live, and the web app opens it as a recorded investigation.
+### What I built
 
-| File | What it holds |
-|---|---|
-| `report.json` | The report: summary, impact, hypotheses with evidence for and against, timeline, actions, what not to do, a verdict per alert, stakeholder update |
-| `events.jsonl` | Every event of the run, replayable without a model |
-| `calls.jsonl`, `evidence.jsonl` | Every tool call with its arguments and native query, and the rows it showed |
-| `board.json`, `verdict.json` | The hypothesis board with its history; the verifier's verdict |
-| `summary.json` | Time, calls, gate decisions, tokens and cost |
+- **A data generator** (`smalls_data/`): a scenario YAML in, a vendor-native evidence bundle out, plus the lints that check it.
+- **Ingestion** (`smalls/tools/ingest/`, `smalls/tools/store.py`): one adapter per source into an in-memory SQLite store, with a replay clock so nothing after `now` is visible.
+- **Tagging** (`smalls/tools/ingest/tagging/`): a closed-set classifier labels log templates, alerts, messages and changes in a separate step. Ingestion reads the labels from a committed cache.
+- **Eleven tools** (`smalls/tools/`) that the agent investigates with.
+- **The agent** (`smalls/agent/`): a LangGraph graph with approval gates, a hypothesis board, a validator, a verifier and carry-forward between checkpoints.
+- **A terminal CLI**: `smalls run | resume | replay | show`.
+- **An API and a web app** (`smalls/api/`, `web/`). FastAPI streams the agent's events over server-sent events. A Next.js UI shows the dashboard, chat, approval gates, evidence drawer, summary and stakeholder messages.
+- **An eval harness** (`eval/`): a matrix runner with a no-tools baseline, a retrieval check, a scripted solve path, and a record of every run.
 
-<!-- Screenshot of the answer card, and one claim opened in the evidence drawer. Update the run id if DEMO_RUN changes. -->
-
-## Approach and considerations
+#### Approach and considerations
 
 I went for a rich UX with a fairly mature agent implementation, but leaned more towards how the user might interact with it, and how they are used to using agentic tools today.
 
@@ -99,7 +99,7 @@ The approach was to work out a real-world scenario, so that the language would a
 
 I wanted to make the system prompt as generic as possible (but still geared towards incident investigation), and had to make sure I didn't overfit it to what should be a generic issue, one you would not have tweaked a system prompt to focus on. In reality, if I generated new test data with a new incident, it should be able to do the same level of investigation.
 
-## The scenario and dataset
+#### The scenario and dataset
 
 Larkspur Retail is a fictional retailer on the stack BigPanda's customers publish: ServiceNow as the system of record, Datadog and Dynatrace for monitoring, Splunk for logs, Jenkins for deploys, PagerDuty for paging and Slack as the war room.
 
@@ -122,18 +122,11 @@ Larkspur Retail is a fictional retailer on the stack BigPanda's customers publis
 - Small on purpose: a documented sample of what the estate would log, under a size ceiling the lint enforces. It includes realistic defects: a duplicate webhook delivery, a truncated log line, an alert that fires and resolves within a minute.
 - Lints check that the data adds up (connection counts, clock conversions, schemas) and that nothing visible at a checkpoint carries a later time.
 
-## What I built
+#### UX approach
 
-- **A data generator** (`smalls_data/`): a scenario YAML in, a vendor-native evidence bundle out, plus the lints that check it.
-- **Ingestion** (`smalls/tools/ingest/`, `smalls/tools/store.py`): one adapter per source into an in-memory SQLite store, with a replay clock so nothing after `now` is visible.
-- **Tagging** (`smalls/tools/ingest/tagging/`): a closed-set classifier labels log templates, alerts, messages and changes in a separate step. Ingestion reads the labels from a committed cache.
-- **Eleven tools** (`smalls/tools/`) that the agent investigates with.
-- **The agent** (`smalls/agent/`): a LangGraph graph with approval gates, a hypothesis board, a validator, a verifier and carry-forward between checkpoints.
-- **A terminal CLI**: `smalls run | resume | replay | show`.
-- **An API and a web app** (`smalls/api/`, `web/`). FastAPI streams the agent's events over server-sent events. A Next.js UI shows the dashboard, chat, approval gates, evidence drawer, summary and stakeholder messages.
-- **An eval harness** (`eval/`): a matrix runner with a no-tools baseline, a retrieval check, a scripted solve path, and a record of every run.
+<!-- ~250 words + screenshots. The 30-second test (PLAN §13). Answer-first header, one click to the native record, timeline, hypothesis trace, checkpoint diff, copy-ready stakeholder update. What you cut from the UI and why. -->
 
-## Architecture
+### The architecture I chose
 
 ```mermaid
 flowchart LR
@@ -157,7 +150,7 @@ The system has three layers, and each one is usable on its own:
 
 Models are config values (profiles in `smalls/agent/config.toml`) reached through LangChain, so the provider can change without a code change.
 
-### Where the model is used and where code is better
+#### Where the model is used and where code is better
 
 Data ingestion pipelines are best done with code over a model. A hallucination in a data transformation can lead to false positives in root cause analysis. Tagging with Jev (a hosted classifier that labels records at ingestion) is an experiment, but the system prompt tells the agent to treat tags as a search aid and never as evidence, so it uses them as potential guides, and when unsure it does its own reasoning.
 
@@ -166,7 +159,7 @@ Coded approval gates are a way to keep users in the loop. This is good when work
 
 Interaction with the data sources (the vendor APIs, in production) is done through tool calls: the agent builds up what it wants to query, but code executes it rather than the agent itself. These tools could be served over MCP instead, but that comes with its own risks and overheads.
 
-## The agentic flow
+### How the agentic flow works
 
 ```mermaid
 flowchart LR
@@ -203,7 +196,7 @@ One investigation, end to end:
 
 I didn't use the Claude Agent SDK, for the same reasons: it works with one provider, its state is a transcript, and its built-in file and shell tools would have to be removed so the agent could not read the answer key. There is one investigator plus a bounded verifier rather than a team of agents. That gives one board and one line of reasoning to follow, with the second model used where it pays: checking.
 
-### Prompt design
+#### Prompt design
 
 - **Written blind.** The system prompt, the first-turn template, both verifier prompts and every tool and field description were written by a fresh sub-agent in a "blind room". That was a folder holding only the requirements, the design, the tool schemas and a brief, with no incident data. Its files were copied in unedited.
 - **Generic rules.** Every rule is standard incident-response practice:
@@ -218,7 +211,7 @@ I didn't use the Claude Agent SDK, for the same reasons: it works with one provi
 - **Guards against overfitting.** A lint fails if any prompt contains a string from the bundle. Every later change to prompts, tools or agent code goes through `make overfit-review`: a model reads the diff alongside the answer key and flags anything that only makes sense for this incident.
 - **Traceability.** Each run records the prompt's hash, and each prompt change is committed with the id of the run that motivated it.
 
-### Failure handling
+#### Failure handling
 
 | Failure | What happens |
 |---|---|
@@ -231,7 +224,9 @@ I didn't use the Claude Agent SDK, for the same reasons: it works with one provi
 | Verifier fails | The report stands, marked unverified |
 | Context nearly full | A fresh conversation restarts from the rendered board |
 
-## Memory and state
+How finished runs are graded is its own section: [How I know it works](#how-i-know-it-works).
+
+### How memory and state are handled
 
 - **Within a run**, state is typed rather than a transcript:
   - the hypothesis board, where each hypothesis has its support, evidence against, confidence, role and a history row per change;
@@ -245,7 +240,7 @@ I didn't use the Claude Agent SDK, for the same reasons: it works with one provi
 - **In the web app**, chats, gate answers, notes, run records and checkpoints live in one in-memory SQLite database. A follow-up question continues the same run, with its conversation and board. Saved knowledge-base entries are searchable in the UI but are not served to the agent.
 - **Context** is never summarised. A fit check restarts from the rendered board before the window fills.
 
-## Retrieval and tools
+### Retrieval, tools, vector search, knowledge graph and RAG
 
 Retrieval is agentic: the agent queries eleven structured tools instead of having the evidence stuffed into its context.
 
@@ -275,7 +270,7 @@ Every tool follows the same rules:
 - **Structured operational context** comes from `get_topology`. It joins CMDB relationships, Dynatrace entities and Datadog service tags with a recursive SQL query. Where sources disagree they are shown side by side with their sources, never merged, because a stale CMDB edge is evidence too. There is no graph database; the graph is small.
 - **Tags** from the classifier are optional filters on several tools, and a filtered result says how many rows it left out.
 
-## Evidence grounding
+#### Evidence grounding
 
 - Every row a tool returns starts with a handle (`snow:INC…`, `log:pay-02/3fa91c0e`, `slack:…`), and every claim in the report cites handles.
 - A result separates the rows it **showed** from the records it only **referenced**, and only shown handles can be cited. The validator rejects any handle that wasn't shown in this run.
@@ -285,11 +280,7 @@ Every tool follows the same rules:
 - Code, not the model, writes the record of what was decided: `proposed_actions` and the validation come from the gate log.
 - In the UI, every handle opens its native vendor record in the evidence drawer, so any claim is one click from its source.
 
-## UX approach
-
-<!-- ~250 words + screenshots. The 30-second test (PLAN §13). Answer-first header, one click to the native record, timeline, hypothesis trace, checkpoint diff, copy-ready stakeholder update. What you cut from the UI and why. -->
-
-## Decisions and tradeoffs
+### The tradeoffs I made
 
 | Decision | Chose | Over | Why | What it cost |
 |---|---|---|---|---|
@@ -304,7 +295,7 @@ Every tool follows the same rules:
 | Prompts | Written blind, plus an overfit review | Written by the build session | The answer can't leak into the prompt | Slower prompt changes |
 | UI transport | FastAPI and SSE over our own event stream | LangGraph's Agent Server; webhooks | One event vocabulary for the terminal, run record, replay and UI | An API of our own to maintain |
 
-### What I chose not to build
+#### What I chose not to build
 
 - Real API clients, auth, webhooks, or writes to ServiceNow, Slack or a status page. The UI copies text and sends nothing.
 - A correlation engine. Correlation here is a time window and an entity join inside `list_alerts` and `get_topology`.
@@ -314,7 +305,7 @@ Every tool follows the same rules:
 - Parsers for SPL or ServiceNow queries. Native queries are echoed, never parsed.
 - Sign-in, multiple users, or persistence across restarts.
 
-## How I know it works
+### How I know it works
 
 Each eval layer answers a different question, and a result in one never stands in for another (PLAN §6.1).
 
@@ -334,15 +325,15 @@ Tag quality is measured separately: precision against a hand-labelled sample and
 
 <!-- TODO: the results table, generated from eval/runs/. Counts, not percentages; avoid "accuracy", "generalises", "robust", "validated" (PLAN §12). Say which layers have not run yet. -->
 
-## Self-evaluation
+#### Self-evaluation
 
 <!-- ~250 words. Score yourself against the brief's "What We Care About" list. Specific and evidence-backed on both sides. -->
 
-### What works well
+##### What works well
 
 I think it looks good, and it emulates how I might envisage a system like this working at a high level. Yes, there are some things which are canned for the purpose of the take-home, but the way the user flows through the application is smooth, and it has the right level of technical exposure for the target audience (SRE, ITOps, engineers).
 
-### What is weak
+##### What is weak
 
 <!-- Candidates, true as of the last push; check before using:
 - One incident in one estate, so no evidence yet beyond it (held-out runs not done).
@@ -353,7 +344,31 @@ I think it looks good, and it emulates how I might envisage a system like this w
 - Strict tool schemas are off for the investigator, because of a provider limit on optional inputs.
 - Known minor realism gaps in the data (HANDOFF, "Open, not blocking"). -->
 
-## How I used AI in development
+### What I would improve with more time
+
+- A synthetic data generator driven by a high-level explanation of an incident, so I can run many tests. Today the generator builds a bundle from a detailed scenario YAML; the step up is generating that YAML from a short description.
+- Retrieval was a bit simplistic, it used tool calls with keyword (BM25) search to get the data required. With under 20 knowledge documents, vectors could not show a gain, so I left them out on purpose, but at real scale vectorising the data would potentially get better search results.
+- Spin up the agent in a container somewhere so it could actually execute code remotely (it already runs in Docker, but can only call fixed tools). That would let it test hypotheses by running code over the evidence, which is what can push results further. It could be somewhat expensive, though.
+- More review cycles. For a project like this, depending on timelines, I would potentially have spent 2–3 days planning and designing before getting anything built. It would also be good to use a different model to review the implementation (OpenAI's latest models, not just Anthropic's).
+- Jev was an interesting experiment in data tagging, which is usually done with trained ML models, using a promptable classifier instead. Its latency made it possible, but the reliability of the tags would need some additional investigation. At a high level and at a glance it looks good, and data enrichment is always good. <!-- TODO numbers: tag precision and stability on the hand-labelled sample (DATA.md 121); the tags on/off ablation (row E5) if it has run. -->
+- More data, more evals. With time, this product would evolve with the frontier models, so I would want to make sure each one performs as expected before switching to the latest. Staying on the previous best-in-class model (BIC-1), which is consistent, could potentially be better than the newest (BIC), which can have some oddities in its outputs straight after release.
+- When errors come from code bases give agents git access, that would they could potentially self heal issues. This is more for isolated code errors rather than other types. Could still potentially be the same for IaC issues, espeically if combined with isolated environments could potentially recreate issues with test data and fix remotely, pushing a PR when fixed.
+
+#### Path to production
+
+- A mature data ingestion pipeline instead of raw Python. Hook into the actual external data sources, but the heart of what I am doing remains.
+- Use Postgres over in-memory SQLite. SQLite was ideal for the take-home context, but not for a real system.
+- Auth and RBAC.
+- Investigations run on workers outside the API process, with events going through a broker like SQS with dead queues with retries.
+- Raw agent interaction data stored in somewhere like S3 so could be potentially be used for some fine tuning depending on the data.
+- An inbound ServiceNow webhook starts an unattended run when a work note is added.
+- Real actions are run by a separate executor after approval.
+- Multi tenancy if would be sold as SaaS
+- Observability and metrics. 
+
+### How I used AI in development
+
+*Beyond the brief: it asks for none of this, but it is how the work was done.*
 
 The coding was done by Claude Code. I ran multiple coding agents concurrently using git worktrees.
 
@@ -365,27 +380,19 @@ Once each stage had been developed to a level where it was deemed working, even 
 
 I often ran prompts like "Imagine you are a UX expert, the target user is X; review this implementation of a UI and feed back what could be changed for a better user experience", or "This is a critical bit of infrastructure/code; spin up 2–3 agents to review it from different perspectives, such as a developer or an SRE, and feed back findings". I could then use those outputs to further refine plans and implementation as I went. This also helps to combat hallucinations, as it doesn't just take one agent's single sweep as gospel; they get challenged.
 
-## With more time
+## 4. Sample output
 
-- A synthetic data generator driven by a high-level explanation of an incident, so I can run many tests. Today the generator builds a bundle from a detailed scenario YAML; the step up is generating that YAML from a short description.
-- Retrieval was a bit simplistic, it used tool calls with keyword (BM25) search to get the data required. With under 20 knowledge documents, vectors could not show a gain, so I left them out on purpose, but at real scale vectorising the data would potentially get better search results.
-- Spin up the agent in a container somewhere so it could actually execute code remotely (it already runs in Docker, but can only call fixed tools). That would let it test hypotheses by running code over the evidence, which is what can push results further. It could be somewhat expensive, though.
-- More review cycles. For a project like this, depending on timelines, I would potentially have spent 2–3 days planning and designing before getting anything built. It would also be good to use a different model to review the implementation (OpenAI's latest models, not just Anthropic's).
-- Jev was an interesting experiment in data tagging, which is usually done with trained ML models, using a promptable classifier instead. Its latency made it possible, but the reliability of the tags would need some additional investigation. At a high level and at a glance it looks good, and data enrichment is always good. <!-- TODO numbers: tag precision and stability on the hand-labelled sample (DATA.md 121); the tags on/off ablation (row E5) if it has run. -->
-- More data, more evals. With time, this product would evolve with the frontier models, so I would want to make sure each one performs as expected before switching to the latest. Staying on the previous best-in-class model (BIC-1), which is consistent, could potentially be better than the newest (BIC), which can have some oddities in its outputs straight after release.
-- When errors come from code bases give agents git access, that would they could potentially self heal issues. This is more for isolated code errors rather than other types. Could still potentially be the same for IaC issues, espeically if combined with isolated environments could potentially recreate issues with test data and fix remotely, pushing a PR when fixed.
+The committed sample is a live run at the 14:52 checkpoint, in `eval/runs/20261014T090933Z-5d5522/`. `make demo` replays it in the terminal exactly as it was shown live, and the web app opens it as a recorded investigation.
 
-### Path to production
+| File | What it holds |
+|---|---|
+| `report.json` | The report: summary, impact, hypotheses with evidence for and against, timeline, actions, what not to do, a verdict per alert, stakeholder update |
+| `events.jsonl` | Every event of the run, replayable without a model |
+| `calls.jsonl`, `evidence.jsonl` | Every tool call with its arguments and native query, and the rows it showed |
+| `board.json`, `verdict.json` | The hypothesis board with its history; the verifier's verdict |
+| `summary.json` | Time, calls, gate decisions, tokens and cost |
 
-- A mature data ingestion pipeline instead of raw Python. Hook into the actual external data sources, but the heart of what I am doing remains.
-- Use Postgres over in-memory SQLite. SQLite was ideal for the take-home context, but not for a real system.
-- Auth and RBAC.
-- Investigations run on workers outside the API process, with events going through a broker like SQS with dead queues with retries.
-- Raw agent interaction data stored in somewhere like S3 so could be potentially be used for some fine tuning depending on the data.
-- An inbound ServiceNow webhook starts an unattended run when a work note is added.
-- Real actions are run by a separate executor after approval.
-- Multi tenancy if would be sold as SaaS
-- Observability and metrics. 
+<!-- Screenshot of the answer card, and one claim opened in the evidence drawer. Update the run id if DEMO_RUN changes. -->
 
 ## Appendix: repo and docs map
 
