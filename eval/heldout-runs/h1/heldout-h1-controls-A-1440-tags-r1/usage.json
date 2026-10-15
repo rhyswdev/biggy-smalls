@@ -1,0 +1,34 @@
+{
+ "calls": [
+  {
+   "node": "agent",
+   "round": 1,
+   "attempt": 1,
+   "latency_ms": 43955.1,
+   "usage": {
+    "input_tokens": 9645,
+    "output_tokens": 2441,
+    "total_tokens": 12086,
+    "input_token_details": {
+     "cache_creation": 9642,
+     "cache_read": 0
+    },
+    "output_token_details": {
+     "reasoning": 197
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.048521
+  }
+ ],
+ "totals": {
+  "input_tokens": 9645,
+  "output_tokens": 2441,
+  "cache_read": 0,
+  "cache_write": 9642,
+  "reasoning": 197,
+  "cost_usd": 0.048521,
+  "model_latency_ms": 43955.1
+ }
+}

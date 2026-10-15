@@ -1,0 +1,104 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/e0be6732",
+    "dd:ev7820517443"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_AZ3X2AeZ6frurScg2wLhmxpE",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "The reported checkout-api 2.14.3 deployment introduced a regression that caused checkout failures.",
+   "role": "cause",
+   "status": "open",
+   "subject": "checkout-api",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "pay-db-01",
+    "payments gateway",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "dd:ev7820517443"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_AZ3X2AeZ6frurScg2wLhmxpE",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "The reported pay-db-01 connection saturation caused checkout failures through the payments dependency; this remains an untested explanation of the observed errors.",
+   "role": "cause",
+   "status": "open",
+   "subject": "pay-db-01",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "redis-sessions",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/4dfb6a73",
+    "dd:ev7820017640"
+   ],
+   "against": [
+    "slack:sre-oncall/d207ff4b"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_AZ3X2AeZ6frurScg2wLhmxpE",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "A redis-sessions fault caused the checkout failures, as suggested in responder chat.",
+   "role": "cause",
+   "status": "open",
+   "subject": "redis-sessions",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h3"
+  }
+ ],
+ "timeline": [],
+ "open_questions": []
+}

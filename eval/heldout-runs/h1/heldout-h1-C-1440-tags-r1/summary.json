@@ -1,0 +1,170 @@
+{
+ "run_id": "heldout-h1-C-1440-tags-r1",
+ "status": "completed",
+ "stop_reason": null,
+ "wall_s_total": 179.937,
+ "wall_s_last_segment": 179.931,
+ "gate_wait_ms": 6.2,
+ "model_calls": 15,
+ "retries": 0,
+ "tool_calls": 30,
+ "calls_by_status": {
+  "ok": 36
+ },
+ "gate": {
+  "policy:approved": 6,
+  "auto:approved": 29
+ },
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "d:3",
+   "h:h1",
+   "h:h4",
+   "t:2",
+   "t:8"
+  ]
+ },
+ "revisions": 0,
+ "tokens": {
+  "input_tokens": 511271,
+  "output_tokens": 8668,
+  "cache_read": 423679,
+  "cache_write": 87547,
+  "reasoning": 652,
+  "cost_usd": 0.348006,
+  "model_latency_ms": 179638.2
+ },
+ "events": {
+  "run_started": 1,
+  "phase": 5,
+  "model_call": 15,
+  "tool_call_proposed": 35,
+  "gate_decision": 35,
+  "tool_started": 35,
+  "hypothesis_update": 10,
+  "tool_result": 35,
+  "board_status": 12,
+  "budget": 13,
+  "thinking_delta": 12,
+  "thinking": 3,
+  "gate_pending": 1,
+  "heartbeat": 7,
+  "validation": 1,
+  "draft_report": 1,
+  "verifier_verdict": 1,
+  "report": 1
+ },
+ "process": {
+  "tool_calls": 30,
+  "calls_by_tool": {
+   "get_oncall": 2,
+   "get_record": 9,
+   "get_topology": 2,
+   "itsm_query": 1,
+   "list_alerts": 1,
+   "list_changes": 1,
+   "propose_action": 1,
+   "query_metrics": 2,
+   "read_chat": 2,
+   "search_knowledge": 1,
+   "search_logs": 8
+  },
+  "repeated_calls": 0,
+  "empty_results": 1,
+  "error_results": 0,
+  "tag_input_calls": 0,
+  "refused_by_policy": 0,
+  "model_turns": 13,
+  "shown_handles": 234,
+  "cited_handles": 25,
+  "cited_share_of_shown": 0.1068,
+  "tokens_total": 519939,
+  "tokens_per_cited_handle": 20797.6,
+  "budget": {
+   "calls": 30,
+   "calls_used": 30,
+   "hit": true,
+   "turn_cap": 36,
+   "turns_used": 13,
+   "turn_cap_hit": false
+  },
+  "stuck_events": 0,
+  "quiet_board": {
+   "nudged_rounds": [
+    10
+   ],
+   "moved_next_round": 1
+  },
+  "restarts": 0,
+  "hypotheses": [
+   {
+    "id": "h1",
+    "subject": "checkout-api",
+    "role": "cause",
+    "status": "leading",
+    "source": "stated",
+    "changes": 5,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 15572
+    },
+    "first_leading": {
+     "round": 7,
+     "tool_calls_before": 21,
+     "tokens_through": 191081
+    }
+   },
+   {
+    "id": "h2",
+    "subject": "pay-db-01",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 3,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 15572
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h3",
+    "subject": "payments-reconciler",
+    "role": "cause",
+    "status": "rejected",
+    "source": "derived",
+    "changes": 2,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 10,
+     "tokens_through": 81200
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h4",
+    "subject": "checkout-api",
+    "role": "trigger",
+    "status": "open",
+    "source": "derived",
+    "changes": 1,
+    "first_seen": {
+     "round": 11,
+     "tool_calls_before": 29,
+     "tokens_through": 378766
+    },
+    "first_leading": null
+   }
+  ]
+ },
+ "event_bytes": 141038,
+ "dropped_sinks": []
+}

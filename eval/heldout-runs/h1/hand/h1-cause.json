@@ -1,0 +1,208 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "summary": "checkout-api 2.14.3 (jk:checkout-api-deploy#897, snow:CHG0031902) is the cause: its new audit appender writes inside the submit transaction and blocks on the slow log sink once the DEBUG flood starts, so each 2.14.3 pod's checkout-db pool fills (40 of 40 active) and submits time out with 504s from 14:29. 2.14.2 pods are clean. The payments gateway and pay-db-01 are healthy. Finish the rollback to 2.14.2 now.",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API"
+  ],
+  "priority": {
+   "suggested": "P1",
+   "impact": "1 - High",
+   "urgency": "1 - High"
+  },
+  "assignment_group": "Commerce Platform",
+  "oncall": "Commerce Platform (Alice Nguyen is incident commander; Ben Kowalski owns the release)",
+  "customer": "payment submissions failing or slow; browsing and cart unaffected"
+ },
+ "hypotheses": [
+  {
+   "id": "h-co",
+   "statement": "checkout-api 2.14.3's audit appender holds the checkout-db connection while it blocks on a slow log sink, exhausting each 2.14.3 pod's pool.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "snow:CHG0031902",
+    "jk:checkout-api-deploy#897"
+   ],
+   "confidence": 0.85,
+   "support": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}",
+    "jk:checkout-api-deploy#897",
+    "snow:CHG0031902",
+    "k8s:d5db1f58",
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-gw",
+   "statement": "payments-gateway 3.8.0 is behind the 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "metric:p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}",
+    "dd:mon7301990"
+   ],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-db",
+   "statement": "pay-db-01 is out of connections.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "entities": [
+    "pay-db-01"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}"
+   ],
+   "source": "derived",
+   "history": []
+  }
+ ],
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T14:27:30Z",
+   "event": "checkout-api 2.14.3 deploy starts",
+   "evidence": [
+    "jk:checkout-api-deploy#897"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:28:05Z",
+   "event": "2.14.3 rollout",
+   "evidence": [
+    "k8s:d5db1f58"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:29:53Z",
+   "event": "first checkout-db pool timeout on a 2.14.3 pod",
+   "evidence": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Roll checkout-api back to 2.14.2 now.",
+   "owner": "Ben Kowalski, Commerce Platform",
+   "evidence": [
+    "jk:checkout-api-deploy#897",
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Leave the payments gateway and pay-db-01 as they are; both are healthy.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "metric:p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}",
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Update support and customers on failed checkout submits.",
+   "owner": "Alice Nguyen",
+   "evidence": [
+    "pd:8812"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Roll back payments-gateway 3.8.0",
+   "why": "the gateway's latency is flat and its pools are not timing out",
+   "evidence": [
+    "metric:p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}"
+   ]
+  },
+  {
+   "action": "Raise pay-db-01's connection limits",
+   "why": "pay-db-01 is well under its limit",
+   "evidence": [
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820516882",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517443",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517864",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "pd:8812",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "pd:8813",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820519966",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "noise"
+  }
+ ],
+ "open_questions": [],
+ "stakeholder_update": {
+  "status": "identified",
+  "customer_impact": "Payment submissions fail or hang; browsing and cart work.",
+  "scope": "Online Checkout payment submit",
+  "changed_since_last": "Cause identified: the 14:28 checkout release.",
+  "next_steps": "Complete the checkout-api rollback; next update 14:55 UTC.",
+  "next_update_at": "2026-10-13T14:55:00Z"
+ },
+ "proposed_actions": [],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": null,
+  "disputed": []
+ }
+}

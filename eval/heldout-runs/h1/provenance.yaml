@@ -1,0 +1,37 @@
+# The held-out run on h1 (session D; docs/decisions/eval-loop.md section 15.6). Written by hand once, not edited after.
+bundle: bundles/h1                       # built from eval/heldout/cards/h1.md; what differs from the card: eval/heldout/h1-build.md
+checkpoint: "14:40"
+trigger: bundles/h1/triggers/1440.md     # the development bundle's 14:40 trigger, unchanged; its database claim is false on h1
+order:                                   # git proves the agent was frozen before h1 reached main
+  cards: 747c3c01a6bb88dc57999b4f6ba7793efc775fb2        # 2026-10-13 15:39 UTC, the five held-out cards
+  agent_v1: d75447eba97844bb834fd6618a7f1f1062e2960d     # tag agent-v1, 2026-10-15 00:02 UTC
+  heldout_h1_tip: 6ad3e8954821ef9ee0ac0ef3535c44aaa9716d00  # branch heldout-h1, with h1's tag cache
+  merge: 6b9007334aa07e17f5e53883b9af9eee0e57dfbf        # --no-ff merge into main, 2026-10-15 00:52 UTC
+  runs_at_commit: e086f74                                 # the merge plus a test-only fix (tests/test_tag_cache.py)
+frozen_files_unchanged: "git diff agent-v1 -- smalls/agent smalls/tools smalls/contracts eval/scorer.py eval/judge.py eval/judge/prompt.md printed nothing"
+model_set: sol                           # investigator, claims and contrarian on the second provider's mid-priced model; investigator at medium
+tags: on
+prompt_sha: {agent: fca517ac3816, cheat_sheet_control: 790ab59b3f0d}
+runs:
+  - {id: heldout-h1-C-1440-tags-r1, arm: C, started: "2026-10-15T01:00:04Z"}
+  - {id: heldout-h1-C-1440-tags-r2, arm: C, started: "2026-10-15T01:03:05Z"}
+  - {id: heldout-h1-C-1440-tags-r3, arm: C, started: "2026-10-15T01:05:48Z"}
+  - {id: heldout-h1-C-1440-tags-r4, arm: C, started: "2026-10-15T01:08:47Z"}
+  - {id: heldout-h1-C-1440-tags-r5, arm: C, started: "2026-10-15T01:11:26Z"}
+  - {id: heldout-h1-controls-A-1440-tags-r1, arm: A, started: "2026-10-15T01:00:06Z"}
+  - {id: heldout-h1-controls-K-1440-tags-r1, arm: K, started: "2026-10-15T01:00:51Z"}
+commands:
+  - python -m eval.matrix --bundle bundles/h1 --arms C --checkpoints 1440 --reps 5 --tags on --label heldout-h1 --runs-dir eval/heldout-runs/h1
+  - python -m eval.matrix --bundle bundles/h1 --arms A,K --checkpoints 1440 --reps 1 --tags on --label heldout-h1-controls --runs-dir eval/heldout-runs/h1
+  - "python -m eval.score <copy of each run folder>, judge on (2026-10-15 01:15 to 01:19 UTC)"
+scoring_note: >-
+  Each run.json names the bundle as larkspur-checkout-2026-10-13, the name h1's served integration.yaml gives
+  the estate, so `python -m eval.score <folder>` would load the development key. Each folder was therefore scored
+  on a scratch copy whose run.json named bundles/h1, with the scorer unchanged, and the copy's scores.json was
+  put back in the record. The record's own run.json is unedited. The scores inside the two *.matrix.json files
+  come from the matrix's automatic scoring against the development key and are wrong; scores.json is authoritative.
+hand_reports: >-
+  hand/h1-cause.json (h1's cause from its key) and hand/h1-dev-answer.json (the development answer), both at 14:40,
+  scored with score_hand(bundle="h1", checkpoint="1440", with_judge=False) before any live call: the first reaches the
+  cause with 4 of 4 facts and no hard fail, the second hard-fails.
+spend_usd: {agent_runs: 1.524, no_tools_call: 0.049, cheat_sheet_control: 0.322, judge: 0.247, total: 2.141}

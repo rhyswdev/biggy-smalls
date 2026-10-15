@@ -1,0 +1,178 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "supported",
+     "quote": "pay-db-01 allows 197 connections for application roles",
+     "handle": "conf:PGW-DB-CONN-TIMEOUT"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "partial",
+     "quote": "13:00 1.312",
+     "handle": "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1240-1440"
+    },
+    {
+     "id": "h:h4",
+     "verdict": "supported",
+     "quote": "2026-10-13T14:29:53.306Z",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "h:h5",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "result: SUCCESS",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:4",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "14:29 24  14:30 64",
+     "handle": "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1415-1440"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "checkout-api is logging 21483 lines in 10 minutes",
+     "handle": "dd:ev7820516882"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "first 2026-10-13T14:32:00Z (native 1791901920)  last 2026-10-13T14:33:00Z  state Triggered",
+     "handle": "dd:ev7820517443"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "rollback job queued",
+     "handle": "slack:inc-checkout-latency/f13ace31"
+    },
+    {
+     "id": "a:1",
+     "verdict": "partial",
+     "quote": "If a deploy went out in the last hour, roll it back first (KB0010233).",
+     "handle": "conf:KB0009871"
+    },
+    {
+     "id": "a:2",
+     "verdict": "partial",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "CO-1192 bump logback 1.5.6 -> 1.5.8, logstash-logback-encoder 7.4 -> 8.0",
+     "handle": "jk:checkout-api-deploy#897/ef4394c5"
+    },
+    {
+     "id": "a:4",
+     "verdict": "partial",
+     "quote": "priority 1 - Critical  impact 1 - High  urgency 1 - High  assignment_group Commerce Platform",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "pay-db-01 allows 197 connections for application roles",
+     "handle": "conf:PGW-DB-CONN-TIMEOUT"
+    },
+    {
+     "id": "d:2",
+     "verdict": "supported",
+     "quote": "13:00 1.312",
+     "handle": "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1240-1440"
+    },
+    {
+     "id": "d:3",
+     "verdict": "partial",
+     "quote": "If a deploy went out in the last hour, roll it back first (KB0010233).",
+     "handle": "conf:KB0009871"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "An independently slow audit sink, rather than a checkout-api release defect, may be holding submit transactions long enough to exhaust the local pool. The 2000ms sink warning and nearly full queue fit this explanation, but its exact alignment with deployment and the release's logging changes favour the report's hypothesis. If this alternative is true, audit-service or other-client logs should show sink failures or latency beginning before checkout's 14:28:55 warning, rather than trouble confined to the new checkout version.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:25:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:30:00Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"audit\"]"
+       },
+       {
+        "name": "group_by",
+        "value": "template"
+       },
+       {
+        "name": "limit",
+        "value": "100"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

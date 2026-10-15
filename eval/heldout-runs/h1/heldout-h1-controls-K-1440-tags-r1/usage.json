@@ -1,0 +1,286 @@
+{
+ "calls": [
+  {
+   "node": "agent",
+   "round": 1,
+   "attempt": 1,
+   "latency_ms": 6876.5,
+   "usage": {
+    "input_tokens": 15824,
+    "output_tokens": 182,
+    "total_tokens": 16006,
+    "input_token_details": {
+     "cache_creation": 15821,
+     "cache_read": 0
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.041378
+  },
+  {
+   "node": "agent",
+   "round": 2,
+   "attempt": 1,
+   "latency_ms": 11069.0,
+   "usage": {
+    "input_tokens": 16056,
+    "output_tokens": 450,
+    "total_tokens": 16506,
+    "input_token_details": {
+     "cache_creation": 232,
+     "cache_read": 15821
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.006668
+  },
+  {
+   "node": "agent",
+   "round": 3,
+   "attempt": 1,
+   "latency_ms": 9247.8,
+   "usage": {
+    "input_tokens": 21147,
+    "output_tokens": 492,
+    "total_tokens": 21639,
+    "input_token_details": {
+     "cache_creation": 5091,
+     "cache_read": 16053
+    },
+    "output_token_details": {
+     "reasoning": 40
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.019259
+  },
+  {
+   "node": "agent",
+   "round": 4,
+   "attempt": 1,
+   "latency_ms": 8911.5,
+   "usage": {
+    "input_tokens": 26446,
+    "output_tokens": 463,
+    "total_tokens": 26909,
+    "input_token_details": {
+     "cache_creation": 5299,
+     "cache_read": 21144
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.019998
+  },
+  {
+   "node": "agent",
+   "round": 5,
+   "attempt": 1,
+   "latency_ms": 10570.6,
+   "usage": {
+    "input_tokens": 26972,
+    "output_tokens": 505,
+    "total_tokens": 27477,
+    "input_token_details": {
+     "cache_creation": 526,
+     "cache_read": 26443
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.009015
+  },
+  {
+   "node": "agent",
+   "round": 6,
+   "attempt": 1,
+   "latency_ms": 10166.7,
+   "usage": {
+    "input_tokens": 32292,
+    "output_tokens": 549,
+    "total_tokens": 32841,
+    "input_token_details": {
+     "cache_creation": 5320,
+     "cache_read": 26969
+    },
+    "output_token_details": {
+     "reasoning": 48
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.021493
+  },
+  {
+   "node": "agent",
+   "round": 7,
+   "attempt": 1,
+   "latency_ms": 10394.5,
+   "usage": {
+    "input_tokens": 32904,
+    "output_tokens": 441,
+    "total_tokens": 33345,
+    "input_token_details": {
+     "cache_creation": 612,
+     "cache_read": 32289
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.009175
+  },
+  {
+   "node": "agent",
+   "round": 8,
+   "attempt": 1,
+   "latency_ms": 11419.0,
+   "usage": {
+    "input_tokens": 36640,
+    "output_tokens": 459,
+    "total_tokens": 37099,
+    "input_token_details": {
+     "cache_creation": 3736,
+     "cache_read": 32901
+    },
+    "output_token_details": {
+     "reasoning": 55
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.017226
+  },
+  {
+   "node": "agent",
+   "round": 9,
+   "attempt": 1,
+   "latency_ms": 12610.3,
+   "usage": {
+    "input_tokens": 38914,
+    "output_tokens": 660,
+    "total_tokens": 39574,
+    "input_token_details": {
+     "cache_creation": 2274,
+     "cache_read": 36637
+    },
+    "output_token_details": {
+     "reasoning": 95
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.015955
+  },
+  {
+   "node": "agent",
+   "round": 10,
+   "attempt": 1,
+   "latency_ms": 8332.0,
+   "usage": {
+    "input_tokens": 39624,
+    "output_tokens": 281,
+    "total_tokens": 39905,
+    "input_token_details": {
+     "cache_creation": 710,
+     "cache_read": 38911
+    },
+    "output_token_details": {
+     "reasoning": 0
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.008482
+  },
+  {
+   "node": "agent",
+   "round": 11,
+   "attempt": 1,
+   "latency_ms": 44260.6,
+   "usage": {
+    "input_tokens": 39949,
+    "output_tokens": 2335,
+    "total_tokens": 42284,
+    "input_token_details": {
+     "cache_creation": 325,
+     "cache_read": 39621
+    },
+    "output_token_details": {
+     "reasoning": 141
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.028131
+  },
+  {
+   "node": "verifier_claims",
+   "round": 11,
+   "attempt": 1,
+   "latency_ms": 19619.3,
+   "usage": {
+    "input_tokens": 20629,
+    "output_tokens": 1008,
+    "total_tokens": 21637,
+    "input_token_details": {
+     "cache_creation": 19265,
+     "cache_read": 1361
+    },
+    "output_token_details": {
+     "reasoning": 42
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.058385
+  },
+  {
+   "node": "verifier_contrarian",
+   "round": 11,
+   "attempt": 1,
+   "latency_ms": 10378.2,
+   "usage": {
+    "input_tokens": 26689,
+    "output_tokens": 455,
+    "total_tokens": 27144,
+    "input_token_details": {
+     "cache_creation": 24912,
+     "cache_read": 1774
+    },
+    "output_token_details": {
+     "reasoning": 224
+    }
+   },
+   "stop_reason": null,
+   "model": "gpt-6.1-sol",
+   "cost_usd": 0.067013
+  }
+ ],
+ "totals": {
+  "input_tokens": 374086,
+  "output_tokens": 8280,
+  "cache_read": 289924,
+  "cache_write": 84123,
+  "reasoning": 645,
+  "cost_usd": 0.322178,
+  "model_latency_ms": 173856.0
+ }
+}

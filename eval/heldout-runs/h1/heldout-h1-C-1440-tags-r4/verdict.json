@@ -1,0 +1,142 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "series version:2.14.3: 11 points",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1345-1440"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=3, idle=3, waiting=0)",
+     "handle": "log:pay-01/9eb862da"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "supported",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "duration: 95671",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:4",
+     "verdict": "supported",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "opened_at 2026-10-13T14:33:41Z",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "on it, rollback job queued.",
+     "handle": "slack:inc-checkout-latency/f13ace31"
+    },
+    {
+     "id": "a:1",
+     "verdict": "partial",
+     "quote": "on it, rollback job queued.",
+     "handle": "slack:inc-checkout-latency/f13ace31"
+    },
+    {
+     "id": "a:2",
+     "verdict": "partial",
+     "quote": "Check checkout-db. If queries are fast and the database is quiet while the pool is full, the pool is the bottleneck, not the database.",
+     "handle": "conf:KB0009871"
+    },
+    {
+     "id": "a:3",
+     "verdict": "partial",
+     "quote": "Record in the incident which mitigation worked.",
+     "handle": "conf:KB0009871"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=2, idle=4, waiting=0)",
+     "handle": "log:pay-01/c0ec04ad"
+    },
+    {
+     "id": "d:2",
+     "verdict": "partial",
+     "quote": "If a deploy went out in the last hour, roll it back first (KB0010233).",
+     "handle": "conf:KB0009871"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "Audit-sink backpressure may be retaining checkout connections because the sink slowed independently, rather than because 2.14.3 introduced a defect. The near-full audit queue precedes the sampled pool timeout, but its occurrence on a new-version pod favours the release hypothesis. If the sink problem predates rollout, this read should find the same audit-slow warnings on 2.14.2 before deployment began.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T13:45:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:27:30Z"
+       },
+       {
+        "name": "sourcetype",
+        "value": "checkout:api"
+       },
+       {
+        "name": "terms",
+        "value": "[\"audit sink slow\"]"
+       },
+       {
+        "name": "limit",
+        "value": "20"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

@@ -1,0 +1,239 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "snow:CHG0031902",
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#897/ef4394c5",
+    "log:checkout-api-7f5c8d9b6-t6y3u/f42c48ba",
+    "log:checkout-api-7f5c8d9b6-z2x8c/f13664be",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1415-1440",
+    "q:588e07fc"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "q:588e07fc"
+   ],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_P65ULfiMYpZP3g7RhIXfz47j",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_6FY00qWe3UZDH9foNEGOzCXt",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1415-1440"
+     ]
+    },
+    {
+     "round": 7,
+     "call_id": "call_5xtBV6VGzMSLdTOHYZZaMEuN",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "jk:checkout-api-deploy#897"
+     ]
+    },
+    {
+     "round": 9,
+     "call_id": "call_4xtNhyI1J18z1fWaKrqBuGDj",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1345-1440"
+     ]
+    },
+    {
+     "round": 11,
+     "call_id": "call_3PDI3dgcNzbWgAON4LPm3bmY",
+     "from": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "jk:checkout-api-deploy#897/ef4394c5",
+      "q:588e07fc"
+     ]
+    }
+   ],
+   "statement": "checkout-api 2.14.3 is the leading regression candidate for checkout-local connection-pool exhaustion and submit 504s; audit/logging backpressure is the suspected mechanism.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "confidence": 0.6,
+   "source": "stated",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "pay-db-01",
+    "payments-gateway",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1345-1440",
+    "conf:PGW-DB-CONN-TIMEOUT",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "log:pay-db-01/87bcae1b"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_P65ULfiMYpZP3g7RhIXfz47j",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 7,
+     "call_id": "call_5xtBV6VGzMSLdTOHYZZaMEuN",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "log:pay-db-01/87bcae1b",
+      "q:7ee9461e"
+     ]
+    },
+    {
+     "round": 9,
+     "call_id": "call_4xtNhyI1J18z1fWaKrqBuGDj",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1345-1440"
+     ]
+    }
+   ],
+   "statement": "pay-db-01 connection exhaustion is preventing payments gateway work and causing checkout submit failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "redis-sessions",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/4dfb6a73",
+    "dd:ev7820017640"
+   ],
+   "against": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa",
+    "dd:ev7820017640",
+    "snow:jn/9230e119"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_6FY00qWe3UZDH9foNEGOzCXt",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "slack:inc-checkout-latency/4dfb6a73"
+     ]
+    },
+    {
+     "round": 11,
+     "call_id": "call_3PDI3dgcNzbWgAON4LPm3bmY",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "dd:ev7820017640",
+      "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+     ]
+    }
+   ],
+   "statement": "Redis sessions failure is causing checkout submit errors.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "redis-sessions",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h3"
+  }
+ ],
+ "timeline": [],
+ "open_questions": [
+  "The version error counts have no old-version overlap after rollout; what independent dependency evidence distinguishes a release regression from a shared upstream failure?",
+  "Is pay-db-01 actually at its connection limit? New orders connections are still authorized at 14:39; payments logs show no pool exhaustion template. Need current counts and exact checkout exception context.",
+  "Which logging configuration in 2.14.3 explains the audit sink slowdown, and is rollback safe?",
+  "Do thread dumps show audit/logging queue blocking while checkout connections are held? Queue pressure is observed, but the lock/transaction mechanism is not yet proven.",
+  "Does reverting to 2.14.2 restore checkout pool headroom and submit success? No rollback completion or recovery is visible as of 14:40."
+ ]
+}

@@ -1,0 +1,98 @@
+{
+ "run_id": "h1-dev-answer",
+ "arm": "hand",
+ "has_report": true,
+ "scorer": "1",
+ "checkpoint": "1440",
+ "as_of": "2026-10-13T14:40:00Z",
+ "integrity": {
+  "cited": 13,
+  "fabricated": [],
+  "unseen": [],
+  "future": [],
+  "ok": true
+ },
+ "cause": {
+  "score": 0.0,
+  "leading": true,
+  "leading_right": false,
+  "change_named": false,
+  "leading_role": "cause",
+  "confidence": 0.8
+ },
+ "trigger": null,
+ "facts": {
+  "required": 1,
+  "required_of": 4,
+  "missing": [
+   "F.errors_on_2143",
+   "F.co_pool_exhausted",
+   "F.gateway_healthy"
+  ],
+  "supporting": 2,
+  "supporting_of": 4
+ },
+ "traps": {
+  "passed": 3,
+  "of": 4,
+  "traps": {
+   "dev-answer": {
+    "pass": false,
+    "why": "fell",
+    "by": [
+     "h-gw"
+    ]
+   },
+   "db-capacity": {
+    "pass": true,
+    "why": "in_leading"
+   },
+   "redis": {
+    "pass": true,
+    "why": "absent"
+   },
+   "paycore": {
+    "pass": true,
+    "why": "absent"
+   }
+  }
+ },
+ "owner": {
+  "pass": true,
+  "named": true,
+  "ruled_out_named": false
+ },
+ "confidence": {
+  "hard_fail": true,
+  "soft_fail": false
+ },
+ "contributing": null,
+ "causal_links": {
+  "links": 1,
+  "with_non_chat": 1,
+  "without": []
+ },
+ "alerts": {
+  "given": 9,
+  "side_right": 9,
+  "exact_right": 9,
+  "wrong": [],
+  "unassessed": 0,
+  "owed": 0,
+  "missing": []
+ },
+ "bar": {
+  "valid_report": true,
+  "no_fabricated_or_future": true,
+  "cause_with_non_chat": false,
+  "non_chat_per_link": true,
+  "rejected_have_against": true,
+  "owner_from_oncall": true,
+  "lists_do_not": true,
+  "stops_within_budget": true,
+  "continuity": true,
+  "met": false
+ },
+ "first_correct": null,
+ "judge": null
+}

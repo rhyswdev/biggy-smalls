@@ -1,0 +1,172 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=3, idle=3, waiting=0)",
+     "handle": "log:pay-01/fa757dc6"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "supported",
+     "quote": "2026-10-13T14:29:53.313Z",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa"
+    },
+    {
+     "id": "h:h4",
+     "verdict": "partial",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:2",
+     "verdict": "partial",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "duration: 95671",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:4",
+     "verdict": "supported",
+     "quote": "request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "POST /api/checkout/submit 504 5019ms",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "building: true",
+     "handle": "jk:payments-reconciler#2311"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "The monitor was last triggered at Tue Oct 13 2026 14:30:40 UTC.",
+     "handle": "dd:ev7820516882"
+    },
+    {
+     "id": "t:8",
+     "verdict": "partial",
+     "quote": "result.opened_at: 2026-10-13 10:33:41",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "a:1",
+     "verdict": "supported",
+     "quote": "on it, rollback job queued.",
+     "handle": "slack:inc-checkout-latency/f13ace31"
+    },
+    {
+     "id": "a:2",
+     "verdict": "supported",
+     "quote": "request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "POST /api/checkout/submit 504 5019ms",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa"
+    },
+    {
+     "id": "a:4",
+     "verdict": "supported",
+     "quote": "affectedPaths: pom.xml, src/main/resources/logback-spring.xml",
+     "handle": "jk:checkout-api-deploy#897/ef4394c5"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "pay-db-01 allows 197 connections for application roles",
+     "handle": "conf:PGW-DB-CONN-TIMEOUT"
+    },
+    {
+     "id": "d:2",
+     "verdict": "supported",
+     "quote": "2026-10-13T14:29:53.313Z",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa"
+    },
+    {
+     "id": "d:3",
+     "verdict": "partial",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "An independent audit-sink slowdown could be holding checkout transactions open and exhausting the local JDBC pool, rather than a checkout release defect. Audit delays precede the pool timeout, but the rollout timing and logging changes favour the release hypothesis. If the independent-sink explanation is true, logs should show audit backend failures or delays in other clients before checkout's pool exhaustion, potentially before the rollout.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:15:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:29:53.306Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"audit\"]"
+       },
+       {
+        "name": "group_by",
+        "value": "template"
+       },
+       {
+        "name": "limit",
+        "value": "100"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

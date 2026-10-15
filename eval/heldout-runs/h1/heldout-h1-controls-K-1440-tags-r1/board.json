@@ -1,0 +1,223 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api",
+    "checkout-db"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#897/ef4394c5",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440",
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+    "q:6e15ea1d"
+   ],
+   "against": [],
+   "discriminating": [
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440"
+   ],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_AECOUDuIOiNtnCbne10R0U6l",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_GQ4I5iDyJJf1sDtimDOV6QDG",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_vbDhyuD4ZI0RQ2H8bvn83n9X",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+      "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+     ]
+    },
+    {
+     "round": 9,
+     "call_id": "call_Vgl8c9EXnu14QuZriM9Xc2tU",
+     "from": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.8
+     },
+     "because": [
+      "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+      "q:6e15ea1d"
+     ]
+    }
+   ],
+   "statement": "checkout-api 2.14.3 exhausts its local JDBC pool and causes checkout submit 504s.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "confidence": 0.8,
+   "source": "stated",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "payments-gateway",
+    "pay-db-01",
+    "PayCore",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "q:e00393cb",
+    "q:86853ec9",
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1410-1440",
+    "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_AECOUDuIOiNtnCbne10R0U6l",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_GQ4I5iDyJJf1sDtimDOV6QDG",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.1
+     },
+     "because": [
+      "q:e00393cb",
+      "q:86853ec9"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_vbDhyuD4ZI0RQ2H8bvn83n9X",
+     "from": {
+      "status": "open",
+      "confidence": 0.1
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.05
+     },
+     "because": [
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1410-1440",
+      "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+     ]
+    }
+   ],
+   "statement": "payments-gateway holds database connections during slow PayCore calls, exhausting pools and causing checkout submit failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "payments-gateway",
+   "confidence": 0.05,
+   "source": "derived",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "redis-sessions",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/4dfb6a73"
+   ],
+   "against": [
+    "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440",
+    "dd:ev7820017640",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_GQ4I5iDyJJf1sDtimDOV6QDG",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "slack:inc-checkout-latency/4dfb6a73"
+     ]
+    },
+    {
+     "round": 9,
+     "call_id": "call_Vgl8c9EXnu14QuZriM9Xc2tU",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.05
+     },
+     "because": [
+      "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440"
+     ]
+    }
+   ],
+   "statement": "redis-sessions is causing checkout failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "redis-sessions",
+   "confidence": 0.05,
+   "source": "stated",
+   "id": "h3"
+  }
+ ],
+ "timeline": [],
+ "open_questions": [
+  "Does the logging-library change block submit threads while they hold checkout database connections? Current logs conflict with the initial payment-database theory.",
+  "What exact logging/audit behavior holds checkout connections? A thread dump and config comparison can distinguish blocked audit calls from another connection leak.",
+  "Did release 2.14.3 introduce audit/logging backpressure that holds database connections, or a different connection leak? Audit warnings start after deployment, but thread-level causality is not yet captured.",
+  "Redis has no visible metric points after 13:00; the historical flap is not evidence of a new fault at 14:30."
+ ]
+}

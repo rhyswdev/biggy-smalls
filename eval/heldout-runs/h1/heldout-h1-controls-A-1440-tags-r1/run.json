@@ -1,0 +1,142 @@
+{
+ "run_id": "heldout-h1-controls-A-1440-tags-r1",
+ "created": "2026-10-15T01:00:06.163+00:00",
+ "arm": "A",
+ "checkpoint": "1440",
+ "now": "2026-10-13T14:40:00Z",
+ "trigger": "From: Alice Nguyen (incident commander)\nTime: 14:40 UTC\n\nCheckout submit has been 504ing since about 14:30. Error rate is around 15% and climbing; browse and cart look fine. INC0048811 is open.\n\nBen thinks it's his checkout-api 2.14.3 deploy at 14:28 and we're about to roll it back. Elena says pay-db-01 is maxed out on connections, mostly from the payments gateway.\n\nWhat's going on, and what should we do first?",
+ "registry": "bundle",
+ "bundle": "larkspur-checkout-2026-10-13",
+ "tags": true,
+ "profile": "openai",
+ "provider": "openai",
+ "model": "gpt-6.1-sol",
+ "script": null,
+ "commit": "e086f74",
+ "prompt_sha": "fca517ac3816",
+ "tools_sha": "9be5c5c9a13b",
+ "sweep": {
+  "alerts": "-2h",
+  "chat": "-2h",
+  "changes": "-24h"
+ },
+ "versions": {
+  "langgraph": "1.2.15",
+  "langgraph-checkpoint-sqlite": "3.1.2",
+  "langchain": "1.4.5",
+  "langchain-core": "1.6.10",
+  "langchain-anthropic": "1.7.6",
+  "pydantic": "2.14.1"
+ },
+ "key_variables": [
+  "ANTHROPIC_API_KEY",
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "JEV_API_KEY",
+  "OPENAI_API_KEY"
+ ],
+ "runner": "host",
+ "eval_run": true,
+ "durability": "exit",
+ "read_tools": [
+  "list_alerts",
+  "read_chat"
+ ],
+ "offered": [
+  "submit_report"
+ ],
+ "verifier": null,
+ "carried_from": null,
+ "verifier_scripts": null,
+ "config": {
+  "profile": "openai",
+  "provider": "openai",
+  "model": "gpt-6.1-sol",
+  "params": {
+   "reasoning": {
+    "effort": "medium",
+    "summary": "auto"
+   },
+   "use_responses_api": true,
+   "max_input_tokens": 260000,
+   "cache": true,
+   "strict_tools": true,
+   "store": false,
+   "include": [
+    "reasoning.encrypted_content"
+   ]
+  },
+  "auto_approve": true,
+  "call_budget": 0,
+  "revision_calls": 5,
+  "extra_turns": 1,
+  "stale_rounds": 3,
+  "stuck_empty": 3,
+  "malformed_shown": 3,
+  "context_fraction": 0.85,
+  "headless": "defer",
+  "sweep": {
+   "alerts": "-2h",
+   "chat": "-2h",
+   "changes": "-24h"
+  },
+  "verifier": {
+   "enabled": false,
+   "digest_tokens": 1500
+  },
+  "set": "sol",
+  "roles": {
+   "investigator": {
+    "profile": "openai",
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+   },
+   "contrarian": {
+    "profile": "openai",
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+   },
+   "claims": {
+    "profile": "openai",
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "effort": "low"
+   },
+   "overfit": {
+    "profile": "openai",
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+   },
+   "drafter": {
+    "profile": "anthropic-mid",
+    "provider": "anthropic",
+    "model": "claude-sonnet-5-5",
+    "effort": "low"
+   }
+  }
+ },
+ "context": {
+  "now": "2026-10-13T14:40:00+00:00",
+  "checkpoint": "1440",
+  "channel": null,
+  "call_budget": 0,
+  "extra_turns": 1,
+  "revision_calls": 5,
+  "stale_rounds": 3,
+  "stuck_empty": 3,
+  "malformed_shown": 3,
+  "context_fraction": 0.85,
+  "max_input_tokens": 260000,
+  "max_tokens": 0,
+  "auto_approve": true,
+  "sweep": {
+   "alerts": "-2h",
+   "chat": "-2h",
+   "changes": "-24h"
+  },
+  "verifier": false,
+  "single_call": true
+ }
+}

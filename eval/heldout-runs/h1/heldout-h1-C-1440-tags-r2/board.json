@@ -1,0 +1,241 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api",
+    "checkout-db"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "q:83e76603",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1350-1440"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_1jBemDH5hhRBJyt7dNLcTbOa",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_ZRW5q4MQw8CTIC10SVCtL5g9",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "jk:checkout-api-deploy#897",
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1350-1440"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_rVEhnc9DmJ95Pf6gnXkPGnTL",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+      "metric:avg:payments.authorize.success_rate{env:prod}@1350-1440"
+     ]
+    },
+    {
+     "round": 10,
+     "call_id": "call_C2aFV2Q83BrurYcFUin4sB1H",
+     "from": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.7
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+      "metric:sum:trace.servlet.request.hits{service:checkout-api,env:prod}by{resource_name}@1350-1440"
+     ]
+    }
+   ],
+   "statement": "checkout-api exhausts its local Hikari connection pool, causing submit requests to time out and return 504s.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "confidence": 0.7,
+   "source": "stated",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "pay-db-01",
+    "payments-gw",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "metric:avg:payments.authorize.success_rate{env:prod}@1350-1440",
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1350-1440",
+    "q:c68c3e5d",
+    "q:7ee9461e",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_1jBemDH5hhRBJyt7dNLcTbOa",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_ZRW5q4MQw8CTIC10SVCtL5g9",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "q:c68c3e5d",
+      "q:7ee9461e",
+      "snow:rel/bcb02990"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_rVEhnc9DmJ95Pf6gnXkPGnTL",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "metric:avg:payments.authorize.success_rate{env:prod}@1350-1440",
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1350-1440"
+     ]
+    }
+   ],
+   "statement": "pay-db-01 connection exhaustion is preventing payments gateway work and causing checkout submit 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1350-1440",
+    "metric:sum:trace.servlet.request.hits{service:checkout-api,env:prod}by{resource_name}@1350-1440"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ],
+   "history": [
+    {
+     "round": 10,
+     "call_id": "call_C2aFV2Q83BrurYcFUin4sB1H",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.6
+     },
+     "because": [
+      "jk:checkout-api-deploy#897",
+      "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+     ]
+    }
+   ],
+   "statement": "The checkout-api 2.14.3 rollout is the likely trigger for the local pool failures, which appear immediately after it.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "checkout-api",
+   "confidence": 0.6,
+   "source": "stated",
+   "id": "h3"
+  },
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 10,
+     "call_id": "call_C2aFV2Q83BrurYcFUin4sB1H",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.8
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+     ]
+    }
+   ],
+   "statement": "checkout-api 2.14.3 reports slow audit sink calls and an almost-full audit queue before its first observed pool timeout.",
+   "role": "symptom",
+   "status": "open",
+   "subject": "checkout-api",
+   "confidence": 0.8,
+   "source": "derived",
+   "id": "h4"
+  }
+ ],
+ "timeline": [],
+ "open_questions": [
+  "What in checkout-api 2.14.3 caused audit sink delays and connection retention? Capture thread and pool diagnostics before rollback destroys them.",
+  "Does the audit/logging path retain connections, or is it another symptom? Thread dumps and effective configuration are required to distinguish these.",
+  "Does rollback restore configuration as well as binaries? KB0010233 says configuration is not automatically undone.",
+  "Submit traffic increases after failures start; is this retries, and is it prolonging saturation?"
+ ]
+}

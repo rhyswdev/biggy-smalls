@@ -1,0 +1,165 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "summary": "payments-gateway 3.8.0 (jk:payments-gateway-deploy#412, snow:CHG0031877) holds a database transaction open across PayCore authorize retries, so its pools and pay-db-01 fill and checkout-api times out on the gateway. Roll the gateway back to 3.7.9.",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API",
+   "Payments Gateway"
+  ],
+  "priority": {
+   "suggested": "P1",
+   "impact": "1 - High",
+   "urgency": "1 - High"
+  },
+  "assignment_group": "Commerce Platform",
+  "oncall": "Commerce Platform",
+  "customer": "payment submissions failing or slow; browsing and cart unaffected"
+ },
+ "hypotheses": [
+  {
+   "id": "h-gw",
+   "statement": "payments-gateway 3.8.0 holds a database transaction open across PayCore authorize calls that now retry up to four times with an 8 s timeout, so slow calls exhaust the connection pools.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412"
+   ],
+   "confidence": 0.8,
+   "support": [
+    "jk:payments-gateway-deploy#412",
+    "conf:KB0010502",
+    "snow:CHG0031877"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": []
+  },
+  {
+   "id": "h-co",
+   "statement": "The checkout-api 2.14.3 deploy caused the 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "source": "derived",
+   "history": []
+  }
+ ],
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T10:19:48Z",
+   "event": "payments-gateway 3.8.0 deployed",
+   "evidence": [
+    "jk:payments-gateway-deploy#412"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Roll payments-gateway back to 3.7.9 now.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "jk:payments-gateway-deploy#412"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Raise pay-db-01's connection limit for headroom.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "conf:KB0010502"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Update support and customers.",
+   "owner": "Alice Nguyen",
+   "evidence": [
+    "pd:8812"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Roll back checkout-api",
+   "why": "the gateway is the cause",
+   "evidence": [
+    "jk:checkout-api-deploy#897"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820516882",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517443",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517864",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "pd:8812",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "pd:8813",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dd:ev7820519966",
+   "verdict": "noise"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "noise"
+  }
+ ],
+ "open_questions": [],
+ "stakeholder_update": {
+  "status": "identified",
+  "customer_impact": "Payment submissions fail or hang; browsing and cart work.",
+  "scope": "Online Checkout payment submit",
+  "changed_since_last": "Cause identified: the morning payments release under a slow payment provider.",
+  "next_steps": "Roll back the payments gateway; next update 15:07 UTC.",
+  "next_update_at": "2026-10-13T14:55:00Z"
+ },
+ "proposed_actions": [],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": null,
+  "disputed": []
+ }
+}

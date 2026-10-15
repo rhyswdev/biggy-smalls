@@ -1,0 +1,156 @@
+{
+ "run_id": "heldout-h1-controls-K-1440-tags-r1",
+ "status": "completed",
+ "stop_reason": null,
+ "wall_s_total": 174.178,
+ "wall_s_last_segment": 174.172,
+ "gate_wait_ms": 18.2,
+ "model_calls": 13,
+ "retries": 0,
+ "tool_calls": 28,
+ "calls_by_status": {
+  "ok": 34
+ },
+ "gate": {
+  "policy:approved": 7,
+  "auto:approved": 26
+ },
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "a:1",
+   "a:4",
+   "d:2",
+   "h:h1",
+   "h:h2",
+   "h:h3",
+   "t:4"
+  ]
+ },
+ "revisions": 0,
+ "tokens": {
+  "input_tokens": 374086,
+  "output_tokens": 8280,
+  "cache_read": 289924,
+  "cache_write": 84123,
+  "reasoning": 645,
+  "cost_usd": 0.322178,
+  "model_latency_ms": 173856.0
+ },
+ "events": {
+  "run_started": 1,
+  "phase": 5,
+  "model_call": 13,
+  "tool_call_proposed": 33,
+  "gate_decision": 33,
+  "tool_started": 33,
+  "hypothesis_update": 9,
+  "tool_result": 33,
+  "board_status": 10,
+  "budget": 11,
+  "heartbeat": 7,
+  "thinking_delta": 19,
+  "thinking": 4,
+  "gate_pending": 2,
+  "validation": 1,
+  "draft_report": 1,
+  "verifier_verdict": 1,
+  "report": 1
+ },
+ "process": {
+  "tool_calls": 28,
+  "calls_by_tool": {
+   "get_oncall": 1,
+   "get_record": 7,
+   "get_topology": 1,
+   "itsm_query": 1,
+   "list_alerts": 1,
+   "list_changes": 1,
+   "propose_action": 2,
+   "query_metrics": 6,
+   "read_chat": 1,
+   "search_knowledge": 1,
+   "search_logs": 6
+  },
+  "repeated_calls": 0,
+  "empty_results": 2,
+  "error_results": 0,
+  "tag_input_calls": 0,
+  "refused_by_policy": 0,
+  "model_turns": 11,
+  "shown_handles": 81,
+  "cited_handles": 25,
+  "cited_share_of_shown": 0.3086,
+  "tokens_total": 382366,
+  "tokens_per_cited_handle": 15294.6,
+  "budget": {
+   "calls": 30,
+   "calls_used": 28,
+   "hit": false,
+   "turn_cap": 36,
+   "turns_used": 11,
+   "turn_cap_hit": false
+  },
+  "stuck_events": 0,
+  "quiet_board": {
+   "nudged_rounds": [],
+   "moved_next_round": 0
+  },
+  "restarts": 0,
+  "hypotheses": [
+   {
+    "id": "h1",
+    "subject": "checkout-api",
+    "role": "cause",
+    "status": "leading",
+    "source": "stated",
+    "changes": 4,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 16006
+    },
+    "first_leading": {
+     "round": 6,
+     "tool_calls_before": 18,
+     "tokens_through": 141378
+    }
+   },
+   {
+    "id": "h2",
+    "subject": "payments-gateway",
+    "role": "cause",
+    "status": "rejected",
+    "source": "derived",
+    "changes": 3,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 16006
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h3",
+    "subject": "redis-sessions",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 2,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 11,
+     "tokens_through": 81060
+    },
+    "first_leading": null
+   }
+  ]
+ },
+ "event_bytes": 136097,
+ "dropped_sinks": []
+}

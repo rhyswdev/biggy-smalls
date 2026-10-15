@@ -1,0 +1,158 @@
+{
+ "run_id": "heldout-h1-C-1440-tags-r5",
+ "status": "completed",
+ "stop_reason": null,
+ "wall_s_total": 160.361,
+ "wall_s_last_segment": 160.355,
+ "gate_wait_ms": 12.5,
+ "model_calls": 15,
+ "retries": 0,
+ "tool_calls": 30,
+ "calls_by_status": {
+  "ok": 36,
+  "error": 1
+ },
+ "gate": {
+  "policy:approved": 8,
+  "auto:approved": 28
+ },
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "a:1",
+   "a:3",
+   "d:1",
+   "d:3",
+   "h:h1",
+   "h:h3",
+   "t:4",
+   "t:5"
+  ]
+ },
+ "revisions": 0,
+ "tokens": {
+  "input_tokens": 489804,
+  "output_tokens": 8430,
+  "cache_read": 424034,
+  "cache_write": 65725,
+  "reasoning": 727,
+  "cost_usd": 0.291107,
+  "model_latency_ms": 160037.9
+ },
+ "events": {
+  "run_started": 1,
+  "phase": 5,
+  "model_call": 15,
+  "tool_call_proposed": 36,
+  "gate_decision": 36,
+  "tool_started": 36,
+  "hypothesis_update": 11,
+  "tool_result": 36,
+  "board_status": 12,
+  "budget": 13,
+  "thinking_delta": 12,
+  "thinking": 3,
+  "heartbeat": 6,
+  "gate_pending": 1,
+  "validation": 1,
+  "draft_report": 1,
+  "verifier_verdict": 1,
+  "report": 1
+ },
+ "process": {
+  "tool_calls": 30,
+  "calls_by_tool": {
+   "get_oncall": 2,
+   "get_record": 8,
+   "get_topology": 2,
+   "itsm_query": 1,
+   "list_alerts": 1,
+   "list_changes": 1,
+   "propose_action": 2,
+   "query_metrics": 3,
+   "read_chat": 1,
+   "search_knowledge": 1,
+   "search_logs": 7
+  },
+  "repeated_calls": 0,
+  "empty_results": 1,
+  "error_results": 1,
+  "tag_input_calls": 0,
+  "refused_by_policy": 0,
+  "model_turns": 13,
+  "shown_handles": 230,
+  "cited_handles": 26,
+  "cited_share_of_shown": 0.113,
+  "tokens_total": 498234,
+  "tokens_per_cited_handle": 19162.8,
+  "budget": {
+   "calls": 30,
+   "calls_used": 30,
+   "hit": true,
+   "turn_cap": 36,
+   "turns_used": 13,
+   "turn_cap_hit": false
+  },
+  "stuck_events": 0,
+  "quiet_board": {
+   "nudged_rounds": [],
+   "moved_next_round": 0
+  },
+  "restarts": 0,
+  "hypotheses": [
+   {
+    "id": "h1",
+    "subject": "checkout-api",
+    "role": "cause",
+    "status": "leading",
+    "source": "stated",
+    "changes": 5,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 15570
+    },
+    "first_leading": {
+     "round": 9,
+     "tool_calls_before": 23,
+     "tokens_through": 265052
+    }
+   },
+   {
+    "id": "h2",
+    "subject": "pay-db-01",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 3,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 15570
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h3",
+    "subject": "redis-sessions",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 2,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 9,
+     "tokens_through": 78245
+    },
+    "first_leading": null
+   }
+  ]
+ },
+ "event_bytes": 142204,
+ "dropped_sinks": []
+}

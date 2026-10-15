@@ -1,0 +1,382 @@
+{
+ "summary": "Proceed with the checkout-api rollback to 2.14.2 first. Ben's deploy theory is supported in this incident: deployment began at 14:27:30, the first observed submit 504 was at 14:29:53 on 2.14.3, and its local JDBC pool was full (40 active, zero idle), while old-version errors stayed at baseline. jk:checkout-api-deploy#897 log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20 metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440\nElena's payment-database explanation is not supported by the current machine evidence: payments connections rose from 24 to 64 at 14:30, PostgreSQL logs show reconciler connections rather than refusals, and checkout-to-payments latency remains at baseline. q:86853ec9 metric:sum:postgresql.connections{host:pay-db-01}by{db}@1410-1440 metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440\nThe leading explanation is a checkout 2.14.3 regression exhausting checkout's own pool, with strong confidence in the release association but an unconfirmed internal mechanism. Audit backpressure starts on 2.14.3 before the first observed 504; the release changed logging libraries/configuration, making that a diagnostic lead, not a proven causal link. Capture a quick thread dump alongside rollback. Rollback addresses the release-associated regression, not a payment-database capacity issue; confirm restored logging configuration as well as the binary. log:checkout-api-7f5c8d9b6-m4n7q/ae16c697 jk:checkout-api-deploy#897/ef4394c5 conf:KB0010233",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API"
+  ],
+  "priority": {
+   "suggested": "1 - Critical",
+   "impact": "Customer checkout submission is failing; affected customer count unknown.",
+   "urgency": "Immediate mitigation: submit failures are rising."
+  },
+  "assignment_group": "Commerce Platform",
+  "oncall": "Alice Nguyen — Commerce Platform level 1",
+  "customer": "Checkout submit returns 504s with approximately five-second connection-acquisition waits. New-version error counts rise to 729 at 14:38. Cart and summary successes remain present in logs; exact customer failure percentage is not independently established."
+ },
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T14:15:00Z",
+   "event": "node-east-14 CPU saturation problem starts.",
+   "evidence": [
+    "dt:P-26101288"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:27:30Z",
+   "event": "checkout-api 2.14.3 deployment begins.",
+   "evidence": [
+    "jk:checkout-api-deploy#897"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:28:55.013Z",
+   "event": "2.14.3 pod on node-east-03 reports slow submit audit sink with queue 506/512.",
+   "evidence": [
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:29:53.307Z",
+   "event": "First observed checkout submit 504: 2.14.3 cannot acquire a local JDBC connection after 5000ms, with 40 active and zero idle.",
+   "evidence": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:30:00Z",
+   "event": "Payments database connection count rises from 24 to 64; reconciler job starts at this time.",
+   "evidence": [
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1410-1440",
+    "jk:payments-reconciler#2311"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:33:41Z",
+   "event": "INC0048811 opens as Priority 1, assigned to Commerce Platform.",
+   "evidence": [
+    "snow:INC0048811"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Proceed with checkout-api rollback to 2.14.2 using KB0010233. Ben Kowalski and Alice Nguyen should confirm schema compatibility and restore release-associated logging configuration too; a binary rollback alone does not undo configuration. Proposal recorded, not executed by this investigation.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "jk:checkout-api-deploy#897",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+    "conf:KB0010233",
+    "pd:oncall/30135f2a"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "Alongside rollback, capture a quick thread dump and effective logging configuration from checkout-api-7f5c8d9b6-g8h1j before replacement, without delaying mitigation. Test whether audit/logging blocks pool-holding submit threads.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+    "jk:checkout-api-deploy#897/ef4394c5"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Verify every pod reports 2.14.2, submit 504s return to baseline, and local pool headroom returns. Check the real submit flow, not merely readiness; if recovery fails, inspect captured diagnostics before making another change.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "conf:KB0010233",
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440"
+   ]
+  },
+  {
+   "rank": 4,
+   "action": "Update INC0048811 with the local checkout-pool failure, release association, and unconfirmed audit mechanism; prepare a confirmed-impact stakeholder update for Alice Nguyen to publish.",
+   "owner": "Commerce Platform",
+   "evidence": [
+    "snow:INC0048811",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+    "pd:oncall/30135f2a"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Do not roll back payments-gateway or kill payment database sessions for this checkout incident.",
+   "why": "Current evidence shows baseline payment-call latency and successful payment activity, while the actual failure is checkout's local pool acquisition. Such intervention targets an unsupported cause.",
+   "evidence": [
+    "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440",
+    "q:e00393cb",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+   ]
+  },
+  {
+   "action": "Do not increase checkout's pool limit or scale pods as the first mitigation.",
+   "why": "Old pods had only 3–4 active connections while new pods reach 40; this points to release-associated behavior, not demonstrated capacity demand. More capacity could mask rather than remove the regression.",
+   "evidence": [
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+   ]
+  },
+  {
+   "action": "Do not restart or clear Redis in response to its fragmentation alert.",
+   "why": "It is a longstanding flapping stream with historical fragmentation below the critical threshold, not evidence explaining the new-version local JDBC failure. There are no current Redis metric points after 13:00, so avoid claiming a fresh health check.",
+   "evidence": [
+    "dd:ev7820017640",
+    "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820017640",
+   "verdict": "noise"
+  },
+  {
+   "handle": "sw:54977",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820508241",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820516882",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517443",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  }
+ ],
+ "open_questions": [
+  "Does logging/audit backpressure introduced in 2.14.3 hold checkout JDBC connections, or is there another connection leak? Inspect thread dumps and compare effective logging configuration with 2.14.2.",
+  "Has the queued rollback actually started, and does it restore all release-associated configuration? No execution or recovery is confirmed as of 14:40.",
+  "Did this release make any schema change incompatible with 2.14.2? Have the service owner confirm before proceeding.",
+  "What is the exact affected-customer percentage and payment outcome for timed-out submissions?",
+  "The CPU alerts are assessed as separate resource contention, but which workload caused them? The available problem record does not identify it."
+ ],
+ "stakeholder_update": {
+  "status": "Investigating — checkout submission failures remain ongoing; mitigation is recommended but recovery is not confirmed.",
+  "customer_impact": "Some customers receive timeout errors when submitting checkout, observed from approximately 14:30 UTC.",
+  "scope": "Checkout submission is affected. Successful cart and checkout-summary requests remain visible; no broader outage has been established.",
+  "changed_since_last": "First investigation update: responders identified exhausted connections inside the checkout service and a strong association with its latest release.",
+  "next_steps": "Responders are preparing rollback verification and diagnostic capture, then will confirm checkout submissions recover.",
+  "next_update_at": "2026-10-13T15:10:00Z"
+ },
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "id": "h1",
+   "statement": "checkout-api 2.14.3 exhausts its local JDBC pool and causes checkout submit 504s.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api",
+    "checkout-db"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "confidence": 0.8,
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#897/ef4394c5",
+    "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440",
+    "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+    "q:6e15ea1d"
+   ],
+   "against": [],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:40:00Z",
+     "status": "leading",
+     "confidence": 0.8,
+     "because": [
+      "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440",
+      "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+      "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440",
+      "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+      "q:6e15ea1d"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h2",
+   "statement": "payments-gateway holds database connections during slow PayCore calls, exhausting pools and causing checkout submit failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway",
+    "pay-db-01",
+    "PayCore",
+    "checkout-api"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [],
+   "against": [
+    "q:e00393cb",
+    "q:86853ec9",
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1410-1440",
+    "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+   ],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:40:00Z",
+     "status": "rejected",
+     "confidence": 0.05,
+     "because": [
+      "q:e00393cb",
+      "q:86853ec9",
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1410-1440",
+      "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h3",
+   "statement": "redis-sessions is causing checkout failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "redis-sessions",
+   "entities": [
+    "redis-sessions",
+    "checkout-api"
+   ],
+   "changes": [],
+   "confidence": 0.05,
+   "support": [
+    "slack:inc-checkout-latency/4dfb6a73"
+   ],
+   "against": [
+    "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440",
+    "dd:ev7820017640",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:40:00Z",
+     "status": "rejected",
+     "confidence": 0.05,
+     "because": [
+      "slack:inc-checkout-latency/4dfb6a73",
+      "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440"
+     ]
+    }
+   ]
+  }
+ ],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "a:1",
+   "a:4",
+   "d:2",
+   "h:h1",
+   "h:h2",
+   "h:h3",
+   "t:4"
+  ]
+ },
+ "proposed_actions": [
+  {
+   "call_id": "call_w7xAQO0D5ogdhsNirsA0Tuzs",
+   "tool": "propose_action",
+   "args": {
+    "kind": "collect_diagnostics",
+    "target": "checkout-api-7f5c8d9b6-g8h1j",
+    "params": [
+     {
+      "name": "capture",
+      "value": "Capture thread dump and effective logback-spring.xml/log levels on one 2.14.3 pod immediately, before rollback replaces it; do not delay rollback."
+     }
+    ],
+    "evidence": [
+     "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+     "jk:checkout-api-deploy#897/ef4394c5",
+     "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    ]
+   },
+   "rationale": {
+    "tests": "h1: capture exact pool-holding mechanism before rollback",
+    "expect": "A quick thread dump and logging config snapshot should distinguish audit blocking from another leak without delaying mitigation."
+   },
+   "decision": "approved",
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "reason": null,
+   "decided_at": "2026-10-15T01:02:10.245+00:00"
+  },
+  {
+   "call_id": "call_n23rRRLAR6O5KuWUp8wGmztq",
+   "tool": "propose_action",
+   "args": {
+    "kind": "rollback_change",
+    "target": "checkout-api",
+    "params": [
+     {
+      "name": "version",
+      "value": "2.14.2"
+     },
+     {
+      "name": "procedure",
+      "value": "Proceed with the queued rollback using checkout-api-deploy and KB0010233, with Ben Kowalski and Alice Nguyen confirming no incompatible schema migration and that logging configuration is restored too. Capture a quick thread dump without delaying rollback. Verify every pod version, pool headroom and submit 504s."
+     }
+    ],
+    "evidence": [
+     "jk:checkout-api-deploy#897",
+     "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440",
+     "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20",
+     "metric:max:hikaricp.connections.active{service:checkout-api,env:prod}by{pod_name}@1410-1440",
+     "conf:KB0010233",
+     "slack:inc-checkout-latency/f13ace31"
+    ]
+   },
+   "rationale": {
+    "tests": "h1: mitigate version-associated checkout local pool exhaustion",
+    "expect": "Returning checkout-api to 2.14.2 should restore pool headroom and baseline submit errors if the release is causal; confirm all pods and error metrics, not just health checks."
+   },
+   "decision": "approved",
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "reason": null,
+   "decided_at": "2026-10-15T01:02:31.224+00:00"
+  }
+ ]
+}

@@ -1,0 +1,275 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api",
+    "checkout-db"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+    "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa",
+    "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1415-1440",
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+    "q:6e15ea1d"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_lldlYYnJiDiT9sbVIvdo3cK1",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_wFnfzYXD5LTaCACtXEKJhtHK",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1415-1440"
+     ]
+    },
+    {
+     "round": 7,
+     "call_id": "call_CyUemuFAXQf8BNKs6shBTDSV",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523",
+      "log:checkout-api-7f5c8d9b6-z2x8c/642286b9"
+     ]
+    },
+    {
+     "round": 11,
+     "call_id": "call_7n8okgIcJs0TwhJFz2ugxgLn",
+     "from": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.75
+     },
+     "because": [
+      "q:6e15ea1d",
+      "jk:checkout-api-deploy#897/ef4394c5"
+     ]
+    },
+    {
+     "round": 13,
+     "call_id": "call_SsXHksQBSkBHHhMEMa2vCDpy",
+     "from": {
+      "status": "leading",
+      "confidence": 0.75
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.75
+     },
+     "because": []
+    }
+   ],
+   "statement": "checkout-api exhausts its local JDBC pool, causing submit requests to time out acquiring transactions and return 504s; this is most consistent with a 2.14.3 regression.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "checkout-api",
+   "confidence": 0.75,
+   "source": "stated",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "pay-db-01",
+    "payments-gateway",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1415-1440",
+    "log:pay-01/fa757dc6",
+    "log:pay-02/1b6f422d",
+    "conf:PGW-DB-CONN-TIMEOUT"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_lldlYYnJiDiT9sbVIvdo3cK1",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 4,
+     "call_id": "call_wFnfzYXD5LTaCACtXEKJhtHK",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "log:pay-01/9eb862da",
+      "log:pay-02/075a256e"
+     ]
+    },
+    {
+     "round": 7,
+     "call_id": "call_CyUemuFAXQf8BNKs6shBTDSV",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1415-1440"
+     ]
+    }
+   ],
+   "statement": "pay-db-01 connection exhaustion prevents payments gateway requests completing and causes checkout submit 504s.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "payments-reconciler",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:payments-reconciler#2311"
+   ],
+   "support": [
+    "jk:payments-reconciler#2311",
+    "log:pay-db-01/cb7610e7"
+   ],
+   "against": [
+    "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa",
+    "jk:payments-reconciler#2311",
+    "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1415-1440"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_wFnfzYXD5LTaCACtXEKJhtHK",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "log:pay-db-01/cb7610e7"
+     ]
+    },
+    {
+     "round": 7,
+     "call_id": "call_CyUemuFAXQf8BNKs6shBTDSV",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa",
+      "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1415-1440"
+     ]
+    }
+   ],
+   "statement": "payments-reconciler consumes database connections at 14:30 and starves checkout.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "payments-reconciler",
+   "confidence": 0.1,
+   "source": "derived",
+   "id": "h3"
+  },
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#897/ef4394c5",
+    "q:6e15ea1d",
+    "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697",
+    "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 11,
+     "call_id": "call_7n8okgIcJs0TwhJFz2ugxgLn",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.6
+     },
+     "because": [
+      "q:6e15ea1d",
+      "jk:checkout-api-deploy#897/ef4394c5"
+     ]
+    }
+   ],
+   "statement": "The checkout-api 2.14.3 rollout is the likely trigger for the newly observed audit delays and local pool timeouts.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "checkout-api",
+   "confidence": 0.6,
+   "source": "derived",
+   "id": "h4"
+  }
+ ],
+ "timeline": [],
+ "open_questions": [
+  "Old version stops reporting before the error surge: version metrics alone cannot distinguish deployment causation from a coincident shared failure.",
+  "What changed in logging configuration, and does it establish the mechanism behind audit backpressure?",
+  "Do thread dumps show checkout transaction holders blocked in audit/logging, SQL, or another call? Audit delays precede failures, but their causal link to pool exhaustion is not yet established.",
+  "Does rollback to 2.14.2 clear audit delays, JDBC waiting and submit 504s? No completed rollback or recovery is visible.",
+  "Is the long-flapping Redis fragmentation alert genuinely benign as reported, and is node CPU contention entirely separate? Those peripheral alerts have not been independently traced."
+ ]
+}

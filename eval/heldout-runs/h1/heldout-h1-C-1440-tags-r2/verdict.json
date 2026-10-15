@@ -1,0 +1,180 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "partial",
+     "quote": "min 98.5 at 13:50  max 98.5 at 13:50  nulls none",
+     "handle": "metric:avg:payments.authorize.success_rate{env:prod}@1350-1440"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "partial",
+     "quote": "min 3 at 14:28  max 729 at 14:38  nulls none",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1350-1440"
+    },
+    {
+     "id": "h:h4",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "result: SUCCESS",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:4",
+     "verdict": "supported",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "min 24 at 13:50  max 64 at 14:30  nulls none",
+     "handle": "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1350-1440"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "first 2026-10-13T14:30:40Z",
+     "handle": "dd:ev7820516882"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "first 2026-10-13T14:32:00Z (native 1791901920)  last 2026-10-13T14:33:00Z  state Triggered  transitions 2",
+     "handle": "dd:ev7820517443"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "opened_at 2026-10-13T14:33:41Z",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "a:1",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "a:2",
+     "verdict": "partial",
+     "quote": "A rollback does not undo config changes made in the same release.",
+     "handle": "conf:KB0010233"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "a:4",
+     "verdict": "supported",
+     "quote": "assigned_to Alice Nguyen",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "min 98.5 at 13:50  max 98.5 at 13:50  nulls none",
+     "handle": "metric:avg:payments.authorize.success_rate{env:prod}@1350-1440"
+    },
+    {
+     "id": "d:2",
+     "verdict": "partial",
+     "quote": "Pool was 20 per pod; all pods showed active=20 with threads waiting, requests queued behind the pool and timed out.",
+     "handle": "snow:INC0042041"
+    },
+    {
+     "id": "d:3",
+     "verdict": "supported",
+     "quote": "A rollback does not undo config changes made in the same release.",
+     "handle": "conf:KB0010233"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "Rollout-related loss of ready checkout capacity, rather than a release-code defect, increased load per available pod and exhausted otherwise unchanged pools. A Kubernetes event read would show readiness failures and insufficient replacement capacity as old replicas were removed, with capacity impairment persisting into the error surge. This is weaker because audit delays already occur during rollout across several new pods, and the shown rows do not establish a sustained capacity deficit.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:27:30Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:40:00Z"
+       },
+       {
+        "name": "sourcetype",
+        "value": "kube:object:events"
+       },
+       {
+        "name": "terms",
+        "value": "[\"checkout-api\"]"
+       },
+       {
+        "name": "limit",
+        "value": "100"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [
+    "k8s:9ae63122",
+    "k8s:ad1428a7",
+    "k8s:90eb86cd"
+   ],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": [
+    "k8s:9ae63122",
+    "k8s:ad1428a7",
+    "k8s:90eb86cd"
+   ]
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

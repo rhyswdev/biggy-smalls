@@ -1,0 +1,160 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "audit sink slow: 3180ms (event=order.submit.received, queue=505/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-t6y3u/f42c48ba"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "supported",
+     "quote": "pay-db-01 allows 197 connections for application roles",
+     "handle": "conf:PGW-DB-CONN-TIMEOUT"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "partial",
+     "quote": "HikariPool-1 - Connection is not available, request timed out after 5000ms",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "result: SUCCESS",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "audit sink slow: 3180ms (event=order.submit.received, queue=505/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-t6y3u/f42c48ba"
+    },
+    {
+     "id": "t:4",
+     "verdict": "partial",
+     "quote": "HikariPool-1 - Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "t:5",
+     "verdict": "partial",
+     "quote": "POST /api/checkout/submit 504 5019ms",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/7b356aaa"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "building: true",
+     "handle": "jk:payments-reconciler#2311"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "result.opened_at: 2026-10-13 10:33:41",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "rollback job queued",
+     "handle": "slack:inc-checkout-latency/f13ace31"
+    },
+    {
+     "id": "a:1",
+     "verdict": "partial",
+     "quote": "rollback job queued",
+     "handle": "slack:inc-checkout-latency/f13ace31"
+    },
+    {
+     "id": "a:2",
+     "verdict": "supported",
+     "quote": "(total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "a:3",
+     "verdict": "partial",
+     "quote": "(total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/b7de6523"
+    },
+    {
+     "id": "d:1",
+     "verdict": "partial",
+     "quote": "connection authorized: user=orders_app database=orders application_name=order-service",
+     "handle": "log:pay-db-01/87bcae1b"
+    },
+    {
+     "id": "d:2",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901800000",
+     "handle": "jk:payments-reconciler#2311"
+    },
+    {
+     "id": "d:3",
+     "verdict": "partial",
+     "quote": "The monitor was last triggered at Mon Oct 12 2026 18:42:00 UTC.",
+     "handle": "dd:ev7820017640"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "An independently degraded audit-sink dependency, rather than a checkout 2.14.3 logging regression, could be blocking checkout work and exhausting its local pools. The client-side multi-second sink calls and nearly full queues fit this explanation, but the release timing and logging changes favor the report's hypothesis. If this alternative is true, audit-sink server logs should show processing delays or failures beginning before the checkout rollout, rather than only after the new clients arrive.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:20:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:30:00Z"
+       },
+       {
+        "name": "host",
+        "value": "audit-sink*"
+       },
+       {
+        "name": "group_by",
+        "value": "template"
+       },
+       {
+        "name": "limit",
+        "value": "100"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

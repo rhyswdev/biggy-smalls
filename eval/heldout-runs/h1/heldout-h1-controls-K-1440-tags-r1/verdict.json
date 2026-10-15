@@ -1,0 +1,154 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "Unable to acquire JDBC Connection [HikariPool-1 - Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)]",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "partial",
+     "quote": "min 2.631 at 14:27  max 2.779 at 14:17  nulls none",
+     "handle": "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "partial",
+     "quote": "visible points from 2026-10-07T15:00:00Z to 2026-10-13T13:00:00Z",
+     "handle": "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "startTime: 1791900900000",
+     "handle": "dt:P-26101288"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:4",
+     "verdict": "partial",
+     "quote": "request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "start 2026-10-13T14:30:00Z",
+     "handle": "jk:payments-reconciler#2311"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "opened_at 2026-10-13T14:33:41Z",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "a:1",
+     "verdict": "partial",
+     "quote": "A rollback does not undo config changes made in the same release.",
+     "handle": "conf:KB0010233"
+    },
+    {
+     "id": "a:2",
+     "verdict": "supported",
+     "quote": "request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "14:28 3  14:29 10  14:30 129  14:31 313  14:32 384  14:33 435  14:34 473  14:35 552  14:36 612  14:37 663  14:38 729",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1410-1440"
+    },
+    {
+     "id": "a:4",
+     "verdict": "partial",
+     "quote": "assignment_group Commerce Platform  assigned_to Alice Nguyen",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "min 2.631 at 14:27  max 2.779 at 14:17  nulls none",
+     "handle": "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1410-1440"
+    },
+    {
+     "id": "d:2",
+     "verdict": "partial",
+     "quote": "total=40, active=40, idle=0, waiting=7",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "d:3",
+     "verdict": "supported",
+     "quote": "no point > 1.5 (critical) in the window",
+     "handle": "metric:avg:redis.mem.fragmentation_ratio{cluster:redis-sessions}@1440-1440"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "An independently slow audit-sink dependency, rather than defective checkout code, blocks submit threads and secondarily exhausts checkout's JDBC pool. Audit warnings precede the first 504 and grow across pods; the old-version series ends at 14:28, so it is not a concurrent healthy control. If this alternative is true, audit-backend logs should show independent latency, queue saturation, or failures beginning before checkout's first audit warning; a checkout-only regression would instead leave the backend healthy. The close deployment timing still favors the report's hypothesis.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:15:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:31:40.145Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"audit\"]"
+       },
+       {
+        "name": "group_by",
+        "value": "template"
+       },
+       {
+        "name": "limit",
+        "value": "100"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}
