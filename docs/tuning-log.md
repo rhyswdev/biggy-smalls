@@ -69,6 +69,7 @@ covers the second checkpoint only. Counts, never percentages. A spread is the me
 - **e4-1452** (pass 7). Each kept its first look's leading cause at 0.8, cited 7 to 11 rows dated after 14:40 that its own calls fetched, passed the continuity check, and took 10 or 11 turns against 12 to 14 for a fresh look.
 - **e5-on** (pass 7). Both led with the gateway at 0.8 with the trigger on the board, and neither used a tag input.
 - **e5-off** (pass 7). The same leading cause, trigger on the board and 30 calls as with tags on; fewer partial claims than pass 7's runs but not than the two tags-on runs made beside them; slower. The agent never used a tag input on either side.
+- **z5** (pass 7). It blamed the gateway at 0.8 and met the bar, as a run told the answer should.
 
 ## Across batches
 
@@ -477,7 +478,9 @@ Tool calls: 30; Model turns: 13 (12 to 13); Board-only turns: 5 (4 to 5); Cost p
 
 ### z5
 
-Section 15's Z5, the contrarian control (arm K). One run at the second checkpoint on sol at medium, the agent with the development incident's discriminators added to its prompt as rules. Not a run of the agent; a held-out variant must make it fail.
+The cheat control (arm K, row Z5 of section 15). One run at 14:52 on sol at medium of the agent with this incident's answer and red flags added to its instructions. It is not a run of the agent; a held-out incident should trip it up.
+
+What moved: It blamed the gateway at 0.8 and met the bar, as a run told the answer should.
 
 phase freeze; pass 7. Commit `3349d84`; prompt files `790ab59b3f0d`; set sol.
 

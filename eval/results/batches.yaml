@@ -132,4 +132,5 @@ batches:
   - name: z5
     phase: freeze
     pass: 7
-    what: Section 15's Z5, the contrarian control (arm K). One run at the second checkpoint on sol at medium, the agent with the development incident's discriminators added to its prompt as rules. Not a run of the agent; a held-out variant must make it fail.
+    what: The cheat control (arm K, row Z5 of section 15). One run at 14:52 on sol at medium of the agent with this incident's answer and red flags added to its instructions. It is not a run of the agent; a held-out incident should trip it up.
+    moved: It blamed the gateway at 0.8 and met the bar, as a run told the answer should.
