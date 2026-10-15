@@ -530,6 +530,8 @@ Everything that `agent-v1` will lock is settled here first, then the tag is made
 | C, held-out authoring | A separate session that never reads agent code, prompts or run transcripts builds h1 from its card (PLAN 12, `eval/heldout/README.md`), runs `make data`, `make lint` and the tagging pass on it (ruling of 13.3) | After `v1-submittable` |
 | D, the held-out run | `make heldout` on h1 with the controls (arm A, the contrarian control, the framing triggers), scored by the frozen scorer; the write-up's held-out table | After C |
 
+**Amended 2026-10-15 (asked for): session C may start beside A.** It works in its own worktree on branch `heldout-h1`, never on `main`, and merges only after `agent-v1` is tagged, so git still shows the agent frozen before the held-out bundle reached the main line. The independence rules are unchanged: C reads no agent code, prompts, tool code or run record, and no agent session reads `eval/heldout/`, `scenario/variants/` or `bundles/h*/`. Session D waits for both the tag and the merge. PLAN 12's gate of `v1-submittable` first was about having a complete submission before spending on held-out data; with A and B under way, starting C beside them costs nothing in fairness.
+
 ### 15.2 Rows for session A
 
 | # | Build | Accepted when |
