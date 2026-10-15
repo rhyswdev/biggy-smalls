@@ -10,7 +10,7 @@ An AI incident investigator for the SREs and ITOps responders on a live incident
 - **The incident.** A payments release four hours earlier holds database connections across a slow provider's retries. Nine traps point elsewhere.
 - **The design idea.** Code does everything that isn't a judgement (parsing, the replay clock, gates, checks); the model forms and tests hypotheses, and can cite only rows it was shown.
 - **What the evals show.** On the two models it runs on, 60 of 60 scored live runs reached the cause with system evidence, with no hard fail and no fabricated citation. A cheaper model, tried and dropped, managed 3 of 8, and a single call with no tools 0 of 3. That is one incident. On a held-out variant of it, the agent reached the cause in 5 of 5 runs, but so did a prompt given the wrong answer (3 of 3), so that variant was too easy to show it follows the evidence rather than a learned answer ([the held-out test](#the-held-out-test)).
-- **See it in two minutes.** `make demo` replays a live run with no key; `make app` opens the web app.
+- **See it in two minutes.** `make demo` replays a live run with no key; `SMALLS_API_MODE=scripted make app` opens the web app with the whole flow working and no key.
 
 ![Smalls in action: the committed sample investigation, then the full flow in demo mode](docs/media/smalls-demo.gif)
 
@@ -63,9 +63,11 @@ You need Python 3.12 and [uv](https://docs.astral.sh/uv/). The web app also need
 make demo
 
 # 2. The web app: dashboard on http://localhost:7317, API on 7318.
-#    Without a key, committed live runs open as recorded investigations.
+#    Without a key, use demo mode: a fixed script stands in for the model, so you can run an
+#    investigation, mark it resolved, and see the summary and the stakeholder messages.
 pnpm --dir web install
-make app
+SMALLS_API_MODE=scripted make app
+#    With a key (step 3), plain `make app` runs real investigations.
 
 # 3. A live investigation (needs a key, costs money per run)
 cp .env.example .env                  # add OPENAI_API_KEY: the default model set, sol, is on that provider
@@ -78,14 +80,15 @@ make test && make lint && make leak-test
 
 # The same commands in Docker
 docker compose run --rm smalls make demo
-docker compose up --build api web     # the web app on http://localhost:7317
+docker compose up --build api web     # the web app on http://localhost:7317 (needs a key)
+SMALLS_API_MODE=scripted docker compose up --build api web   # demo mode, no key
 ```
 
 ### Keys and models
 
 | Key (in `.env`) | Needed for |
 |---|---|
-| none | `make demo`, browsing the app, `make test`, `make lint` |
+| none | `make demo`, the app in demo mode (`SMALLS_API_MODE=scripted make app`), `make test`, `make lint` |
 | `OPENAI_API_KEY` | Live investigations on the default model set, `sol` |
 | `ANTHROPIC_API_KEY` | Optional. The stakeholder-message drafts (without it, code writes them and says so), and the `claude` set |
 | `JEV_API_KEY` | Only `make tag`, which re-runs the tagging classifier. The tags are committed in `tags/cache.jsonl`, so nothing else needs it |
@@ -116,14 +119,17 @@ need to read the docs beyond README section 2, "Running it locally".
    Node 20.9 or later, and pnpm (the repo pins pnpm 10.9.0). Docker is optional; use it only if I ask.
 3. Run `make demo`. It replays the committed sample investigation in the terminal, with no API key and no
    model call. Tell me in two or three sentences what the investigation concluded.
-4. Run `pnpm --dir web install`, then start the web app with `make app` in the background. Wait until it
-   answers on http://localhost:7317, then give me that link. If port 7317 or 7318 is taken, start it on
-   others (SMALLS_WEB_PORT=... SMALLS_API_PORT=...) and give me the link you used. Without a key, the
-   committed investigations open as recorded chats.
+4. Run `pnpm --dir web install`, then start the web app in demo mode with `SMALLS_API_MODE=scripted make app`
+   in the background. Wait until it answers on http://localhost:7317, then give me that link. If port 7317
+   or 7318 is taken, start it on others (SMALLS_WEB_PORT=... SMALLS_API_PORT=...) and give me the link you
+   used. Tell me: in demo mode a fixed script stands in for the model, so "Investigate in chat" runs the
+   whole flow with no key (approve the reads, then "Mark resolved…" on the report opens the summary and
+   then the stakeholder messages). The committed live investigations are in the chats list as recorded
+   runs; they are read-only, so they cannot be resolved and have no summary.
 5. Ask me whether I want live investigations. They need an OpenAI API key (the default model set runs on
    it) and cost about $0.40 each; an Anthropic key is optional, for the stakeholder-message drafter. If I
    say yes, copy .env.example to .env and have me paste the keys into .env myself. Never print, echo or log
-   a key. Then restart `make app`.
+   a key. Then restart the app with plain `make app` (live mode).
 6. Don't run `make data`, `make tag`, `make matrix` or `make regress`. The evidence bundle
    and the tag cache are already committed, and those targets either rebuild data or spend money on many
    runs. Ask me before running anything else that calls a model.
