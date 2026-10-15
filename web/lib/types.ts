@@ -16,6 +16,7 @@ export interface RecordedRun {
   created: string | null;
   profile: string | null;
   wall_s: number | null;
+  reads: number;
   tool_calls: number | null;
   model_calls: number | null;
   gate: Record<string, number> | null;

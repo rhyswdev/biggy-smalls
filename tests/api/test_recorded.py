@@ -42,6 +42,10 @@ def test_a_live_run_is_loaded_as_a_recorded_chat_and_a_scripted_one_is_skipped(s
         [past] = chats
         assert past["recorded"] == json.loads((live / "run.json").read_text())["created"] and past["status"] == "finished"
         assert past["recorded_run"]["tool_calls"] == json.loads((live / "summary.json").read_text())["tool_calls"]
+        # The dashboard's count of reads is the chats list's: reads that came back ok, not the budget's tool calls.
+        calls = [json.loads(line) for line in (live / "calls.jsonl").read_text().splitlines()]
+        ran = sum(c["kind"] == "read" and c["by"] == "agent" and c["status"] == "ok" for c in calls)
+        assert past["recorded_run"]["reads"] == past["tally"]["run"] == ran
         assert client.get("/capabilities").json()["last_recorded"]["run_id"] == live.name
         view = client.get(f"/chats/{past['id']}").json()
         stored = [json.loads(line) for line in (live / "events.jsonl").read_text().splitlines()]

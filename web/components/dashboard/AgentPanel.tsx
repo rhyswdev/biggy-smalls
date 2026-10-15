@@ -53,7 +53,7 @@ function Idle({ author, noteTime, recorded, profile, mode }: Props) {
         </Button>
         <span className="small muted">
           Runs without asking for reads; an action it proposes waits for you. {recorded
-            ? <>The last recorded run took <span className="time">{seconds(recorded.wall_s)}</span>, {plural(recorded.tool_calls ?? 0, "read")} and {money(recorded.cost_usd)}. </>
+            ? <>The last recorded run took <span className="time">{seconds(recorded.wall_s)}</span>, {plural(recorded.reads, "read")} and {money(recorded.cost_usd)}. </>
             : null}
           This one uses the {mode === "scripted" ? "scripted development" : profile} profile. Findings open in the same chat, read for read.
         </span>

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button, Notice, Toggle } from "@/components/ds";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { moreRun, sendNote, setAutoApprove, stopRun } from "@/lib/actions/chats";
-import { startedAt, type ChatState, type Turn } from "@/lib/chat/reduce";
+import { startedAt, tally, type ChatState, type Turn } from "@/lib/chat/reduce";
 import { useChatEvents } from "@/lib/events";
 import { clock, day, plural, seconds, stamp, waitingText } from "@/lib/format";
 import { sendKey } from "@/lib/keys";
@@ -60,6 +60,10 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   const pin = useRef(false);      // the person just sent something: bring it into view, wherever they were
 
   useEffect(() => { if (finishedAtStart !== finished && finished) router.refresh(); }, [finished, finishedAtStart, router]);
+  // The app bar is rendered on the server, and offers "Mark resolved…" only once there is a report: the first
+  // report to arrive live, a stopped run's partial one included, asks for it again.
+  const reported = state.report !== null;
+  useEffect(() => { if (reported && !initial.report) router.refresh(); }, [reported, initial.report, router]);
   useEffect(() => { if (state.pending) refocus(); }, [state.pending]);
   useEffect(() => { if (pin.current || atEnd.current) toEnd(); pin.current = false; }, [local, atEnd]);
 
@@ -88,6 +92,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
   const summary = state.finished;
   const reads = Object.values(state.rows).filter((r) => r.by === "agent" && r.kind === "read");
   const asked = reads.filter((r) => r.who === "human").length;
+  const ran = tally(state).run;        // reads run, as the chats list and the dashboard count them
   return (
     <div className="v-chat" style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       {children}
@@ -100,7 +105,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: "1 1 360px", minWidth: 0 }}>
                   <span style={{ fontWeight: 600 }}>
                     {past ? `Recorded run · made ${day(chat.recorded)}` : "Agent run"}
-                    {summary ? <> · finished in <span className="time">{seconds(summary.wall_s)}</span> · {plural(reads.length, "read")}, {asked ? `${asked} needed approval` : "none needed approval"}</> : running ? " · running" : null}
+                    {summary ? <> · finished in <span className="time">{seconds(summary.wall_s)}</span> · {plural(ran, "read")}, {asked ? `${asked} needed approval` : "none needed approval"}</> : running ? " · running" : null}
                   </span>
                   <span className="small muted">
                     {past ? "A live run, kept as it was recorded. Nothing here calls a model. " : "Started from the incident commander's note, unattended: reads ran without asking and any action was left for you. "}
@@ -150,7 +155,7 @@ export function ChatScreen({ chat, initial, schemas, card, resolved, children }:
         <WorkingPicture state={state} />
       </div>
       {drawer ? <EvidenceDrawer key={drawer} chatId={chat.id} handle={drawer} onClose={() => setDrawer(null)} /> : null}
-      {resolving && !past ? <ResolveDialog chat={chat} card={card} report={state.report} onClose={() => router.replace(`/chats/${chat.id}`, { scroll: false })} /> : null}
+      {resolving && !past && reported ? <ResolveDialog chat={chat} card={card} report={state.report} onClose={() => router.replace(`/chats/${chat.id}`, { scroll: false })} /> : null}
     </div>
   );
 }

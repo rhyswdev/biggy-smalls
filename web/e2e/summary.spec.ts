@@ -29,6 +29,29 @@ test("Continue stays disabled until there is a note, then opens the summary", as
   await expect(page.locator('nav[aria-label="Incident steps"] a').first()).toContainText("✓");
 });
 
+test("Mark resolved waits for a report, then appears without a reload", async ({ page, request }) => {
+  const id = await newChat(request, { origin: "chat", auto_approve: false });
+  await until(request, id, ["waiting"]);
+  await page.goto(`/chats/${id}`);
+  await expect(page.locator("#pending")).toBeVisible();
+  await expect(page.getByText("Mark resolved…")).toHaveCount(0);
+  await page.goto(`/chats/${id}?resolve`);                                    // the dialog's address opens nothing either
+  await expect(page.locator("#pending")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Mark it resolved" })).toHaveCount(0);
+  const header = page.getByRole("link", { name: "Mark resolved…" });
+  for (let round = 0; round < 12 && !(await header.isVisible()); round++) {
+    const gate = page.locator("#pending");
+    await expect(gate.or(header).first()).toBeVisible({ timeout: 30_000 });
+    if (await header.isVisible()) break;
+    await expect(gate.getByRole("button", { name: /^Approve( all)?/ }).first()).toBeFocused();
+    const before = await gate.innerText();
+    await page.keyboard.press("Shift+A");
+    // The next gate takes this one's place, so wait for a change rather than for the gate to go.
+    await expect.poll(async () => (await gate.count()) === 0 || (await gate.innerText()) !== before, { timeout: 30_000 }).toBe(true);
+  }
+  await expect(header).toBeVisible({ timeout: 30_000 });
+});
+
 test("the agent's path keeps every record the report cites", async ({ page, request }) => {
   const id = await finishedChat(page, request);
   await request.put(`${API}/chats/${id}/resolution`, { data: { path: "agent", note: "Rolled back and re-ran.", resolved_at: "02:40", resolved_by: "Commander" } });

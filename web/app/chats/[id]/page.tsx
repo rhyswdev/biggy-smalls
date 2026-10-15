@@ -17,11 +17,13 @@ export default async function Chat({ params }: { params: Promise<{ id: string }>
   const blank = chat.origin === "blank";
   const resolved = chat.status === "resolved";
   const state = fold(view.events);        // the first paint: the same fold the browser carries on live
+  // Resolving needs a report: the summary is written from it and the messages are drafted from it.
+  const resolvable = !blank && chat.origin !== "past" && !resolved && state.report !== null;
   return (
     <ChatScreen chat={chat} initial={state} schemas={schemas} card={blank ? null : card} resolved={resolved}>
       <AppBar>
         <IncidentBar card={blank ? null : card} chatId={chat.id} current="investigate" resolved={resolved} blank={blank}>
-          {!blank && chat.origin !== "past" && !resolved ? <Link className="lbtn" href={`/chats/${chat.id}?resolve`} scroll={false}>Mark resolved…</Link> : null}
+          {resolvable ? <Link className="lbtn" href={`/chats/${chat.id}?resolve`} scroll={false}>Mark resolved…</Link> : null}
         </IncidentBar>
       </AppBar>
     </ChatScreen>

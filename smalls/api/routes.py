@@ -34,23 +34,9 @@ def capabilities(request: Request) -> dict[str, Any]:
 
 # -- chats -------------------------------------------------------------------------------------------------------
 
-def tallies(s: Service, chat_id: str) -> dict[str, int]:
-    """What the chats list and the tally count: reads the agent proposed, ran, the commander rejected or skipped."""
-    row = s.db.row("""
-        SELECT
-          sum(type = 'tool_call_proposed' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent'
-              AND json_extract(data, '$.hidden') IS NULL) AS proposed,
-          sum(type = 'tool_result' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent'
-              AND json_extract(data, '$.status') = 'ok') AS run,
-          sum(type = 'gate_decision' AND json_extract(data, '$.decision') = 'rejected' AND json_extract(data, '$.by.who') = 'human') AS rejected,
-          sum(type = 'gate_decision' AND json_extract(data, '$.decision') = 'deferred' AND json_extract(data, '$.by.who') = 'human') AS skipped
-        FROM event WHERE chat_id = ?""", (chat_id,))
-    return {k: int(v or 0) for k, v in (row or {}).items()}
-
-
 def summary(s: Service, chat: dict[str, Any]) -> dict[str, Any]:
     gate = s.pending_gate(chat["id"])
-    out = {**chat, "status": s.status(chat["id"]), "pending": len(gate["cards"]) if gate else 0, "tally": tallies(s, chat["id"])}
+    out = {**chat, "status": s.status(chat["id"]), "pending": len(gate["cards"]) if gate else 0, "tally": s.tallies(chat["id"])}
     if chat["origin"] == "past":
         out["recorded_run"] = s.recorded_summary(chat["id"])
     return out

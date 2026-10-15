@@ -156,8 +156,24 @@ class Service:
             conn.executemany("INSERT INTO event (chat_id, seq, run_id, agent_seq, type, data, t_wall) VALUES (?, ?, ?, ?, ?, ?, ?)",
                              [(chat_id, n, run_id, e.seq, e.type, dumps(e.data), e.t_wall) for n, e in enumerate(events, 1)])
 
+    def tallies(self, chat_id: str) -> dict[str, int]:
+        """What the chats list and the tally count: reads the agent proposed, ran, the commander rejected or skipped.
+        A read counts as run when it came back ok; one refused for its arguments before the gate is not."""
+        row = self.db.row("""
+            SELECT
+              sum(type = 'tool_call_proposed' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent'
+                  AND json_extract(data, '$.hidden') IS NULL) AS proposed,
+              sum(type = 'tool_result' AND json_extract(data, '$.kind') = 'read' AND json_extract(data, '$.by') = 'agent'
+                  AND json_extract(data, '$.status') = 'ok') AS run,
+              sum(type = 'gate_decision' AND json_extract(data, '$.decision') = 'rejected' AND json_extract(data, '$.by.who') = 'human') AS rejected,
+              sum(type = 'gate_decision' AND json_extract(data, '$.decision') = 'deferred' AND json_extract(data, '$.by.who') = 'human') AS skipped
+            FROM event WHERE chat_id = ?""", (chat_id,))
+        return {k: int(v or 0) for k, v in (row or {}).items()}
+
     def recorded_summary(self, chat_id: str) -> dict[str, Any] | None:
-        """A recorded run's measured numbers, from its own `summary.json`: what the dashboard shows beside "Run agent"."""
+        """A recorded run's measured numbers, from its own `summary.json`: what the dashboard shows beside "Run agent".
+        `reads` is the chats list's count of reads run, so the dashboard and the list agree; `tool_calls` is the
+        budget's count, which also charges the actions it proposed."""
         run = self.latest_run(chat_id)
         if run is None:
             return None
@@ -168,6 +184,7 @@ class Service:
         except ValueError:
             return None
         return {"run_id": run["run_id"], "created": meta.get("created"), "profile": meta.get("profile"), "wall_s": summary.get("wall_s_total"),
+                "reads": self.tallies(chat_id)["run"],
                 "tool_calls": summary.get("tool_calls"), "model_calls": summary.get("model_calls"), "gate": summary.get("gate"),
                 "cost_usd": (summary.get("tokens") or {}).get("cost_usd")}
 
