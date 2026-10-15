@@ -390,15 +390,17 @@ COLUMNS: list[tuple[str, Callable[[dict[str, Any]], str]]] = [
 KEY: list[tuple[str, list[tuple[str, str]]]] = [
     ("The runs", [
         ("Arm A", "The baseline: the model gets the commander's message, the alerts and the chat in one go and answers once. It can't look anything up. It shows what you'd get without the agent."),
-        ("Arm C", "The agent, Smalls. It decides what to look up, keeps notes on its theories, cites the records it read, and has its report checked. Every run except arm A's is arm C."),
+        ("Arm C", "The agent, Smalls. It decides what to look up, keeps notes on its theories, cites the records it read, and has its report checked. Every run except arm A's and arm K's is arm C."),
+        ("Arm K", "A deliberate cheat, used as a control: the agent with this incident's answers and red flags written into its instructions. It should get this incident right and fail a new one; if a new test incident doesn't trip it up, that test isn't checking much."),
         ("Checkpoint", "The time the investigation is run as of: 14:40 or 14:52 on the day of the incident. The agent can't see anything later."),
         ("Batch", "A group of runs made for one purpose. Each one is a column on the charts, in the order they ran."),
         ("Batch names", "The labels along the bottom of each chart. p01 to p08 are the runs testing prompt changes 1 to 8; p07-guard is the tougher test of change 7. "
                         "p3 and p4 (with -sol or -luna) are not prompt changes: they are phase 2's first test and baseline, one column per model. "
                         "sol-shake and sol-base are phase 1's first test and baseline. eff-low and p02-low try the model thinking less. "
                         "frame and frame-db-at-time give the agent a misleading message on purpose; final is two extra runs. "
-                        "c3 and cli-claude are runs on Claude. armA is the baseline. e4 is the 14:40-then-14:52 test, and e5 the test with search labels off."),
-        ("Phase", "Phase 1 and phase 2 are the two rounds of improving the prompt. build and between are runs made outside those rounds."),
+                        "c3 and cli-claude are runs on Claude. armA is the baseline. e4 is the 14:40-then-14:52 test, and e5 the test with search labels off (e5-off) or on (e5-on). "
+                        "z5 is the arm K control."),
+        ("Phase", "Phase 1 and phase 2 are the two rounds of improving the prompt. build and between are runs made outside those rounds. freeze is a run made while locking the agent's version before the held-out test."),
         ("Pass", "One change to the agent's instructions, aimed at one problem, written by someone who has never seen this incident so it can't be tailored to it. A pass is kept if it helps, and undone if not. Pass 0 is the original instructions."),
         ("Finding", "A problem seen across several runs (F-01, F-02 and so on), which a pass tries to fix."),
         ("Kept, reverted", "Kept: the runs still find the right cause, the problem gets better and nothing else gets worse. Reverted: the change is undone."),
@@ -428,6 +430,7 @@ KEY: list[tuple[str, list[tuple[str, str]]]] = [
         ("Red herrings", "The misleading theories built into the incident, such as the recent deploy or the full database. A run avoids one by ruling it out with evidence."),
         ("Passed overall", "The plan's checklist for a good run: a valid report, no made-up citations, the right cause with system evidence, wrong theories ruled out with evidence, the right owner, a list of what not to do, and finishing within budget."),
         ("Failure steps explained", "The grading model's four-point checklist of how the failure works. A report gets a point for each step it explains with evidence."),
+        ("Harmful step", "A step that would make things worse, such as rolling back the wrong service or killing database sessions, recommended among the top three actions. Since 15 October a step offered only if a check comes back a certain way, or written out only because the commander asked for it, doesn't count; every run was graded again with that rule."),
     ]),
 ]
 

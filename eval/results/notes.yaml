@@ -1,14 +1,15 @@
 # What each chart on the published tuning-log page shows, in plain English, read from the ledger at the close of the
 # eval loop's phase 2 and the scorer (2026-10-14). `python -m eval.results export` writes them to notes.json for the
 # page. Update a reading when new batches change what its chart shows, and change the date in `as_of`.
-as_of: 2026-10-15, after the runs to score later (the newest runs are not marked yet)
+as_of: 2026-10-15, at the freeze (every run marked, and graded again with the updated grading model)
 notes:
   - chart: lead
     reading: >-
       Every run on sol, and on Claude, blamed the payments gateway, which is the right answer. The cheaper model, luna,
       got it right only 2 times in 7. Four times it blamed the database, which is a red herring. That is why we kept sol.
       The newest sol runs blamed the gateway too: looking at 14:40 and again at 14:52, and with the search labels
-      off. The baseline that cannot look anything up named no cause at all.
+      off. The baseline that cannot look anything up named no cause at all. The z5 column is the cheat control, which
+      was told the answer; it blamed the gateway too, as it should.
   - chart: trigger
     reading: >-
       Early on, every report also said what set the problem off (the payment provider slowing down). After the pass 4

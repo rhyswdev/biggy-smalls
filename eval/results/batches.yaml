@@ -105,31 +105,32 @@ batches:
     what: Pass 8, the leading statement chaining links that its rows do not each show. Five runs at the second checkpoint on sol at medium (three, then two more, since the first three sat inside the spread).
     moved: The leading statement was judged supported in 1 of 5 runs, short of the target, and an effect came back as an open cause in 3 of 5.
   - name: armA
-    phase: to score
+    phase: between
     pass: 7
     what: Section 13's R1, the no-tools baseline (arm A) at the second checkpoint on sol at medium, three runs, for PLAN 13's "arm C beats arm A" once the scorer lands.
     moved: No run named a cause; each left connection exhaustion open at 0.4 with its origin unknown, and none was steered by a trap in the commander's message.
   - name: e4-1440
-    phase: to score
+    phase: between
     pass: 7
     what: Section 13's R2, the first look of the live carry-forward (row E4). Three runs at the first checkpoint on sol at medium, each the start of a run at the second checkpoint in batch e4-1452.
     moved: Every run led with the gateway at 0.75 to 0.8 and answered the planned checkout rollback first; one kept the database as an open cause beside its symptom.
   - name: e4-1452
-    phase: to score
+    phase: between
     pass: 7
     what: Section 13's R3, the live carry-forward (row E4). One run at the second checkpoint for each run of e4-1440, started from its board (--carry-from), on sol at medium.
     moved: Each kept its first look's leading cause at 0.8, cited 7 to 11 rows dated after 14:40 that its own calls fetched, passed the continuity check, and took 10 or 11 turns against 12 to 14 for a fresh look.
   - name: e5-off
-    phase: to score
+    phase: between
     pass: 7
     what: Section 13's R4, the tags ablation (row E5), tags off. Five runs at the second checkpoint on sol at medium.
     moved: The same leading cause, trigger on the board and 30 calls as with tags on; fewer partial claims than pass 7's runs but not than the two tags-on runs made beside them; slower. The agent never used a tag input on either side.
   - name: e5-on
-    phase: to score
+    phase: between
     pass: 7
     what: Section 13's R4, the tags ablation (row E5), tags on. Two runs at the second checkpoint on sol at medium, which with pass 7's three regression runs (p07) make five a side.
     moved: Both led with the gateway at 0.8 with the trigger on the board, and neither used a tag input.
   - name: z5
     phase: freeze
     pass: 7
-    what: Section 15's Z5, the contrarian control (arm K). One run at the second checkpoint on sol at medium, the agent with the development incident's discriminators added to its prompt as rules. Not a run of the agent; a held-out variant must make it fail.
+    what: The cheat control (arm K, row Z5 of section 15). One run at 14:52 on sol at medium of the agent with this incident's answer and red flags added to its instructions. It is not a run of the agent; a held-out incident should trip it up.
+    moved: It blamed the gateway at 0.8 and met the bar, as a run told the answer should.
