@@ -5,8 +5,9 @@ BUNDLE ?= bundles/larkspur-checkout-2026-10-13
 # The replay clock for the targets that need one: the second checkpoint, and the trigger file of the same name.
 NOW ?= 14:52
 CHECKPOINT ?= 1452
-# The committed run that `make demo` replays: the first complete live run, at the second checkpoint (build row C3).
-DEMO_RUN ?= 20261014T090933Z-5d5522
+# The committed run that `make demo` replays: the sample output, the best-scored pass 7 run at the second checkpoint
+# (row Z3 of docs/decisions/eval-loop.md section 15). The first live run, 20261014T090933Z-5d5522 (row C3), stays beside it.
+DEMO_RUN ?= p07-b-C-1452-tags-r1
 # Runs per cell of `make matrix`.
 REPS ?= 5
 # Keys come from .env when there is one; nothing here names or prints one.

@@ -1,0 +1,764 @@
+{
+ "summary": "The cause to act on is payments-gateway holding database connections through slow PayCore calls and retries—not checkout-api 2.14.3, a uniquely dying pay-03, or a demonstrated shared network outage. Confidence is strong (0.8): one authorization retried four times for 39.025 seconds, its transactional connection was reported held and returned only when that sequence ended, and database logs show connection-slot exhaustion. log:pay-01/61c1af32 log:pay-01/336ab539 log:pay-01/ebfd5293 log:pay-01/74d40873 q:8c60aece Slow PayCore calls appeared at 14:25, before the checkout release; the morning gateway 3.8.0 release introduced 8-second timeouts and three retries inside the existing transaction. conf:KB0010502 jk:payments-gateway-deploy#412 log:pay-01/07da4433 jk:checkout-api-deploy#897 The reconciler adds 40 connections of competing demand. q:8c60aece jk:payments-reconciler#2311 Pay-03's SolarWinds alarm measures Payments HTTP, not hardware; its pool membership repeatedly recovers, and payment failure is already visible on pay-01. sw:55012 log:ltm/24acc74d log:ltm/678ed2f5 log:ltm/e8046462 log:pay-01/ebfd5293 Marketing is a separately scoped homepage failure with an in-progress DNS/CDN change; that change is not yet proven causal. dd:ev7820520800 snow:CHG0031880 PayCore's green page was last updated at 10:33 and does not outweigh current slow-call evidence; whether the provider or its network path is responsible remains unknown. psp:paycore@v1 dt:P-26101350 In the next ten minutes, Payments Engineering, led by engaged escalation responder Priya Raman, should restore bounded PSP settings via a config-only release, verify pool and payment recovery, and escalate to PayCore in parallel. The two proposals were recorded, not executed or confirmed approved. conf:KB0010502 pd:oncall/fafc2fbc slack:inc-checkout-latency/af7783ee Checkout rollback completed at 14:42:05.899, but submit 504s persist and payment authorization success is only 43.03% at 14:50 versus 98.5% before onset; the stated 17% checkout error rate was not independently recomputed. jk:checkout-api-deploy#898 log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace metric:avg:payments.authorize.success_rate{env:prod}@1415-1452",
+ "impact": {
+  "business_service": "Online Checkout",
+  "cis": [
+   "Checkout API",
+   "Payments Gateway",
+   "Payments DB",
+   "pay-db-01"
+  ],
+  "priority": {
+   "suggested": "1 - Critical",
+   "impact": "1 - High: production payment failures, authorization success near 43%, support reports 40+ tickets",
+   "urgency": "1 - High: ongoing checkout failures despite completed rollback"
+  },
+  "assignment_group": "Payments Engineering",
+  "oncall": "Tom Beckett level 1; Priya Raman level 2, acknowledged and engaged. CMDB named owner Marcus Okafor is inactive.",
+  "customer": "Payment spinner and failing checkout submit requests; 504s independently confirmed. Support reports 40+ tickets. One support incident reports an apparent charge without confirmation; financial outcome is not verified."
+ },
+ "timeline": [
+  {
+   "t_utc": "2026-10-13T10:25:00.062Z",
+   "event": "Payments gateway 3.8.0 deployment completed.",
+   "evidence": [
+    "jk:payments-gateway-deploy#412"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:24:13.192Z",
+   "event": "pay-01 pool baseline: 6 total connections, 1 active, 5 idle, no waiters.",
+   "evidence": [
+    "log:pay-01/b9d410fc"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:25:08.067Z",
+   "event": "pay-01 recorded a 5488ms PayCore response.",
+   "evidence": [
+    "log:pay-01/07da4433"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:26:12.044Z",
+   "event": "Authorization ord-7781901 timed out on attempt 1 of 4 after 8000ms and scheduled a retry.",
+   "evidence": [
+    "log:pay-01/61c1af32"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:26:34.031Z",
+   "event": "Leak detector reported the transactional connection held by PaymentService.authorize on the retrying thread.",
+   "evidence": [
+    "log:pay-01/336ab539",
+    "log:pay-01/61c1af32"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:26:43.056Z",
+   "event": "Authorization ord-7781901 failed after 4 attempts in 39025ms.",
+   "evidence": [
+    "log:pay-01/ebfd5293"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:26:43.065Z",
+   "event": "That thread returned its reported connection to the pool.",
+   "evidence": [
+    "log:pay-01/74d40873",
+    "log:pay-01/336ab539"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:27:30Z",
+   "event": "Checkout-api 2.14.3 deployment began.",
+   "evidence": [
+    "jk:checkout-api-deploy#897"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:30:00Z",
+   "event": "Scheduled payments-reconciler #2311 started and remains running.",
+   "evidence": [
+    "jk:payments-reconciler#2311"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:32:01.350Z",
+   "event": "Payments pool-exhaustion saved search fired on pay-02.",
+   "evidence": [
+    "spl:alert/891f48a7"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:40:00Z",
+   "event": "Marketing homepage synthetic fired from two regions.",
+   "evidence": [
+    "dd:ev7820520800"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:42:05.899Z",
+   "event": "Checkout rollback deployment to 2.14.2 completed successfully.",
+   "evidence": [
+    "jk:checkout-api-deploy#898"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:49:12.036Z",
+   "event": "Checkout submit still returned a 504 after 10037ms.",
+   "evidence": [
+    "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace"
+   ]
+  },
+  {
+   "t_utc": "2026-10-13T14:50:00Z",
+   "event": "Payment authorization success measured 43.03%.",
+   "evidence": [
+    "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452"
+   ]
+  }
+ ],
+ "actions": [
+  {
+   "rank": 1,
+   "action": "Immediately decide on the recorded proposal: config-only release restoring payments.psp.timeout-ms 8000 -> 3000 and payments.psp.retries 3 -> 0 across pay-01 to pay-04. Retain 3.8.0's security update. Expect shorter transaction occupancy, not repair of PayCore latency; slow authorizations may still decline. If a config-only release cannot be delivered promptly, decide on documented rollback to 3.7.9 (about six minutes), explicitly weighing loss of the security update.",
+   "owner": "Priya Raman / Payments Engineering",
+   "evidence": [
+    "conf:KB0010502",
+    "snow:CHG0031877",
+    "log:pay-01/336ab539",
+    "log:pay-01/ebfd5293",
+    "log:pay-01/74d40873",
+    "pd:oncall/fafc2fbc"
+   ]
+  },
+  {
+   "rank": 2,
+   "action": "During and immediately after the release, verify Hikari active/idle/waiting, pgw_app idle-in-transaction sessions, database slot headroom, submit 504s, and payment authorization success against the pre-onset baseline. Capture failed authorization IDs and check idempotent outcomes before encouraging customers to retry.",
+   "owner": "Payments Engineering with Elena / Database Engineering",
+   "evidence": [
+    "log:pay-01/b9d410fc",
+    "slack:inc-checkout-latency/cd4b848c",
+    "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452",
+    "conf:KB0010502",
+    "snow:INC0048813"
+   ]
+  },
+  {
+   "rank": 3,
+   "action": "Escalate the recorded PayCore provider-case proposal in parallel, supplying slow calls, ord-7781901 retry timings and APM dependency latency. Ask for current authorization and regional-route health; do not wait for their public status page to change.",
+   "owner": "Priya Raman / Payments Engineering",
+   "evidence": [
+    "log:pay-01/07da4433",
+    "log:pay-01/ebfd5293",
+    "dt:P-26101350",
+    "psp:paycore@v1",
+    "pd:oncall/fafc2fbc"
+   ]
+  },
+  {
+   "rank": 4,
+   "action": "Ask the reconciliation owner to confirm safe interruption/resumption of payments-reconciler #2311; if safe and slots remain exhausted, pause it to release its 40-session demand. Treat this as temporary headroom, not a fix for long authorization transactions.",
+   "owner": "Payments Engineering with Database Engineering",
+   "evidence": [
+    "jk:payments-reconciler#2311",
+    "q:8c60aece",
+    "slack:inc-checkout-latency/cd4b848c"
+   ]
+  },
+  {
+   "rank": 5,
+   "action": "Keep INC0048811 at priority 1 with Payments Engineering ownership and post the planned 14:55 UTC customer update. Route the marketing homepage failure separately to Web Platform to inspect CHG0031880 and DNS/CDN state without assuming that change caused it.",
+   "owner": "Alice Nguyen; Web Platform / Kofi Mensah for marketing",
+   "evidence": [
+    "snow:INC0048811",
+    "slack:inc-checkout-latency/a1f9b5fa",
+    "dd:ev7820520800",
+    "snow:CHG0031880"
+   ]
+  }
+ ],
+ "do_not": [
+  {
+   "action": "Do not repeat the checkout rollback as the primary mitigation.",
+   "why": "Payment retry failure predates the checkout deployment, and submit 504s remain after its completed rollback.",
+   "evidence": [
+    "log:pay-01/ebfd5293",
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#898",
+    "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace"
+   ]
+  },
+  {
+   "action": "Do not restart or permanently remove pay-03 on a hardware-failure theory.",
+   "why": "SolarWinds identifies Payments HTTP, membership recovers repeatedly, and pay-01 also fails. Removing capacity is therefore likely to worsen shared gateway pressure rather than address its origin.",
+   "evidence": [
+    "sw:55012",
+    "log:ltm/24acc74d",
+    "log:ltm/678ed2f5",
+    "log:ltm/e8046462",
+    "log:pay-01/ebfd5293"
+   ]
+  },
+  {
+   "action": "Do not kill idle transactions or restart PostgreSQL as the sole fix, or simply raise connection limits/scale gateways.",
+   "why": "The app holds and later releases its transactional connections across retries; unbounded demand would remain. Killing transactions risks disrupting payment work, while more connections may only move shared saturation. Diagnose and shorten the holds first.",
+   "evidence": [
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873",
+    "conf:KB0010502",
+    "q:8c60aece",
+    "slack:inc-checkout-latency/cd4b848c"
+   ]
+  },
+  {
+   "action": "Do not clear PayCore from investigation because its status page is green, or roll back unrelated network changes to fix checkout.",
+   "why": "The published status predates the observed slow calls by hours. The marketing change is scoped to its DNS/CDN, while payment evidence directly shows prolonged retries and transactional connection retention.",
+   "evidence": [
+    "psp:paycore@v1",
+    "log:pay-01/07da4433",
+    "dt:P-26101350",
+    "snow:CHG0031880",
+    "log:pay-01/336ab539"
+   ]
+  }
+ ],
+ "alerts": [
+  {
+   "handle": "dd:ev7820017640",
+   "verdict": "noise"
+  },
+  {
+   "handle": "sw:54977",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820508241",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820510301",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101288",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dd:ev7820515412",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101350",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516603",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516604",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820516885",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/891f48a7",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820517511",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dt:P-26101362",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518073",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/a678ed4b",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820518915",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "spl:alert/7ae5d933",
+   "verdict": "this_incident"
+  },
+  {
+   "handle": "dd:ev7820520800",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "dt:P-26101377",
+   "verdict": "other_incident"
+  },
+  {
+   "handle": "sw:55012",
+   "verdict": "this_incident"
+  }
+ ],
+ "open_questions": [
+  "Is the current PayCore authorization delay inside the provider or on our path to it? Provider and route diagnostics are needed; no shared internal network outage was demonstrated.",
+  "Has the IC approved the proposed PSP config release and provider escalation? Both were recorded only; neither has executed in this investigation.",
+  "Can payments-reconciler #2311 safely be paused and resumed without duplicate or missing reconciliation?",
+  "What exactly broke the marketing homepage? Its DNS/CDN change is a candidate, not a proven cause.",
+  "What are the actual financial outcomes of timed-out authorizations, including the support report of a charge without confirmation?",
+  "How does the reported 17% checkout error rate relate to payment authorization success near 43%? They are different measures; checkout error rate was not recomputed.",
+  "Can responders independently confirm redis fragmentation is benign with live latency, eviction and memory evidence? Its noise verdict is provisional, based on flap history and Sam's assessment, not a fresh health check."
+ ],
+ "stakeholder_update": {
+  "status": "Identified: prolonged payment retries are holding database connections; mitigation is proposed and service remains degraded.",
+  "customer_impact": "Customers are seeing slow or failing payment submission and a persistent payment spinner. Payment success began degrading around 14:26 UTC, with submit failures reported around 14:30.",
+  "scope": "Online checkout and card payment processing are affected. Marketing homepage monitoring also reports a failure, being treated separately; a common network cause has not been established.",
+  "changed_since_last": "The checkout rollback did not restore service. Responders have identified long payment retry sequences and database connection exhaustion.",
+  "next_steps": "Payments Engineering is deciding on shorter payment timeouts with retries disabled, checking recovery signals, and escalating the slow authorization calls to the payment provider.",
+  "next_update_at": "2026-10-13T14:55:00Z"
+ },
+ "as_of": "2026-10-13T14:52:00Z",
+ "hypotheses": [
+  {
+   "id": "h1",
+   "statement": "pay-03 is failing and causing checkout submit failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-03",
+   "entities": [
+    "pay-03",
+    "checkout-api"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [],
+   "against": [
+    "log:pay-01/ebfd5293",
+    "log:ltm/24acc74d",
+    "log:ltm/678ed2f5",
+    "log:ltm/e8046462"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.1,
+     "because": [
+      "log:ltm/24acc74d",
+      "log:pay-01/ebfd5293",
+      "log:pay-01/336ab539"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h2",
+   "statement": "A network failure is causing both checkout failures and the marketing-site outage.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "network",
+   "entities": [
+    "checkout-api",
+    "marketing site"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [
+    "slack:inc-checkout-latency/43883c32"
+   ],
+   "against": [
+    "snow:CHG0031880",
+    "dd:ev7820520800",
+    "log:pay-01/07da4433",
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.1,
+     "because": [
+      "dt:P-26101377",
+      "log:pay-01/336ab539",
+      "snow:CHG0031880"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h3",
+   "statement": "payments-gateway holds database connections across long PayCore retries, exhausting connection capacity and causing payment failures.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway",
+    "PayCore",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412"
+   ],
+   "confidence": 0.8,
+   "support": [
+    "conf:KB0010502",
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412",
+    "log:pay-01/61c1af32",
+    "log:pay-01/16432265",
+    "log:pay-01/789c7991",
+    "log:pay-01/336ab539",
+    "log:pay-01/ebfd5293",
+    "log:pay-01/74d40873",
+    "spl:alert/891f48a7",
+    "q:8c60aece",
+    "slack:inc-checkout-latency/cd4b848c",
+    "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace",
+    "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "leading",
+     "confidence": 0.8,
+     "because": [
+      "q:33d1917a",
+      "log:pay-01/336ab539",
+      "log:pay-01/74d40873",
+      "snow:CHG0031877",
+      "conf:KB0010502",
+      "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace",
+      "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h4",
+   "statement": "checkout-api 2.14.3 caused the checkout failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "confidence": 0.1,
+   "support": [
+    "slack:inc-checkout-latency/d0e8134c"
+   ],
+   "against": [
+    "log:pay-01/07da4433",
+    "log:pay-01/ebfd5293",
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#898"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.1,
+     "because": [
+      "jk:checkout-api-deploy#898",
+      "log:pay-01/ebfd5293"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h5",
+   "statement": "pay-db-01 is intrinsically failing and causing payment failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "entities": [
+    "pay-db-01",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.1,
+   "support": [
+    "dd:ev7820518073",
+    "slack:inc-checkout-latency/cf1b0360"
+   ],
+   "against": [
+    "q:8c60aece",
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "source": "stated",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "rejected",
+     "confidence": 0.1,
+     "because": [
+      "dd:ev7820518073",
+      "q:8c60aece",
+      "conf:KB0010502"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h6",
+   "statement": "Slow PayCore authorization responses triggered long retry sequences in payments-gateway.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "PayCore",
+   "entities": [
+    "PayCore",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.8,
+   "support": [
+    "log:pay-01/07da4433",
+    "log:pay-01/61c1af32",
+    "log:pay-01/ebfd5293",
+    "dt:P-26101350"
+   ],
+   "against": [
+    "psp:paycore@v1"
+   ],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "open",
+     "confidence": 0.8,
+     "because": [
+      "log:pay-01/07da4433",
+      "dt:P-26101350"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h7",
+   "statement": "payments-reconciler consumes 40 database sessions during payment connection saturation, reducing remaining headroom.",
+   "role": "contributing",
+   "status": "open",
+   "subject": "payments-reconciler",
+   "entities": [
+    "payments-reconciler",
+    "pay-db-01",
+    "payments-gateway"
+   ],
+   "changes": [
+    "jk:payments-reconciler#2311"
+   ],
+   "confidence": 0.4,
+   "support": [
+    "jk:payments-reconciler#2311",
+    "q:8c60aece",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "open",
+     "confidence": 0.4,
+     "because": [
+      "q:8c60aece"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h8",
+   "statement": "The morning payments-gateway 3.8.0 release introduced longer timeout and retries inside the existing authorization transaction, amplifying later slow PayCore calls.",
+   "role": "contributing",
+   "status": "open",
+   "subject": "payments-gateway",
+   "entities": [
+    "payments-gateway",
+    "PayCore",
+    "pay-db-01"
+   ],
+   "changes": [
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412"
+   ],
+   "confidence": 0.8,
+   "support": [
+    "conf:KB0010502",
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412",
+    "log:pay-01/61c1af32",
+    "log:pay-01/ebfd5293",
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "open",
+     "confidence": 0.8,
+     "because": [
+      "conf:KB0010502"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "h9",
+   "statement": "pay-03 has intermittent application HTTP health failures during gateway connection exhaustion, rather than evidence of a unique hardware failure.",
+   "role": "symptom",
+   "status": "open",
+   "subject": "pay-03",
+   "entities": [
+    "pay-03",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "confidence": 0.6,
+   "support": [
+    "sw:55012",
+    "log:ltm/24acc74d",
+    "log:ltm/678ed2f5",
+    "log:ltm/e8046462",
+    "q:33d1917a"
+   ],
+   "against": [],
+   "source": "derived",
+   "history": [
+    {
+     "as_of": "2026-10-13T14:52:00Z",
+     "status": "open",
+     "confidence": 0.6,
+     "because": [
+      "sw:55012"
+     ]
+    }
+   ]
+  }
+ ],
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "a:1",
+   "a:2",
+   "a:3",
+   "a:4",
+   "a:5",
+   "d:2",
+   "d:3",
+   "d:4",
+   "h:h1",
+   "h:h2",
+   "h:h3",
+   "h:h4",
+   "h:h5",
+   "h:h7",
+   "h:h9",
+   "t:5"
+  ]
+ },
+ "proposed_actions": [
+  {
+   "call_id": "call_3QMiltp5vCWJQdVGp0eEivBW",
+   "tool": "propose_action",
+   "args": {
+    "kind": "change_config",
+    "target": "Payments Gateway",
+    "params": [
+     {
+      "name": "payments.psp.timeout-ms",
+      "value": "8000 -> 3000"
+     },
+     {
+      "name": "payments.psp.retries",
+      "value": "3 -> 0"
+     },
+     {
+      "name": "implementation",
+      "value": "Priya Raman: config-only release of application-prod.yml across pay-01 to pay-04; monitor pool waits, DB sessions, submit errors and authorization success. Retain 3.8.0 security update."
+     }
+    ],
+    "evidence": [
+     "conf:KB0010502",
+     "snow:CHG0031877",
+     "log:pay-01/336ab539",
+     "log:pay-01/ebfd5293",
+     "log:pay-01/74d40873",
+     "spl:alert/891f48a7"
+    ]
+   },
+   "rationale": {
+    "tests": "h3 mitigation: bound retries and release connections promptly",
+    "expect": "Reverting PSP settings to timeout 3000 ms and retries 0 should shorten transaction occupancy and restore pool headroom; it cannot fix PayCore latency and some slow authorizations will decline."
+   },
+   "decision": "approved",
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "reason": null,
+   "decided_at": "2026-10-14T21:44:19.805+00:00"
+  },
+  {
+   "call_id": "call_3TIMUj0IeNgUGcOfQKhg7S1d",
+   "tool": "propose_action",
+   "args": {
+    "kind": "contact_provider",
+    "target": "PayCore",
+    "params": [
+     {
+      "name": "owner",
+      "value": "Priya Raman / Payments Engineering"
+     },
+     {
+      "name": "case",
+      "value": "Escalate authorization latency beginning around 14:25 UTC. Include ord-7781901: four 8s attempts and 39.025s total; APM api.paycore.example response shifted 1.042s to 8.016s. Ask for current regional authorization health and idempotent outcome lookup; public status last updated 10:33 UTC."
+     }
+    ],
+    "evidence": [
+     "log:pay-01/07da4433",
+     "log:pay-01/61c1af32",
+     "log:pay-01/ebfd5293",
+     "dt:P-26101350",
+     "psp:paycore@v1",
+     "pd:oncall/fafc2fbc"
+    ]
+   },
+   "rationale": {
+    "tests": "h6: current PayCore latency despite stale green page",
+    "expect": "Provider investigation confirms authorization latency or route issue; internal mitigation proceeds in parallel."
+   },
+   "decision": "approved",
+   "by": {
+    "who": "policy",
+    "via": "headless"
+   },
+   "reason": null,
+   "decided_at": "2026-10-14T21:44:27.636+00:00"
+  }
+ ]
+}

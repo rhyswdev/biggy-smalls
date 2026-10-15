@@ -1,0 +1,251 @@
+{
+ "run_id": "p07-b-C-1452-tags-r1",
+ "status": "completed",
+ "stop_reason": null,
+ "wall_s_total": 225.5,
+ "wall_s_last_segment": 225.489,
+ "gate_wait_ms": 25.6,
+ "model_calls": 16,
+ "retries": 0,
+ "tool_calls": 30,
+ "calls_by_status": {
+  "ok": 38,
+  "error": 4
+ },
+ "gate": {
+  "policy:approved": 9,
+  "auto:approved": 32
+ },
+ "validation": {
+  "ok": true,
+  "attempts": 1,
+  "dropped": [],
+  "flagged": [],
+  "continuity": null,
+  "verifier": "pass",
+  "disputed": [
+   "a:1",
+   "a:2",
+   "a:3",
+   "a:4",
+   "a:5",
+   "d:2",
+   "d:3",
+   "d:4",
+   "h:h1",
+   "h:h2",
+   "h:h3",
+   "h:h4",
+   "h:h5",
+   "h:h7",
+   "h:h9",
+   "t:5"
+  ]
+ },
+ "revisions": 0,
+ "tokens": {
+  "input_tokens": 551646,
+  "output_tokens": 11797,
+  "cache_read": 451237,
+  "cache_write": 100361,
+  "reasoning": 737,
+  "cost_usd": 0.414092,
+  "model_latency_ms": 225121.9
+ },
+ "events": {
+  "run_started": 1,
+  "phase": 5,
+  "model_call": 16,
+  "tool_call_proposed": 41,
+  "gate_decision": 41,
+  "tool_started": 41,
+  "hypothesis_update": 21,
+  "tool_result": 41,
+  "board_status": 13,
+  "budget": 14,
+  "thinking_delta": 26,
+  "thinking": 5,
+  "heartbeat": 12,
+  "gate_pending": 2,
+  "validation": 1,
+  "draft_report": 1,
+  "verifier_verdict": 1,
+  "report": 1
+ },
+ "process": {
+  "tool_calls": 30,
+  "calls_by_tool": {
+   "check_status_page": 1,
+   "get_oncall": 1,
+   "get_record": 10,
+   "get_topology": 2,
+   "itsm_query": 1,
+   "list_alerts": 1,
+   "list_changes": 2,
+   "propose_action": 2,
+   "query_metrics": 1,
+   "read_chat": 3,
+   "search_knowledge": 1,
+   "search_logs": 5
+  },
+  "repeated_calls": 0,
+  "empty_results": 0,
+  "error_results": 4,
+  "tag_input_calls": 0,
+  "refused_by_policy": 0,
+  "model_turns": 14,
+  "shown_handles": 187,
+  "cited_handles": 52,
+  "cited_share_of_shown": 0.2781,
+  "tokens_total": 563443,
+  "tokens_per_cited_handle": 10835.4,
+  "budget": {
+   "calls": 30,
+   "calls_used": 30,
+   "hit": true,
+   "turn_cap": 36,
+   "turns_used": 14,
+   "turn_cap_hit": false
+  },
+  "stuck_events": 0,
+  "quiet_board": {
+   "nudged_rounds": [],
+   "moved_next_round": 0
+  },
+  "restarts": 0,
+  "hypotheses": [
+   {
+    "id": "h1",
+    "subject": "pay-03",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 3,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 15765
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h2",
+    "subject": "network",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 3,
+    "first_seen": {
+     "round": 1,
+     "tool_calls_before": 0,
+     "tokens_through": 15765
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h3",
+    "subject": "payments-gateway",
+    "role": "cause",
+    "status": "leading",
+    "source": "derived",
+    "changes": 5,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 4,
+     "tokens_through": 73215
+    },
+    "first_leading": {
+     "round": 6,
+     "tool_calls_before": 10,
+     "tokens_through": 131509
+    }
+   },
+   {
+    "id": "h4",
+    "subject": "checkout-api",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 2,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 4,
+     "tokens_through": 73215
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h5",
+    "subject": "pay-db-01",
+    "role": "cause",
+    "status": "rejected",
+    "source": "stated",
+    "changes": 3,
+    "first_seen": {
+     "round": 4,
+     "tool_calls_before": 4,
+     "tokens_through": 73215
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h6",
+    "subject": "PayCore",
+    "role": "trigger",
+    "status": "open",
+    "source": "derived",
+    "changes": 2,
+    "first_seen": {
+     "round": 6,
+     "tool_calls_before": 10,
+     "tokens_through": 131509
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h7",
+    "subject": "payments-reconciler",
+    "role": "contributing",
+    "status": "open",
+    "source": "derived",
+    "changes": 1,
+    "first_seen": {
+     "round": 10,
+     "tool_calls_before": 23,
+     "tokens_through": 292878
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h8",
+    "subject": "payments-gateway",
+    "role": "contributing",
+    "status": "open",
+    "source": "derived",
+    "changes": 1,
+    "first_seen": {
+     "round": 13,
+     "tool_calls_before": 30,
+     "tokens_through": 439126
+    },
+    "first_leading": null
+   },
+   {
+    "id": "h9",
+    "subject": "pay-03",
+    "role": "symptom",
+    "status": "open",
+    "source": "derived",
+    "changes": 1,
+    "first_seen": {
+     "round": 13,
+     "tool_calls_before": 30,
+     "tokens_through": 439126
+    },
+    "first_leading": null
+   }
+  ]
+ },
+ "event_bytes": 188271,
+ "dropped_sinks": []
+}

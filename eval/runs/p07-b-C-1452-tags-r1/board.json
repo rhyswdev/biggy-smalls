@@ -1,0 +1,562 @@
+{
+ "as_of": "2026-10-13T14:52:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "pay-03",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [],
+   "against": [
+    "log:pay-01/ebfd5293",
+    "log:ltm/24acc74d",
+    "log:ltm/678ed2f5",
+    "log:ltm/e8046462"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_KePTFrkBaUOV5FlDhC37ZYc7",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 8,
+     "call_id": "call_tQqUTKMTg3XAZrsYL4kMddwA",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.1
+     },
+     "because": [
+      "log:ltm/24acc74d",
+      "log:pay-01/ebfd5293"
+     ]
+    },
+    {
+     "round": 10,
+     "call_id": "call_wIBJx3AHcb1vRQVD4gO4dwYQ",
+     "from": {
+      "status": "open",
+      "confidence": 0.1
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "log:pay-01/336ab539"
+     ]
+    }
+   ],
+   "statement": "pay-03 is failing and causing checkout submit failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-03",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "checkout-api",
+    "marketing site"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/43883c32"
+   ],
+   "against": [
+    "snow:CHG0031880",
+    "dd:ev7820520800",
+    "log:pay-01/07da4433",
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_KePTFrkBaUOV5FlDhC37ZYc7",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    },
+    {
+     "round": 8,
+     "call_id": "call_tQqUTKMTg3XAZrsYL4kMddwA",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.15
+     },
+     "because": [
+      "dt:P-26101377",
+      "log:pay-01/336ab539"
+     ]
+    },
+    {
+     "round": 13,
+     "call_id": "call_d5so8RVr3MJpSd97CiGkmppM",
+     "from": {
+      "status": "open",
+      "confidence": 0.15
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "snow:CHG0031880"
+     ]
+    }
+   ],
+   "statement": "A network failure is causing both checkout failures and the marketing-site outage.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "network",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "payments-gateway",
+    "PayCore",
+    "pay-db-01",
+    "checkout-api"
+   ],
+   "changes": [
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412"
+   ],
+   "support": [
+    "conf:KB0010502",
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412",
+    "log:pay-01/61c1af32",
+    "log:pay-01/16432265",
+    "log:pay-01/789c7991",
+    "log:pay-01/336ab539",
+    "log:pay-01/ebfd5293",
+    "log:pay-01/74d40873",
+    "spl:alert/891f48a7",
+    "q:8c60aece",
+    "slack:inc-checkout-latency/cd4b848c",
+    "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace",
+    "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873"
+   ],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_9LnBYVM7PXEKV5uPpUmwHhRL",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "q:33d1917a"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_jfFBna7i7YcFD43U3CAq0YRU",
+     "from": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:pay-01/336ab539",
+      "log:pay-01/74d40873"
+     ]
+    },
+    {
+     "round": 8,
+     "call_id": "call_tQqUTKMTg3XAZrsYL4kMddwA",
+     "from": {
+      "status": "leading",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.7
+     },
+     "because": [
+      "log:pay-01/336ab539",
+      "snow:CHG0031877"
+     ]
+    },
+    {
+     "round": 10,
+     "call_id": "call_wIBJx3AHcb1vRQVD4gO4dwYQ",
+     "from": {
+      "status": "leading",
+      "confidence": 0.7
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.8
+     },
+     "because": [
+      "conf:KB0010502",
+      "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace"
+     ]
+    },
+    {
+     "round": 13,
+     "call_id": "call_d5so8RVr3MJpSd97CiGkmppM",
+     "from": {
+      "status": "leading",
+      "confidence": 0.8
+     },
+     "to": {
+      "status": "leading",
+      "confidence": 0.8
+     },
+     "because": [
+      "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452"
+     ]
+    }
+   ],
+   "statement": "payments-gateway holds database connections across long PayCore retries, exhausting connection capacity and causing payment failures.",
+   "role": "cause",
+   "status": "leading",
+   "subject": "payments-gateway",
+   "confidence": 0.8,
+   "source": "derived",
+   "id": "h3"
+  },
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [
+    "jk:checkout-api-deploy#897"
+   ],
+   "support": [
+    "slack:inc-checkout-latency/d0e8134c"
+   ],
+   "against": [
+    "log:pay-01/07da4433",
+    "log:pay-01/ebfd5293",
+    "jk:checkout-api-deploy#897",
+    "jk:checkout-api-deploy#898"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_9LnBYVM7PXEKV5uPpUmwHhRL",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "jk:checkout-api-deploy#898"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_jfFBna7i7YcFD43U3CAq0YRU",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "log:pay-01/ebfd5293"
+     ]
+    }
+   ],
+   "statement": "checkout-api 2.14.3 caused the checkout failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "checkout-api",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h4"
+  },
+  {
+   "entities": [
+    "pay-db-01",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "support": [
+    "dd:ev7820518073",
+    "slack:inc-checkout-latency/cf1b0360"
+   ],
+   "against": [
+    "q:8c60aece",
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 4,
+     "call_id": "call_9LnBYVM7PXEKV5uPpUmwHhRL",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": [
+      "dd:ev7820518073"
+     ]
+    },
+    {
+     "round": 6,
+     "call_id": "call_jfFBna7i7YcFD43U3CAq0YRU",
+     "from": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.15
+     },
+     "because": [
+      "q:8c60aece"
+     ]
+    },
+    {
+     "round": 10,
+     "call_id": "call_wIBJx3AHcb1vRQVD4gO4dwYQ",
+     "from": {
+      "status": "open",
+      "confidence": 0.15
+     },
+     "to": {
+      "status": "rejected",
+      "confidence": 0.1
+     },
+     "because": [
+      "conf:KB0010502"
+     ]
+    }
+   ],
+   "statement": "pay-db-01 is intrinsically failing and causing payment failures.",
+   "role": "cause",
+   "status": "rejected",
+   "subject": "pay-db-01",
+   "confidence": 0.1,
+   "source": "stated",
+   "id": "h5"
+  },
+  {
+   "entities": [
+    "PayCore",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "support": [
+    "log:pay-01/07da4433",
+    "log:pay-01/61c1af32",
+    "log:pay-01/ebfd5293",
+    "dt:P-26101350"
+   ],
+   "against": [
+    "psp:paycore@v1"
+   ],
+   "discriminating": [
+    "log:pay-01/61c1af32"
+   ],
+   "history": [
+    {
+     "round": 6,
+     "call_id": "call_jfFBna7i7YcFD43U3CAq0YRU",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.6
+     },
+     "because": [
+      "log:pay-01/07da4433"
+     ]
+    },
+    {
+     "round": 10,
+     "call_id": "call_wIBJx3AHcb1vRQVD4gO4dwYQ",
+     "from": {
+      "status": "open",
+      "confidence": 0.6
+     },
+     "to": {
+      "status": "open",
+      "confidence": 0.8
+     },
+     "because": [
+      "dt:P-26101350"
+     ]
+    }
+   ],
+   "statement": "Slow PayCore authorization responses triggered long retry sequences in payments-gateway.",
+   "role": "trigger",
+   "status": "open",
+   "subject": "PayCore",
+   "confidence": 0.8,
+   "source": "derived",
+   "id": "h6"
+  },
+  {
+   "entities": [
+    "payments-reconciler",
+    "pay-db-01",
+    "payments-gateway"
+   ],
+   "changes": [
+    "jk:payments-reconciler#2311"
+   ],
+   "support": [
+    "jk:payments-reconciler#2311",
+    "q:8c60aece",
+    "slack:inc-checkout-latency/cd4b848c"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 10,
+     "call_id": "call_wIBJx3AHcb1vRQVD4gO4dwYQ",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.4
+     },
+     "because": [
+      "q:8c60aece"
+     ]
+    }
+   ],
+   "statement": "payments-reconciler consumes 40 database sessions during payment connection saturation, reducing remaining headroom.",
+   "role": "contributing",
+   "status": "open",
+   "subject": "payments-reconciler",
+   "confidence": 0.4,
+   "source": "derived",
+   "id": "h7"
+  },
+  {
+   "entities": [
+    "payments-gateway",
+    "PayCore",
+    "pay-db-01"
+   ],
+   "changes": [
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412"
+   ],
+   "support": [
+    "conf:KB0010502",
+    "snow:CHG0031877",
+    "jk:payments-gateway-deploy#412",
+    "log:pay-01/61c1af32",
+    "log:pay-01/ebfd5293",
+    "log:pay-01/336ab539",
+    "log:pay-01/74d40873"
+   ],
+   "against": [],
+   "discriminating": [
+    "log:pay-01/61c1af32",
+    "log:pay-01/ebfd5293"
+   ],
+   "history": [
+    {
+     "round": 13,
+     "call_id": "call_d5so8RVr3MJpSd97CiGkmppM",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.8
+     },
+     "because": [
+      "conf:KB0010502"
+     ]
+    }
+   ],
+   "statement": "The morning payments-gateway 3.8.0 release introduced longer timeout and retries inside the existing authorization transaction, amplifying later slow PayCore calls.",
+   "role": "contributing",
+   "status": "open",
+   "subject": "payments-gateway",
+   "confidence": 0.8,
+   "source": "derived",
+   "id": "h8"
+  },
+  {
+   "entities": [
+    "pay-03",
+    "payments-gateway"
+   ],
+   "changes": [],
+   "support": [
+    "sw:55012",
+    "log:ltm/24acc74d",
+    "log:ltm/678ed2f5",
+    "log:ltm/e8046462",
+    "q:33d1917a"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 13,
+     "call_id": "call_d5so8RVr3MJpSd97CiGkmppM",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.6
+     },
+     "because": [
+      "sw:55012"
+     ]
+    }
+   ],
+   "statement": "pay-03 has intermittent application HTTP health failures during gateway connection exhaustion, rather than evidence of a unique hardware failure.",
+   "role": "symptom",
+   "status": "open",
+   "subject": "pay-03",
+   "confidence": 0.6,
+   "source": "derived",
+   "id": "h9"
+  }
+ ],
+ "timeline": [],
+ "open_questions": [
+  "Is PayCore itself slow or is the path to PayCore impaired? Its last public update is 10:33 UTC, so green does not clear current authorization delays.",
+  "Can Finance safely pause payments-reconciler #2311 and resume its reconciliation without duplication?",
+  "What exactly broke the marketing homepage? CHG0031880 is a scoped DNS/CDN candidate, not a proven cause.",
+  "Can Web Platform verify redis fragmentation is benign using live memory, latency and eviction metrics? This run only has historical flap context and responder assessment.",
+  "The stated 17% checkout error rate was not independently recomputed; how does it relate to the separate payment authorization success metric?"
+ ]
+}

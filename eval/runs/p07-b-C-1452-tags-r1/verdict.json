@@ -1,0 +1,250 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "authorize failed txn=ord-7781901 after 4 attempts in 39025ms: PSP timeout",
+     "handle": "log:pay-01/ebfd5293"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "partial",
+     "quote": "slow PSP response: 5488ms",
+     "handle": "log:pay-01/07da4433"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "partial",
+     "quote": "Connection leak detection triggered for org.postgresql.jdbc.PgConnection@5b2a8e1d on thread http-nio-8443-exec-17",
+     "handle": "log:pay-01/336ab539"
+    },
+    {
+     "id": "h:h4",
+     "verdict": "partial",
+     "quote": "authorize failed txn=ord-7781901 after 4 attempts in 39025ms: PSP timeout",
+     "handle": "log:pay-01/ebfd5293"
+    },
+    {
+     "id": "h:h5",
+     "verdict": "partial",
+     "quote": "remaining connection slots are reserved for non-replication superuser connections",
+     "handle": "q:8c60aece"
+    },
+    {
+     "id": "h:h6",
+     "verdict": "supported",
+     "quote": "authorize attempt 1/4 timed out after 8000ms (txn=ord-7781901) retrying in 1000ms",
+     "handle": "log:pay-01/61c1af32"
+    },
+    {
+     "id": "h:h7",
+     "verdict": "partial",
+     "quote": "connection authorized: user=recon_app database=payments application_name=payments-reconciler  40  40",
+     "handle": "q:8c60aece"
+    },
+    {
+     "id": "h:h8",
+     "verdict": "supported",
+     "quote": "The retry wraps the existing PayCore call inside `PaymentService.authorize`. Nothing else in the authorize flow changes: the same transaction still writes the `authorization_attempt` row",
+     "handle": "conf:KB0010502"
+    },
+    {
+     "id": "h:h9",
+     "verdict": "partial",
+     "quote": "Component Payments HTTP on PAY-03.LARKSPUR.INTERNAL is Down",
+     "handle": "sw:55012"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "end 2026-10-13T10:25:00.062Z  state SUCCESS",
+     "handle": "jk:payments-gateway-deploy#412"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=1, idle=5, waiting=0)",
+     "handle": "log:pay-01/b9d410fc"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "slow PSP response: 5488ms",
+     "handle": "log:pay-01/07da4433"
+    },
+    {
+     "id": "t:4",
+     "verdict": "supported",
+     "quote": "authorize attempt 1/4 timed out after 8000ms (txn=ord-7781901) retrying in 1000ms",
+     "handle": "log:pay-01/61c1af32"
+    },
+    {
+     "id": "t:5",
+     "verdict": "partial",
+     "quote": "Connection leak detection triggered for org.postgresql.jdbc.PgConnection@5b2a8e1d on thread http-nio-8443-exec-17",
+     "handle": "log:pay-01/336ab539"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "authorize failed txn=ord-7781901 after 4 attempts in 39025ms",
+     "handle": "log:pay-01/ebfd5293"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "on thread http-nio-8443-exec-17 was returned to the pool (unleaked)",
+     "handle": "log:pay-01/74d40873"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "start 2026-10-13T14:27:30Z",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:9",
+     "verdict": "supported",
+     "quote": "building: true",
+     "handle": "jk:payments-reconciler#2311"
+    },
+    {
+     "id": "t:10",
+     "verdict": "supported",
+     "quote": "Payments pool exhaustion  entity pay-02  first 2026-10-13T14:32:01.350Z",
+     "handle": "spl:alert/891f48a7"
+    },
+    {
+     "id": "t:11",
+     "verdict": "supported",
+     "quote": "Marketing homepage check failing from aws:eu-west-1, aws:us-east-1.",
+     "handle": "dd:ev7820520800"
+    },
+    {
+     "id": "t:12",
+     "verdict": "supported",
+     "quote": "end 2026-10-13T14:42:05.899Z  state SUCCESS",
+     "handle": "jk:checkout-api-deploy#898"
+    },
+    {
+     "id": "t:13",
+     "verdict": "supported",
+     "quote": "POST /api/checkout/submit 504 10037ms",
+     "handle": "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace"
+    },
+    {
+     "id": "t:14",
+     "verdict": "supported",
+     "quote": "14:50 43.03",
+     "handle": "metric:avg:payments.authorize.success_rate{env:prod}@1415-1452"
+    },
+    {
+     "id": "a:1",
+     "verdict": "partial",
+     "quote": "Raise `payments.psp.timeout-ms` from 3000 to 8000",
+     "handle": "conf:KB0010502"
+    },
+    {
+     "id": "a:2",
+     "verdict": "partial",
+     "quote": "Order not confirmed but card charged?",
+     "handle": "snow:INC0048813"
+    },
+    {
+     "id": "a:3",
+     "verdict": "partial",
+     "quote": "slow PSP response: 5488ms",
+     "handle": "log:pay-01/07da4433"
+    },
+    {
+     "id": "a:4",
+     "verdict": "partial",
+     "quote": "connection authorized: user=recon_app database=payments application_name=payments-reconciler  40  40",
+     "handle": "q:8c60aece"
+    },
+    {
+     "id": "a:5",
+     "verdict": "partial",
+     "quote": "next update at 14:55 UTC.",
+     "handle": "slack:inc-checkout-latency/a1f9b5fa"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "POST /api/checkout/submit 504 10037ms",
+     "handle": "log:checkout-api-6d8c9b7f4d-e3r9t/d7489ace"
+    },
+    {
+     "id": "d:2",
+     "verdict": "partial",
+     "quote": "EntityCaption: Payments HTTP",
+     "handle": "sw:55012"
+    },
+    {
+     "id": "d:3",
+     "verdict": "partial",
+     "quote": "was returned to the pool (unleaked)",
+     "handle": "log:pay-01/74d40873"
+    },
+    {
+     "id": "d:4",
+     "verdict": "partial",
+     "quote": "page updated 2026-10-13T10:33:00Z",
+     "handle": "psp:paycore@v1"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "The reconciler's 14:30 start precipitated shared database-slot exhaustion, rather than gateway retry occupancy alone: the earlier PayCore timeouts were a separate, initially limited payment problem. This is weaker because gateway connection retention is directly demonstrated before the job starts and dominates the later session snapshot. If the reconciler was the decisive capacity trigger, gateway pool snapshots should retain headroom before 14:30 and develop sustained waiting immediately afterward, coinciding with the sharper authorization-success decline.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:24:13.192Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:33:30Z"
+       },
+       {
+        "name": "sourcetype",
+        "value": "payments:app"
+       },
+       {
+        "name": "terms",
+        "value": "[\"After cleanup\"]"
+       },
+       {
+        "name": "limit",
+        "value": "200"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}
