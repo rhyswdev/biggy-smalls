@@ -1,0 +1,170 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "partial",
+     "quote": "min 2.628 at 14:02  max 2.779 at 14:17  nulls none",
+     "handle": "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1400-1440"
+    },
+    {
+     "id": "h:h3",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "start 2026-10-13T10:19:48Z",
+     "handle": "jk:payments-gateway-deploy#412"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:4",
+     "verdict": "partial",
+     "quote": "request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "t:5",
+     "verdict": "supported",
+     "quote": "14:29 24  14:30 64",
+     "handle": "metric:sum:postgresql.connections{host:pay-db-01}by{db}@1400-1440"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "checkout-api is logging 21483 lines in 10 minutes",
+     "handle": "dd:ev7820516882"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "first 2026-10-13T14:32:00Z (native 1791901920)  last 2026-10-13T14:33:00Z  state Triggered",
+     "handle": "dd:ev7820517443"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "14:38 729",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1400-1440"
+    },
+    {
+     "id": "a:1",
+     "verdict": "supported",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "a:2",
+     "verdict": "partial",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "[Triggered] [Synthetics] checkout flow",
+     "handle": "dd:ev7820518915"
+    },
+    {
+     "id": "a:4",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "min 2.628 at 14:02  max 2.779 at 14:17  nulls none",
+     "handle": "metric:p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}@1400-1440"
+    },
+    {
+     "id": "d:2",
+     "verdict": "partial",
+     "quote": "total=40, active=40, idle=0, waiting=7",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "d:3",
+     "verdict": "partial",
+     "quote": "transitions 19",
+     "handle": "dd:ev7820017640"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "An independently slow audit sink could be holding checkout transactions open, making local pool exhaustion a downstream symptom rather than a defect introduced by 2.14.3. If so, audit-sink slow warnings may already appear on old-version pods before the rollout; warnings confined to new pods after deployment would instead favour the release hypothesis. This is weaker because the observed onset closely follows deployment and that release changed logging dependencies and configuration.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:15:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:29:53.307Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"audit sink slow\"]"
+       },
+       {
+        "name": "sourcetype",
+        "value": "checkout:api"
+       },
+       {
+        "name": "group_by",
+        "value": "minute"
+       },
+       {
+        "name": "bucket",
+        "value": "1m"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

@@ -1,0 +1,103 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/e0be6732",
+    "slack:inc-checkout-latency/efb4f43b"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_UX6tVfJFYGO09vH9DGMFcDGN",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "The reported checkout-api 2.14.3 deployment introduced a regression causing checkout submit failures.",
+   "role": "cause",
+   "status": "open",
+   "subject": "checkout-api",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "redis-sessions",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/4dfb6a73",
+    "dd:ev7820017640"
+   ],
+   "against": [
+    "slack:sre-oncall/d207ff4b"
+   ],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_UX6tVfJFYGO09vH9DGMFcDGN",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "redis-sessions trouble is causing the checkout failures, as suggested by a responder.",
+   "role": "cause",
+   "status": "open",
+   "subject": "redis-sessions",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "checkout-api",
+    "payments dependency (identity unverified)"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/efb4f43b"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_UX6tVfJFYGO09vH9DGMFcDGN",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "A payments dependency failure could be causing the reported slow or failed checkout payments.",
+   "role": "cause",
+   "status": "open",
+   "subject": "payments dependency (identity unverified)",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h3"
+  }
+ ],
+ "timeline": [],
+ "open_questions": []
+}

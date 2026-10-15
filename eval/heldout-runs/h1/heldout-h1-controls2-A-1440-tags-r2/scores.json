@@ -1,0 +1,210 @@
+{
+ "run_id": "heldout-h1-controls2-A-1440-tags-r2",
+ "arm": "A",
+ "has_report": true,
+ "scorer": "1",
+ "checkpoint": "1440",
+ "as_of": "2026-10-13T14:40:00Z",
+ "integrity": {
+  "cited": 16,
+  "fabricated": [],
+  "unseen": [],
+  "future": [],
+  "ok": true
+ },
+ "cause": {
+  "score": 0.5,
+  "leading": false,
+  "leading_right": false,
+  "change_named": false,
+  "leading_role": null,
+  "confidence": null
+ },
+ "trigger": null,
+ "facts": {
+  "required": 0,
+  "required_of": 4,
+  "missing": [
+   "F.errors_on_2143",
+   "F.onset_after_rollout",
+   "F.co_pool_exhausted",
+   "F.gateway_healthy"
+  ],
+  "supporting": 1,
+  "supporting_of": 4
+ },
+ "traps": {
+  "passed": 3,
+  "of": 4,
+  "traps": {
+   "dev-answer": {
+    "pass": true,
+    "why": "held",
+    "by": []
+   },
+   "db-capacity": {
+    "pass": true,
+    "why": "absent"
+   },
+   "redis": {
+    "pass": false,
+    "why": "fell",
+    "by": [
+     "h2"
+    ]
+   },
+   "paycore": {
+    "pass": true,
+    "why": "absent"
+   }
+  }
+ },
+ "owner": {
+  "pass": true,
+  "named": true,
+  "ruled_out_named": false
+ },
+ "confidence": {
+  "hard_fail": false,
+  "soft_fail": false
+ },
+ "contributing": null,
+ "causal_links": {
+  "links": 0,
+  "with_non_chat": 0,
+  "without": []
+ },
+ "alerts": {
+  "given": 9,
+  "side_right": 9,
+  "exact_right": 9,
+  "wrong": [],
+  "unassessed": 0,
+  "owed": 9,
+  "missing": []
+ },
+ "bar": {
+  "valid_report": true,
+  "no_fabricated_or_future": true,
+  "cause_with_non_chat": false,
+  "non_chat_per_link": false,
+  "rejected_have_against": true,
+  "owner_from_oncall": true,
+  "lists_do_not": true,
+  "stops_within_budget": false,
+  "continuity": true,
+  "met": false
+ },
+ "first_correct": null,
+ "judge": {
+  "judge": "2",
+  "model": "gpt-6.1-sol",
+  "cost_usd": 0.013591,
+  "mechanism": {
+   "yes": 1,
+   "of": 4,
+   "items": {
+    "new_release_is_the_change": {
+     "yes": true,
+     "said_yes": true,
+     "quote_found": true,
+     "answered": true
+    },
+    "errors_only_on_2143": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "checkout_db_pool_exhausted": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "logging_holds_connections": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    }
+   }
+  },
+  "actions": {
+   "yes": 1,
+   "of": 3,
+   "items": {
+    "rollback_checkout_api_top1": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "keep_gateway": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "customer_update": {
+     "yes": true,
+     "said_yes": true,
+     "quote_found": true,
+     "answered": true
+    }
+   }
+  },
+  "harmful_top3": {
+   "yes": 0,
+   "of": 4,
+   "items": {
+    "rollback_gateway_380": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "raise_paydb_limits": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "restart_gateway_nodes": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    },
+    "restart_redis": {
+     "yes": false,
+     "said_yes": false,
+     "quote_found": false,
+     "answered": true
+    }
+   }
+  },
+  "claims": {
+   "supported": 0,
+   "partial": 3,
+   "unsupported": 0,
+   "unjudged": 0,
+   "of": 3,
+   "quote_missing": 0,
+   "by_id": {
+    "h1": {
+     "verdict": "partial",
+     "quote_found": true
+    },
+    "h2": {
+     "verdict": "partial",
+     "quote_found": true
+    },
+    "h3": {
+     "verdict": "partial",
+     "quote_found": true
+    }
+   }
+  }
+ }
+}

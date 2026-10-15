@@ -1,0 +1,168 @@
+{
+ "verdict": {
+  "claims": {
+   "claims": [
+    {
+     "id": "h:h1",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "h:h2",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=2, idle=4, waiting=0)",
+     "handle": "log:pay-01/c0ec04ad"
+    },
+    {
+     "id": "t:1",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=1, idle=5, waiting=0)",
+     "handle": "log:pay-01/74859533"
+    },
+    {
+     "id": "t:2",
+     "verdict": "supported",
+     "quote": "timestamp: 1791901650000",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:3",
+     "verdict": "supported",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "t:4",
+     "verdict": "supported",
+     "quote": "duration: 95671",
+     "handle": "jk:checkout-api-deploy#897"
+    },
+    {
+     "id": "t:5",
+     "verdict": "partial",
+     "quote": "Connection is not available, request timed out after 5000ms (total=40, active=40, idle=0, waiting=7)",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "t:6",
+     "verdict": "supported",
+     "quote": "connection authorized: user=recon_app database=payments application_name=payments-reconciler",
+     "handle": "log:pay-db-01/cb7610e7"
+    },
+    {
+     "id": "t:7",
+     "verdict": "supported",
+     "quote": "checkout-api is logging 21483 lines in 10 minutes",
+     "handle": "dd:ev7820516882"
+    },
+    {
+     "id": "t:8",
+     "verdict": "supported",
+     "quote": "14:38 729",
+     "handle": "metric:sum:trace.servlet.request.errors{service:checkout-api,env:prod}by{version}@1415-1440"
+    },
+    {
+     "id": "t:9",
+     "verdict": "supported",
+     "quote": "authorize ok txn=ord-7795021 amount=162.45 USD psp_ms=367 attempts=1",
+     "handle": "log:pay-01/12413fbd"
+    },
+    {
+     "id": "a:1",
+     "verdict": "supported",
+     "quote": "backout_plan: Redeploy 2.14.2 with checkout-api-deploy.",
+     "handle": "snow:CHG0031902"
+    },
+    {
+     "id": "a:2",
+     "verdict": "partial",
+     "quote": "audit sink slow: 2000ms (event=order.submit.received, queue=506/512)",
+     "handle": "log:checkout-api-7f5c8d9b6-m4n7q/ae16c697"
+    },
+    {
+     "id": "a:3",
+     "verdict": "supported",
+     "quote": "submit failed for cartId=55404552, responding 504: Could not open JPA EntityManager for transaction",
+     "handle": "log:checkout-api-7f5c8d9b6-g8h1j/20e1fd20"
+    },
+    {
+     "id": "a:4",
+     "verdict": "supported",
+     "quote": "CO-1192 bump logback 1.5.6 -> 1.5.8, logstash-logback-encoder 7.4 -> 8.0",
+     "handle": "jk:checkout-api-deploy#897/ef4394c5"
+    },
+    {
+     "id": "a:5",
+     "verdict": "supported",
+     "quote": "priority 1 - Critical  impact 1 - High  urgency 1 - High  assignment_group Commerce Platform",
+     "handle": "snow:INC0048811"
+    },
+    {
+     "id": "d:1",
+     "verdict": "supported",
+     "quote": "stats (total=6, active=1, idle=5, waiting=0)",
+     "handle": "log:pay-04/cf5113f5"
+    },
+    {
+     "id": "d:2",
+     "verdict": "supported",
+     "quote": "Checkout API -[Depends on::Used by]-> checkout-db",
+     "handle": "snow:rel/bcb02990"
+    },
+    {
+     "id": "d:3",
+     "verdict": "supported",
+     "quote": "it's the usual flap, INC0047003 says it's benign",
+     "handle": "slack:sre-oncall/d207ff4b"
+    }
+   ],
+   "alternatives": [],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "contrarian": {
+   "claims": [],
+   "alternatives": [
+    {
+     "statement": "An independently slow audit sink, rather than a checkout-api code regression, could be blocking submit work and exhausting checkout's pool. The nearly full audit queue and 2000ms delivery precede the first observed pool timeout. A pre-rollout search would support this alternative if the same audit-sink slowdown was already occurring on 2.14.2 before deployment began; warnings appearing only after rollout would instead favor the release hypothesis.",
+     "fit": "weaker",
+     "check": {
+      "tool": "search_logs",
+      "args": [
+       {
+        "name": "since",
+        "value": "2026-10-13T14:15:00Z"
+       },
+       {
+        "name": "until",
+        "value": "2026-10-13T14:27:30Z"
+       },
+       {
+        "name": "terms",
+        "value": "[\"audit sink slow\"]"
+       },
+       {
+        "name": "limit",
+        "value": "100"
+       }
+      ]
+     }
+    }
+   ],
+   "ignored": [],
+   "overall": "pass"
+  },
+  "decision": {
+   "revise": false,
+   "unsupported": [],
+   "checks": [],
+   "discarded_checks": [],
+   "ignored": []
+  },
+  "status": "pass",
+  "recheck": null,
+  "diff": null
+ },
+ "revisions": 0
+}

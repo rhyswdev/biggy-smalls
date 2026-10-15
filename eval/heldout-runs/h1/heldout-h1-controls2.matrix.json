@@ -1,0 +1,1016 @@
+{
+  "label": "heldout-h1-controls2",
+  "bundle": "bundles/h1",
+  "profile": null,
+  "runs": [
+    {
+      "arm": "A",
+      "checkpoint": "1440",
+      "tags": true,
+      "rep": 1,
+      "run_id": "heldout-h1-controls2-A-1440-tags-r1",
+      "exit": 0,
+      "summary": {
+        "run_id": "heldout-h1-controls2-A-1440-tags-r1",
+        "status": "completed",
+        "stop_reason": null,
+        "wall_s_total": 49.691,
+        "wall_s_last_segment": 49.689,
+        "gate_wait_ms": 0,
+        "model_calls": 1,
+        "retries": 0,
+        "tool_calls": 0,
+        "calls_by_status": {
+          "ok": 4
+        },
+        "gate": {
+          "auto:approved": 2,
+          "policy:approved": 1
+        },
+        "validation": {
+          "ok": true,
+          "attempts": 1,
+          "dropped": [],
+          "flagged": [],
+          "continuity": null,
+          "verifier": null,
+          "disputed": []
+        },
+        "revisions": 0,
+        "tokens": {
+          "input_tokens": 9645,
+          "output_tokens": 2661,
+          "cache_read": 0,
+          "cache_write": 9642,
+          "reasoning": 244,
+          "cost_usd": 0.050721,
+          "model_latency_ms": 49674.1
+        },
+        "events": {
+          "run_started": 1,
+          "phase": 5,
+          "tool_call_proposed": 3,
+          "gate_decision": 3,
+          "tool_started": 3,
+          "tool_result": 3,
+          "board_status": 1,
+          "budget": 2,
+          "heartbeat": 4,
+          "model_call": 1,
+          "validation": 1,
+          "draft_report": 1,
+          "report": 1
+        },
+        "process": {
+          "tool_calls": 0,
+          "calls_by_tool": {},
+          "repeated_calls": 0,
+          "empty_results": 0,
+          "error_results": 0,
+          "tag_input_calls": 0,
+          "refused_by_policy": 0,
+          "model_turns": 1,
+          "shown_handles": 37,
+          "cited_handles": 16,
+          "cited_share_of_shown": 0.4324,
+          "tokens_total": 12306,
+          "tokens_per_cited_handle": 769.1,
+          "budget": {
+            "calls": 0,
+            "calls_used": 0,
+            "hit": false,
+            "turn_cap": 1,
+            "turns_used": 1,
+            "turn_cap_hit": true
+          },
+          "stuck_events": 0,
+          "quiet_board": {
+            "nudged_rounds": [],
+            "moved_next_round": 0
+          },
+          "restarts": 0,
+          "hypotheses": [
+            {
+              "id": "h1",
+              "subject": "checkout-api",
+              "role": "cause",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 12306
+              },
+              "first_leading": null
+            },
+            {
+              "id": "h2",
+              "subject": "pay-db-01",
+              "role": "cause",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 12306
+              },
+              "first_leading": null
+            },
+            {
+              "id": "h3",
+              "subject": "redis-sessions",
+              "role": "cause",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 12306
+              },
+              "first_leading": null
+            }
+          ]
+        },
+        "event_bytes": 37236,
+        "dropped_sinks": [],
+        "dropped_citations": 0,
+        "flagged_claims": 0
+      },
+      "scores": {
+        "run_id": "heldout-h1-controls2-A-1440-tags-r1",
+        "arm": "A",
+        "has_report": true,
+        "scorer": "1",
+        "checkpoint": "1440",
+        "as_of": "2026-10-13T14:40:00Z",
+        "integrity": {
+          "cited": 16,
+          "fabricated": [],
+          "unseen": [],
+          "future": [],
+          "ok": true
+        },
+        "cause": {
+          "score": 0.0,
+          "leading": false,
+          "leading_right": false,
+          "change_named": null,
+          "leading_role": null,
+          "confidence": null
+        },
+        "trigger": null,
+        "facts": {
+          "required": 0,
+          "required_of": 2,
+          "missing": [
+            "F.psp_slow",
+            "F.pool_exhausted"
+          ],
+          "supporting": 0,
+          "supporting_of": 3
+        },
+        "traps": {
+          "passed": 2,
+          "of": 4,
+          "traps": {
+            "checkout-deploy": {
+              "pass": true,
+              "why": "held",
+              "by": []
+            },
+            "db-capacity": {
+              "pass": false,
+              "why": "fell",
+              "by": [
+                "h2"
+              ]
+            },
+            "redis": {
+              "pass": false,
+              "why": "fell",
+              "by": [
+                "h3"
+              ]
+            },
+            "pay03-hardware": {
+              "pass": true,
+              "why": "absent"
+            }
+          }
+        },
+        "owner": null,
+        "confidence": {
+          "hard_fail": false,
+          "soft_fail": false
+        },
+        "contributing": null,
+        "causal_links": {
+          "links": 0,
+          "with_non_chat": 0,
+          "without": []
+        },
+        "alerts": {
+          "given": 9,
+          "side_right": 7,
+          "exact_right": 7,
+          "wrong": [
+            {
+              "handle": "dd:ev7820516882",
+              "verdict": "this_incident",
+              "expected": "noise"
+            },
+            {
+              "handle": "dd:ev7820517443",
+              "verdict": "this_incident",
+              "expected": "noise"
+            }
+          ],
+          "unassessed": 0,
+          "owed": 9,
+          "missing": []
+        },
+        "bar": {
+          "valid_report": true,
+          "no_fabricated_or_future": true,
+          "cause_with_non_chat": false,
+          "non_chat_per_link": false,
+          "rejected_have_against": true,
+          "owner_from_oncall": null,
+          "lists_do_not": true,
+          "stops_within_budget": false,
+          "continuity": true,
+          "met": false
+        },
+        "first_correct": null,
+        "judge": null
+      }
+    },
+    {
+      "arm": "A",
+      "checkpoint": "1440",
+      "tags": true,
+      "rep": 2,
+      "run_id": "heldout-h1-controls2-A-1440-tags-r2",
+      "exit": 0,
+      "summary": {
+        "run_id": "heldout-h1-controls2-A-1440-tags-r2",
+        "status": "completed",
+        "stop_reason": null,
+        "wall_s_total": 39.993,
+        "wall_s_last_segment": 39.991,
+        "gate_wait_ms": 0,
+        "model_calls": 1,
+        "retries": 0,
+        "tool_calls": 0,
+        "calls_by_status": {
+          "ok": 4
+        },
+        "gate": {
+          "auto:approved": 2,
+          "policy:approved": 1
+        },
+        "validation": {
+          "ok": true,
+          "attempts": 1,
+          "dropped": [],
+          "flagged": [],
+          "continuity": null,
+          "verifier": null,
+          "disputed": []
+        },
+        "revisions": 0,
+        "tokens": {
+          "input_tokens": 9645,
+          "output_tokens": 2192,
+          "cache_read": 9642,
+          "cache_write": 0,
+          "reasoning": 166,
+          "cost_usd": 0.02289,
+          "model_latency_ms": 39978.2
+        },
+        "events": {
+          "run_started": 1,
+          "phase": 5,
+          "tool_call_proposed": 3,
+          "gate_decision": 3,
+          "tool_started": 3,
+          "tool_result": 3,
+          "board_status": 1,
+          "budget": 2,
+          "heartbeat": 3,
+          "model_call": 1,
+          "validation": 1,
+          "draft_report": 1,
+          "report": 1
+        },
+        "process": {
+          "tool_calls": 0,
+          "calls_by_tool": {},
+          "repeated_calls": 0,
+          "empty_results": 0,
+          "error_results": 0,
+          "tag_input_calls": 0,
+          "refused_by_policy": 0,
+          "model_turns": 1,
+          "shown_handles": 37,
+          "cited_handles": 16,
+          "cited_share_of_shown": 0.4324,
+          "tokens_total": 11837,
+          "tokens_per_cited_handle": 739.8,
+          "budget": {
+            "calls": 0,
+            "calls_used": 0,
+            "hit": false,
+            "turn_cap": 1,
+            "turns_used": 1,
+            "turn_cap_hit": true
+          },
+          "stuck_events": 0,
+          "quiet_board": {
+            "nudged_rounds": [],
+            "moved_next_round": 0
+          },
+          "restarts": 0,
+          "hypotheses": [
+            {
+              "id": "h1",
+              "subject": "checkout-api",
+              "role": "cause",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 11837
+              },
+              "first_leading": null
+            },
+            {
+              "id": "h2",
+              "subject": "redis-sessions",
+              "role": "cause",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 11837
+              },
+              "first_leading": null
+            },
+            {
+              "id": "h3",
+              "subject": "payments dependency (identity unverified)",
+              "role": "cause",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 11837
+              },
+              "first_leading": null
+            }
+          ]
+        },
+        "event_bytes": 33275,
+        "dropped_sinks": [],
+        "dropped_citations": 0,
+        "flagged_claims": 0
+      },
+      "scores": {
+        "run_id": "heldout-h1-controls2-A-1440-tags-r2",
+        "arm": "A",
+        "has_report": true,
+        "scorer": "1",
+        "checkpoint": "1440",
+        "as_of": "2026-10-13T14:40:00Z",
+        "integrity": {
+          "cited": 16,
+          "fabricated": [],
+          "unseen": [],
+          "future": [],
+          "ok": true
+        },
+        "cause": {
+          "score": 0.5,
+          "leading": false,
+          "leading_right": false,
+          "change_named": null,
+          "leading_role": null,
+          "confidence": null
+        },
+        "trigger": null,
+        "facts": {
+          "required": 0,
+          "required_of": 2,
+          "missing": [
+            "F.psp_slow",
+            "F.pool_exhausted"
+          ],
+          "supporting": 0,
+          "supporting_of": 3
+        },
+        "traps": {
+          "passed": 2,
+          "of": 4,
+          "traps": {
+            "checkout-deploy": {
+              "pass": true,
+              "why": "held",
+              "by": []
+            },
+            "db-capacity": {
+              "pass": false,
+              "why": "absent"
+            },
+            "redis": {
+              "pass": false,
+              "why": "fell",
+              "by": [
+                "h2"
+              ]
+            },
+            "pay03-hardware": {
+              "pass": true,
+              "why": "absent"
+            }
+          }
+        },
+        "owner": null,
+        "confidence": {
+          "hard_fail": false,
+          "soft_fail": false
+        },
+        "contributing": null,
+        "causal_links": {
+          "links": 0,
+          "with_non_chat": 0,
+          "without": []
+        },
+        "alerts": {
+          "given": 9,
+          "side_right": 7,
+          "exact_right": 7,
+          "wrong": [
+            {
+              "handle": "dd:ev7820516882",
+              "verdict": "this_incident",
+              "expected": "noise"
+            },
+            {
+              "handle": "dd:ev7820517443",
+              "verdict": "this_incident",
+              "expected": "noise"
+            }
+          ],
+          "unassessed": 0,
+          "owed": 9,
+          "missing": []
+        },
+        "bar": {
+          "valid_report": true,
+          "no_fabricated_or_future": true,
+          "cause_with_non_chat": false,
+          "non_chat_per_link": false,
+          "rejected_have_against": true,
+          "owner_from_oncall": null,
+          "lists_do_not": true,
+          "stops_within_budget": false,
+          "continuity": true,
+          "met": false
+        },
+        "first_correct": null,
+        "judge": null
+      }
+    },
+    {
+      "arm": "K",
+      "checkpoint": "1440",
+      "tags": true,
+      "rep": 1,
+      "run_id": "heldout-h1-controls2-K-1440-tags-r1",
+      "exit": 0,
+      "summary": {
+        "run_id": "heldout-h1-controls2-K-1440-tags-r1",
+        "status": "completed",
+        "stop_reason": null,
+        "wall_s_total": 184.666,
+        "wall_s_last_segment": 184.661,
+        "gate_wait_ms": 19.3,
+        "model_calls": 14,
+        "retries": 0,
+        "tool_calls": 29,
+        "calls_by_status": {
+          "ok": 36
+        },
+        "gate": {
+          "policy:approved": 8,
+          "auto:approved": 27
+        },
+        "validation": {
+          "ok": true,
+          "attempts": 1,
+          "dropped": [],
+          "flagged": [],
+          "continuity": null,
+          "verifier": "pass",
+          "disputed": [
+            "a:2",
+            "h:h1",
+            "t:5"
+          ]
+        },
+        "revisions": 0,
+        "tokens": {
+          "input_tokens": 468737,
+          "output_tokens": 8896,
+          "cache_read": 379645,
+          "cache_write": 89050,
+          "reasoning": 644,
+          "cost_usd": 0.349633,
+          "model_latency_ms": 184423.7
+        },
+        "events": {
+          "run_started": 1,
+          "phase": 5,
+          "model_call": 14,
+          "tool_call_proposed": 35,
+          "gate_decision": 35,
+          "tool_started": 35,
+          "hypothesis_update": 10,
+          "tool_result": 35,
+          "board_status": 11,
+          "budget": 12,
+          "heartbeat": 10,
+          "thinking_delta": 14,
+          "thinking": 3,
+          "gate_pending": 2,
+          "validation": 1,
+          "draft_report": 1,
+          "verifier_verdict": 1,
+          "report": 1
+        },
+        "process": {
+          "tool_calls": 29,
+          "calls_by_tool": {
+            "get_oncall": 1,
+            "get_record": 9,
+            "get_topology": 1,
+            "itsm_query": 1,
+            "list_alerts": 1,
+            "list_changes": 1,
+            "propose_action": 2,
+            "query_metrics": 2,
+            "read_chat": 2,
+            "search_logs": 9
+          },
+          "repeated_calls": 0,
+          "empty_results": 3,
+          "error_results": 0,
+          "tag_input_calls": 0,
+          "refused_by_policy": 0,
+          "model_turns": 12,
+          "shown_handles": 206,
+          "cited_handles": 29,
+          "cited_share_of_shown": 0.1408,
+          "tokens_total": 477633,
+          "tokens_per_cited_handle": 16470.1,
+          "budget": {
+            "calls": 30,
+            "calls_used": 29,
+            "hit": false,
+            "turn_cap": 36,
+            "turns_used": 12,
+            "turn_cap_hit": false
+          },
+          "stuck_events": 0,
+          "quiet_board": {
+            "nudged_rounds": [
+              10
+            ],
+            "moved_next_round": 1
+          },
+          "restarts": 0,
+          "hypotheses": [
+            {
+              "id": "h1",
+              "subject": "checkout-api",
+              "role": "cause",
+              "status": "leading",
+              "source": "stated",
+              "changes": 5,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 16007
+              },
+              "first_leading": {
+                "round": 7,
+                "tool_calls_before": 19,
+                "tokens_through": 197078
+              }
+            },
+            {
+              "id": "h2",
+              "subject": "payments-gateway",
+              "role": "cause",
+              "status": "rejected",
+              "source": "derived",
+              "changes": 5,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 16007
+              },
+              "first_leading": null
+            }
+          ]
+        },
+        "event_bytes": 144414,
+        "dropped_sinks": [],
+        "dropped_citations": 0,
+        "flagged_claims": 0
+      },
+      "scores": {
+        "run_id": "heldout-h1-controls2-K-1440-tags-r1",
+        "arm": "K",
+        "has_report": true,
+        "scorer": "1",
+        "checkpoint": "1440",
+        "as_of": "2026-10-13T14:40:00Z",
+        "integrity": {
+          "cited": 30,
+          "fabricated": [],
+          "unseen": [],
+          "future": [],
+          "ok": true
+        },
+        "cause": {
+          "score": 0.0,
+          "leading": true,
+          "leading_right": false,
+          "change_named": null,
+          "leading_role": "cause",
+          "confidence": 0.75
+        },
+        "trigger": null,
+        "facts": {
+          "required": 0,
+          "required_of": 2,
+          "missing": [
+            "F.psp_slow",
+            "F.pool_exhausted"
+          ],
+          "supporting": 1,
+          "supporting_of": 3
+        },
+        "traps": {
+          "passed": 2,
+          "of": 4,
+          "traps": {
+            "checkout-deploy": {
+              "pass": false,
+              "why": "fell",
+              "by": [
+                "h1"
+              ]
+            },
+            "db-capacity": {
+              "pass": false,
+              "why": "absent"
+            },
+            "redis": {
+              "pass": true,
+              "why": "absent"
+            },
+            "pay03-hardware": {
+              "pass": true,
+              "why": "absent"
+            }
+          }
+        },
+        "owner": null,
+        "confidence": {
+          "hard_fail": true,
+          "soft_fail": false
+        },
+        "contributing": null,
+        "causal_links": {
+          "links": 1,
+          "with_non_chat": 1,
+          "without": []
+        },
+        "alerts": {
+          "given": 8,
+          "side_right": 6,
+          "exact_right": 6,
+          "wrong": [
+            {
+              "handle": "dd:ev7820516882",
+              "verdict": "this_incident",
+              "expected": "noise"
+            },
+            {
+              "handle": "dd:ev7820517443",
+              "verdict": "this_incident",
+              "expected": "noise"
+            }
+          ],
+          "unassessed": 0,
+          "owed": 8,
+          "missing": []
+        },
+        "bar": {
+          "valid_report": true,
+          "no_fabricated_or_future": true,
+          "cause_with_non_chat": false,
+          "non_chat_per_link": true,
+          "rejected_have_against": true,
+          "owner_from_oncall": null,
+          "lists_do_not": true,
+          "stops_within_budget": true,
+          "continuity": true,
+          "met": false
+        },
+        "first_correct": null,
+        "judge": null
+      }
+    },
+    {
+      "arm": "K",
+      "checkpoint": "1440",
+      "tags": true,
+      "rep": 2,
+      "run_id": "heldout-h1-controls2-K-1440-tags-r2",
+      "exit": 0,
+      "summary": {
+        "run_id": "heldout-h1-controls2-K-1440-tags-r2",
+        "status": "completed",
+        "stop_reason": null,
+        "wall_s_total": 168.946,
+        "wall_s_last_segment": 168.941,
+        "gate_wait_ms": 13.8,
+        "model_calls": 13,
+        "retries": 0,
+        "tool_calls": 29,
+        "calls_by_status": {
+          "ok": 35
+        },
+        "gate": {
+          "policy:approved": 7,
+          "auto:approved": 27
+        },
+        "validation": {
+          "ok": true,
+          "attempts": 1,
+          "dropped": [],
+          "flagged": [],
+          "continuity": null,
+          "verifier": "pass",
+          "disputed": [
+            "a:2",
+            "a:4",
+            "d:2",
+            "d:3",
+            "h:h1",
+            "h:h2",
+            "t:4"
+          ]
+        },
+        "revisions": 0,
+        "tokens": {
+          "input_tokens": 377637,
+          "output_tokens": 8480,
+          "cache_read": 308462,
+          "cache_write": 69136,
+          "reasoning": 624,
+          "cost_usd": 0.288564,
+          "model_latency_ms": 168619.7
+        },
+        "events": {
+          "run_started": 1,
+          "phase": 5,
+          "model_call": 13,
+          "tool_call_proposed": 34,
+          "gate_decision": 34,
+          "tool_started": 34,
+          "hypothesis_update": 8,
+          "tool_result": 34,
+          "board_status": 10,
+          "budget": 11,
+          "thinking_delta": 16,
+          "thinking": 3,
+          "heartbeat": 7,
+          "gate_pending": 1,
+          "validation": 1,
+          "draft_report": 1,
+          "verifier_verdict": 1,
+          "report": 1
+        },
+        "process": {
+          "tool_calls": 29,
+          "calls_by_tool": {
+            "get_oncall": 1,
+            "get_record": 8,
+            "get_topology": 1,
+            "itsm_query": 1,
+            "list_alerts": 1,
+            "list_changes": 1,
+            "propose_action": 2,
+            "query_metrics": 4,
+            "read_chat": 1,
+            "search_logs": 9
+          },
+          "repeated_calls": 0,
+          "empty_results": 3,
+          "error_results": 0,
+          "tag_input_calls": 0,
+          "refused_by_policy": 0,
+          "model_turns": 11,
+          "shown_handles": 92,
+          "cited_handles": 24,
+          "cited_share_of_shown": 0.2609,
+          "tokens_total": 386117,
+          "tokens_per_cited_handle": 16088.2,
+          "budget": {
+            "calls": 30,
+            "calls_used": 29,
+            "hit": false,
+            "turn_cap": 36,
+            "turns_used": 11,
+            "turn_cap_hit": false
+          },
+          "stuck_events": 0,
+          "quiet_board": {
+            "nudged_rounds": [],
+            "moved_next_round": 0
+          },
+          "restarts": 0,
+          "hypotheses": [
+            {
+              "id": "h1",
+              "subject": "checkout-api",
+              "role": "cause",
+              "status": "leading",
+              "source": "stated",
+              "changes": 4,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 16006
+              },
+              "first_leading": {
+                "round": 9,
+                "tool_calls_before": 27,
+                "tokens_through": 254078
+              }
+            },
+            {
+              "id": "h2",
+              "subject": "payments-gateway",
+              "role": "cause",
+              "status": "rejected",
+              "source": "derived",
+              "changes": 3,
+              "first_seen": {
+                "round": 1,
+                "tool_calls_before": 0,
+                "tokens_through": 16006
+              },
+              "first_leading": null
+            },
+            {
+              "id": "h3",
+              "subject": "checkout-api",
+              "role": "symptom",
+              "status": "open",
+              "source": "derived",
+              "changes": 1,
+              "first_seen": {
+                "round": 9,
+                "tool_calls_before": 27,
+                "tokens_through": 254078
+              },
+              "first_leading": null
+            }
+          ]
+        },
+        "event_bytes": 135836,
+        "dropped_sinks": [],
+        "dropped_citations": 0,
+        "flagged_claims": 0
+      },
+      "scores": {
+        "run_id": "heldout-h1-controls2-K-1440-tags-r2",
+        "arm": "K",
+        "has_report": true,
+        "scorer": "1",
+        "checkpoint": "1440",
+        "as_of": "2026-10-13T14:40:00Z",
+        "integrity": {
+          "cited": 25,
+          "fabricated": [],
+          "unseen": [],
+          "future": [],
+          "ok": true
+        },
+        "cause": {
+          "score": 0.0,
+          "leading": true,
+          "leading_right": false,
+          "change_named": null,
+          "leading_role": "cause",
+          "confidence": 0.75
+        },
+        "trigger": null,
+        "facts": {
+          "required": 0,
+          "required_of": 2,
+          "missing": [
+            "F.psp_slow",
+            "F.pool_exhausted"
+          ],
+          "supporting": 1,
+          "supporting_of": 3
+        },
+        "traps": {
+          "passed": 2,
+          "of": 4,
+          "traps": {
+            "checkout-deploy": {
+              "pass": false,
+              "why": "fell",
+              "by": [
+                "h1"
+              ]
+            },
+            "db-capacity": {
+              "pass": false,
+              "why": "absent"
+            },
+            "redis": {
+              "pass": true,
+              "why": "absent"
+            },
+            "pay03-hardware": {
+              "pass": true,
+              "why": "absent"
+            }
+          }
+        },
+        "owner": null,
+        "confidence": {
+          "hard_fail": true,
+          "soft_fail": false
+        },
+        "contributing": null,
+        "causal_links": {
+          "links": 1,
+          "with_non_chat": 1,
+          "without": []
+        },
+        "alerts": {
+          "given": 8,
+          "side_right": 6,
+          "exact_right": 6,
+          "wrong": [
+            {
+              "handle": "dd:ev7820516882",
+              "verdict": "this_incident",
+              "expected": "noise"
+            },
+            {
+              "handle": "dd:ev7820517443",
+              "verdict": "this_incident",
+              "expected": "noise"
+            }
+          ],
+          "unassessed": 0,
+          "owed": 8,
+          "missing": []
+        },
+        "bar": {
+          "valid_report": true,
+          "no_fabricated_or_future": true,
+          "cause_with_non_chat": false,
+          "non_chat_per_link": true,
+          "rejected_have_against": true,
+          "owner_from_oncall": null,
+          "lists_do_not": true,
+          "stops_within_budget": true,
+          "continuity": true,
+          "met": false
+        },
+        "first_correct": null,
+        "judge": null
+      }
+    }
+  ]
+}

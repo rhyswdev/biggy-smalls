@@ -1,0 +1,103 @@
+{
+ "as_of": "2026-10-13T14:40:00Z",
+ "hypotheses": [
+  {
+   "entities": [
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/e0be6732",
+    "dd:ev7820517443"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_PngeyDlfXJW1eO7Y0fZ4XTMA",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "checkout-api 2.14.3 may have introduced a regression causing checkout errors; this is Ben's unverified deployment hypothesis.",
+   "role": "cause",
+   "status": "open",
+   "subject": "checkout-api",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h1"
+  },
+  {
+   "entities": [
+    "pay-db-01",
+    "payments gateway",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "dd:ev7820517443"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_PngeyDlfXJW1eO7Y0fZ4XTMA",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "pay-db-01 connection exhaustion may be causing checkout failures; the database mechanism is reported in the trigger but remains unverified.",
+   "role": "cause",
+   "status": "open",
+   "subject": "pay-db-01",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h2"
+  },
+  {
+   "entities": [
+    "redis-sessions",
+    "checkout-api"
+   ],
+   "changes": [],
+   "support": [
+    "slack:inc-checkout-latency/4dfb6a73",
+    "dd:ev7820017640",
+    "dd:ev7820517443"
+   ],
+   "against": [],
+   "discriminating": [],
+   "history": [
+    {
+     "round": 1,
+     "call_id": "call_PngeyDlfXJW1eO7Y0fZ4XTMA",
+     "from": null,
+     "to": {
+      "status": "open",
+      "confidence": 0.2
+     },
+     "because": []
+    }
+   ],
+   "statement": "redis-sessions trouble may be causing checkout failures, as suggested in chat, but the fragmentation alert alone does not establish that link.",
+   "role": "cause",
+   "status": "open",
+   "subject": "redis-sessions",
+   "confidence": 0.2,
+   "source": "derived",
+   "id": "h3"
+  }
+ ],
+ "timeline": [],
+ "open_questions": []
+}
