@@ -638,13 +638,15 @@ Rules: PLAN 12's wording (counts, never percentages; never "accuracy", "generali
 | At 14:40 on h1, set `sol`, tags on | Runs | Cause reached with system evidence | Hard fails | Traps passed | Required facts | Cost per run |
 |---|---|---|---|---|---|---|
 | The agent (arm C) | 5 | 5 of 5 | 0 of 5 | 20 of 20 | 20 of 20 | $0.29 ($0.27 to $0.35) |
-| No-tools call (arm A) | 1 | 0 of 1 | 0 of 1 | 3 of 4 | 0 of 4 | $0.05 |
-| Cheat-sheet control (arm K) | 1 | 1 of 1 | 0 of 1 | 4 of 4 | 4 of 4 | $0.32 |
+| No-tools call (arm A) | 3 | 0 of 3 | 0 of 3 | 9 of 12 | 0 of 12 | $0.05 ($0.02 to $0.05) |
+| Cheat-sheet control (arm K) | 3 | 3 of 3 | 0 of 3 | 12 of 12 | 12 of 12 | $0.32 ($0.29 to $0.35) |
 
 - **The agent.** Every run led with checkout-api 2.14.3 as the cause (Jenkins #897, and CHG0031902 in three runs) at 0.6 to 0.75 and rejected pay-db-01 with evidence; none had a hypothesis on the payments gateway, so neither the development answer nor the trigger's database claim led anywhere. Every run met PLAN 13's checklist, with no fabricated, future or unseen citation and every alert stream placed rightly. The judge found 2 of 4 mechanism items in every run (the release is the change; checkout-api's own pool is exhausted) and never the other two (errors only on 2.14.3 pods, said in words; the logging change holding connections), 2 or 3 of 3 actions, and no harmful step. One run (r2) put a thread dump before the rollback. The right cause first led after 17 to 28 calls; every run used all 30.
-- **The no-tools call** left checkout-api, pay-db-01 and redis open at 0.2 each and asked to review the queued rollback: no cause, no hard fail.
-- **The cheat-sheet control did not fail.** With the development incident's answer and discriminators appended to its prompt, it led with checkout-api 2.14.3 at 0.8 and rejected the gateway at 0.05. `criteria.yaml` asks that it fail or name the development answer; it did neither. So on this agent h1 cannot tell following the evidence from a learned answer: a prompt told the wrong answer still followed the evidence here. The h1 trigger also names 2.14.3 as Ben's theory, so the right answer starts on the table.
-- **The verifier on h1** passed all six reports it checked (five agent runs and the control) at the first attempt, sent none back and changed no conclusion; it cost $0.57 of the agent runs' $1.52.
+- **The no-tools call** named no cause in 3 of 3: each left checkout-api and redis open at 0.2 beside pay-db-01 or an unnamed payments dependency, and the first asked to review the queued rollback. No hard fail.
+- **The cheat-sheet control did not fail.** With the development incident's answer and discriminators appended to its prompt, it led with checkout-api 2.14.3 in 3 of 3 runs (at 0.8, 0.75 and 0.75) and rejected the gateway each time. `criteria.yaml` asks that it fail or name the development answer in at least 2 of 3; it did so in 0 of 3. So on this agent h1 cannot tell following the evidence from a learned answer: a prompt told the wrong answer still followed the evidence here. The h1 trigger also names 2.14.3 as Ben's theory, so the right answer starts on the table.
+- **The verifier on h1** passed all eight reports it checked (five agent runs and three control runs) at the first attempt, sent none back and changed no conclusion; on the agent's five runs it cost $0.57 of $1.52.
 - **Not run on h1:** the proximity baseline and separate wrong-cause triggers. h1's trigger already carries a wrong claim (the database maxed out).
 
-**Spend.** Agent runs $1.52, no-tools call $0.05, control $0.32, judge $0.25 (now $5.59 of its $9): $2.14 of the $5 cap.
+**Controls to three.** The first batch ran one of each control; `criteria.yaml` judges the controls on 3 runs, so two more of each were run at 14:40 the same way (label `heldout-h1-controls2`, at `3671925`) and scored the same way.
+
+**Spend.** First batch: agent runs $1.52, no-tools call $0.05, control $0.32, judge $0.25: $2.14. Controls to three: no-tools calls $0.07, controls $0.64, judge $0.10: $0.81. In all $2.95 of the $5 cap; the judge has spent $5.69 of its $9.
