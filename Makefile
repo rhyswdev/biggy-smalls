@@ -1,4 +1,4 @@
-# Smalls. Every target is real but `heldout`, which waits for its step in docs/PLAN.md.
+# Smalls.
 UV ?= uv
 PY := $(UV) run --python 3.12 python
 BUNDLE ?= bundles/larkspur-checkout-2026-10-13
@@ -15,7 +15,7 @@ ENV := $(if $(wildcard .env),--env-file .env)
 # The commit a run record carries. A container has no git, so the host passes it in.
 export SMALLS_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 
-.PHONY: data lint lint-every-bundle ingest tag docker-test leak-test tools-smoke retrieval solve score demo run resume regress matrix heldout test schemas
+.PHONY: data lint lint-every-bundle ingest tag docker-test leak-test tools-smoke retrieval solve score demo run resume regress matrix test schemas
 
 # The scenario `make data` and `make lint` build and check: the development scenario when empty. The session
 # that authors a held-out bundle names its file (SCENARIO=scenario/variants/h1/scenario.yaml); nothing else does.
@@ -94,9 +94,6 @@ regress:
 # The matrix: the no-tools baseline and the agent, at both checkpoints, REPS runs per cell. Live, and REPS times dearer.
 matrix:
 	$(UV) run --python 3.12 $(ENV) python -m eval.matrix --bundle $(BUNDLE) --arms A,C --checkpoints 1440,1452 --reps $(REPS)
-
-heldout:
-	@echo "heldout: stub until step 11"
 
 # -- The UI step (docs/decisions/ui-build.md) ----------------------------------------------------------
 # The ref the overfit review diffs from: make overfit-review BASE=<ref>. The working tree is what is reviewed.

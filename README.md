@@ -9,7 +9,7 @@ An AI incident investigator for the SREs and ITOps responders on a live incident
 - **What it does.** Given a commander's note ("still 504s on submit; Sam thinks pay-03 is dying"), the agent reads ten vendor sources through eleven tools, tests competing hypotheses, and returns a cited report with the cause, evidence for and against, next steps, what not to do, the owner and a stakeholder update.
 - **The incident.** A payments release four hours earlier holds database connections across a slow provider's retries. Nine traps point elsewhere.
 - **The design idea.** Code does everything that isn't a judgement (parsing, the replay clock, gates, checks); the model forms and tests hypotheses, and can cite only rows it was shown.
-- **What the evals show.** On the two models it runs on, 60 of 60 scored live runs reached the cause with system evidence, with no hard fail and no fabricated citation. A cheaper model, tried and dropped, managed 3 of 8, and a single call with no tools 0 of 3. That is one incident. On a held-out variant of it, the agent reached the cause in 5 of 5 runs, but so did a prompt given the wrong answer (3 of 3), so that variant was too easy to show it follows the evidence rather than a learned answer.
+- **What the evals show.** On the two models it runs on, 60 of 60 scored live runs reached the cause with system evidence, with no hard fail and no fabricated citation. A cheaper model, tried and dropped, managed 3 of 8, and a single call with no tools 0 of 3. That is one incident. On a held-out variant of it, the agent reached the cause in 5 of 5 runs, but so did a prompt given the wrong answer (3 of 3), so that variant was too easy to show it follows the evidence rather than a learned answer ([the held-out test](#the-held-out-test)).
 - **See it in two minutes.** `make demo` replays a live run with no key; `make app` opens the web app.
 
 ![Smalls in action: the committed sample investigation, then the full flow in demo mode](docs/media/smalls-demo.gif)
@@ -38,6 +38,7 @@ An AI incident investigator for the SREs and ITOps responders on a live incident
 - [The tradeoffs I made](#the-tradeoffs-i-made)
   - [What I chose not to build](#what-i-chose-not-to-build)
 - [How I know it works](#how-i-know-it-works)
+  - [The held-out test](#the-held-out-test)
   - [Self-evaluation](#self-evaluation)
 - [What I would improve with more time](#what-i-would-improve-with-more-time)
   - [Path to production](#path-to-production)
@@ -123,7 +124,7 @@ need to read the docs beyond README section 2, "Running it locally".
    it) and cost about $0.40 each; an Anthropic key is optional, for the stakeholder-message drafter. If I
    say yes, copy .env.example to .env and have me paste the keys into .env myself. Never print, echo or log
    a key. Then restart `make app`.
-6. Don't run `make data`, `make tag`, `make matrix`, `make regress` or `make heldout`. The evidence bundle
+6. Don't run `make data`, `make tag`, `make matrix` or `make regress`. The evidence bundle
    and the tag cache are already committed, and those targets either rebuild data or spend money on many
    runs. Ask me before running anything else that calls a model.
 7. When I'm done, stop the app (Ctrl-C on `make app`, or kill the background job). Its state is an
@@ -473,7 +474,7 @@ I think it looks good, and it emulates how I might envisage a system like this w
 - **Gaps the scorer shows.** The agent misses the same required fact in 40 of 48 runs at 14:52 (that the gateway's sessions sit idle inside a transaction, which it cites from chat, where it was pasted, rather than from the incident record that holds it too). It never asks for an audit of payments the retries may have duplicated (47 of 48), and its explanation often stops at the exhausted database and doesn't connect it to the checkout timeouts customers see (32 of 48).
 - **The grading model leans lenient** on "partly supported" claims, so its counts of fully supported claims read high.
 - **Tag filters are unused.** The agent has never passed a tag to a tool, so that part of the tagging work is unproven.
-- **The verifier costs a lot for what it has caught.** Its two passes cost $10.17 of $24.77 across 60 runs and sent 2 reports back, neither of which changed the cause. It stays for the held-out runs, where a wrong conclusion is more likely. On h1 it passed all 8 reports it checked at the first attempt and changed no conclusion.
+- **The verifier costs a lot for what it has caught.** Its two passes cost $10.17 of $24.77 across 60 runs and sent 2 reports back, neither of which changed the cause. It was kept for the held-out run, where a wrong conclusion was more likely. On h1 it passed all 8 reports it checked at the first attempt and changed no conclusion.
 - **Strict tool schemas are off** on the first provider, which refuses them past 24 optional inputs; malformed calls are answered and retried instead.
 - **Minor realism gaps** in the data are listed in `docs/HANDOFF.md` ("Open, not blocking").
 
@@ -553,7 +554,7 @@ From its `report.json`:
 | [`docs/research/agent-design.md`](docs/research/agent-design.md) | The agent design and its rulings                                              |
 | [`docs/research/`](docs/research/) (others) | The research behind ingestion, retrieval and tagging                          |
 | [`docs/decisions/`](docs/decisions/) | Rulings for ingestion, the tools and agent, and the UI                        |
-| [`docs/decisions/eval-loop.md`](docs/decisions/eval-loop.md) | The eval loop, the scorer, the freeze and the held-out plan, with every ruling |
+| [`docs/decisions/eval-loop.md`](docs/decisions/eval-loop.md) | The eval loop, the scorer, the freeze, the held-out plan and h1's result (section 15.6), with every ruling |
 | [`docs/tuning-log.md`](docs/tuning-log.md) | Every live run, batch by batch, generated from the ledger; also published as the [tuning log page](https://claude.ai/artifact/Kqtg6nS1oDdbC5y4F4VvUQ) |
 | [`docs/gate-b/`](docs/gate-b/) | The blind test of the evidence, with its brief, call log and [findings](docs/gate-b/FINDINGS.md) |
 | [`docs/HANDOFF.md`](docs/HANDOFF.md) | Where the build stands and what is next                                       |
