@@ -77,7 +77,9 @@ def test_the_cache_holds_answers_and_no_record_text(all_units):
     entries = [json.loads(x) for x in cache.DEFAULT_CACHE.read_text().splitlines()]
     assert [e["tag_key"] for e in entries] == sorted(e["tag_key"] for e in entries)
     known = profiles.profiles()
-    current = {units.tag_key(u, p) for u in all_units.values() for p in u.profiles}
+    # The cache is shared by every bundle, so an answer is current if any bundle's units still ask it.
+    every_unit = [u for b in sorted(parity.ROOT.glob("bundles/*/")) for u in measure.units_of(*store.read(b)[1:3]).values()]
+    current = {units.tag_key(u, p) for u in every_unit for p in u.profiles}
     for e in entries:
         assert set(e) == {"tag_key", "profile", "classifier", "answer", "usage", "request_id"}
         name, version = e["profile"].split("@")
