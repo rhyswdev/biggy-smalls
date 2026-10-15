@@ -1,0 +1,236 @@
+# Integration configuration as exported with this bundle: each source's clock and
+# record-break rule, and the log pipeline's sampling: one constant rate per line class,
+# matched on a record's first line (first matching class wins). Configuration, not evidence.
+bundle: larkspur-checkout-2026-10-13
+syslog_year: 2026
+servicenow_display_value: 'true'
+sources:
+  splunk/raw/payments_app:
+    zone: UTC
+    format: '%Y-%m-%d %H:%M:%S,%f'
+    marker: none
+    break_only_before: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} '
+    index: payments
+    sourcetype: payments:app
+    source: /var/log/payments-gateway/app.log
+    host: file_stem
+  splunk/raw/checkout_api:
+    zone: UTC
+    format: '%Y-%m-%dT%H:%M:%S.%fZ'
+    marker: Z
+    break_only_before: ^\{
+    index: commerce
+    sourcetype: checkout:api
+    source: /var/log/containers/{host}_commerce_checkout-api.log
+    host: file_stem
+  splunk/raw/postgres:
+    zone: UTC
+    format: '%Y-%m-%d %H:%M:%S.%f UTC'
+    marker: UTC suffix
+    break_only_before: '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} UTC '
+    index: db
+    sourcetype: postgresql
+    source: /var/log/postgresql/postgresql-15-main.log
+    host: file_stem
+  splunk/raw/nginx:
+    zone: UTC
+    format: '[%d/%b/%Y:%H:%M:%S %z]'
+    marker: '+0000'
+    break_only_before: ^\S+ - \S+ \[
+    index: edge
+    sourcetype: nginx:plus:access
+    source: /var/log/nginx/access.log
+    host: file_stem
+  splunk/raw/k8s_events:
+    zone: UTC
+    format: '%Y-%m-%dT%H:%M:%SZ'
+    marker: Z
+    break_only_before: ^\{
+    index: k8s
+    sourcetype: kube:object:events
+    source: kube:object:events
+    host: k8s-prod-east
+  datadog:
+    zone: UTC
+    format_note: epoch seconds (events), epoch milliseconds (metric points); monitors ISO-8601 with offset
+    marker: epoch
+  dynatrace:
+    zone: UTC
+    format_note: epoch milliseconds
+    marker: epoch
+  servicenow:
+    zone: America/New_York
+    format: '%Y-%m-%d %H:%M:%S'
+    marker: none
+  pagerduty:
+    zone: UTC
+    format: '%Y-%m-%dT%H:%M:%SZ'
+    marker: Z
+  jenkins:
+    zone: UTC
+    format_note: epoch milliseconds; changeSet item dates %Y-%m-%d %H:%M:%S %z
+    marker: epoch
+  slack:
+    zone: UTC
+    format_note: ts = epoch seconds with a 6-digit sequence
+    marker: epoch
+  confluence:
+    zone: none
+    format_note: Last updated <d Mon YYYY> (date only)
+    marker: none
+  solarwinds:
+    zone: America/New_York
+    format_note: '%Y-%m-%dT%H:%M:%S with a seven-digit fraction; keep six digits, then %f'
+    marker: none
+  paycore:
+    zone: America/Los_Angeles
+    format: '%Y-%m-%dT%H:%M:%S.%f%z'
+    marker: offset
+  splunk/saved_searches.json:
+    zone: UTC
+    format: '%Y-%m-%dT%H:%M:%S%z'
+    marker: offset
+sampling:
+  splunk/raw/payments_app:
+    pipeline: gateway log forwarder; request lines follow the caller's per-cart decision
+    key: cartId
+    classes:
+    - name: lifecycle
+      match: '\[(main|tomcat-shutdown)\] '
+      keep_1_in: 1
+      per: line
+    - name: scheduler
+      match: '\[scheduling-\d+\] '
+      keep_1_in: 1
+      per: line
+    - name: pool_stats
+      match: After cleanup  stats
+      keep_1_in: 4
+      per: housekeeper run
+      note: the housekeeper runs every 30 s per host; one run in four is kept
+    - name: pool_growth
+      match: \[HikariPool-1 connection adder\] \S+ - HikariPool-1 - Added connection
+      keep_1_in: 6
+      per: line
+    - name: cannot_acquire
+      match: Cannot acquire connection from data source
+      keep_1_in: 24
+      per: attempt
+      note: the connection adder retries every 10 s while the database refuses it
+    - name: health_check_failed
+      match: DB health check failed
+      keep_1_in: 14
+      per: line
+    - name: authorize_ok
+      match: ' - authorize ok txn='
+      keep_1_in: 1500
+      per: request
+    - name: psp_slow_response
+      match: ' - slow PSP response: '
+      keep_1_in: 12
+      per: request
+    - name: psp_retry
+      match: ' - authorize (attempt \d+/\d+ timed out|failed txn=\S+ after \d+ attempts )'
+      keep_1_in: 100
+      per: request
+      note: a kept request keeps every attempt line and its final ERROR
+    - name: psp_fail_fast
+      match: ' - authorize failed txn=\S+ after 1 attempt '
+      keep_1_in: 60
+      per: request
+    - name: pool_timeout
+      match: '(SqlExceptionHelper - |: Could not open JPA EntityManager)'
+      keep_1_in: 200
+      per: request
+      note: the first kept request per host logs the full cause chain, later ones the one-line form
+    - name: leak_detection
+      match: (ProxyLeakTask - Connection leak detection|was returned to the pool \(unleaked\))
+      keep_1_in: 400
+      per: request
+  splunk/raw/checkout_api:
+    pipeline: Kubernetes container log collector; request failures sampled per cart at source, request lines one in N
+    key: cartId
+    classes:
+    - name: lifecycle
+      match: '"thread_name":"(main|SpringApplicationShutdownHook)"'
+      keep_1_in: 1
+      per: line
+    - name: gateway_failure
+      match: '"logger_name":"com.larkspur.checkout.payments.PaymentsGatewayClient"'
+      keep_1_in: 100
+      per: request
+      note: a kept request keeps its client ERROR
+    - name: request_error
+      match: ("level":"ERROR"|"logger_name":"org.hibernate.engine.jdbc.spi.SqlExceptionHelper"|"message":"POST /api/checkout/submit 50[0-9] )
+      keep_1_in: 100
+      per: request
+      note: a kept request keeps every error line it wrote and its 5xx request line
+    - name: debug
+      match: '"level":"DEBUG"'
+      keep_1_in: 70
+      per: line
+    - name: audit_client
+      match: '"logger_name":"com.larkspur.checkout.audit.AuditSinkClient"'
+      keep_1_in: 300
+      per: line
+    - name: request
+      match: '"logger_name":"com.larkspur.checkout.web.RequestLogFilter"'
+      keep_1_in: 2000
+      per: line
+      note: not keyed by cart; successful submits do not join to gateway lines
+    - name: application
+      match: '"level":"(INFO|WARN)"'
+      keep_1_in: 1
+      per: line
+  splunk/raw/postgres:
+    pipeline: database host forwarder
+    key: backend pid
+    note: a 'connection received' line belongs to the session with the same pid
+    classes:
+    - name: connection
+      match: 'LOG:  connection authorized: '
+      keep_1_in: 1
+      per: session
+    - name: refused
+      match: 'FATAL:  remaining connection slots are reserved'
+      keep_1_in: 12
+      per: session
+    - name: terminated
+      match: 'FATAL:  terminating connection due to administrator command'
+      keep_1_in: 1
+      per: line
+    - name: eof_open_transaction
+      match: 'LOG:  unexpected EOF on client connection with an open transaction'
+      keep_1_in: 8
+      per: line
+    - name: maintenance
+      match: 'LOG:  (checkpoint|automatic)'
+      keep_1_in: 1
+      per: line
+  splunk/raw/nginx:
+    pipeline: edge log forwarder; submit requests follow checkout-api's per-cart decision (cartId is in the query string)
+    key: cartId
+    classes:
+    - name: submit_server_error
+      match: '"POST /api/checkout/submit\?cartId=\d+ HTTP/1\.1" 5\d\d '
+      keep_1_in: 200
+      per: request
+    - name: submit
+      match: '"POST /api/checkout/submit'
+      keep_1_in: 600
+      per: request
+    - name: checkout
+      match: '"(GET|POST) /api/checkout/'
+      keep_1_in: 600
+      per: line
+    - name: other
+      match: '" \d{3} '
+      keep_1_in: 1
+      per: line
+  splunk/raw/k8s_events:
+    pipeline: Kubernetes event collector
+    classes:
+    - name: event
+      match: ^\{
+      keep_1_in: 1
+      per: event

@@ -1,0 +1,144 @@
+{
+  "_class": "hudson.model.FreeStyleBuild",
+  "actions": [
+    {
+      "_class": "hudson.model.ParametersAction",
+      "parameters": [
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "VERSION",
+          "value": "2.14.3"
+        },
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "TARGET_ENV",
+          "value": "prod"
+        },
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "CHANGE_TICKET",
+          "value": "CHG0031902"
+        }
+      ]
+    },
+    {
+      "_class": "hudson.model.CauseAction",
+      "causes": [
+        {
+          "_class": "hudson.model.Cause$UserIdCause",
+          "shortDescription": "Started by user Ben Kowalski",
+          "userId": "ben.kowalski",
+          "userName": "Ben Kowalski"
+        }
+      ]
+    }
+  ],
+  "artifacts": [],
+  "building": true,
+  "description": null,
+  "displayName": "#897",
+  "duration": 0,
+  "estimatedDuration": 97000,
+  "executor": {
+    "_class": "hudson.model.Executor"
+  },
+  "fullDisplayName": "checkout-api-deploy #897",
+  "id": "897",
+  "keepLog": false,
+  "number": 897,
+  "queueId": 90897,
+  "result": null,
+  "timestamp": 1791901650000,
+  "url": "https://jenkins.larkspur.internal/job/checkout-api-deploy/897/",
+  "builtOn": "jenkins-agent-01",
+  "changeSet": {
+    "_class": "hudson.plugins.git.GitChangeSetList",
+    "items": [
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "src/main/java/com/larkspur/checkout/address/AddressFormVariantResolver.java",
+          "src/main/resources/application.yml"
+        ],
+        "commitId": "d5b8430bb2391750d244eeb049852d8830c5f4d6",
+        "timestamp": 1791560412000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/ben.kowalski",
+          "fullName": "Ben Kowalski"
+        },
+        "authorEmail": "ben.kowalski@larkspur.com",
+        "comment": "CO-1187 address form v2 behind flag checkout.address-form-v2\n",
+        "date": "2026-10-09 16:40:12 +0100",
+        "id": "d5b8430bb2391750d244eeb049852d8830c5f4d6",
+        "msg": "CO-1187 address form v2 behind flag checkout.address-form-v2",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "src/main/java/com/larkspur/checkout/address/AddressFormVariantResolver.java"
+          },
+          {
+            "editType": "edit",
+            "file": "src/main/resources/application.yml"
+          }
+        ]
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "pom.xml",
+          "src/main/resources/logback-spring.xml"
+        ],
+        "commitId": "ef4394c5d0c66b55440323b4a649ad940bee311a",
+        "timestamp": 1791627175000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/ben.kowalski",
+          "fullName": "Ben Kowalski"
+        },
+        "authorEmail": "ben.kowalski@larkspur.com",
+        "comment": "CO-1192 bump logback 1.5.6 -> 1.5.8, logstash-logback-encoder 7.4 -> 8.0\n",
+        "date": "2026-10-10 11:12:55 +0100",
+        "id": "ef4394c5d0c66b55440323b4a649ad940bee311a",
+        "msg": "CO-1192 bump logback 1.5.6 -> 1.5.8, logstash-logback-encoder 7.4 -> 8.0",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "pom.xml"
+          },
+          {
+            "editType": "edit",
+            "file": "src/main/resources/logback-spring.xml"
+          }
+        ]
+      },
+      {
+        "_class": "hudson.plugins.git.GitChangeSet",
+        "affectedPaths": [
+          "pom.xml",
+          "CHANGELOG.md"
+        ],
+        "commitId": "05f60225861548f270a8857b20f4ee13f29fbe62",
+        "timestamp": 1791821130000,
+        "author": {
+          "absoluteUrl": "https://jenkins.larkspur.internal/user/ben.kowalski",
+          "fullName": "Ben Kowalski"
+        },
+        "authorEmail": "ben.kowalski@larkspur.com",
+        "comment": "release 2.14.3\n",
+        "date": "2026-10-12 17:05:30 +0100",
+        "id": "05f60225861548f270a8857b20f4ee13f29fbe62",
+        "msg": "release 2.14.3",
+        "paths": [
+          {
+            "editType": "edit",
+            "file": "pom.xml"
+          },
+          {
+            "editType": "edit",
+            "file": "CHANGELOG.md"
+          }
+        ]
+      }
+    ],
+    "kind": "git"
+  }
+}

@@ -1,0 +1,115 @@
+2026-10-13 10:16:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 10:16:51,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 152 records reconciled, 0 pending
+2026-10-13 10:18:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 10:20:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 10:21:51,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 199 records reconciled, 0 pending
+2026-10-13 10:22:14,813 INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-10-13 10:22:16,713 INFO  [tomcat-shutdown] o.s.b.w.e.t.GracefulShutdown - Graceful shutdown complete
+2026-10-13 10:22:16,913 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-13 10:22:17,113 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-13 10:22:22,713 INFO  [main] c.l.p.PaymentsGatewayApplication - Starting PaymentsGatewayApplication v3.8.0 using Java 17.0.12 with PID 3723 (/opt/payments-gateway/payments-gateway-3.8.0.jar started by payments in /opt/payments-gateway)
+2026-10-13 10:22:22,813 INFO  [main] c.l.p.PaymentsGatewayApplication - The following 1 profile is active: "prod"
+2026-10-13 10:22:35,413 INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat initialized with port 8443 (https)
+2026-10-13 10:22:42,913 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Starting...
+2026-10-13 10:22:43,213 INFO  [main] c.z.h.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@e948f9a8
+2026-10-13 10:22:43,313 INFO  [main] c.z.h.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-13 10:22:50,820 INFO  [main] c.l.p.psp.PayCoreClient - PSP client configured: endpoint=https://api.paycore.example/v2/authorizations payments.psp.timeout-ms=8000 payments.psp.retries=3 payments.psp.backoff-ms=1000,2000,4000
+2026-10-13 10:23:03,613 INFO  [main] o.s.b.w.e.t.TomcatWebServer - Tomcat started on port 8443 (https) with context path ''
+2026-10-13 10:23:03,913 INFO  [main] c.l.p.PaymentsGatewayApplication - Started PaymentsGatewayApplication in 41.213 seconds (process running for 43.07)
+2026-10-13 10:24:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 10:26:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 10:26:51,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 175 records reconciled, 0 pending
+2026-10-13 10:26:59,000 INFO  [scheduling-3] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 10:28:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 13:45:23,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 45 records reconciled, 0 pending
+2026-10-13 13:45:59,216 INFO  [http-nio-8443-exec-86] c.l.p.s.PaymentService - authorize ok txn=ord-7748228 amount=138.39 USD psp_ms=403 attempts=1
+2026-10-13 13:46:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 13:48:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 13:50:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 13:50:23,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 124 records reconciled, 0 pending
+2026-10-13 13:52:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 13:54:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 13:55:23,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 62 records reconciled, 0 pending
+2026-10-13 13:56:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 13:57:10,793 INFO  [http-nio-8443-exec-161] c.l.p.s.PaymentService - authorize ok txn=ord-7757630 amount=253.11 USD psp_ms=360 attempts=1
+2026-10-13 13:58:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:00:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:00:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 167 records reconciled, 0 pending
+2026-10-13 14:02:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:04:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:05:23,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 53 records reconciled, 0 pending
+2026-10-13 14:06:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:06:20,000 INFO  [scheduling-3] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 14:07:24,899 INFO  [http-nio-8443-exec-182] c.l.p.s.PaymentService - authorize ok txn=ord-7766228 amount=31.99 USD psp_ms=337 attempts=1
+2026-10-13 14:08:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:10:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:10:23,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 118 records reconciled, 0 pending
+2026-10-13 14:12:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:14:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:15:23,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 76 records reconciled, 0 pending
+2026-10-13 14:16:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:18:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:20:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:20:23,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 207 records reconciled, 0 pending
+2026-10-13 14:22:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:23:53,572 INFO  [http-nio-8443-exec-75] c.l.p.s.PaymentService - authorize ok txn=ord-7780069 amount=73.46 USD psp_ms=402 attempts=1
+2026-10-13 14:24:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:25:18,255 INFO  [http-nio-8443-exec-86] c.l.p.s.PaymentService - authorize ok txn=ord-7781254 amount=123.15 USD psp_ms=379 attempts=1
+2026-10-13 14:25:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 156 records reconciled, 0 pending
+2026-10-13 14:26:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:28:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:30:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:30:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 176 records reconciled, 0 pending
+2026-10-13 14:32:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:34:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:35:23,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 99 records reconciled, 0 pending
+2026-10-13 14:36:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:36:20,000 INFO  [scheduling-3] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 14:38:05,504 INFO  [http-nio-8443-exec-28] c.l.p.s.PaymentService - authorize ok txn=ord-7793101 amount=219.16 EUR psp_ms=2028 attempts=1
+2026-10-13 14:38:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:40:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:40:23,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 195 records reconciled, 0 pending
+2026-10-13 14:42:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:44:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:45:23,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 208 records reconciled, 0 pending
+2026-10-13 14:46:04,081 INFO  [http-nio-8443-exec-137] c.l.p.s.PaymentService - authorize ok txn=ord-7802268 amount=93.89 EUR psp_ms=2461 attempts=1
+2026-10-13 14:46:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 14:48:07,374 INFO  [http-nio-8443-exec-137] c.l.p.s.PaymentService - authorize ok txn=ord-7804087 amount=115.13 EUR psp_ms=2148 attempts=1
+2026-10-13 14:48:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:50:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:50:23,000 INFO  [scheduling-2] c.l.p.s.SettlementSyncJob - settlement sync: 127 records reconciled, 0 pending
+2026-10-13 14:51:58,927 INFO  [http-nio-8443-exec-53] c.l.p.s.PaymentService - authorize ok txn=ord-7807355 amount=188.78 USD psp_ms=284 attempts=1
+2026-10-13 14:52:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:54:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 14:55:23,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 113 records reconciled, 0 pending
+2026-10-13 14:56:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 14:58:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 15:00:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:00:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 230 records reconciled, 0 pending
+2026-10-13 15:02:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 15:04:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:04:48,543 INFO  [http-nio-8443-exec-27] c.l.p.s.PaymentService - authorize ok txn=ord-7818100 amount=23.00 EUR psp_ms=2406 attempts=1
+2026-10-13 15:05:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 226 records reconciled, 0 pending
+2026-10-13 15:06:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 15:06:20,000 INFO  [scheduling-3] c.l.p.p.PspTokenRefresher - PSP access token refreshed, expires in 3600s
+2026-10-13 15:07:18,477 INFO  [http-nio-8443-exec-49] c.l.p.s.PaymentService - authorize ok txn=ord-7820225 amount=237.26 USD psp_ms=544 attempts=1
+2026-10-13 15:08:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:10:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 15:10:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 104 records reconciled, 0 pending
+2026-10-13 15:12:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 15:14:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:15:09,144 INFO  [http-nio-8443-exec-168] c.l.p.s.PaymentService - authorize ok txn=ord-7826818 amount=254.46 USD psp_ms=319 attempts=1
+2026-10-13 15:15:23,000 INFO  [scheduling-3] c.l.p.s.SettlementSyncJob - settlement sync: 207 records reconciled, 0 pending
+2026-10-13 15:15:34,264 INFO  [http-nio-8443-exec-118] c.l.p.s.PaymentService - authorize ok txn=ord-7827139 amount=52.71 EUR psp_ms=2444 attempts=1
+2026-10-13 15:16:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 15:18:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 15:18:21,111 INFO  [http-nio-8443-exec-138] c.l.p.s.PaymentService - authorize ok txn=ord-7829504 amount=246.19 USD psp_ms=395 attempts=1
+2026-10-13 15:20:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)
+2026-10-13 15:20:23,000 INFO  [scheduling-1] c.l.p.s.SettlementSyncJob - settlement sync: 192 records reconciled, 0 pending
+2026-10-13 15:21:33,378 INFO  [http-nio-8443-exec-80] c.l.p.s.PaymentService - authorize ok txn=ord-7832196 amount=88.96 USD psp_ms=390 attempts=1
+2026-10-13 15:22:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=2, idle=4, waiting=0)
+2026-10-13 15:24:11,462 INFO  [http-nio-8443-exec-144] c.l.p.s.PaymentService - authorize ok txn=ord-7834407 amount=241.28 USD psp_ms=482 attempts=1
+2026-10-13 15:24:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:25:23,000 INFO  [scheduling-4] c.l.p.s.SettlementSyncJob - settlement sync: 158 records reconciled, 0 pending
+2026-10-13 15:26:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=1, idle=5, waiting=0)
+2026-10-13 15:28:14,903 DEBUG [HikariPool-1 housekeeper] c.z.h.pool.HikariPool - HikariPool-1 - After cleanup  stats (total=6, active=3, idle=3, waiting=0)

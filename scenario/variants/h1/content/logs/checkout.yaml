@@ -1,0 +1,58 @@
+# checkout-api log content for held-out variant h1: the development bundle's file plus the pool-timeout and
+# audit-sink lines of 2.14.3. Never served. Message text only; the generator renders the logstash JSON
+# envelope, times, pods and versions. HikariCP's timeout message is its pinned string (lint invariant 12).
+
+loggers:
+  gw_client: com.larkspur.checkout.payments.PaymentsGatewayClient
+  request: com.larkspur.checkout.web.RequestLogFilter
+  sql_helper: org.hibernate.engine.jdbc.spi.SqlExceptionHelper
+  handler: com.larkspur.checkout.web.CheckoutExceptionHandler
+  audit: com.larkspur.checkout.audit.AuditSinkClient
+  app: com.larkspur.checkout.CheckoutApiApplication
+  tomcat: org.springframework.boot.web.embedded.tomcat.TomcatWebServer
+  availability: org.springframework.boot.availability.ApplicationAvailabilityBean
+  shutdown: org.springframework.boot.web.embedded.tomcat.GracefulShutdown
+
+gw_timeout: "POST {url} timed out after 10000ms (orderId={order})"
+gw_timeout_stack: "org.springframework.web.reactive.function.client.WebClientRequestException: null\n\tat org.springframework.web.reactive.function.client.ExchangeFunctions$DefaultExchangeFunction.lambda$wrapException$9(ExchangeFunctions.java:136)\n\tSuppressed: reactor.core.publisher.FluxOnAssembly$OnAssemblyException: \nError has been observed at the following site(s):\n\t*__checkpoint ⇢ Request to POST https://payments-gw.prod.larkspur.internal:8443/v1/authorize [DefaultWebClient]\nCaused by: io.netty.handler.timeout.ReadTimeoutException: null\n"
+gw_5xx: "POST {url} returned 503 SERVICE_UNAVAILABLE after {ms}ms (orderId={order})"
+request_line: "{method} {path} {status} {ms}ms"
+
+# A submit that waited the full connectionTimeout for a pooled checkout-db connection: Hibernate logs the pair,
+# then the exception handler maps the transaction failure to 504 with its cause chain.
+db_timeout:
+  warn: "SQL Error: 0, SQLState: null"
+  error: "HikariPool-1 - Connection is not available, request timed out after {timeout}ms (total={t}, active={a}, idle={i}, waiting={w})"
+  handler: "submit failed for cartId={cart}, responding 504: Could not open JPA EntityManager for transaction"
+  stack: "org.springframework.transaction.CannotCreateTransactionException: Could not open JPA EntityManager for transaction\n\tat org.springframework.orm.jpa.JpaTransactionManager.doBegin(JpaTransactionManager.java:466)\n\tat org.springframework.transaction.support.AbstractPlatformTransactionManager.startTransaction(AbstractPlatformTransactionManager.java:532)\n\tat org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:386)\n\tat com.larkspur.checkout.submit.SubmitService$$SpringCGLIB$$0.submit(<generated>)\n\tat com.larkspur.checkout.web.CheckoutController.submit(CheckoutController.java:91)\nCaused by: org.hibernate.exception.JDBCConnectionException: Unable to acquire JDBC Connection [HikariPool-1 - Connection is not available, request timed out after {timeout}ms (total={t}, active={a}, idle={i}, waiting={w})] [n/a]\n\tat org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:100)\n\tat org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl.acquireConnectionIfNeeded(LogicalConnectionManagedImpl.java:116)\n\t... 48 common frames omitted\nCaused by: java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after {timeout}ms (total={t}, active={a}, idle={i}, waiting={w})\n\tat com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java:686)\n\tat com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java:179)\n\tat com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java:99)\n\t... 52 common frames omitted\n"
+
+# The audit sink client warns when one audit write takes longer than 2000 ms. Each submit writes these events,
+# in order, inside its transaction.
+audit_slow: "audit sink slow: {ms}ms (event={event}, queue={depth}/512)"
+audit_events: [order.submit.received, payment.authorized, order.submitted]
+
+# [offset seconds from start, level, logger key, message]
+startup:
+  - [0.4, INFO, app, "Starting CheckoutApiApplication v{version} using Java 21.0.4 with PID 1 (/app/checkout-api.jar started by app in /app)"]
+  - [0.5, INFO, app, "The following 1 profile is active: \"prod\""]
+  - [6.9, INFO, tomcat, "Tomcat initialized with port 8080 (http)"]
+  - [10.6, INFO, tomcat, "Tomcat started on port 8080 (http) with context path ''"]
+  - [10.7, INFO, app, "Started CheckoutApiApplication in 10.418 seconds (process running for 11.06)"]
+  - [11.4, INFO, availability, "Application availability state ReadinessState changed to ACCEPTING_TRAFFIC"]
+shutdown:
+  - [1.0, INFO, availability, "Application availability state ReadinessState changed from ACCEPTING_TRAFFIC to REFUSING_TRAFFIC"]
+  - [1.1, INFO, shutdown, "Commencing graceful shutdown. Waiting for active requests to complete"]
+  - [2.3, INFO, shutdown, "Graceful shutdown complete"]
+
+# 2.14.3 bumped the logging library and its default level for two packages to DEBUG.
+debug_flood:
+  - {logger: com.larkspur.checkout.address.AddressFormVariantResolver, msg: "resolved address form variant={variant} for session={session} (flag checkout.address-form-v2)"}
+  - {logger: org.hibernate.SQL, msg: "select ci1_0.id,ci1_0.cart_id,ci1_0.sku,ci1_0.qty,ci1_0.unit_price from cart_item ci1_0 where ci1_0.cart_id=?"}
+  - {logger: org.hibernate.orm.jdbc.bind, msg: "binding parameter (1:BIGINT) <- [{cart}]"}
+  - {logger: com.larkspur.checkout.address.AddressFormVariantResolver, msg: "flag checkout.address-form-v2 evaluated: variant={variant} rollout=50%"}
+
+background:
+  - {level: WARN, logger: com.larkspur.checkout.address.AddressValidationClient, msg: "address validation fell back to local rules: upstream returned 429 for cart={cart}"}
+  - {level: INFO, logger: com.larkspur.checkout.cart.CartCache, msg: "cart cache miss for cart={cart}, loaded from db"}
+  - {level: INFO, logger: com.larkspur.checkout.promo.PromoService, msg: "promo code rejected for cart={cart}: expired"}
+  - {level: WARN, logger: com.larkspur.checkout.tax.TaxRateClient, msg: "tax rate lookup slow ({n}00ms), using cached rates"}

@@ -1,0 +1,319 @@
+[
+  {
+    "type": "message",
+    "subtype": "channel_join",
+    "user": "U03MU4G0DPE",
+    "text": "<@U03MU4G0DPE> has joined the channel",
+    "ts": "1791902100.000006",
+    "team": "T0LARKSPUR"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8812 *checkout-api error rate > 5%* on Checkout - Prod: Acknowledged by Alice Nguyen",
+    "ts": "1791902105.000001",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "IC here. checkout payments failing / slow since ~14:30, 504s on submit. INC0048811. <@U0OUMNOBHU9> <@U01B0NXMOC4> <@U01GG60ZVQK> pls join",
+    "ts": "1791902120.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "87748d1b-49a5-c3b3-e9b3-08182e847219"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "joining. pulling up the checkout dashboards",
+    "ts": "1791902141.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "eb96a27e-8d71-6568-c001-fe50beb31670"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "we deployed checkout-api 2.14.3 at 14:28, that's gotta be it. <@U03MU4G0DPE> can we roll back?",
+    "ts": "1791902160.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "d41fb3fa-57e9-fc65-91e4-b299e7bbebdd"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "yes, roll it back. <@U01B0NXMOC4> go",
+    "ts": "1791902190.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "4618f248-4005-4793-f448-c547836b7a3e"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "on it, rollback job queued. pods look healthy fwiw, nothing crashlooping",
+    "ts": "1791902208.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "4e5d4162-98a7-97c5-b996-e575217bfa6d"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8813 *[Synthetics] checkout flow* merged into #8812 by Alice Nguyen",
+    "ts": "1791902221.000001",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "what do we put on the status page? do we say anything yet",
+    "ts": "1791902228.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "1b85c7fc-ad53-8936-633f-0b9423098081"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "is it redis again? the runbook says check redis",
+    "ts": "1791902250.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "ebaa8e6b-89e0-3900-01c3-b76144ccff70"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "that runbook is ancient, sessions moved to the cluster last year",
+    "ts": "1791902270.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "fb6f87e7-0f64-0df8-2025-cc8a66ff55a4"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "hold the status page for ten mins. one line 'investigating checkout errors' when we post",
+    "ts": "1791902310.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "f036886e-0660-871e-a4fc-e20e390dbc3c",
+    "reactions": [
+      {
+        "name": "+1",
+        "count": 2,
+        "users": [
+          "U01B0NXMOC4",
+          "U0OUMNOBHU9"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "who's IC here? sorry, lost track",
+    "ts": "1791902350.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "5c52791e-8f0e-0ff9-7ba7-c4af1d1193fe"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "<@U01B0NXMOC4> alice, she's IC. top of the channel",
+    "ts": "1791902380.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e0c4ae42-d698-ff8b-8fe0-d71c00705f9b"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "marketing site synthetic just went red. checking my side, prob separate",
+    "ts": "1791902420.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "338d1c10-1a40-0e7c-2697-efa9d58d43ca"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "is this a network thing? marketing site is down too",
+    "ts": "1791902460.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "c078c9e2-41e8-a9c3-b65b-80a01ffe8fce"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "checkout-api is back on the old version, watching the error graph",
+    "ts": "1791902575.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e3dbfee7-2f86-a244-483f-2f73bb785fa2"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "rollback done, 504s have stopped. watching for 10 min before we call it",
+    "ts": "1791902590.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "048e0491-6a84-4144-71e2-e150ddef6ae1"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "this one has the checkout breakdown https://app.datadoghq.com/dashboard/abc-123-xyz",
+    "ts": "1791902630.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "0b7bada9-5dd0-5602-a857-d8c6fb55f2fb",
+    "thread_ts": "1791902630.000002",
+    "reply_count": 1,
+    "reply_users_count": 1,
+    "latest_reply": "1791902725.000006",
+    "reply_users": [
+      "U01B0NXMOC4"
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "error graph is back to baseline. before the rollback every 2.14.3 pod was pinned at 40/40 on the checkout-db pool, 2.14.2 pods sit at 2 or 3",
+    "ts": "1791902660.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "4dab7e2c-e00a-f6c0-f15a-da61c5ecfff8"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "404 for me. <@U0OUMNOBHU9> is that dashboard private or dead?",
+    "ts": "1791902725.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "19ac4a60-5fe2-ec10-43f5-77040add006b",
+    "thread_ts": "1791902630.000002",
+    "parent_user_id": "U0OUMNOBHU9"
+  },
+  {
+    "type": "message",
+    "user": "U01GG60ZVQK",
+    "text": "checkout-db was quiet the whole time btw, nowhere near max_connections and no slow queries",
+    "ts": "1791902730.000001",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "fb3df899-55be-5141-a80a-357a1cf75519"
+  },
+  {
+    "type": "message",
+    "subtype": "bot_message",
+    "text": "Incident #8812 resolved by Alice Nguyen",
+    "ts": "1791902791.000004",
+    "username": "PagerDuty",
+    "bot_id": "B0KZ207TOM1"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "next update at 14:55 UTC. one line updates pls, theories go in the thread",
+    "ts": "1791902860.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "92f5837b-b86a-a5fc-8cb8-4e42e964b39a"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "marketing site is my DNS change, nothing to do with checkout. sorry for the noise",
+    "ts": "1791902890.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "039e2278-3586-dcc8-82f9-9d722c90470f"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "support says ~20 tickets, all 'error when i press pay'. drafting the customer line now",
+    "ts": "1791903030.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "b97257f4-e7ba-5b11-cfd1-5b3e4b1bab7f"
+  },
+  {
+    "type": "message",
+    "user": "U0UAC4HTR91",
+    "text": "it's 10:51 here. 2.14.3 went out as a standard change, i'll flag it for the CAB review",
+    "ts": "1791903100.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "8d715efc-cd91-050b-9cb5-c20ae498bea7"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "found it. the logback bump in 2.14.3 switched the audit appender to synchronous, and it writes inside the submit transaction. with the DEBUG flood the sink was taking ~10s a write, 3 writes per submit, so every submit sat on its connection for 30s",
+    "ts": "1791903160.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "60080b6d-40ae-b8b4-8e68-47aa1fb17f24"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "grabbing a coffee, back at 14:56 UTC :coffee:",
+    "ts": "1791903190.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "1c9777cd-a0d3-719a-d978-8e3a24cb4b52"
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "nice. 2.14.3 stays parked until the appender is async again and DEBUG is off. <@U01B0NXMOC4> can you write it up on the INC",
+    "ts": "1791903250.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "5c5cf582-5808-e11f-9243-75e6c08bf29b"
+  },
+  {
+    "type": "message",
+    "user": "U0W2EYK5S75",
+    "text": "status page line is up: 'some customers saw errors at checkout between 14:29 and 14:42 UTC, resolved'",
+    "ts": "1791903450.000004",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "bab220c0-b0af-7260-522c-5368b2e0d2ea",
+    "reactions": [
+      {
+        "name": "+1",
+        "count": 2,
+        "users": [
+          "U03MU4G0DPE",
+          "U01B0NXMOC4"
+        ]
+      }
+    ]
+  },
+  {
+    "type": "message",
+    "user": "U03MU4G0DPE",
+    "text": "resolving INC0048811. thanks all",
+    "ts": "1791903730.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "276b867b-26e3-d235-7125-1d953c2b1b6f"
+  },
+  {
+    "type": "message",
+    "user": "U0UAC4HTR91",
+    "text": "postmortem: <@U03MU4G0DPE> i can book a slot tomorrow, 10am my time work?",
+    "ts": "1791903860.000005",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "c40036be-9694-7827-5473-5373b995bed7"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "14:00 UTC works for <@U0UAC4HTR91>, i'll put it in the calendar",
+    "ts": "1791904000.000002",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "469579c0-67c5-0d67-2317-fd095ea3873e"
+  },
+  {
+    "type": "message",
+    "user": "U01B0NXMOC4",
+    "text": "i'll raise a ticket for the broken dashboard link, it's been bugging me",
+    "ts": "1791904340.000003",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "e5544523-eb85-1e3a-9e00-1839bd9f2ae3"
+  },
+  {
+    "type": "message",
+    "user": "U0OUMNOBHU9",
+    "text": "signing off. thanks all :sweat_smile:",
+    "ts": "1791905300.000006",
+    "team": "T0LARKSPUR",
+    "client_msg_id": "c1a3e985-f543-b544-7b9d-d248d3ad0ed7"
+  }
+]

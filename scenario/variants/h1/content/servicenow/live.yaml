@@ -1,0 +1,49 @@
+# INC0048811 in held-out variant h1, and the early customer incidents. Never served. Times are UTC clock
+# times on the day; the generator renders them in the integration user's zone. Opened by the Datadog
+# integration from the first paging alert, which here is checkout-api's error-rate monitor.
+
+inc0048811:
+  short_description: "[Datadog] checkout-api error rate > 5%"
+  description: |-
+    Datadog monitor 7391255 "checkout-api error rate > 5%" is Triggered.
+    sum:trace.servlet.request.errors{service:checkout-api,env:prod} / sum:trace.servlet.request.hits{service:checkout-api,env:prod} above 5% over the last minute.
+    Monitor: https://app.datadoghq.com/monitors/7391255
+    Runbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY
+    Created by the Datadog ServiceNow integration.
+  category: Software
+  subcategory: ""
+  contact_type: Monitoring
+  impact: {initial: "2 - Medium", at_p1: "1 - High"}
+  urgency: "1 - High"
+  severity: "2 - Medium"
+  correlation_id: "datadog:7391255:checkout-api"
+  correlation_display: Datadog
+  close_code: "Solved (Permanently)"
+  close_notes: |-
+    checkout-api rolled back to 2.14.2 (Jenkins checkout-api-deploy #898, 14:40 to 14:42 UTC); errors back to baseline from 14:43 UTC. Cause: the logging library bump in 2.14.3 made the audit appender synchronous inside the submit transaction; with the DEBUG flood from the same release the log sink took about 10 s a write, so submits held their checkout-db connections about 30 s and the 40-connection pool on every 2.14.3 pod ran out. Submits that waited 5 s for a connection got a 504. 2.14.3 is parked until the appender is asynchronous again. Problem record to follow.
+
+journal:
+  wn_scope: "Failures are POST /api/checkout/submit returning 504 since about 14:30 UTC; cart and browse look fine. checkout-api 2.14.3 went out 14:27 to 14:29 UTC under CHG0031902 and Ben is rolling it back as the first step. Bridge in #inc-checkout-latency."
+  wn_rollback: "checkout-api rolled back to 2.14.2 (Jenkins checkout-api-deploy #898, done 14:42 UTC). Submit 504s stopped at 14:43 UTC."
+  wn_cause: "Cause found: 2.14.3's logback bump makes the audit appender synchronous, and it runs inside the submit transaction (3 audit writes per submit). The DEBUG flood from the same release slowed the log sink to about 10 s a write, so each submit held its checkout-db connection about 30 s and the pool (40 per pod) ran out on every 2.14.3 pod. checkout-db itself was quiet. Fix before 2.14.4: async appender, DEBUG off."
+
+# Early customer incidents, 14:41 to 14:50. {cart} is a real cart whose submit failed, chosen by the generator.
+early:
+  - at: "14:41:20"
+    report: spinner
+    short_description: "Checkout error when pressing pay"
+    description: |-
+      Customer called: pressed pay on {cart}, waited a few seconds and got an error page saying something went wrong. No confirmation email. Wants to know if they were charged.
+    contact_type: Phone
+  - at: "14:45:05"
+    report: spinner
+    short_description: "Payment page error at checkout"
+    description: |-
+      Customer emailed: checkout for {cart} failed at the payment step with an error. Their bank shows no pending charge. Asked whether to try again.
+    contact_type: Email
+  - at: "14:48:40"
+    report: spinner_repeat
+    short_description: "Customer can't pay, checkout keeps failing"
+    description: |-
+      Customer on chat says they tried to pay three times on {cart}, each time an error after a few seconds. Cart and address pages are fine. Asked them to wait while we check.
+    contact_type: Chat

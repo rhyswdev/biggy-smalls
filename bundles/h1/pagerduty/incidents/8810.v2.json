@@ -1,0 +1,63 @@
+{
+  "incident": {
+    "id": "QARVU3UMK0EH5N",
+    "type": "incident",
+    "summary": "[#8810] Disk space low on ord-01",
+    "self": "https://api.pagerduty.com/incidents/QARVU3UMK0EH5N",
+    "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N",
+    "incident_number": 8810,
+    "title": "Disk space low on ord-01",
+    "created_at": "2026-10-13T13:52:12Z",
+    "updated_at": "2026-10-13T13:53:02Z",
+    "status": "resolved",
+    "incident_key": "monitor-7266031-host:ord-01,device:/data",
+    "service": {
+      "id": "PSV5P4F",
+      "type": "service_reference",
+      "summary": "Platform",
+      "self": "https://api.pagerduty.com/services/PSV5P4F",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+    },
+    "assignments": [],
+    "assigned_via": "escalation_policy",
+    "acknowledgements": [],
+    "last_status_change_at": "2026-10-13T13:53:02Z",
+    "last_status_change_by": {
+      "id": "PSV5P4F",
+      "type": "service_reference",
+      "summary": "Platform",
+      "self": "https://api.pagerduty.com/services/PSV5P4F",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+    },
+    "first_trigger_log_entry": {
+      "id": "XUFO9865YL9PEA",
+      "type": "trigger_log_entry_reference",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/XUFO9865YL9PEA",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N/log_entries/XUFO9865YL9PEA"
+    },
+    "alert_counts": {
+      "all": 1,
+      "triggered": 0,
+      "resolved": 1
+    },
+    "is_mergeable": false,
+    "escalation_policy": {
+      "id": "PEP8H3J",
+      "type": "escalation_policy_reference",
+      "summary": "Platform Reliability",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP8H3J",
+      "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP8H3J"
+    },
+    "teams": [],
+    "pending_actions": [],
+    "urgency": "low",
+    "priority": {
+      "id": "T6TYFKOFSOSK5Q",
+      "type": "priority",
+      "summary": "P4",
+      "name": "P4"
+    },
+    "resolved_at": "2026-10-13T13:53:02Z"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "incident": {
+    "id": "QWUYRGF214IXSR",
+    "type": "incident",
+    "summary": "[#8811] search-indexer cron job failed",
+    "self": "https://api.pagerduty.com/incidents/QWUYRGF214IXSR",
+    "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR",
+    "incident_number": 8811,
+    "title": "search-indexer cron job failed",
+    "created_at": "2026-10-13T14:10:05Z",
+    "updated_at": "2026-10-13T14:10:05Z",
+    "status": "triggered",
+    "incident_key": "monitor-7344120",
+    "service": {
+      "id": "PSV5P4F",
+      "type": "service_reference",
+      "summary": "Platform",
+      "self": "https://api.pagerduty.com/services/PSV5P4F",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+    },
+    "assignments": [
+      {
+        "at": "2026-10-13T14:10:05Z",
+        "assignee": {
+          "id": "PFR2YX8",
+          "type": "user_reference",
+          "summary": "Sam Ortega",
+          "self": "https://api.pagerduty.com/users/PFR2YX8",
+          "html_url": "https://larkspur.pagerduty.com/users/PFR2YX8"
+        }
+      }
+    ],
+    "assigned_via": "escalation_policy",
+    "acknowledgements": [],
+    "last_status_change_at": "2026-10-13T14:10:05Z",
+    "last_status_change_by": {
+      "id": "PSV5P4F",
+      "type": "service_reference",
+      "summary": "Platform",
+      "self": "https://api.pagerduty.com/services/PSV5P4F",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+    },
+    "first_trigger_log_entry": {
+      "id": "TVRO3HE4BB9OKH",
+      "type": "trigger_log_entry_reference",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/TVRO3HE4BB9OKH",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR/log_entries/TVRO3HE4BB9OKH"
+    },
+    "alert_counts": {
+      "all": 1,
+      "triggered": 1,
+      "resolved": 0
+    },
+    "is_mergeable": true,
+    "escalation_policy": {
+      "id": "PEP8H3J",
+      "type": "escalation_policy_reference",
+      "summary": "Platform Reliability",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP8H3J",
+      "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP8H3J"
+    },
+    "teams": [],
+    "pending_actions": [],
+    "urgency": "low",
+    "priority": {
+      "id": "T6TYFKOFSOSK5Q",
+      "type": "priority",
+      "summary": "P4",
+      "name": "P4"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "_class": "hudson.model.FreeStyleBuild",
+  "actions": [
+    {
+      "_class": "hudson.model.ParametersAction",
+      "parameters": [
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "VERSION",
+          "value": "2.14.2"
+        },
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "TARGET_ENV",
+          "value": "prod"
+        },
+        {
+          "_class": "hudson.model.StringParameterValue",
+          "name": "CHANGE_TICKET",
+          "value": "CHG0031902"
+        }
+      ]
+    },
+    {
+      "_class": "hudson.model.CauseAction",
+      "causes": [
+        {
+          "_class": "hudson.model.Cause$UserIdCause",
+          "shortDescription": "Started by user Alice Nguyen",
+          "userId": "alice.nguyen",
+          "userName": "Alice Nguyen"
+        }
+      ]
+    }
+  ],
+  "artifacts": [],
+  "building": true,
+  "description": null,
+  "displayName": "#898",
+  "duration": 0,
+  "estimatedDuration": 95000,
+  "executor": {
+    "_class": "hudson.model.Executor"
+  },
+  "fullDisplayName": "checkout-api-deploy #898",
+  "id": "898",
+  "keepLog": false,
+  "number": 898,
+  "queueId": 90898,
+  "result": null,
+  "timestamp": 1791902430000,
+  "url": "https://jenkins.larkspur.internal/job/checkout-api-deploy/898/",
+  "builtOn": "jenkins-agent-01",
+  "changeSet": {
+    "_class": "hudson.scm.EmptyChangeLogSet",
+    "items": [],
+    "kind": null
+  }
+}
