@@ -624,3 +624,27 @@ Rules: PLAN 12's wording (counts, never percentages; never "accuracy", "generali
 **Z7 (2026-10-15).** HANDOFF records the freeze and holds session C's prompt; it starts once `v1-submittable` exists, reads `eval/heldout/README.md` as its authority, and never reads agent code, prompts, tool descriptions, run transcripts or these decision records. The tuning-log page is refreshed: `export` wrote its three files, each was uploaded and its dataset pointed at it, and the page's key now explains arm K, the freeze phase and judge 2's harmful-step rule; section 13's five batches are relabelled from "to score" to "between" (`rebuild` changed no other field). Spend: $3.10 (15.3).
 
 **A held-out-rule slip, disclosed.** During Z4, a grep this session ran over `eval/heldout/README.md` among other files printed two of the README's lines: its handling rule, and "No new sources, tools or vendor shapes. Entities and people come from `facts.yaml`." No card, design, variant or held-out bundle was read or listed, and nothing this session built depends on those lines. Every later search excluded the held-out paths.
+
+### 15.6 Session D, the held-out run on h1 (2026-10-15)
+
+**Order.** The cards were committed at `747c3c0` (2026-10-13), `agent-v1` tagged at `d75447e`, and `heldout-h1` (tip `6ad3e89`, with h1's 47 tag answers) merged into `main` with `--no-ff` at `6b90073`, after checking that `agent-v1` is an ancestor of `main` and that `git diff agent-v1` over the frozen files prints nothing. `make lint` and `make lint-every-bundle` passed; `make test` failed once, on `tests/test_tag_cache.py`, which counted any cache answer not asked by the development bundle as superseded; `e086f74` makes it count every bundle's units, and the suite passed (742, 3 skipped). The runs were made at `e086f74`. Records, scores and provenance: `eval/heldout-runs/h1/` (`provenance.yaml`).
+
+**The scorer on h1 first, with no model call.** Two hand-written reports at 14:40 (`eval/heldout-runs/h1/hand/`): h1's cause from its key reached the cause with system evidence, 4 of 4 facts, 4 of 4 traps, no hard fail; the development answer hard-failed (the gateway leading at 0.8), 1 of 4 facts.
+
+**Scored through a copy.** Each run's `run.json` names the bundle `larkspur-checkout-2026-10-13`, the name h1's served `integration.yaml` gives the estate, so `python -m eval.score <folder>` would load the development key. Each folder was scored by `python -m eval.score`, unchanged, on a scratch copy whose `run.json` named `bundles/h1`, and the copy's `scores.json` was put back; the records are otherwise unedited. The scores inside the two `*.matrix.json` files are the matrix's own pass against the development key and are wrong.
+
+**Not in the ledger.** The ledger would take the rows, but the tuning log's header sums runs and cost over every row, which would be a total across bundles (PLAN 12), and a row records no bundle. So the table is here.
+
+| At 14:40 on h1, set `sol`, tags on | Runs | Cause reached with system evidence | Hard fails | Traps passed | Required facts | Cost per run |
+|---|---|---|---|---|---|---|
+| The agent (arm C) | 5 | 5 of 5 | 0 of 5 | 20 of 20 | 20 of 20 | $0.29 ($0.27 to $0.35) |
+| No-tools call (arm A) | 1 | 0 of 1 | 0 of 1 | 3 of 4 | 0 of 4 | $0.05 |
+| Cheat-sheet control (arm K) | 1 | 1 of 1 | 0 of 1 | 4 of 4 | 4 of 4 | $0.32 |
+
+- **The agent.** Every run led with checkout-api 2.14.3 as the cause (Jenkins #897, and CHG0031902 in three runs) at 0.6 to 0.75 and rejected pay-db-01 with evidence; none had a hypothesis on the payments gateway, so neither the development answer nor the trigger's database claim led anywhere. Every run met PLAN 13's checklist, with no fabricated, future or unseen citation and every alert stream placed rightly. The judge found 2 of 4 mechanism items in every run (the release is the change; checkout-api's own pool is exhausted) and never the other two (errors only on 2.14.3 pods, said in words; the logging change holding connections), 2 or 3 of 3 actions, and no harmful step. One run (r2) put a thread dump before the rollback. The right cause first led after 17 to 28 calls; every run used all 30.
+- **The no-tools call** left checkout-api, pay-db-01 and redis open at 0.2 each and asked to review the queued rollback: no cause, no hard fail.
+- **The cheat-sheet control did not fail.** With the development incident's answer and discriminators appended to its prompt, it led with checkout-api 2.14.3 at 0.8 and rejected the gateway at 0.05. `criteria.yaml` asks that it fail or name the development answer; it did neither. So on this agent h1 cannot tell following the evidence from a learned answer: a prompt told the wrong answer still followed the evidence here. The h1 trigger also names 2.14.3 as Ben's theory, so the right answer starts on the table.
+- **The verifier on h1** passed all six reports it checked (five agent runs and the control) at the first attempt, sent none back and changed no conclusion; it cost $0.57 of the agent runs' $1.52.
+- **Not run on h1:** the proximity baseline and separate wrong-cause triggers. h1's trigger already carries a wrong claim (the database maxed out).
+
+**Spend.** Agent runs $1.52, no-tools call $0.05, control $0.32, judge $0.25 (now $5.59 of its $9): $2.14 of the $5 cap.
