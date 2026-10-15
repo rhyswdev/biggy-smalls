@@ -33,6 +33,8 @@ class F5:
         return f"{t.strftime('%b')} {t.day:2d} {t.strftime('%H:%M:%S')} lb-int-01 notice mcpd[{pid}]: {msg}"
 
     def render(self) -> None:
+        if not self.F["flaps"]:         # no member ever changed state: the forwarder sent nothing
+            return
         recs = []
         pid = 7114
         # A member passes its health monitor once the application has started (about 13 s after the PSP
@@ -109,8 +111,12 @@ class Nginx:
                 rt = 10.0 + r.randint(9, 49) / 1000 if q.outcome == "gave_up" else (q.gw_ms + r.randint(10, 30)) / 1000
                 status, size = (504, 167) if q.outcome == "gave_up" else (502, 158)
                 cls, kind, keep = "nginx.submit_5xx", "signal", q.kept(n_err)
+            elif q.outcome == "co_pool_timeout":       # checkout-api answered 504 after waiting on its own pool
+                rt = (q.co_ms + r.randint(10, 30)) / 1000
+                status, size = 504, 167
+                cls, kind, keep = "nginx.submit_5xx", "signal", q.kept(n_err)
             else:
-                rt = (q.gw_ms + r.randint(40, 160)) / 1000
+                rt = (q.gw_ms + q.co_ms + r.randint(40, 160)) / 1000
                 status, size = 200, r.randint(310, 420)
                 cls = "nginx.cart_resubmit" if q.resubmit else "nginx.submit"
                 kind, keep = "noise", q.kept(n_ok)

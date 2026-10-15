@@ -28,12 +28,24 @@ def load_yaml(p: Path):
     return yaml.safe_load(p.read_text())
 
 
+# A variant scenario (scenario/variants/<id>/) may carry a content folder of its own; a file there replaces the
+# base file of the same name. Set by load_ctx for the scenario being built; None builds from the base alone.
+OVERLAY: Path | None = None
+
+
+def content_path(rel: str) -> Path:
+    """scenario/content/<rel>, or the variant's own copy of it when the scenario being built has one."""
+    if rel.startswith("content/"):
+        rel = rel[len("content/"):]
+    if OVERLAY is not None and (OVERLAY / rel).exists():
+        return OVERLAY / rel
+    return CONTENT / rel
+
+
 def content(rel: str):
     """Load scenario/content/<rel>; `rel` may carry a `#key` fragment."""
     path, _, key = rel.partition("#")
-    if path.startswith("content/"):
-        path = path[len("content/"):]
-    data = load_yaml(CONTENT / path)
+    data = load_yaml(content_path(path))
     return data[key] if key else data
 
 
@@ -274,8 +286,15 @@ def parse_rate(spec) -> int:
     return int(m.group(1))
 
 
+def facts_path(sc: dict, scenario_file: Path) -> Path:
+    """The facts a scenario renders from: scenario/facts.yaml, or a variant's own (`meta.facts`, relative to it)."""
+    return (scenario_file.parent / sc["meta"]["facts"]) if sc["meta"].get("facts") else SCENARIO / "facts.yaml"
+
+
 def load_ctx(scenario_file: Path, out_root: Path = BUNDLES) -> Ctx:
+    global OVERLAY
     sc = load_yaml(scenario_file)
-    facts = load_yaml(SCENARIO / "facts.yaml")
+    facts = load_yaml(facts_path(sc, scenario_file))
+    OVERLAY = (scenario_file.parent / sc["meta"]["content"]) if sc["meta"].get("content") else None
     out = out_root / sc["meta"]["bundle"]
     return Ctx(scenario=sc, facts=facts, out=out, clock=Clock(sc["meta"]["date"]), seed=sc["meta"]["seed"])

@@ -10,13 +10,17 @@ from smalls_data.gen.core import Ctx, Rec, content, every_nth, hexid, iso_z, par
 from smalls_data.gen.model import Model
 
 KIND = {"log.co_request": "noise", "log.co_gw_timeout": "signal", "log.co_gw_5xx": "signal",
-        "log.co_debug_flood": "trap", "log.co_startup": "noise", "log.co_shutdown": "noise", "log.co_bg": "noise"}
+        "log.co_debug_flood": "trap", "log.co_startup": "noise", "log.co_shutdown": "noise", "log.co_bg": "noise",
+        "log.co_db_timeout": "signal", "log.co_audit_slow": "signal"}
+PER_CART = ("log.co_gw_timeout", "log.co_gw_5xx", "log.co_db_timeout")     # request-path classes kept per cart
 LEVEL_VALUE = {"DEBUG": 10000, "INFO": 20000, "WARN": 30000, "ERROR": 40000}
 
 
 class Checkout:
     def __init__(self, ctx: Ctx, model: Model):
         ctx.per_unit.update({"log.co_gw_timeout": 2, "log.co_gw_5xx": 2})
+        if model.co:
+            ctx.per_unit["log.co_db_timeout"] = 4
         self.ctx, self.m, self.c = ctx, model, ctx.clock
         self.tpl = content("logs/checkout.yaml")
         self.folder = "splunk/raw/checkout_api"
@@ -40,7 +44,7 @@ class Checkout:
     def add(self, pod: str, t: datetime, level: str, logger: str, msg: str, cls: str, thread: str, sig_id=None,
             order_id=None, cart=None, trace=True, stack=None) -> None:
         if self.in_window(t):
-            self.ctx.pop(cls, t, key=cart if cls in ("log.co_gw_timeout", "log.co_gw_5xx") else None)
+            self.ctx.pop(cls, t, key=cart if cls in PER_CART else None)
         r = rng(self.ctx.seed, "trace", order_id) if order_id else rng(self.ctx.seed, "co", pod, t.isoformat(), msg[:20])
         d = {"@timestamp": iso_z(t), "@version": "1", "message": msg, "logger_name": logger, "thread_name": thread,
              "level": level, "level_value": LEVEL_VALUE[level]}
@@ -96,6 +100,57 @@ class Checkout:
                 t2 = t + timedelta(milliseconds=r.randint(3, 9))
                 self.add(q.pod, t2, "WARN", T["loggers"]["request"], T["request_line"].format(method="POST", path="/api/checkout/submit",
                          status=502, ms=int((t2 - q.t).total_seconds() * 1000) + 6), "log.co_gw_5xx", th, None, q.order, q.cart)
+            elif q.outcome == "co_pool_timeout":
+                self.db_timeout(q, th, r)
+
+    def db_timeout(self, q, th: str, r) -> None:
+        """A submit that timed out waiting for a checkout-db connection (checkout_db model): Hibernate's pair of
+        lines, the exception handler's ERROR with the cause chain, and the 504 request line. No order exists yet."""
+        n = self.ctx.keep_1_in(self.folder, "log.co_db_timeout")
+        t = q.t + timedelta(milliseconds=q.co_ms)
+        if not q.kept(n):
+            self.drop(t, "log.co_db_timeout", 4, key=q.cart)
+            return
+        T, D = self.tpl, self.tpl["db_timeout"]
+        co = self.m.co
+        ca = self.ctx.scenario["estate"].get("co_anchor") or {}
+        sig = ca.get("sig_id") if q.anchor and q.anchor == ca.get("id") else None
+        kw = dict(timeout=co["connection_timeout_ms"], t=co["pool_per_pod"], a=co["pool_per_pod"], i=0, w=q.co_waiting, cart=q.cart)
+        self.add(q.pod, t, "WARN", T["loggers"]["sql_helper"], D["warn"], "log.co_db_timeout", th, None, None, q.cart)
+        self.add(q.pod, t, "ERROR", T["loggers"]["sql_helper"], D["error"].format(**kw), "log.co_db_timeout", th, sig, None, q.cart)
+        t2 = t + timedelta(milliseconds=r.randint(1, 3))
+        self.add(q.pod, t2, "ERROR", T["loggers"]["handler"], D["handler"].format(**kw), "log.co_db_timeout", th, None, None, q.cart,
+                 stack=D["stack"].format(**kw))
+        t3 = t2 + timedelta(milliseconds=r.randint(2, 6))
+        self.add(q.pod, t3, "WARN", T["loggers"]["request"], T["request_line"].format(method="POST", path="/api/checkout/submit",
+                 status=504, ms=int((t3 - q.t).total_seconds() * 1000) + 4), "log.co_db_timeout", th, None, None, q.cart)
+
+    def audit(self) -> None:
+        """The audit sink client's WARN for each audit write over its threshold (checkout_db model): every submit
+        that got a connection on an affected pod writes `audit_writes_per_submit` events, each blocking for the
+        sink's latency. One line in `keep_1_in` is kept, by count."""
+        co = self.m.co
+        if not co:
+            return
+        n = self.ctx.keep_1_in(self.folder, "log.co_audit_slow")
+        T = self.tpl
+        events = T["audit_events"]
+        for q in self.m.requests():
+            if q.outcome == "co_pool_timeout" or self.version_of(q.pod) not in self.m.co_versions or not self.in_window(q.t):
+                continue
+            per = q.co_ms / len(events)
+            if per < co["audit_warn_over_ms"]:
+                continue
+            r = rng(self.ctx.seed, "audit", q.order)
+            th = f"http-nio-8080-exec-{rng(self.ctx.seed, 'cocall', q.order).randint(1, 200)}"
+            for k, ev in enumerate(events):
+                t = q.borrow_t + timedelta(milliseconds=int(per * (k + 1)))
+                ms = int(round(per * r.uniform(0.985, 1.015), -1))
+                if every_nth(self.cnt, ("audit",), n):
+                    self.add(q.pod, t, "WARN", T["loggers"]["audit"], T["audit_slow"].format(ms=ms, event=ev, depth=r.randint(480, 512)),
+                             "log.co_audit_slow", th, cart=q.cart)
+                else:
+                    self.drop(t, "log.co_audit_slow")
 
     def requests(self) -> None:
         n = self.ctx.keep_1_in(self.folder, "log.co_request")
@@ -124,6 +179,8 @@ class Checkout:
                     ms = r.randint(8, 60) if method == "GET" else r.randint(40, 180)
                     if path.endswith("submit"):
                         ms = r.randint(450, 900) + (2400 if r.random() < 0.25 else 0)
+                        if self.m.co and self.version_of(pod) in self.m.co_versions:      # the audit writes hold the request
+                            ms = max(ms, int(self.m.co_hold_s(at, self.version_of(pod)) * 1000))
                     self.add(pod, at, "INFO", T["loggers"]["request"], T["request_line"].format(method=method, path=path, status=200, ms=ms),
                              "log.co_request", f"http-nio-8080-exec-{r.randint(1, 200)}", cart=r.randint(*self.ctx.scenario["estate"]["cart_id_range"]))
                 t += timedelta(seconds=10)
@@ -182,6 +239,7 @@ class Checkout:
 
     def render(self) -> None:
         self.gateway_calls()
+        self.audit()
         self.requests()
         self.flood()
         self.lifecycle()

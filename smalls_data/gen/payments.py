@@ -70,7 +70,7 @@ class Gateway:
 
     def startups(self) -> None:
         gw = self.ctx.facts["parameters"]["payments_gateway"]
-        for sid in ("startup_380", "startup_379"):
+        for sid in (x for x in ("startup_380", "startup_379") if x in self.sig):
             s = self.sig[sid]
             v = s["version"]
             cfg = gw["versions"][v]
@@ -101,9 +101,9 @@ class Gateway:
         n_ok, n_slow, n_retry = self.rate("log.request_ok"), self.rate("log.psp_ok_slow"), self.rate("log.psp_retry")
         n_ff, n_to, n_leak = self.rate("log.psp_fail_fast"), self.rate("log.hikari_timeout"), self.rate("log.hikari_leak")
         traced_hosts: set[str] = set()
-        first_leak = self.sig["first_leak"]
+        first_leak = self.sig.get("first_leak")
         for q in self.m.requests():
-            if not self.in_window(q.t):
+            if not self.in_window(q.t) or q.outcome == "co_pool_timeout":     # never reached the gateway
                 continue
             h = q.host
             th = f"http-nio-8443-exec-{q.thread}"
@@ -201,8 +201,8 @@ class Gateway:
         that puts the anchored 14:31:34 line on pay-02 on the grid."""
         every = self.shape["hikari_stats"]["every_s"]
         n = self.rate("log.hikari_stats")
-        full = self.sig["stats_full"]
-        full_t = self.c.t(full["at"])
+        full = self.sig.get("stats_full", {"host": None})          # no anchored line: every host on its own grid
+        full_t = self.c.t(full["at"]) if full["host"] else None
         for h in HOSTS:
             phase = 4.009 if h == full["host"] else rng(self.ctx.seed, "hk", h).randint(0, 29999) / 1000
             ref = full_t if h == full["host"] else self.c.t("00:00") + timedelta(seconds=phase)
@@ -248,6 +248,8 @@ class Gateway:
     def cannot_acquire(self) -> None:
         """pay-04's connection adder retries every 10 s while the database refuses it; the anchored first
         attempt and then one in `keep_1_in` are kept."""
+        if "cannot_acquire_first" not in self.sig:      # the database never refuses the gateway
+            return
         every = self.shape["cannot_acquire"]["every_s"]
         n = self.rate("log.hikari_cannot_acquire")
         sig = self.sig["cannot_acquire_first"]

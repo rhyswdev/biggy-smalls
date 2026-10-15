@@ -101,8 +101,8 @@ class Postgres:
                     for _ in range(-d):
                         self.event(t1 + timedelta(seconds=self.r.randint(1, 50)), "close", pool=("gw", h))
         # Gateway restarts on 3.7.9: Hikari aborts its in-use connections (EOF with an open transaction), then
-        # opens minimumIdle new ones.
-        for h in HOSTS:
+        # opens minimumIdle new ones. A scenario with no 3.7.9 start has no restart.
+        for h in (HOSTS if any(s["id"] == "startup_379" for s in self.ctx.scenario["gateway_signals"]) else []):
             self.event(self.m.v379_at[h] - timedelta(seconds=33.9), "restart", prio=1, host=h)
             t = self.m.v379_at[h] - timedelta(seconds=7.9)     # Hikari's "Added connection" at startup
             for j in range(hik["minimumIdle"]):
@@ -122,6 +122,9 @@ class Postgres:
         for i in range(rc["count"]):
             self.event(t, "connect", pool=("recon",), who="recon", sig=rc["sig_id"] if i == 0 else None)
             t += timedelta(milliseconds=self.r.randint(*rc["spacing_ms"]))
+        if "first_53300" not in self.sig:       # the database never reaches its ceiling: no refusals, no DBA session
+            self.plan_maintenance()
+            return
         # The Datadog agent loses its slot at 14:34 (budget "other" 1 to 0) and gets one back at 15:08.
         self.event(c.t("14:33:58.600"), "close", pool=("dd",))
         self.event(c.t("15:08:00") + timedelta(milliseconds=self.r.randint(100, 900)), "connect", pool=("dd",), who="datadog")
@@ -142,6 +145,10 @@ class Postgres:
         self.event(c.t(self.ctx.scenario["model"]["connections"]["pgsa_snapshot"]["at"]), "paste", prio=9)
         ks = self.sig["kill_sessions"]
         self.event(c.t(ks["at"]), "kill", prio=2, count=ks["count"], sig=ks["sig_id"])
+        self.plan_maintenance()
+
+    def plan_maintenance(self) -> None:
+        S = self.shape
         for w0, w1 in self.win:
             for tbl in S["autovacuum_tables"]:
                 self.event(w0 + timedelta(seconds=self.r.randint(60, int((w1 - w0).total_seconds()) - 60)), "autovacuum", table=tbl)
