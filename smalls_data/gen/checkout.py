@@ -73,7 +73,7 @@ class Checkout:
         n = self.ctx.keep_1_in(self.folder, "log.co_gw_timeout")
         T = self.tpl
         url = self.params["gateway_url"]
-        first = self.sig["first_checkout_timeout"]
+        first = self.sig.get("first_checkout_timeout", {"order": None, "sig_id": None})
         for q in self.m.requests():
             if not self.in_window(q.t):
                 continue

@@ -161,7 +161,7 @@ class Datadog:
                    "restricted_roles": None, "deleted": None}
             mons_out.append(obj)
             ctx.row(dd_monitor_handle(mon["id"]), "datadog/monitors.json", f"/{len(mons_out) - 1}", ctx.clock.t(mc["created"]),
-                    "dd.monitor", mon.get("kind", "signal") if "kind" in mon else "signal", None)
+                    "dd.monitor", mon.get("kind", "signal") if "kind" in mon else "signal", mon.get("definition_sig_id"))
             for tr in trs:
                 self.event(mon, mc, tr)
         ctx.write_json("datadog/monitors.json", mons_out)

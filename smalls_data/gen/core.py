@@ -231,6 +231,9 @@ class Ctx:
             sig_id: str | None = None, t_known: datetime | None = None,
             valid_from: datetime | None = None, valid_to: datetime | None = None) -> None:
         rel = path if isinstance(path, str) else self.rel(path)
+        # A variant may relabel a generated class whose role differs there (the renderers' default kinds are the
+        # development incident's); the label goes to the manifest only.
+        kind = self.scenario.get("kind_overrides", {}).get(cls, kind)
         self.rows.append(ManifestRow(
             handle=handle, src=rel.split("/")[0], path=rel, locator=locator, t_utc=iso_z(t),
             t_known=iso_z(t_known or t), valid_from=iso_z(valid_from) if valid_from else None,

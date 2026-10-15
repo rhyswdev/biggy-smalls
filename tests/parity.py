@@ -2,11 +2,14 @@
 path and locator. Only tests read `_internal/manifest.jsonl`, and only its handle, path, locator and time
 columns: the scenario's labels (`class`, `sig_id`, `kind`) are dropped on load."""
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BUNDLE = ROOT / "bundles/larkspur-checkout-2026-10-13"
+# The development bundle. The session that authors a held-out bundle points the leak tests at it with
+# SMALLS_TEST_BUNDLE and SMALLS_TEST_SCENARIO (eval/heldout/README.md, acceptance 1); nothing else sets them.
+BUNDLE = ROOT / os.environ.get("SMALLS_TEST_BUNDLE", "bundles/larkspur-checkout-2026-10-13")
 COLUMNS = ("handle", "path", "locator", "t_utc", "t_known", "valid_from", "valid_to")
 _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 

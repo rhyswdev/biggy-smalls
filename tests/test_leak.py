@@ -12,6 +12,7 @@ Exemptions, each a time that is known in advance, as the served-file lint alread
   `closed_at` and `sys_updated_on` are not exempt).
 """
 import json
+import os
 import re
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -26,7 +27,7 @@ from smalls.tools import store
 
 ROOT = parity.ROOT
 BUNDLE = parity.BUNDLE
-SCENARIO = yaml.safe_load((ROOT / "scenario/larkspur-checkout.yaml").read_text())
+SCENARIO = yaml.safe_load((ROOT / os.environ.get("SMALLS_TEST_SCENARIO", "scenario/larkspur-checkout.yaml")).read_text())
 DAY = SCENARIO["meta"]["date"]
 CHECKPOINTS = [(c["id"], c["at"]) for c in SCENARIO["checkpoints"] if c.get("core")]
 UTC = timezone.utc
