@@ -8,7 +8,7 @@ from datetime import timedelta
 import yaml
 
 from smalls.contracts.handles import conf_handle_for_path, psp_handle
-from smalls_data.gen.core import CONTENT, Ctx, content, local
+from smalls_data.gen.core import Ctx, content, content_path, local
 
 
 def iso_local(t, zone: str) -> str:
@@ -25,7 +25,7 @@ class Confluence:
         for p in self.ctx.scenario["confluence"]:
             if not p.get("slice", False):
                 continue
-            src = CONTENT / "confluence" / f"{p['key']}.md"
+            src = content_path(f"confluence/{p['key']}.md")
             rel = f"confluence/{p['file']}"
             self.ctx.write_text(rel, src.read_text())
             self.ctx.row(conf_handle_for_path(rel), rel, 1, self.ctx.clock.t(p["updated"] + "T12:00:00Z"), "conf.page", p["kind"], p.get("sig_id"))
@@ -98,7 +98,7 @@ class Triggers:
 
     def render(self) -> None:
         for t in self.ctx.scenario["triggers"]:
-            src = CONTENT / "triggers" / f"{t['checkpoint']}.md"
+            src = content_path(f"triggers/{t['checkpoint']}.md")
             self.ctx.write_text(t["file"], src.read_text())
 
 
@@ -139,7 +139,8 @@ class Integration:
             d = {k: v for k, v in spec.items() if k != "classes"}
             d["classes"] = [{k: v for k, v in c.items() if k != "gen"} for c in spec["classes"]]
             sampling[folder] = d
-        doc = {"bundle": self.ctx.scenario["meta"]["bundle"], "syslog_year": int(self.ctx.scenario["meta"]["date"][:4]),
+        # A variant may serve the estate's bundle name rather than its own folder's, so nothing served names it.
+        doc = {"bundle": self.ctx.scenario["meta"].get("served_name", self.ctx.scenario["meta"]["bundle"]), "syslog_year": int(self.ctx.scenario["meta"]["date"][:4]),
                "servicenow_display_value": "true", "sources": sources, "sampling": sampling}
         self.ctx.write_text("integration.yaml", "# Integration configuration as exported with this bundle: each source's clock and\n"
                             "# record-break rule, and the log pipeline's sampling: one constant rate per line class,\n"

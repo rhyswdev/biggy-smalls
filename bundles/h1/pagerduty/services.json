@@ -1,0 +1,112 @@
+{
+  "services": [
+    {
+      "id": "PSV7Q2M",
+      "type": "service",
+      "summary": "Payments - Prod",
+      "self": "https://api.pagerduty.com/services/PSV7Q2M",
+      "html_url": "https://larkspur.pagerduty.com/service-directory/PSV7Q2M",
+      "name": "Payments - Prod",
+      "description": "Payments - Prod alerts from Datadog",
+      "auto_resolve_timeout": 14400,
+      "created_at": "2023-06-01T10:00:00Z",
+      "status": "active",
+      "escalation_policy": {
+        "id": "PEP4K9R",
+        "type": "escalation_policy_reference",
+        "summary": "Payments Engineering",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP4K9R",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP4K9R"
+      },
+      "teams": [],
+      "integrations": [],
+      "incident_urgency_rule": {
+        "type": "constant",
+        "urgency": "high"
+      },
+      "alert_creation": "create_alerts_and_incidents"
+    },
+    {
+      "id": "PSV3D8X",
+      "type": "service",
+      "summary": "Database - Prod",
+      "self": "https://api.pagerduty.com/services/PSV3D8X",
+      "html_url": "https://larkspur.pagerduty.com/service-directory/PSV3D8X",
+      "name": "Database - Prod",
+      "description": "Database - Prod alerts from Datadog",
+      "auto_resolve_timeout": 14400,
+      "created_at": "2023-06-01T10:00:00Z",
+      "status": "active",
+      "escalation_policy": {
+        "id": "PEP7W2T",
+        "type": "escalation_policy_reference",
+        "summary": "Database Engineering",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP7W2T",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP7W2T"
+      },
+      "teams": [],
+      "integrations": [],
+      "incident_urgency_rule": {
+        "type": "constant",
+        "urgency": "high"
+      },
+      "alert_creation": "create_alerts_and_incidents"
+    },
+    {
+      "id": "PSV9C1L",
+      "type": "service",
+      "summary": "Checkout - Prod",
+      "self": "https://api.pagerduty.com/services/PSV9C1L",
+      "html_url": "https://larkspur.pagerduty.com/service-directory/PSV9C1L",
+      "name": "Checkout - Prod",
+      "description": "Checkout - Prod alerts from Datadog",
+      "auto_resolve_timeout": 14400,
+      "created_at": "2023-06-01T10:00:00Z",
+      "status": "active",
+      "escalation_policy": {
+        "id": "PEP2N6B",
+        "type": "escalation_policy_reference",
+        "summary": "Commerce Platform",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP2N6B",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP2N6B"
+      },
+      "teams": [],
+      "integrations": [],
+      "incident_urgency_rule": {
+        "type": "constant",
+        "urgency": "high"
+      },
+      "alert_creation": "create_alerts_and_incidents"
+    },
+    {
+      "id": "PSV5P4F",
+      "type": "service",
+      "summary": "Platform",
+      "self": "https://api.pagerduty.com/services/PSV5P4F",
+      "html_url": "https://larkspur.pagerduty.com/service-directory/PSV5P4F",
+      "name": "Platform",
+      "description": "Platform alerts from Datadog",
+      "auto_resolve_timeout": 14400,
+      "created_at": "2023-06-01T10:00:00Z",
+      "status": "active",
+      "escalation_policy": {
+        "id": "PEP8H3J",
+        "type": "escalation_policy_reference",
+        "summary": "Platform Reliability",
+        "self": "https://api.pagerduty.com/escalation_policies/PEP8H3J",
+        "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP8H3J"
+      },
+      "teams": [],
+      "integrations": [],
+      "incident_urgency_rule": {
+        "type": "constant",
+        "urgency": "low"
+      },
+      "alert_creation": "create_alerts_and_incidents"
+    }
+  ],
+  "limit": 25,
+  "offset": 0,
+  "more": false,
+  "total": null
+}

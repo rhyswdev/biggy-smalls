@@ -11,7 +11,9 @@ import shutil
 import sys
 
 from smalls_data.gen.checkout import Checkout
-from smalls_data.gen.core import BUNDLES, SCENARIO, load_ctx
+from pathlib import Path
+
+from smalls_data.gen.core import BUNDLES, SCENARIO, content_path, load_ctx
 from smalls_data.gen.datadog import Datadog
 from smalls_data.gen.dynatrace import Dynatrace
 from smalls_data.gen.edge import F5, Nginx, SolarWinds
@@ -42,7 +44,7 @@ def build(scenario_file=SCENARIO / "larkspur-checkout.yaml", out_root=BUNDLES):
     p = ctx.out / "_internal" / "manifest.jsonl"
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text("".join(r.to_json() + "\n" for r in rows))
-    key = (SCENARIO / "content/answer_key.yaml").read_text()
+    key = content_path("answer_key.yaml").read_text()
     (ctx.out / "_internal" / "answer_key.yaml").write_text(f"# Answer key for {ctx.out.name}. Never served (PLAN 3.3).\n" + key)
     (ctx.out / "_internal" / "counts.json").write_text(json.dumps(dict(sorted(ctx.counts.items())), indent=2) + "\n")
     def per_unit(k, v):      # per-cart classes: records per distinct cart; otherwise the renderer's fixed count
@@ -55,8 +57,10 @@ def build(scenario_file=SCENARIO / "larkspur-checkout.yaml", out_root=BUNDLES):
     return ctx
 
 
-def main() -> int:
-    ctx = build()
+def main(argv: list[str] | None = None) -> int:
+    """`python -m smalls_data.build [scenario file]`: the development scenario unless a file is named."""
+    argv = sys.argv[1:] if argv is None else argv
+    ctx = build(Path(argv[0])) if argv else build()
     print(f"data: built {ctx.out} with {len(ctx.rows)} manifest rows")
     for k, v in sorted(ctx.counts.items()):
         print(f"  {k}: {v}")

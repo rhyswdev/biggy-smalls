@@ -1,0 +1,38 @@
+# Hand-written Slack messages for held-out variant h1. Never served: the generator renders the export.
+# The development bundle's fixed messages that the card keeps are here unchanged (Sam's snooze, Alice opening
+# the channel, Ben's rollback call, Sam's redis question and Alice's answer); Elena's 14:34 and 14:38 lines
+# are gone, and the messages after the 14:40 cut follow this variant's day. `at` is UTC on the bundle day.
+
+channels:
+  sre-oncall:
+    - {id: slack.sre_sam_1414, at: "14:14:00", author: sam.ortega, kind: trap, sig_id: sig.slack_sam_snooze,
+       text: "muted the redis-sessions frag monitor for an hour. it's the usual flap, INC0047003 says it's benign"}
+
+  inc-checkout-latency:
+    - {id: slack.inc_channel_created, at: "14:35:00", author: alice.nguyen, subtype: channel_join, kind: signal,
+       text: "<@{self}> has joined the channel"}
+    - {id: slack.inc_alice_1435, at: "14:35:20", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_opens,
+       text: "IC here. checkout payments failing / slow since ~14:30, 504s on submit. INC0048811. @sam.ortega @ben.kowalski @elena.rossi pls join"}
+    - {id: slack.inc_ben_1436, at: "14:36:00", author: ben.kowalski, kind: signal, sig_id: sig.slack_ben_deploy,
+       text: "we deployed checkout-api 2.14.3 at 14:28, that's gotta be it. @alice.nguyen can we roll back?"}
+    - {id: slack.inc_alice_1436, at: "14:36:30", author: alice.nguyen, kind: signal,
+       text: "yes, roll it back. @ben.kowalski go"}
+    - {id: slack.inc_sam_1437, at: "14:37:30", author: sam.ortega, kind: trap, sig_id: sig.slack_sam_redis,
+       text: "is it redis again? the runbook says check redis"}
+    - {id: slack.inc_alice_1437, at: "14:37:50", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_runbook_ancient,
+       text: "that runbook is ancient, sessions moved to the cluster last year"}
+    # After the 14:40 cut.
+    - {id: slack.inc_kofi_1441, at: "14:41:00", author: kofi.mensah, kind: trap, sig_id: sig.slack_kofi_network,
+       text: "is this a network thing? marketing site is down too"}
+    - {id: slack.inc_alice_1443, at: "14:43:10", author: alice.nguyen, kind: signal, sig_id: sig.slack_alice_1443,
+       text: "rollback done, 504s have stopped. watching for 10 min before we call it"}
+    - {id: slack.inc_ben_1444, at: "14:44:20", author: ben.kowalski, kind: signal, sig_id: sig.slack_ben_pool,
+       text: "error graph is back to baseline. before the rollback every 2.14.3 pod was pinned at 40/40 on the checkout-db pool, 2.14.2 pods sit at 2 or 3"}
+    - {id: slack.inc_elena_1445, at: "14:45:30", author: elena.rossi, kind: signal, sig_id: sig.slack_elena_db_fine,
+       text: "checkout-db was quiet the whole time btw, nowhere near max_connections and no slow queries"}
+    - {id: slack.inc_ben_1452, at: "14:52:40", author: ben.kowalski, kind: signal, sig_id: sig.slack_ben_cause,
+       text: "found it. the logback bump in 2.14.3 switched the audit appender to synchronous, and it writes inside the submit transaction. with the DEBUG flood the sink was taking ~10s a write, 3 writes per submit, so every submit sat on its connection for 30s"}
+    - {id: slack.inc_alice_1454, at: "14:54:10", author: alice.nguyen, kind: signal,
+       text: "nice. 2.14.3 stays parked until the appender is async again and DEBUG is off. @ben.kowalski can you write it up on the INC"}
+    - {id: slack.inc_alice_1502, at: "15:02:10", author: alice.nguyen, kind: signal,
+       text: "resolving INC0048811. thanks all"}

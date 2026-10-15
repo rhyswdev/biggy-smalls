@@ -161,7 +161,7 @@ class Datadog:
                    "restricted_roles": None, "deleted": None}
             mons_out.append(obj)
             ctx.row(dd_monitor_handle(mon["id"]), "datadog/monitors.json", f"/{len(mons_out) - 1}", ctx.clock.t(mc["created"]),
-                    "dd.monitor", mon.get("kind", "signal") if "kind" in mon else "signal", None)
+                    "dd.monitor", mon.get("kind", "signal") if "kind" in mon else "signal", mon.get("definition_sig_id"))
             for tr in trs:
                 self.event(mon, mc, tr)
         ctx.write_json("datadog/monitors.json", mons_out)
@@ -266,6 +266,12 @@ class Datadog:
                 errs = jit(total * m.err_rate(t) / 100, 0.05)
                 pods = m.active_pods(t + timedelta(seconds=30))
                 share = sum(1 for _, v in pods if v == "2.14.3") / len(pods)
+                if m.co:     # the baseline falls on every pod; the checkout-db timeouts only on the affected version
+                    base = total * m.co["baseline_error_pct"] / 100
+                    fails = max(0.0, errs - jit(base, 0.05))
+                    v143.append(round(base * share + fails) * 1.0 if share > 0 else ...)
+                    v142.append(round(base * (1 - share)) * 1.0 if share < 1 else ...)
+                    continue
                 v143.append(round(errs * share) * 1.0 if share > 0 else ...)
                 v142.append(round(errs * (1 - share)) * 1.0 if share < 1 else ...)
             return [(["version:2.14.2"], v142), (["version:2.14.3"], v143)]
@@ -275,8 +281,21 @@ class Datadog:
             return [([], [round(min(jit(m.p90(t)), hi * 0.985), 3) for t, hi in zip(times, p99)])]
         if f.startswith("payments-gw.p99"):
             return [([], [round(min(10.02, jit(m.p99(t))), 3) for t in times])]
+        if f.startswith("checkout-api.hikaricp"):
+            # checkout-api's pool to checkout-db, per pod while the pod runs (checkout_db model).
+            P = self.ctx.scenario["estate"]["checkout_pods"]
+            out = []
+            for pod in P["initial"] + P["rollout_2_14_3"] + P["rollback_2_14_2"]:
+                vals = []
+                for t in times:
+                    mid = t + timedelta(seconds=30)
+                    v = dict(m.active_pods(mid)).get(pod)
+                    vals.append(round(min(float(m.co["pool_per_pod"]), jit(m.co_active(mid, v), 0.08))) * 1.0 if v else ...)
+                if any(x is not ... for x in vals):
+                    out.append(([f"pod_name:{pod}"], vals))
+            return out
         if f.startswith("postgresql.connections"):
-            n0, n1 = (self.c.t(x) for x in q["nulls"])
+            n0, n1 = (self.c.t(x) for x in q.get("nulls", ["23:59", "23:59"]))
             pay, orders, pg = [], [], []
             for t in times:
                 row = m.conn_row(t)
@@ -293,6 +312,8 @@ class Datadog:
             base = self.ctx.facts["parameters"]["payment_success_rate"]["baseline"]
             ok, tot = {}, {}
             for q_ in m.requests():
+                if q_.outcome == "co_pool_timeout":       # stopped at checkout-api; the gateway never saw it
+                    continue
                 k = q_.t.replace(second=0, microsecond=0)
                 tot[k] = tot.get(k, 0) + 1
                 ok[k] = ok.get(k, 0) + (q_.outcome in ("ok", "slow_ok"))

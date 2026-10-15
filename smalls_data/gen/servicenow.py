@@ -235,7 +235,7 @@ class ServiceNow:
                 if t - timedelta(seconds=hi_s) <= q.t <= t - timedelta(seconds=lo_s) and q.cart not in self.used_carts and pred(q):
                     best = q
             return best
-        failing = lambda q: q.outcome in ("gave_up", "pool_timeout") and q.u < 1 / 100
+        failing = lambda q: q.outcome in ("gave_up", "pool_timeout", "co_pool_timeout") and q.u < 1 / 100
         if report == "spinner":
             q = latest(failing, 60, 1200)
         elif report == "spinner_repeat":
@@ -265,6 +265,7 @@ class ServiceNow:
             raise ValueError(f"no order for a {report} ticket at {t}")
         self.used_orders.add(q.order)
         self.used_carts.add(q.cart)
+        self.last_cart = q.cart
         return q.order.split("-", 1)[1]
 
     def customer_incidents(self) -> list[tuple]:
@@ -279,6 +280,7 @@ class ServiceNow:
                 t = self.c.t(it["at"])
                 order = self.pick_order(it["report"], t)
                 desc = it["description"].replace("order {order}", "{order}").replace("{order}", f"order {order}")
+                desc = desc.replace("{cart}", f"cart {self.last_cart}")      # a submit that failed before any order existed
                 body = {"short_description": it["short_description"], "description": desc}
                 number = f"INC{n:07d}"
                 n += 1
@@ -299,7 +301,7 @@ class ServiceNow:
         J = content("servicenow/live.yaml")["journal"]
         number, opened = L["number"], self.c.t(L["opened"])
         sid = sys_id("incident", number)
-        summary, rows = pgsa_text(self.ctx, self.m)
+        summary, rows = pgsa_text(self.ctx, self.m) if "pgsa_snapshot" in self.ctx.scenario["model"]["connections"] else ("", "")
         for j in L["journal"]:
             text = J[j["key"]].replace("{pgsa_summary}", summary).replace("{pgsa_rows}", rows)
             self.note(self.c.t(j["at"]), number, sid, j["element"], j["by"], text, j["kind"], j.get("sig_id"), cls=j.get("class", "snow.journal.live"),

@@ -62,6 +62,13 @@ class Slack:
         # PagerDuty's Slack app posts in the incident channel once it exists.
         pd = {i["number"]: i for i in self.ctx.scenario["pagerduty"]["incidents"]}
         name = lambda h: self.people[h]["name"]
+        if "pagerduty_posts" in self.ctx.scenario["slack"]:      # a scenario that lists its own posts
+            for p in self.ctx.scenario["slack"]["pagerduty_posts"]:
+                text = p["text"].replace("{title}", pd[p["incident"]]["title"]) if p.get("incident") else p["text"]
+                for h in self.people:
+                    text = text.replace("{" + h + "}", name(h))
+                self.add("inc-checkout-latency", self.c.t(p["at"]), None, text, "slack.bot.pagerduty", "signal", None, bot="PagerDuty")
+            return
         posts = [("14:35:04", f"Incident #8812 *{pd[8812]['title']}* on Payments - Prod: Triggered, assigned to {name('tom.beckett')}"),
                  ("14:35:05", f"Incident #8814 *{pd[8814]['title']}* on Checkout - Prod: Acknowledged by {name('alice.nguyen')}"),
                  ("14:37:01", "Incident #8815 *[Synthetics] checkout flow* merged into #8814 by " + name("alice.nguyen")),
@@ -74,7 +81,7 @@ class Slack:
 
     def load(self) -> None:
         fixed = content("slack/fixed.yaml")["channels"]
-        summary, rows = self.pgsa()
+        summary, rows = self.pgsa() if "pgsa_snapshot" in self.ctx.scenario["model"]["connections"] else ("", "")
         for ch, msgs in fixed.items():
             for m in msgs:
                 text = m["text"].replace("{pgsa_summary}", summary).replace("{pgsa_rows}", rows)

@@ -1,0 +1,233 @@
+2026-10-13 13:45:58.000 UTC [34760] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=51630
+2026-10-13 13:45:58.005 UTC [34760] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:46:35.190 UTC [1021] @ LOG:  checkpoint starting: time
+2026-10-13 13:47:21.902 UTC [1021] @ LOG:  checkpoint complete: wrote 2429 buffers (1.9%); 0 WAL file(s) added, 0 removed, 2 recycled; write=46.712 s, sync=0.038 s, total=46.812 s; sync files=37, longest=0.006 s, average=0.001 s; distance=19432 kB, estimate=19787 kB
+2026-10-13 13:50:43.000 UTC [34775] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=48260
+2026-10-13 13:50:43.005 UTC [34775] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:53:54.000 UTC [34786] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=33849
+2026-10-13 13:53:54.002 UTC [34786] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:53:59.000 UTC [34789] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=55399
+2026-10-13 13:53:59.006 UTC [34789] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:55:44.000 UTC [34795] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=47508
+2026-10-13 13:55:44.003 UTC [34795] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:58:24.000 UTC [34804] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=44566
+2026-10-13 13:58:24.002 UTC [34804] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:59:02.000 UTC [34807] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=49681
+2026-10-13 13:59:02.002 UTC [34807] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:59:15.000 UTC [34808] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=54281
+2026-10-13 13:59:15.004 UTC [34808] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 13:59:55.000 UTC [34813] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=37449
+2026-10-13 13:59:55.006 UTC [34813] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:00:50.000 UTC [34818] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=53592
+2026-10-13 14:00:50.005 UTC [34818] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:01:36.000 UTC [34822] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=43777
+2026-10-13 14:01:36.003 UTC [34822] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:03:15.000 UTC [34828] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=59127
+2026-10-13 14:03:15.005 UTC [34828] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:06:01.000 UTC [34838] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=56699
+2026-10-13 14:06:01.005 UTC [34838] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:06:10.000 UTC [34840] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=54820
+2026-10-13 14:06:10.002 UTC [34840] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:06:32.000 UTC [34844] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=49245
+2026-10-13 14:06:32.002 UTC [34844] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:06:35.190 UTC [1021] @ LOG:  checkpoint starting: time
+2026-10-13 14:07:34.748 UTC [1021] @ LOG:  checkpoint complete: wrote 3097 buffers (2.4%); 0 WAL file(s) added, 0 removed, 2 recycled; write=59.558 s, sync=0.051 s, total=59.658 s; sync files=59, longest=0.004 s, average=0.001 s; distance=24776 kB, estimate=25603 kB
+2026-10-13 14:09:43.000 UTC [34856] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=60933
+2026-10-13 14:09:43.006 UTC [34856] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:10:27.000 UTC [34859] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=36172
+2026-10-13 14:10:27.005 UTC [34859] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:10:48.000 UTC [34861] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=44080
+2026-10-13 14:10:48.004 UTC [34861] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:12:36.000 UTC [34868] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=53978
+2026-10-13 14:12:36.000 UTC [34869] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=43218
+2026-10-13 14:12:36.004 UTC [34868] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:12:36.005 UTC [34869] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:15:58.000 UTC [34880] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=44207
+2026-10-13 14:15:58.002 UTC [34880] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:20:43.000 UTC [34896] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=44721
+2026-10-13 14:20:43.000 UTC [34897] @ LOG:  automatic analyze of table "payments.public.authorizations"
+2026-10-13 14:20:43.003 UTC [34896] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:23:54.000 UTC [34907] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=33875
+2026-10-13 14:23:54.003 UTC [34907] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:23:59.000 UTC [34909] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=44024
+2026-10-13 14:23:59.002 UTC [34909] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:25:44.000 UTC [34916] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=33800
+2026-10-13 14:25:44.003 UTC [34916] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:26:35.190 UTC [1021] @ LOG:  checkpoint starting: time
+2026-10-13 14:27:04.517 UTC [1021] @ LOG:  checkpoint complete: wrote 1525 buffers (1.2%); 0 WAL file(s) added, 0 removed, 1 recycled; write=29.327 s, sync=0.076 s, total=29.427 s; sync files=48, longest=0.007 s, average=0.001 s; distance=12200 kB, estimate=12427 kB
+2026-10-13 14:28:24.000 UTC [34925] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=44299
+2026-10-13 14:28:24.004 UTC [34925] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:29:02.000 UTC [34929] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=34001
+2026-10-13 14:29:02.004 UTC [34929] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:29:15.000 UTC [34932] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=53371
+2026-10-13 14:29:15.006 UTC [34932] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:29:55.000 UTC [34935] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=60646
+2026-10-13 14:29:55.006 UTC [34935] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:30:00.180 UTC [34938] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=37301
+2026-10-13 14:30:00.182 UTC [34938] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.197 UTC [34940] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=57029
+2026-10-13 14:30:00.200 UTC [34940] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.210 UTC [34942] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=58554
+2026-10-13 14:30:00.213 UTC [34942] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.218 UTC [34945] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=59468
+2026-10-13 14:30:00.222 UTC [34945] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.253 UTC [34947] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=33792
+2026-10-13 14:30:00.256 UTC [34947] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.266 UTC [34948] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=49398
+2026-10-13 14:30:00.268 UTC [34948] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.304 UTC [34949] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=46366
+2026-10-13 14:30:00.310 UTC [34949] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.332 UTC [34950] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=51788
+2026-10-13 14:30:00.334 UTC [34950] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.354 UTC [34953] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=34864
+2026-10-13 14:30:00.360 UTC [34953] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.390 UTC [34955] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=58879
+2026-10-13 14:30:00.393 UTC [34955] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.424 UTC [34958] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=43259
+2026-10-13 14:30:00.429 UTC [34958] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.447 UTC [34959] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=60898
+2026-10-13 14:30:00.452 UTC [34959] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.455 UTC [34960] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=37120
+2026-10-13 14:30:00.460 UTC [34960] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.467 UTC [34961] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=44731
+2026-10-13 14:30:00.472 UTC [34961] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.495 UTC [34962] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=40876
+2026-10-13 14:30:00.499 UTC [34962] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.508 UTC [34965] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=52194
+2026-10-13 14:30:00.511 UTC [34965] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.544 UTC [34966] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=55454
+2026-10-13 14:30:00.550 UTC [34966] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.577 UTC [34967] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=41271
+2026-10-13 14:30:00.582 UTC [34967] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.600 UTC [34970] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=55303
+2026-10-13 14:30:00.605 UTC [34970] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.636 UTC [34973] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=33678
+2026-10-13 14:30:00.642 UTC [34973] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.652 UTC [34976] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=38022
+2026-10-13 14:30:00.655 UTC [34976] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.669 UTC [34978] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=55393
+2026-10-13 14:30:00.674 UTC [34978] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.707 UTC [34980] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=49190
+2026-10-13 14:30:00.712 UTC [34980] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.742 UTC [34982] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=55466
+2026-10-13 14:30:00.748 UTC [34982] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.780 UTC [34983] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=48939
+2026-10-13 14:30:00.782 UTC [34983] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.788 UTC [34984] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=59558
+2026-10-13 14:30:00.790 UTC [34984] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.808 UTC [34986] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=52090
+2026-10-13 14:30:00.812 UTC [34986] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.834 UTC [34989] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=43464
+2026-10-13 14:30:00.837 UTC [34989] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.861 UTC [34990] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=36029
+2026-10-13 14:30:00.866 UTC [34990] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.894 UTC [34993] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=52120
+2026-10-13 14:30:00.898 UTC [34993] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.925 UTC [34995] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=50935
+2026-10-13 14:30:00.931 UTC [34995] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.954 UTC [34998] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=60520
+2026-10-13 14:30:00.957 UTC [34998] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:00.971 UTC [35000] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=45679
+2026-10-13 14:30:00.977 UTC [35000] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.008 UTC [35002] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=57488
+2026-10-13 14:30:01.010 UTC [35002] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.016 UTC [35005] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=38154
+2026-10-13 14:30:01.020 UTC [35005] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.034 UTC [35008] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=55094
+2026-10-13 14:30:01.038 UTC [35008] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.056 UTC [35010] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=53439
+2026-10-13 14:30:01.062 UTC [35010] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.083 UTC [35013] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=44864
+2026-10-13 14:30:01.088 UTC [35013] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.098 UTC [35016] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=51278
+2026-10-13 14:30:01.100 UTC [35016] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:01.119 UTC [35018] [unknown]@[unknown] LOG:  connection received: host=10.20.6.23 port=41469
+2026-10-13 14:30:01.125 UTC [35018] recon_app@payments LOG:  connection authorized: user=recon_app database=payments application_name=payments-reconciler
+2026-10-13 14:30:16.000 UTC [35021] @ LOG:  automatic analyze of table "payments.public.settlement_lines"
+2026-10-13 14:30:50.000 UTC [35025] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=54356
+2026-10-13 14:30:50.006 UTC [35025] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:31:36.000 UTC [35029] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=35961
+2026-10-13 14:31:36.006 UTC [35029] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:33:15.000 UTC [35035] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=55907
+2026-10-13 14:33:15.003 UTC [35035] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:36:01.000 UTC [35044] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=33961
+2026-10-13 14:36:01.002 UTC [35044] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:36:10.000 UTC [35046] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=51418
+2026-10-13 14:36:10.004 UTC [35046] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:36:32.000 UTC [35048] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=45113
+2026-10-13 14:36:32.005 UTC [35048] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:39:43.000 UTC [35058] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=50100
+2026-10-13 14:39:43.002 UTC [35058] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:40:27.000 UTC [35062] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=59957
+2026-10-13 14:40:27.006 UTC [35062] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:40:48.000 UTC [35066] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=33072
+2026-10-13 14:40:48.006 UTC [35066] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:42:36.000 UTC [35074] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=42764
+2026-10-13 14:42:36.000 UTC [35076] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=52834
+2026-10-13 14:42:36.006 UTC [35074] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:42:36.006 UTC [35076] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:45:58.000 UTC [35087] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=40652
+2026-10-13 14:45:58.002 UTC [35087] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:46:35.190 UTC [1021] @ LOG:  checkpoint starting: time
+2026-10-13 14:47:23.786 UTC [1021] @ LOG:  checkpoint complete: wrote 2527 buffers (1.9%); 0 WAL file(s) added, 0 removed, 3 recycled; write=48.596 s, sync=0.087 s, total=48.696 s; sync files=27, longest=0.002 s, average=0.001 s; distance=20216 kB, estimate=20618 kB
+2026-10-13 14:50:43.000 UTC [35103] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=48180
+2026-10-13 14:50:43.005 UTC [35103] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:53:54.000 UTC [35114] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=38789
+2026-10-13 14:53:54.006 UTC [35114] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:53:59.000 UTC [35117] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=48605
+2026-10-13 14:53:59.002 UTC [35117] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:55:44.000 UTC [35125] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=60771
+2026-10-13 14:55:44.005 UTC [35125] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:58:24.000 UTC [35135] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=46653
+2026-10-13 14:58:24.004 UTC [35135] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:59:02.000 UTC [35137] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=57154
+2026-10-13 14:59:02.002 UTC [35137] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:59:15.000 UTC [35138] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=40099
+2026-10-13 14:59:15.005 UTC [35138] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 14:59:55.000 UTC [35143] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=35730
+2026-10-13 14:59:55.005 UTC [35143] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:00:50.000 UTC [35148] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=40576
+2026-10-13 15:00:50.005 UTC [35148] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:01:36.000 UTC [35153] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=55029
+2026-10-13 15:01:36.003 UTC [35153] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:03:15.000 UTC [35158] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=43618
+2026-10-13 15:03:15.002 UTC [35158] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:06:01.000 UTC [35169] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=53615
+2026-10-13 15:06:01.005 UTC [35169] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:06:10.000 UTC [35172] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=48161
+2026-10-13 15:06:10.002 UTC [35172] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:06:32.000 UTC [35174] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=37573
+2026-10-13 15:06:32.002 UTC [35174] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:06:35.190 UTC [1021] @ LOG:  checkpoint starting: time
+2026-10-13 15:07:30.959 UTC [1021] @ LOG:  checkpoint complete: wrote 2900 buffers (2.2%); 0 WAL file(s) added, 0 removed, 2 recycled; write=55.769 s, sync=0.047 s, total=55.869 s; sync files=47, longest=0.007 s, average=0.001 s; distance=23200 kB, estimate=23807 kB
+2026-10-13 15:09:43.000 UTC [35185] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=48956
+2026-10-13 15:09:43.002 UTC [35185] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:10:27.000 UTC [35190] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=47458
+2026-10-13 15:10:27.006 UTC [35190] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:10:48.000 UTC [35193] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=34889
+2026-10-13 15:10:48.005 UTC [35193] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:12:36.000 UTC [35201] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=43346
+2026-10-13 15:12:36.000 UTC [35202] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=37931
+2026-10-13 15:12:36.004 UTC [35202] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:12:36.005 UTC [35201] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:15:58.000 UTC [35214] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=38493
+2026-10-13 15:15:58.002 UTC [35214] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:20:43.000 UTC [35231] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=55028
+2026-10-13 15:20:43.006 UTC [35231] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:23:06.000 UTC [35241] @ LOG:  automatic analyze of table "orders.public.order_events"
+2026-10-13 15:23:54.000 UTC [35245] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=54179
+2026-10-13 15:23:54.002 UTC [35245] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:23:59.000 UTC [35246] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=54718
+2026-10-13 15:23:59.002 UTC [35246] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:25:44.000 UTC [35254] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=52064
+2026-10-13 15:25:44.004 UTC [35254] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:26:35.190 UTC [1021] @ LOG:  checkpoint starting: time
+2026-10-13 15:27:27.690 UTC [1021] @ LOG:  checkpoint complete: wrote 2730 buffers (2.1%); 0 WAL file(s) added, 0 removed, 2 recycled; write=52.500 s, sync=0.049 s, total=52.600 s; sync files=25, longest=0.003 s, average=0.001 s; distance=21840 kB, estimate=22193 kB
+2026-10-13 15:28:24.000 UTC [35263] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=58100
+2026-10-13 15:28:24.003 UTC [35263] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:29:02.000 UTC [35266] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=34515
+2026-10-13 15:29:02.006 UTC [35266] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:29:15.000 UTC [35269] [unknown]@[unknown] LOG:  connection received: host=10.20.4.42 port=33872
+2026-10-13 15:29:15.002 UTC [35269] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service
+2026-10-13 15:29:55.000 UTC [35273] [unknown]@[unknown] LOG:  connection received: host=10.20.4.41 port=60616
+2026-10-13 15:29:55.004 UTC [35273] orders_app@orders LOG:  connection authorized: user=orders_app database=orders application_name=order-service

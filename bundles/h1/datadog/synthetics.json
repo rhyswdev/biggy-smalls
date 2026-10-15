@@ -1,0 +1,106 @@
+[
+  {
+    "public_id": "syn-checkout-flow",
+    "name": "checkout flow",
+    "type": "browser",
+    "status": "live",
+    "message": "{{#is_alert}}Synthetic checkout flow is failing from {{locations}}.{{/is_alert}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n{{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}",
+    "locations": [
+      "aws:eu-west-1",
+      "aws:us-east-1"
+    ],
+    "monitor_id": 7390118,
+    "tags": [
+      "team:commerce",
+      "synthetics",
+      "env:prod"
+    ],
+    "config": {
+      "assertions": [],
+      "request": {
+        "method": "GET",
+        "url": "https://www.larkspur.com/checkout"
+      }
+    },
+    "options": {
+      "tick_every": 300,
+      "min_location_failed": 1,
+      "monitor_name": "[Synthetics] checkout flow"
+    },
+    "steps": [
+      {
+        "name": "Navigate to https://www.larkspur.com/checkout",
+        "type": "assertCurrentUrl"
+      },
+      {
+        "name": "Add test SKU 100-200-17 to cart",
+        "type": "click"
+      },
+      {
+        "name": "Click Checkout",
+        "type": "click"
+      },
+      {
+        "name": "Fill test card",
+        "type": "click"
+      },
+      {
+        "name": "Click Pay",
+        "type": "click"
+      },
+      {
+        "name": "Assert text present: Order confirmed",
+        "type": "assertElementContent"
+      }
+    ],
+    "creator": {
+      "email": "alice.nguyen@larkspur.com",
+      "handle": "alice.nguyen@larkspur.com",
+      "name": "Alice Nguyen"
+    }
+  },
+  {
+    "public_id": "syn-marketing-home",
+    "name": "marketing site homepage",
+    "type": "browser",
+    "status": "live",
+    "message": "{{#is_alert}}Marketing homepage check failing from {{locations}}.{{/is_alert}}\n{{#is_recovery}}Marketing homepage check passing again.{{/is_recovery}}\n@slack-web-platform",
+    "locations": [
+      "aws:eu-west-1",
+      "aws:us-east-1"
+    ],
+    "monitor_id": 7390233,
+    "tags": [
+      "team:web",
+      "site:marketing",
+      "env:prod"
+    ],
+    "config": {
+      "assertions": [],
+      "request": {
+        "method": "GET",
+        "url": "https://cdn.larkspur.com/"
+      }
+    },
+    "options": {
+      "tick_every": 300,
+      "min_location_failed": 1,
+      "monitor_name": "[Synthetics] marketing site homepage"
+    },
+    "steps": [
+      {
+        "name": "Navigate to https://cdn.larkspur.com/",
+        "type": "assertCurrentUrl"
+      },
+      {
+        "name": "Assert text present: Autumn collection",
+        "type": "assertElementContent"
+      }
+    ],
+    "creator": {
+      "email": "kofi.mensah@larkspur.com",
+      "handle": "kofi.mensah@larkspur.com",
+      "name": "Kofi Mensah"
+    }
+  }
+]

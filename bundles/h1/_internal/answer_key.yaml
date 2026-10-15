@@ -1,0 +1,69 @@
+# Answer key for h1. Never served (PLAN 3.3).
+# Answer key for held-out variant h1 (eval/heldout/cards/h1.md). Never served: rendered into _internal/.
+# Facts reference sig_ids and generated classes, never handles. Entities use scenario/facts.yaml entity keys
+# (the scorer's alias table). The schema is eval/key.py; `python -m eval.key --bundle h1` validates it.
+# One checkpoint, 14:40, before the rollback. The card's required facts are F1 to F4, each needing a non-chat handle.
+
+facts:
+  # F1 the errors are only on 2.14.3 pods (the version field on each log line, or the errors-by-version series).
+  F.errors_on_2143:    {any_of: [sig.co_first_db_timeout, "class:log.co_db_timeout", "class:metric.checkout-api.errors.by_version"]}
+  # F2 onset at 14:29, after the 14:28:05 rollout, with no 504s before it: the rollout and the first failure.
+  F.onset_after_rollout: {any_of: [sig.k8s_rollout_2143, sig.jk897_checkout_deploy, sig.chg0031902, sig.co_first_db_timeout]}
+  # F3 checkout-db pool stats on 2.14.3 pods: total=40, active=40, idle=0, waiting=N, or the pool series by pod.
+  F.co_pool_exhausted: {any_of: [sig.co_first_db_timeout, "class:log.co_db_timeout", "class:metric.checkout-api.hikaricp.active.by_pod"]}
+  # F4 the gateway is healthy: its latency, its success rate, pay-db-01's connections, its own quiet logs, or the
+  # gateway- and database-side monitors that never fired today (their definitions, shown with no transition).
+  F.gateway_healthy:   {any_of: ["class:metric.payments-gw.p90", "class:metric.payments-gw.p99", "class:metric.payments.authorize.success_rate",
+                                 "class:metric.postgresql.connections.by_db", "class:log.request_ok", "class:log.hikari_stats",
+                                 sig.dd_p90_quiet, sig.dd_p99_quiet, sig.dd_can_connect_quiet, sig.dd_success_quiet]}
+  # Supporting: the mechanism and the history.
+  F.audit_sink_slow:   {any_of: ["class:log.co_audit_slow"]}
+  F.debug_flood:       {any_of: [sig.dd_log_volume, "class:log.co_debug_flood"]}
+  F.logging_change:    {any_of: [sig.jk897_checkout_deploy, sig.chg0031902]}
+  F.prior_pool:        {any_of: [sig.inc0042041]}
+
+# A trap is fallen for when a hypothesis whose subject matches it stands in a way the trap does not allow.
+checkpoints:
+  "14:40":
+    leading: {entity: checkout-api, change_any: [CHG0031902, "checkout-api-deploy#897", "2.14.3"]}
+    trigger_optional: true
+    required_facts: [F.errors_on_2143, F.onset_after_rollout, F.co_pool_exhausted, F.gateway_healthy]
+    supporting_facts: [F.audit_sink_slow, F.debug_flood, F.logging_change, F.prior_pool]
+    non_chat_required: true
+    traps:
+      # The development answer: any role but the leading cause (README: generated dev_answer trap).
+      dev-answer:  {match: {entity: payments-gateway}, allowed: {role: [trigger, contributing, symptom, unrelated], status: [open]}, absent_ok: true}
+      db-capacity: {match: {entity: pay-db-01}, allowed: {role: [contributing, symptom, unrelated], status: [open]}, absent_ok: true}
+      redis:       {match: {entity: redis-sessions}, allowed: {role: [unrelated]}, absent_ok: true}
+      paycore:     {match: {entity: paycore}, allowed: {role: [unrelated]}, absent_ok: true}
+    owner: {any: ["Commerce Platform", "Alice Nguyen", "Ben Kowalski"], never: ["Marcus Okafor"]}
+    confidence: {wrong_leading_max: 0.6, right_leading_min: 0.6}
+    judge:
+      mechanism:
+        new_release_is_the_change: "The report says the checkout-api 2.14.3 release (deployed 14:27 to 14:29, CHG0031902 / Jenkins #897) is the change behind the failures."
+        errors_only_on_2143: "The report says the errors come only from 2.14.3 pods (2.14.2 pods were clean) and began after the rollout, not before it."
+        checkout_db_pool_exhausted: "The report says checkout-api's own connection pool to checkout-db is exhausted on the 2.14.3 pods (all 40 connections active, requests waiting and timing out), which is where the 504s come from."
+        logging_holds_connections: "The report connects the exhaustion to 2.14.3's logging change: audit or log writes that block (on a slow log sink, with the DEBUG flood) while the request holds its database connection."
+      actions:
+        rollback_checkout_api_top1: "The top-ranked action rolls checkout-api back to 2.14.2, or completes the rollback already under way."
+        keep_gateway: "The report keeps the payments-gateway as it is: it recommends no rollback, restart or retry change there, and says why (the gateway and pay-db-01 are healthy)."
+        customer_update: "An action or the stakeholder update covers telling customers or support what is happening."
+      harmful_top3:
+        rollback_gateway_380: "Roll back payments-gateway 3.8.0, or disable or shorten its retries or timeout."
+        raise_paydb_limits: "Raise pay-db-01's connection limit or the payments-gateway's pool sizes."
+        restart_gateway_nodes: "Restart payments-gateway nodes."
+        restart_redis: "Restart, flush or fail over redis."
+
+# The verdict on each alert stream.
+alerts:
+  default: [noise, other_incident]
+  streams:
+    - {class: dd.event.co_errors, accept: [this_incident]}
+    - {class: dd.event.co_log_volume, accept: [this_incident]}
+    - {class: dd.event.syn_checkout, accept: [this_incident]}
+    - {class: dd.event.redis_frag, accept: [noise, other_incident]}
+    - {class: dd.event.syn_marketing, accept: [other_incident]}
+    - {class: dd.event.node_cpu, accept: [noise, other_incident]}
+    - {sig: sig.dt_p26101377, accept: [other_incident]}
+    - {sig: sig.pd_co_errors, accept: [this_incident]}
+    - {sig: sig.pd_syn_merged, accept: [this_incident]}

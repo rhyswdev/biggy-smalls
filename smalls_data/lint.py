@@ -21,7 +21,7 @@ from smalls_data import lint_schema as ls
 from smalls_data import prompt_lint
 from smalls_data import shape
 from smalls_data.parity import Parity
-from smalls_data.gen.core import BUNDLES, SCENARIO, Clock, Curve
+from smalls_data.gen.core import BUNDLES, SCENARIO, Clock, Curve, facts_path
 
 UTC = ZoneInfo("UTC")
 
@@ -33,7 +33,10 @@ def t_of(s: str) -> datetime:
 class Lint:
     def __init__(self, scenario_file: Path, bundle_root: Path = BUNDLES):
         self.sc = yaml.safe_load(scenario_file.read_text())
-        self.facts = yaml.safe_load((SCENARIO / "facts.yaml").read_text())
+        self.facts = yaml.safe_load(facts_path(self.sc, scenario_file).read_text())
+        # A variant's content folder, where its files replace the base content (smalls_data/gen/core.py).
+        self.content = (scenario_file.parent / self.sc["meta"]["content"]) if self.sc["meta"].get("content") else SCENARIO / "content"
+        self.opts = self.sc.get("lint", {})
         self.c = Clock(self.sc["meta"]["date"])
         self.b = bundle_root / self.sc["meta"]["bundle"]
         self.rows = [ManifestRow.from_json(x) for x in (self.b / "_internal/manifest.jsonl").read_text().splitlines()]
@@ -97,7 +100,7 @@ class Lint:
     def inv1_connections(self) -> None:
         conn = self.sc["model"]["connections"]
         usable = conn["usable"]
-        expect = {"14:29": 45, "14:30": 121, "14:31": 161, "14:32": 186, "14:33": 197}
+        expect = self.opts.get("connection_totals", {"14:29": 45, "14:30": 121, "14:31": 161, "14:32": 186, "14:33": 197})
         for r in conn["rows"]:
             total = sum(r["gateway"]) + r["order"] + r["recon"] + r["other"]
             if total > usable:
@@ -197,7 +200,9 @@ class Lint:
                 for v in node:
                     walk(v)
         walk({k: v for k, v in self.sc.items() if k != "timeline"})
-        for ch in yaml.safe_load((SCENARIO / "content/slack/fixed.yaml").read_text())["channels"].values():
+        fixed = self.content / "slack/fixed.yaml"
+        fixed = fixed if fixed.exists() else SCENARIO / "content/slack/fixed.yaml"
+        for ch in yaml.safe_load(fixed.read_text())["channels"].values():
             for m in ch:
                 if m.get("sig_id"):
                     ids[m["id"]] = m["sig_id"]
@@ -490,9 +495,12 @@ class Lint:
 
     def inv12_strings(self) -> None:
         pinned = ls.exact_strings()
-        corpus = "\n".join(p.read_text() for p in (self.b / "splunk/raw").rglob("*.log"))
+        # Which pinned strings a bundle renders, and in which files, are the scenario's to say; by default every
+        # one, in the plain-text logs.
+        want = set(self.opts.get("pinned_strings", pinned))
+        corpus = "\n".join(p.read_text() for g in self.opts.get("pinned_corpus", ["*.log"]) for p in (self.b / "splunk/raw").rglob(g))
         for key, s in pinned.items():
-            if key == "hikari.before_cleanup":
+            if key == "hikari.before_cleanup" or key not in want:
                 continue
             if s not in corpus:
                 self.err(12, f"pinned string {key!r} not rendered verbatim: {s!r}")
@@ -643,8 +651,11 @@ class Lint:
         self.notes.append("[10] served files checked; the store half is `make leak-test`; the tool-output half arrives with the tools (step 6a-tools)")
 
 
-def main() -> int:
-    bundles = [s for s in SCENARIO.glob("*.yaml") if s.name != "facts.yaml"]
+def main(argv: list[str] | None = None) -> int:
+    """`python -m smalls_data.lint [scenario file]`: the development scenario unless a file is named. Plain
+    `make lint` never opens a variant, so a session under the held-out rule reads none of its files."""
+    argv = sys.argv[1:] if argv is None else argv
+    bundles = [Path(argv[0])] if argv else [s for s in SCENARIO.glob("*.yaml") if s.name != "facts.yaml"]
     failed = False
     for s in bundles:
         L = Lint(s)

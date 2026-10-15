@@ -1,0 +1,321 @@
+# Facts for held-out variant h1 (eval/heldout/cards/h1.md): the Larkspur estate's facts, copied from
+# scenario/facts.yaml unchanged except the bundle name and checkout-api's pool to checkout-db under
+# `parameters` (the card's "checkout-db CI and pool budget"; the CI itself is in the CMDB content).
+# Held out: never read by a session that writes or edits the agent (eval/heldout/README.md).
+#
+# Aliases: for each entity, the exact strings each source uses for it (case-sensitive). The lint checks
+# every alias appears at least once in the bundle and that no alias appears in a source whose list does
+# not include it (longest match wins, so "pay-03" inside "pay-03.larkspur.internal" counts as the FQDN).
+# Source keys are the top-level bundle folders, plus `triggers`.
+
+company: Larkspur Retail
+bundle: h1
+date: "2026-10-13"
+
+anchors:
+  t0_utc: "2026-10-13T14:00:00Z"
+  t0_epoch: 1791900000            # 2026-10-13T14:00:00Z
+  day_start_utc: "2026-10-13T00:00:00Z"
+  # Offsets on the day, used to render local clocks. The generator derives them from the IANA zone and
+  # the lint re-derives every rendered local time to UTC (invariant 8).
+  offsets_on_day: {America/New_York: "-04:00", Europe/London: "+01:00", Europe/Rome: "+02:00", America/Los_Angeles: "-07:00", UTC: "+00:00"}
+
+# How each source writes time. `zone` is a property of the integration, not of the data. The generator
+# renders `zone`, `format` and `marker` (not `note`) into the served bundle's integration.yaml, which is
+# the only place ingestion learns a source's clock.
+zones:
+  # `format` is a Python strptime pattern that parses the source's time field as served; sources whose
+  # times are epochs or need a step first carry `format_note` instead (engineer M5).
+  splunk/raw/payments_app: {zone: UTC, format: "%Y-%m-%d %H:%M:%S,%f", marker: none, note: "logback custom pattern, server clock UTC, no offset"}
+  splunk/raw/checkout_api: {zone: UTC, format: "%Y-%m-%dT%H:%M:%S.%fZ", marker: Z}
+  splunk/raw/postgres: {zone: UTC, format: "%Y-%m-%d %H:%M:%S.%f UTC", marker: "UTC suffix"}
+  splunk/raw/nginx: {zone: UTC, format: "[%d/%b/%Y:%H:%M:%S %z]", marker: "+0000"}
+  splunk/raw/f5: {zone: UTC, format: "%b %d %H:%M:%S", marker: none, note: "BSD syslog, no year: take syslog_year"}
+  splunk/raw/k8s_events: {zone: UTC, format: "%Y-%m-%dT%H:%M:%SZ", marker: Z}
+  splunk/alerts: {zone: UTC, format_note: "_time is epoch seconds as a string with milliseconds; the sid's _at_<epoch>_ is the trigger time", marker: epoch}
+  datadog: {zone: UTC, format_note: "epoch seconds (events), epoch milliseconds (metric points); monitors ISO-8601 with offset", marker: epoch}
+  dynatrace: {zone: UTC, format_note: "epoch milliseconds", marker: epoch}
+  servicenow: {zone: America/New_York, format: "%Y-%m-%d %H:%M:%S", marker: none, note: "sysparm_display_value=true, integration user's zone"}
+  pagerduty: {zone: UTC, format: "%Y-%m-%dT%H:%M:%SZ", marker: Z}
+  jenkins: {zone: UTC, format_note: "epoch milliseconds; changeSet item dates %Y-%m-%d %H:%M:%S %z", marker: epoch}
+  slack: {zone: UTC, format_note: "ts = epoch seconds with a 6-digit sequence", marker: epoch, note: "humans write local times in text; users.json carries tz"}
+  confluence: {zone: none, format_note: "Last updated <d Mon YYYY> (date only)", marker: none}
+  solarwinds: {zone: America/New_York, format_note: "%Y-%m-%dT%H:%M:%S with a seven-digit fraction; keep six digits, then %f", marker: none, note: "Orion server local time"}
+  paycore: {zone: America/Los_Angeles, format: "%Y-%m-%dT%H:%M:%S.%f%z", marker: offset}
+
+people:
+  - {name: Alice Nguyen, handle: alice.nguyen, display_name: alice, role: "Incident commander; Commerce Platform lead", team: Commerce Platform, tz: Europe/London, writes_times_as: UTC,
+     pagerduty: {service: Checkout - Prod, level: 1}, slack: true, slack_id: U03MU4G0DPE, pagerduty_id: PBO9GPI, sn_sys_id: 6ef41475acdafffdec7904d731e2fe40, sn_active: true, title: Engineering Lead}
+  - {name: Ben Kowalski, handle: ben.kowalski, display_name: benk, role: "checkout-api engineer", team: Commerce Platform, tz: Europe/London, writes_times_as: UTC,
+     pagerduty: null, slack: true, slack_id: U01B0NXMOC4, pagerduty_id: null, sn_sys_id: e4bc420e6e2c3ea9befc1867b9885b86, sn_active: true, title: Software Engineer}
+  - {name: Sam Ortega, handle: sam.ortega, display_name: sam, role: "SRE", team: Platform Reliability, tz: Europe/London, writes_times_as: UTC,
+     pagerduty: {service: Platform, level: 1}, slack: true, slack_id: U0OUMNOBHU9, pagerduty_id: PFR2YX8, sn_sys_id: e57bb4aad0a62cb02d26a41c1a0e9775, sn_active: true, title: Site Reliability Engineer}
+  - {name: Elena Rossi, handle: elena.rossi, display_name: elena, role: "DBA", team: Database Engineering, tz: Europe/Rome, writes_times_as: rarely,
+     pagerduty: {service: Database - Prod, level: 1}, slack: true, slack_id: U01GG60ZVQK, pagerduty_id: PXPL6G3, sn_sys_id: 8090db172e95ff922213110e39eba4af, sn_active: true, title: Database Administrator}
+  - {name: Kofi Mensah, handle: kofi.mensah, display_name: kofi, role: "Web Platform engineer (marketing site, CDN)", team: Web Platform, tz: Europe/London, writes_times_as: UTC,
+     pagerduty: null, slack: true, slack_id: U0W2EYK5S75, pagerduty_id: null, sn_sys_id: ea319dfb6ca0b97e5ccf5a8d37c2fe11, sn_active: true, title: Software Engineer}
+  - {name: Jordan Pike, handle: jordan.pike, display_name: jordan.p, role: "Release manager", team: Change Management, tz: America/New_York, writes_times_as: Eastern,
+     pagerduty: null, slack: true, slack_id: U0UAC4HTR91, pagerduty_id: null, sn_sys_id: 4c7e04a2a197aec0b52f3fc5e9127779, sn_active: true, title: Release Manager}
+  - {name: Priya Raman, handle: priya.raman, display_name: priya, role: "Payments Engineering, senior engineer", team: Payments Engineering, tz: America/New_York, writes_times_as: Eastern,
+     pagerduty: {service: Payments - Prod, level: 2}, slack: true, slack_id: U0XEFKXZ4W1, pagerduty_id: PR2F8XY, sn_sys_id: 6cbb9edea80054ff5f141d51c6d1f485, sn_active: true, title: Senior Software Engineer}
+  - {name: Tom Beckett, handle: tom.beckett, display_name: tbeckett, role: "Payments Engineering engineer", team: Payments Engineering, tz: America/New_York, writes_times_as: Eastern,
+     pagerduty: {service: Payments - Prod, level: 1}, slack: true, slack_messages_today: false, slack_id: U0AVT5NH38I, pagerduty_id: P1QXA4K, sn_sys_id: 3f76decdb233bfe85b66b475b1ecac32, sn_active: true, title: Software Engineer}
+  - {name: Dana Whitfield, handle: dana.whitfield, display_name: dana, role: "Payments Engineering engineer, author of PAY-2231", team: Payments Engineering, tz: America/New_York, writes_times_as: Eastern,
+     pagerduty: null, slack: true, slack_messages_today: false, slack_id: U008V77DLJF, pagerduty_id: null, sn_sys_id: 7fb00ed0a06f7e21cfaa314bc0c8bbbb, sn_active: true, title: Software Engineer,
+     email: dana.whitfield@larkspur.com}
+  - {name: Marcus Okafor, handle: marcus.okafor, display_name: marcus, role: "Former Payments Engineering lead, left in August", team: Payments Engineering, tz: America/New_York, writes_times_as: n/a,
+     pagerduty: null, slack: deactivated, slack_id: U0UCZJ2994B, pagerduty_id: null, sn_sys_id: d8350fa23bd4f46ba8bf8ae40efc7f40, sn_active: false, title: Engineering Manager,
+     left_on: "2026-08-14"}
+
+# ServiceNow integration users (not people).
+integration_users:
+  - {user_name: svc-datadog, name: Datadog Integration, sn_sys_id: 3b1d8e0f9a2c47d6b5e4c3a2f1e0d9c8}
+  - {user_name: svc-jenkins, name: Jenkins Integration, sn_sys_id: 9c8b7a6f5e4d43c2b1a0f9e8d7c6b5a4}
+  - {user_name: support.desk, name: Customer Support Desk, sn_sys_id: 7d6c5b4a39284716a5b4c3d2e1f0a9b8}   # shared account Support raises tickets from
+
+bots:
+  slack:
+    - {name: PagerDuty, bot_id: B0KZ207TOM1, app_user: U0KZ207TOM1}
+    - {name: Datadog, bot_id: B0GKXDGNF6K, app_user: U0GKXDGNF6K}
+
+# Teams as ServiceNow groups and Slack/PagerDuty teams.
+groups:
+  - {name: Commerce Platform, sn_sys_id: 0f1e2d3c4b5a49687766554433221100, manager: alice.nguyen}
+  - {name: Payments Engineering, sn_sys_id: 1a2b3c4d5e6f47089a1b2c3d4e5f6071, manager: marcus.okafor}
+  - {name: Database Engineering, sn_sys_id: 2b3c4d5e6f7a48190b2c3d4e5f607182, manager: elena.rossi}
+  - {name: Platform Reliability, sn_sys_id: 3c4d5e6f7a8b492a1c3d4e5f60718293, manager: sam.ortega}
+  - {name: Web Platform, sn_sys_id: 4d5e6f7a8b9c4a3b2d4e5f60718293a4, manager: kofi.mensah}
+  - {name: Change Management, sn_sys_id: 5e6f7a8b9cad4b4c3e5f60718293a4b5, manager: jordan.pike}
+  - {name: Customer Support, sn_sys_id: 6f7a8b9cadbe4c5d4f60718293a4b5c6, manager: null}
+
+# Network facts used by several sources.
+network:
+  pay-01: 10.20.4.31
+  pay-02: 10.20.4.32
+  pay-03: 10.20.4.33
+  pay-04: 10.20.4.34
+  ord-01: 10.20.4.41
+  ord-02: 10.20.4.42
+  pay-db-01: 10.20.5.10
+  jenkins-agent-03: 10.20.6.23
+  bastion: 10.20.9.15
+  edge_lb: [10.0.3.9, 10.0.3.10]
+  f5_pool: /Common/pool_pay_gw
+  f5_vip: payments-gw.prod.larkspur.internal
+  gateway_port: 8443
+
+entities:
+  online-checkout:
+    kind: business_service
+    aliases:
+      servicenow: [Online Checkout]
+      triggers: []
+  checkout-api:
+    kind: service
+    aliases:
+      datadog: [checkout-api]
+      splunk: [checkout-api, checkout_api]
+      jenkins: [checkout-api-deploy, checkout-api]
+      servicenow: [Checkout API, checkout-api]
+      pagerduty: [Checkout - Prod]
+      slack: [checkout-api, Checkout - Prod]
+      confluence: [checkout-api]
+      triggers: [checkout-api]
+  payments-gateway:
+    kind: service
+    aliases:
+      datadog: [payments-gw, payments-gateway]
+      dynatrace: [PaymentsGateway]
+      splunk: [payments-gateway, payments_app, PaymentsGatewayApplication, pool_pay_gw, payments-gw.prod.larkspur.internal, payments-gw, pgw_app]
+      jenkins: [payments-gateway-deploy, payments-gateway]
+      servicenow: [Payments Gateway, payments-gateway, payments-gw]
+      pagerduty: [Payments - Prod, payments-gw]
+      slack: [payments-gateway, payments-gw, pgw, pgw_app, Payments - Prod]
+      confluence: [payments-gateway, PaymentsGateway, payments_app]
+      solarwinds: [Payments HTTP]
+      triggers: [payments]
+  pay-db-01:
+    kind: host
+    aliases:
+      datadog: [pay-db-01]
+      dynatrace: [pay-db-01.larkspur.internal]
+      splunk: [pay-db-01]
+      servicenow: [pay-db-01]
+      pagerduty: [pay-db-01, Database - Prod]
+      slack: [pay-db-01, pay-db]
+      confluence: [pay-db-01]
+  payments-db:
+    kind: database
+    aliases:
+      dynatrace: [payments]
+      datadog: [payments]
+      servicenow: [Payments DB]
+  order-service:
+    kind: service
+    aliases:
+      dynatrace: [OrderService]
+      splunk: [order-service, orders_app]
+      servicenow: [Order Service]
+  payments-reconciler:
+    kind: batch_job
+    aliases:
+      jenkins: [payments-reconciler]
+      splunk: [payments-reconciler, recon_app]
+      slack: [recon_app, reconciler]
+      confluence: [payments-reconciler]
+  paycore:
+    kind: external_provider
+    aliases:
+      dynatrace: [api.paycore.example]
+      splunk: [api.paycore.example, PayCoreClient]
+      paycore: [PayCore]
+      slack: [PayCore, paycore]
+      servicenow: [PayCore]
+      confluence: [PayCore, api.paycore.example]
+      jenkins: [PayCoreClient]
+  redis-sessions:
+    kind: cache
+    aliases:
+      datadog: [redis-sessions]
+      servicenow: [redis-sessions-01]
+      confluence: [redis-sessions-01]
+      slack: [redis]
+  storefront-web:
+    kind: service
+    aliases:
+      datadog: [storefront-web]
+      splunk: [storefront-web]
+      servicenow: [Storefront Web]
+  marketing-site:
+    kind: website
+    aliases:
+      datadog: [cdn.larkspur.com]
+      dynatrace: [cdn.larkspur.com]
+      servicenow: [Marketing Website, cdn.larkspur.com]
+      slack: [marketing site]
+  search-indexer:
+    kind: batch_job
+    aliases:
+      datadog: [search-indexer]
+      pagerduty: [search-indexer]
+      splunk: [search-indexer]
+      slack: [search-indexer]
+  k8s-prod-east:
+    kind: cluster
+    aliases:
+      datadog: [k8s-prod-east]
+      splunk: [k8s-prod-east]
+      servicenow: [k8s-prod-east]
+  node-east-14:
+    kind: host
+    aliases:
+      datadog: [node-east-14]
+      dynatrace: [node-east-14.larkspur.internal]
+      splunk: [node-east-14]
+  checkout-db:
+    kind: database
+    aliases:
+      servicenow: [checkout-db]
+      confluence: [checkout-db]
+  pay-01:
+    kind: host
+    aliases:
+      splunk: [pay-01, 10.20.4.31]
+      datadog: [pay-01]
+      dynatrace: [pay-01.larkspur.internal]
+      servicenow: [pay-01]
+  pay-02:
+    kind: host
+    aliases:
+      splunk: [pay-02, 10.20.4.32]
+      datadog: [pay-02]
+      dynatrace: [pay-02.larkspur.internal]
+      servicenow: [pay-02]
+  pay-03:
+    kind: host
+    aliases:
+      splunk: [pay-03, 10.20.4.33]
+      datadog: [pay-03]
+      dynatrace: [pay-03.larkspur.internal]
+      servicenow: [pay-03]
+      solarwinds: [PAY-03.LARKSPUR.INTERNAL]
+      slack: [pay-03]
+  pay-04:
+    kind: host
+    aliases:
+      splunk: [pay-04, 10.20.4.34]
+      datadog: [pay-04]
+      dynatrace: [pay-04.larkspur.internal]
+      servicenow: [pay-04]
+  ord-01:
+    kind: host
+    aliases:
+      datadog: [ord-01]
+      pagerduty: [ord-01]
+      servicenow: [ord-01]
+      dynatrace: [ord-01.larkspur.internal]
+  ord-02:
+    kind: host
+    aliases:
+      servicenow: [ord-02]
+      dynatrace: [ord-02.larkspur.internal]
+  win-rpt:
+    kind: host_group
+    aliases:
+      servicenow: [win-rpt-05, win-rpt-06, win-rpt-07, win-rpt-08]
+
+# Fixed parameters, docs/PLAN.md section 1.2. Every number a bundle shows derives from these and the
+# connection budget in the scenario YAML.
+parameters:
+  pay_db:
+    engine: PostgreSQL 15
+    max_connections: 200
+    superuser_reserved_connections: 3
+    usable_by_app_roles: 197
+    log_connections: "on"
+    log_line_prefix: "%m [%p] %u@%d "
+    databases: [payments, orders]
+  payments_gateway:
+    vms: [pay-01, pay-02, pay-03, pay-04]
+    hikari: {version: 5.1.0, pool_name: HikariPool-1, minimumIdle: 5, maximumPoolSize: 35, connectionTimeout: 5000, idleTimeout: 600000, leakDetectionThreshold: 30000, maxLifetime: 1800000}
+    idle_baseline_total: 24
+    spring_boot: "3.3.4"
+    hibernate: "6.5.3.Final"
+    java: "17.0.12"
+    db_user: pgw_app
+    application_name: payments-gateway
+    hikari_logger_level: DEBUG
+    versions:
+      "3.7.9": {psp_timeout_ms: 3000, psp_retries: 0, backoff_ms: []}
+      "3.8.0": {psp_timeout_ms: 8000, psp_retries: 3, backoff_ms: [1000, 2000, 4000]}
+    retry_path_hold_s: 39          # 8+1+8+2+8+4+8
+    startup: {started_in_s: 41.213, process_running_s: 43.07}
+  order_service: {instances: [ord-01, ord-02], pool_fixed: 10, total: 20, db_user: orders_app, application_name: order-service}
+  payments_reconciler: {connections: 40, db_user: recon_app, application_name: payments-reconciler, start: "14:30:00", end: "15:15:30"}
+  monitoring: {datadog_user: datadog, datadog_connections: 1, datadog_role: pg_monitor, dba_user: postgres}
+  authorization_rate_per_s: 14
+  paycore: {eu_share: 0.25, fast_call_ms: 400, slow_attempt_s: [9, 12], host: api.paycore.example}
+  hold_time_model:
+    before_s: "0.75 x 0.4 + 0.25 x 3 = 1.05"
+    with_slow_share_p: "1.05 + 36p"
+  checkout_api:
+    pods: 6
+    hikari_pool: 40
+    # The pool to checkout-db (HikariCP defaults but size and timeout): fixed at 40 per pod since the March
+    # incident, so 240 across six pods against checkout-db's max_connections of 400.
+    checkout_db_pool: {pool_name: HikariPool-1, maximumPoolSize: 40, minimumIdle: 40, connectionTimeout: 5000}
+    checkout_db: {engine: PostgreSQL 15, max_connections: 400}
+    # 2.14.3's logging bump adds a synchronous audit appender: three audit events per submit, written inside the
+    # submit transaction to the shared log sink; the client warns when a write takes over 2000 ms.
+    audit: {events_per_submit: 3, warn_over_ms: 2000}
+    gateway_client_timeout_ms: 10000
+    gateway_url: "https://payments-gw.prod.larkspur.internal:8443/v1/authorize"
+    namespace: commerce
+    versions: {before: "2.14.2", rollout: "2.14.3"}
+  traffic_baseline_per_s:
+    "GET /api/cart": 30
+    "GET /api/checkout/summary": 20
+    "POST /api/checkout/address": 10
+    "POST /api/checkout/submit": 14
+    storefront_browse: 400
+  payment_success_rate: {baseline: 98.5, after_rollback: 73.0}

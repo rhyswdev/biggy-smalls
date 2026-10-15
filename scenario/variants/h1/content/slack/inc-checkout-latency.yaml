@@ -1,0 +1,102 @@
+channel: inc-checkout-latency
+messages:
+  - at: "14:35:41"
+    author: sam.ortega
+    text: "joining. pulling up the checkout dashboards"
+    thread_of: null
+    reactions: []
+  - at: "14:36:48"
+    author: ben.kowalski
+    text: "on it, rollback job queued. pods look healthy fwiw, nothing crashlooping"
+    thread_of: null
+    reactions: []
+  - at: "14:37:08"
+    author: kofi.mensah
+    text: "what do we put on the status page? do we say anything yet"
+    thread_of: null
+    reactions: []
+  - at: "14:38:30"
+    author: alice.nguyen
+    text: "hold the status page for ten mins. one line 'investigating checkout errors' when we post"
+    thread_of: null
+    reactions: [{name: "+1", count: 2}]
+  - at: "14:39:10"
+    author: ben.kowalski
+    text: "who's IC here? sorry, lost track"
+    thread_of: null
+    reactions: []
+  - at: "14:39:40"
+    author: sam.ortega
+    text: "@ben.kowalski alice, she's IC. top of the channel"
+    thread_of: null
+    reactions: []
+  - at: "14:40:20"
+    author: kofi.mensah
+    text: "marketing site synthetic just went red. checking my side, prob separate"
+    thread_of: null
+    reactions: []
+  - at: "14:42:55"
+    author: ben.kowalski
+    text: "checkout-api is back on the old version, watching the error graph"
+    thread_of: null
+    reactions: []
+  - at: "14:43:50"
+    author: sam.ortega
+    text: "this one has the checkout breakdown https://app.datadoghq.com/dashboard/abc-123-xyz"
+    thread_of: null
+    reactions: []
+  - at: "14:45:25"
+    author: ben.kowalski
+    text: "404 for me. @sam.ortega is that dashboard private or dead?"
+    thread_of: "14:43:50/sam.ortega"
+    reactions: []
+  - at: "14:47:40"
+    author: alice.nguyen
+    text: "next update at 14:55 UTC. one line updates pls, theories go in the thread"
+    thread_of: null
+    reactions: []
+  - at: "14:48:10"
+    author: kofi.mensah
+    text: "marketing site is my DNS change, nothing to do with checkout. sorry for the noise"
+    thread_of: null
+    reactions: []
+  - at: "14:50:30"
+    author: alice.nguyen
+    text: "support says ~20 tickets, all 'error when i press pay'. drafting the customer line now"
+    thread_of: null
+    reactions: []
+  - at: "14:51:40"
+    author: jordan.pike
+    text: "it's 10:51 here. 2.14.3 went out as a standard change, i'll flag it for the CAB review"
+    thread_of: null
+    reactions: []
+  - at: "14:53:10"
+    author: sam.ortega
+    text: "grabbing a coffee, back at 14:56 UTC :coffee:"
+    thread_of: null
+    reactions: []
+  - at: "14:57:30"
+    author: kofi.mensah
+    text: "status page line is up: 'some customers saw errors at checkout between 14:29 and 14:42 UTC, resolved'"
+    thread_of: null
+    reactions: [{name: "+1", count: 2}]
+  - at: "15:04:20"
+    author: jordan.pike
+    text: "postmortem: @alice.nguyen i can book a slot tomorrow, 10am my time work?"
+    thread_of: null
+    reactions: []
+  - at: "15:06:40"
+    author: sam.ortega
+    text: "14:00 UTC works for @jordan.pike, i'll put it in the calendar"
+    thread_of: null
+    reactions: []
+  - at: "15:12:20"
+    author: ben.kowalski
+    text: "i'll raise a ticket for the broken dashboard link, it's been bugging me"
+    thread_of: null
+    reactions: []
+  - at: "15:28:20"
+    author: sam.ortega
+    text: "signing off. thanks all :sweat_smile:"
+    thread_of: null
+    reactions: []

@@ -1,0 +1,229 @@
+{
+  "result": [
+    {
+      "sys_id": "762d04c9b3fae3ab88ab504e4ed6b731",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "Taking this. Campaign email went out at 19:00 UTC, traffic on submit ~3x. Checking checkout-api first.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 14:20:00"
+    },
+    {
+      "sys_id": "339ccaddcc8c8695454fdcd2fe2c2c34",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "redis-sessions looks fine, fragmentation 1.3, no evictions. Not redis.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-03-04 14:41:00"
+    },
+    {
+      "sys_id": "466d9960ecc78206104da6156dc5019e",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "checkout-api pods all at active=20 idle=0 on the checkout-db pool, 30-40 threads waiting. DB itself is quiet, queries fast. It's our pool size.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 15:05:00"
+    },
+    {
+      "sys_id": "177c669d706c37878480cf809dd2e87e",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "Scaled checkout-api to 12 replicas. p90 dropping.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 15:22:00"
+    },
+    {
+      "sys_id": "d4cbb02a66edac345a16610cca8dde57",
+      "element": "work_notes",
+      "element_id": "9348651b0440301a911f5563a6c5d74f",
+      "name": "incident",
+      "value": "Pool raised to 40 under CHG0029514, HPA added. Scaling back to 6 tomorrow once HPA is proven.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-03-04 16:30:00"
+    },
+    {
+      "sys_id": "17c3ff342cddd574ebbd9b1dc8b51aab",
+      "element": "work_notes",
+      "element_id": "09362a6660d7b16a984efbb6a329a3da",
+      "name": "incident",
+      "value": "Origin cert on the CDN shows expired at 09:04 ET. Renewal job did not fire, checking why.",
+      "sys_created_by": "kofi.mensah",
+      "sys_created_on": "2026-04-14 09:18:00"
+    },
+    {
+      "sys_id": "f9699954f4440cb3bb66601fd502777b",
+      "element": "work_notes",
+      "element_id": "12b6f620603fb8176b36dc1eb5338c65",
+      "name": "incident",
+      "value": "Order Service emails are queued on the relay, not failing. Checking queue depth.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-05-06 13:54:00"
+    },
+    {
+      "sys_id": "86bc7608741c29b56ad5aa6106af4a22",
+      "element": "work_notes",
+      "element_id": "5c5f891a824048d779c6b5550772b9e8",
+      "name": "incident",
+      "value": "Indexer pods hitting OOMKilled on every run since 02:00 ET. Pulling the last three pod events.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-05-27 08:03:00"
+    },
+    {
+      "sys_id": "b46627d889bb53d27a7653789ac4adff",
+      "element": "work_notes",
+      "element_id": "675eb016a4740265c828c6481a8e197e",
+      "name": "incident",
+      "value": "Two nodes in DiskPressure. Eviction list is storefront pods only. Cordoning both nodes for now.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-06-18 22:17:00"
+    },
+    {
+      "sys_id": "5cf2400c2211084deec9f3b8e92611ce",
+      "element": "work_notes",
+      "element_id": "6f7a69e56602cf8c8c11086a1fca4d1c",
+      "name": "incident",
+      "value": "Every authorize to PayCore timing out at 3000ms, gateway returning declines quickly. Pools fine, pay-db-01 at 46 connections.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-07-19 12:09:00"
+    },
+    {
+      "sys_id": "48092466eb354f05f392ece3c7f030bf",
+      "element": "work_notes",
+      "element_id": "6f7a69e56602cf8c8c11086a1fca4d1c",
+      "name": "incident",
+      "value": "PayCore status page: major outage, all regions. Nothing to do on our side but wait. Support briefed on 'card declined'.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-07-19 12:14:00"
+    },
+    {
+      "sys_id": "bd039e6c6172fced628e8cd21b05db4c",
+      "element": "work_notes",
+      "element_id": "6f7a69e56602cf8c8c11086a1fca4d1c",
+      "name": "incident",
+      "value": "PayCore recovered 16:44. Authorize success back to 98%.",
+      "sys_created_by": "priya.raman",
+      "sys_created_on": "2026-07-19 12:46:00"
+    },
+    {
+      "sys_id": "b76060a5f1446c6e92df3fee39805020",
+      "element": "work_notes",
+      "element_id": "e706a47bbaf5fdde7d5b1f60357b0ece",
+      "name": "incident",
+      "value": "Address validation getting 429s from the provider since 14:50 ET. Checkout is on the local rules fallback. Orders are going through.",
+      "sys_created_by": "ben.kowalski",
+      "sys_created_on": "2026-07-30 15:17:00"
+    },
+    {
+      "sys_id": "b43fbcaaa73294c0caad6b4e4fbff583",
+      "element": "work_notes",
+      "element_id": "61fab8d39ec06c05c254b707b91e707c",
+      "name": "incident",
+      "value": "C: is full on win-rpt-06. Staging file for the finance report cannot be written. Looking at the largest folders.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-08-21 06:39:00"
+    },
+    {
+      "sys_id": "efbdfe1c48add6bbb6b59d4aba3d68fb",
+      "element": "work_notes",
+      "element_id": "ea5f77b5dbf0ee77573a9b4e74dc00d3",
+      "name": "incident",
+      "value": "Refund settlement recon has not started. Parser rejected the acquirer file for the previous business day.",
+      "sys_created_by": "dana.whitfield",
+      "sys_created_on": "2026-09-08 11:35:00"
+    },
+    {
+      "sys_id": "1274889353c576388d3a7517dde41ff2",
+      "element": "work_notes",
+      "element_id": "29527d3103936280aa3334f5cdbaf57d",
+      "name": "incident",
+      "value": "Ratio 1.61, no evictions, used_memory flat. Same flap as last week.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-09-22 05:55:00"
+    },
+    {
+      "sys_id": "987f40c59b6ff1eea3425c4146eacc9e",
+      "element": "work_notes",
+      "element_id": "29527d3103936280aa3334f5cdbaf57d",
+      "name": "incident",
+      "value": "Back to 1.34. Closing as benign; will look at the threshold.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-09-22 06:58:00"
+    },
+    {
+      "sys_id": "9a1a824cf58733c6040a012c6c212448",
+      "element": "work_notes",
+      "element_id": "02fd55868bfb51e0dcac60f8519cd23f",
+      "name": "incident",
+      "value": "Resizer pods are pinned at their CPU limit and throttled. Checking whether the new hero image sizes changed the load.",
+      "sys_created_by": "kofi.mensah",
+      "sys_created_on": "2026-10-02 16:56:00"
+    },
+    {
+      "sys_id": "a1d759dcc9e36e74fb1ecd4dfd710010",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Bridge open, link in #inc-checkout-latency. Keeping this journal as the single record.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 10:36:40"
+    },
+    {
+      "sys_id": "8069567224283e67de20aed673227350",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Failures are POST /api/checkout/submit returning 504 since about 14:30 UTC; cart and browse look fine. checkout-api 2.14.3 went out 14:27 to 14:29 UTC under CHG0031902 and Ben is rolling it back as the first step. Bridge in #inc-checkout-latency.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 10:38:10"
+    },
+    {
+      "sys_id": "bf69a084a81d92725882f86a0eff8dd7",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "checkout-api rolled back to 2.14.2 (Jenkins checkout-api-deploy #898, done 14:42 UTC). Submit 504s stopped at 14:43 UTC.",
+      "sys_created_by": "ben.kowalski",
+      "sys_created_on": "2026-10-13 10:43:40"
+    },
+    {
+      "sys_id": "d3ac065ed2f08f73f581688738d8e992",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Dashboard links for checkout-api are pinned in the bridge channel.",
+      "sys_created_by": "sam.ortega",
+      "sys_created_on": "2026-10-13 10:45:20"
+    },
+    {
+      "sys_id": "352dd7e9d82c1ff3c10c5291284c82a7",
+      "element": "comments",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Customer comms draft is with Comms for review. We will post once the wording is agreed. (10:53 ET)",
+      "sys_created_by": "jordan.pike",
+      "sys_created_on": "2026-10-13 10:53:10"
+    },
+    {
+      "sys_id": "c035a4f10960ad9940b0af7ed992ef31",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Cause found: 2.14.3's logback bump makes the audit appender synchronous, and it runs inside the submit transaction (3 audit writes per submit). The DEBUG flood from the same release slowed the log sink to about 10 s a write, so each submit held its checkout-db connection about 30 s and the pool (40 per pod) ran out on every 2.14.3 pod. checkout-db itself was quiet. Fix before 2.14.4: async appender, DEBUG off.",
+      "sys_created_by": "ben.kowalski",
+      "sys_created_on": "2026-10-13 10:56:20"
+    },
+    {
+      "sys_id": "eed8e5c4156768d7b4a4a4a65ad51e10",
+      "element": "work_notes",
+      "element_id": "5958457257035b8386d9d1d85a4d84ae",
+      "name": "incident",
+      "value": "Checkout smoke tests re-run, all green. Monitoring until 15:00 UTC before resolving.",
+      "sys_created_by": "alice.nguyen",
+      "sys_created_on": "2026-10-13 10:58:30"
+    }
+  ]
+}

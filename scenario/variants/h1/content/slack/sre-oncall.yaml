@@ -1,0 +1,77 @@
+channel: sre-oncall
+messages:
+  - at: "14:03:15"
+    author: sam.ortega
+    text: "afternoon all. quiet so far, which i don't trust :coffee:"
+    thread_of: null
+    reactions: []
+  - at: "14:08:50"
+    author: kofi.mensah
+    text: "anyone else seeing slow builds on the marketing site or is it just me"
+    thread_of: null
+    reactions: []
+  - at: "14:11:40"
+    author: elena.rossi
+    text: "not me"
+    thread_of: "14:08:50/kofi.mensah"
+    reactions: []
+  - at: "14:16:30"
+    author: sam.ortega
+    text: "node-east-14 cpu is a batch pod in the analytics namespace, nothing customer facing. should settle off by itself"
+    thread_of: null
+    reactions: []
+  - at: "14:21:10"
+    author: sam.ortega
+    text: "search-indexer cron failed again, same way as last week. checking the cronjob before i rerun it"
+    thread_of: null
+    reactions: []
+  - at: "14:22:40"
+    author: ben.kowalski
+    text: "2.14.3 going out to prod in a bit, standard change"
+    thread_of: null
+    reactions: []
+  - at: "14:30:10"
+    author: kofi.mensah
+    text: "heads up, CDN DNS TTL change on the marketing site this afternoon. low risk, will post when done"
+    thread_of: null
+    reactions: []
+  - at: "14:31:30"
+    author: sam.ortega
+    text: "checkout-api log volume monitor just fired. someone left DEBUG on?"
+    thread_of: null
+    reactions: []
+  - at: "14:32:15"
+    author: ben.kowalski
+    text: "prob the new address form flag, it's chatty. noisy but harmless, i'll turn it down after"
+    thread_of: "14:31:30/sam.ortega"
+    reactions: []
+  - at: "14:36:15"
+    author: alice.nguyen
+    text: "moving this to #inc-checkout-latency, pls follow there @sam.ortega"
+    thread_of: null
+    reactions: []
+  - at: "14:37:30"
+    author: sam.ortega
+    text: "everything checkout-y is in #inc-checkout-latency now, see you there"
+    thread_of: null
+    reactions: []
+  - at: "14:52:10"
+    author: kofi.mensah
+    text: "lunch cancelled apparently. sandwich at desk it is :sandwich:"
+    thread_of: null
+    reactions: []
+  - at: "15:12:20"
+    author: sam.ortega
+    text: "rerun went through, search-indexer is green"
+    thread_of: "14:21:10/sam.ortega"
+    reactions: []
+  - at: "15:20:30"
+    author: sam.ortega
+    text: "handover: search-indexer rerun ok, node-east-14 back to normal. @kofi.mensah your DNS change is still open, can you post when done. checkout stuff is in #inc-checkout-latency"
+    thread_of: null
+    reactions: []
+  - at: "15:26:50"
+    author: elena.rossi
+    text: "signing off for the day. night all"
+    thread_of: null
+    reactions: []

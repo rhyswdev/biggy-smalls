@@ -1,0 +1,84 @@
+{
+  "incident": {
+    "id": "QK3D7N2W8PXV4M",
+    "type": "incident",
+    "summary": "[#8812] checkout-api error rate > 5%",
+    "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+    "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+    "incident_number": 8812,
+    "title": "checkout-api error rate > 5%",
+    "created_at": "2026-10-13T14:33:12Z",
+    "updated_at": "2026-10-13T14:37:00Z",
+    "status": "acknowledged",
+    "incident_key": "monitor-7391255",
+    "service": {
+      "id": "PSV9C1L",
+      "type": "service_reference",
+      "summary": "Checkout - Prod",
+      "self": "https://api.pagerduty.com/services/PSV9C1L",
+      "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+    },
+    "assignments": [
+      {
+        "at": "2026-10-13T14:33:12Z",
+        "assignee": {
+          "id": "PBO9GPI",
+          "type": "user_reference",
+          "summary": "Alice Nguyen",
+          "self": "https://api.pagerduty.com/users/PBO9GPI",
+          "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+        }
+      }
+    ],
+    "assigned_via": "escalation_policy",
+    "acknowledgements": [
+      {
+        "at": "2026-10-13T14:34:05Z",
+        "acknowledger": {
+          "id": "PBO9GPI",
+          "type": "user_reference",
+          "summary": "Alice Nguyen",
+          "self": "https://api.pagerduty.com/users/PBO9GPI",
+          "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+        }
+      }
+    ],
+    "last_status_change_at": "2026-10-13T14:34:05Z",
+    "last_status_change_by": {
+      "id": "PBO9GPI",
+      "type": "user_reference",
+      "summary": "Alice Nguyen",
+      "self": "https://api.pagerduty.com/users/PBO9GPI",
+      "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+    },
+    "first_trigger_log_entry": {
+      "id": "K7WA771XVC70BW",
+      "type": "trigger_log_entry_reference",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/K7WA771XVC70BW",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/K7WA771XVC70BW"
+    },
+    "alert_counts": {
+      "all": 2,
+      "triggered": 2,
+      "resolved": 0
+    },
+    "is_mergeable": true,
+    "escalation_policy": {
+      "id": "PEP2N6B",
+      "type": "escalation_policy_reference",
+      "summary": "Commerce Platform",
+      "self": "https://api.pagerduty.com/escalation_policies/PEP2N6B",
+      "html_url": "https://larkspur.pagerduty.com/escalation-policies/PEP2N6B"
+    },
+    "teams": [],
+    "pending_actions": [],
+    "urgency": "high",
+    "priority": {
+      "id": "H3P3CA0WXO23L2",
+      "type": "priority",
+      "summary": "P2",
+      "name": "P2"
+    }
+  }
+}

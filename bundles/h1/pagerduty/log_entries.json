@@ -1,0 +1,573 @@
+{
+  "log_entries": [
+    {
+      "id": "XUFO9865YL9PEA",
+      "type": "trigger_log_entry",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/XUFO9865YL9PEA",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N/log_entries/XUFO9865YL9PEA",
+      "created_at": "2026-10-13T13:52:12Z",
+      "agent": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "channel": {
+        "type": "api"
+      },
+      "service": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "incident": {
+        "id": "QARVU3UMK0EH5N",
+        "type": "incident_reference",
+        "summary": "[#8810] Disk space low on ord-01",
+        "self": "https://api.pagerduty.com/incidents/QARVU3UMK0EH5N",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N"
+      },
+      "teams": [],
+      "contexts": [],
+      "event_details": {
+        "description": "Disk space low on ord-01"
+      }
+    },
+    {
+      "id": "1OAGZZL7CLN2LF",
+      "type": "assign_log_entry",
+      "summary": "Assigned to Sam Ortega.",
+      "self": "https://api.pagerduty.com/log_entries/1OAGZZL7CLN2LF",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N/log_entries/1OAGZZL7CLN2LF",
+      "created_at": "2026-10-13T13:52:12Z",
+      "agent": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "channel": {
+        "type": "auto"
+      },
+      "service": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "incident": {
+        "id": "QARVU3UMK0EH5N",
+        "type": "incident_reference",
+        "summary": "[#8810] Disk space low on ord-01",
+        "self": "https://api.pagerduty.com/incidents/QARVU3UMK0EH5N",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N"
+      },
+      "teams": [],
+      "contexts": [],
+      "assignees": [
+        {
+          "id": "PFR2YX8",
+          "type": "user_reference",
+          "summary": "Sam Ortega",
+          "self": "https://api.pagerduty.com/users/PFR2YX8",
+          "html_url": "https://larkspur.pagerduty.com/users/PFR2YX8"
+        }
+      ]
+    },
+    {
+      "id": "EGPF24HUQOEJ3B",
+      "type": "resolve_log_entry",
+      "summary": "Resolved through the API.",
+      "self": "https://api.pagerduty.com/log_entries/EGPF24HUQOEJ3B",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N/log_entries/EGPF24HUQOEJ3B",
+      "created_at": "2026-10-13T13:53:02Z",
+      "agent": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "channel": {
+        "type": "api"
+      },
+      "service": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "incident": {
+        "id": "QARVU3UMK0EH5N",
+        "type": "incident_reference",
+        "summary": "[#8810] Disk space low on ord-01",
+        "self": "https://api.pagerduty.com/incidents/QARVU3UMK0EH5N",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QARVU3UMK0EH5N"
+      },
+      "teams": [],
+      "contexts": []
+    },
+    {
+      "id": "TVRO3HE4BB9OKH",
+      "type": "trigger_log_entry",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/TVRO3HE4BB9OKH",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR/log_entries/TVRO3HE4BB9OKH",
+      "created_at": "2026-10-13T14:10:05Z",
+      "agent": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "channel": {
+        "type": "api"
+      },
+      "service": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "incident": {
+        "id": "QWUYRGF214IXSR",
+        "type": "incident_reference",
+        "summary": "[#8811] search-indexer cron job failed",
+        "self": "https://api.pagerduty.com/incidents/QWUYRGF214IXSR",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR"
+      },
+      "teams": [],
+      "contexts": [],
+      "event_details": {
+        "description": "search-indexer cron job failed"
+      }
+    },
+    {
+      "id": "6K17NKK9B8CDEA",
+      "type": "assign_log_entry",
+      "summary": "Assigned to Sam Ortega.",
+      "self": "https://api.pagerduty.com/log_entries/6K17NKK9B8CDEA",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR/log_entries/6K17NKK9B8CDEA",
+      "created_at": "2026-10-13T14:10:05Z",
+      "agent": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "channel": {
+        "type": "auto"
+      },
+      "service": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "incident": {
+        "id": "QWUYRGF214IXSR",
+        "type": "incident_reference",
+        "summary": "[#8811] search-indexer cron job failed",
+        "self": "https://api.pagerduty.com/incidents/QWUYRGF214IXSR",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR"
+      },
+      "teams": [],
+      "contexts": [],
+      "assignees": [
+        {
+          "id": "PFR2YX8",
+          "type": "user_reference",
+          "summary": "Sam Ortega",
+          "self": "https://api.pagerduty.com/users/PFR2YX8",
+          "html_url": "https://larkspur.pagerduty.com/users/PFR2YX8"
+        }
+      ]
+    },
+    {
+      "id": "UH44WSZBP55935",
+      "type": "acknowledge_log_entry",
+      "summary": "Acknowledged by Sam Ortega.",
+      "self": "https://api.pagerduty.com/log_entries/UH44WSZBP55935",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR/log_entries/UH44WSZBP55935",
+      "created_at": "2026-10-13T14:19:40Z",
+      "agent": {
+        "id": "PFR2YX8",
+        "type": "user_reference",
+        "summary": "Sam Ortega",
+        "self": "https://api.pagerduty.com/users/PFR2YX8",
+        "html_url": "https://larkspur.pagerduty.com/users/PFR2YX8"
+      },
+      "channel": {
+        "type": "website"
+      },
+      "service": {
+        "id": "PSV5P4F",
+        "type": "service_reference",
+        "summary": "Platform",
+        "self": "https://api.pagerduty.com/services/PSV5P4F",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV5P4F"
+      },
+      "incident": {
+        "id": "QWUYRGF214IXSR",
+        "type": "incident_reference",
+        "summary": "[#8811] search-indexer cron job failed",
+        "self": "https://api.pagerduty.com/incidents/QWUYRGF214IXSR",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QWUYRGF214IXSR"
+      },
+      "teams": [],
+      "contexts": []
+    },
+    {
+      "id": "K7WA771XVC70BW",
+      "type": "trigger_log_entry",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/K7WA771XVC70BW",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/K7WA771XVC70BW",
+      "created_at": "2026-10-13T14:33:12Z",
+      "agent": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "channel": {
+        "type": "api"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QK3D7N2W8PXV4M",
+        "type": "incident_reference",
+        "summary": "[#8812] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M"
+      },
+      "teams": [],
+      "contexts": [],
+      "event_details": {
+        "description": "checkout-api error rate > 5%"
+      }
+    },
+    {
+      "id": "KD2V1U57K1K5IH",
+      "type": "assign_log_entry",
+      "summary": "Assigned to Alice Nguyen.",
+      "self": "https://api.pagerduty.com/log_entries/KD2V1U57K1K5IH",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/KD2V1U57K1K5IH",
+      "created_at": "2026-10-13T14:33:12Z",
+      "agent": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "channel": {
+        "type": "auto"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QK3D7N2W8PXV4M",
+        "type": "incident_reference",
+        "summary": "[#8812] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M"
+      },
+      "teams": [],
+      "contexts": [],
+      "assignees": [
+        {
+          "id": "PBO9GPI",
+          "type": "user_reference",
+          "summary": "Alice Nguyen",
+          "self": "https://api.pagerduty.com/users/PBO9GPI",
+          "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+        }
+      ]
+    },
+    {
+      "id": "NPED0SFS4ARUIE",
+      "type": "notify_log_entry",
+      "summary": "Notified Alice Nguyen by phone.",
+      "self": "https://api.pagerduty.com/log_entries/NPED0SFS4ARUIE",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/NPED0SFS4ARUIE",
+      "created_at": "2026-10-13T14:33:13Z",
+      "agent": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "channel": {
+        "type": "auto"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QK3D7N2W8PXV4M",
+        "type": "incident_reference",
+        "summary": "[#8812] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M"
+      },
+      "teams": [],
+      "contexts": [],
+      "user": {
+        "id": "PBO9GPI",
+        "type": "user_reference",
+        "summary": "Alice Nguyen",
+        "self": "https://api.pagerduty.com/users/PBO9GPI",
+        "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+      }
+    },
+    {
+      "id": "Z8RBV82TR2V9VA",
+      "type": "acknowledge_log_entry",
+      "summary": "Acknowledged by Alice Nguyen.",
+      "self": "https://api.pagerduty.com/log_entries/Z8RBV82TR2V9VA",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/Z8RBV82TR2V9VA",
+      "created_at": "2026-10-13T14:34:05Z",
+      "agent": {
+        "id": "PBO9GPI",
+        "type": "user_reference",
+        "summary": "Alice Nguyen",
+        "self": "https://api.pagerduty.com/users/PBO9GPI",
+        "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+      },
+      "channel": {
+        "type": "website"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QK3D7N2W8PXV4M",
+        "type": "incident_reference",
+        "summary": "[#8812] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M"
+      },
+      "teams": [],
+      "contexts": []
+    },
+    {
+      "id": "3YC6QO0MOOXRCI",
+      "type": "trigger_log_entry",
+      "summary": "Triggered through the API.",
+      "self": "https://api.pagerduty.com/log_entries/3YC6QO0MOOXRCI",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QM8T4R1C6YZB2J/log_entries/3YC6QO0MOOXRCI",
+      "created_at": "2026-10-13T14:35:40Z",
+      "agent": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "channel": {
+        "type": "api"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QM8T4R1C6YZB2J",
+        "type": "incident_reference",
+        "summary": "[#8813] [Synthetics] checkout flow",
+        "self": "https://api.pagerduty.com/incidents/QM8T4R1C6YZB2J",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QM8T4R1C6YZB2J"
+      },
+      "teams": [],
+      "contexts": [],
+      "event_details": {
+        "description": "[Synthetics] checkout flow"
+      }
+    },
+    {
+      "id": "67XN4SIIGTPOYA",
+      "type": "assign_log_entry",
+      "summary": "Assigned to Alice Nguyen.",
+      "self": "https://api.pagerduty.com/log_entries/67XN4SIIGTPOYA",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QM8T4R1C6YZB2J/log_entries/67XN4SIIGTPOYA",
+      "created_at": "2026-10-13T14:35:40Z",
+      "agent": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "channel": {
+        "type": "auto"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QM8T4R1C6YZB2J",
+        "type": "incident_reference",
+        "summary": "[#8813] [Synthetics] checkout flow",
+        "self": "https://api.pagerduty.com/incidents/QM8T4R1C6YZB2J",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QM8T4R1C6YZB2J"
+      },
+      "teams": [],
+      "contexts": [],
+      "assignees": [
+        {
+          "id": "PBO9GPI",
+          "type": "user_reference",
+          "summary": "Alice Nguyen",
+          "self": "https://api.pagerduty.com/users/PBO9GPI",
+          "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+        }
+      ]
+    },
+    {
+      "id": "V6WHLWXNHY15GA",
+      "type": "annotate_log_entry",
+      "summary": "Incident #8813 was merged into this incident.",
+      "self": "https://api.pagerduty.com/log_entries/V6WHLWXNHY15GA",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/V6WHLWXNHY15GA",
+      "created_at": "2026-10-13T14:37:00Z",
+      "agent": {
+        "id": "PBO9GPI",
+        "type": "user_reference",
+        "summary": "Alice Nguyen",
+        "self": "https://api.pagerduty.com/users/PBO9GPI",
+        "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+      },
+      "channel": {
+        "type": "website"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QK3D7N2W8PXV4M",
+        "type": "incident_reference",
+        "summary": "[#8812] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M"
+      },
+      "teams": [],
+      "contexts": []
+    },
+    {
+      "id": "IK5926WXOXRMYH",
+      "type": "resolve_log_entry",
+      "summary": "Resolved by merging into incident #8812.",
+      "self": "https://api.pagerduty.com/log_entries/IK5926WXOXRMYH",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QM8T4R1C6YZB2J/log_entries/IK5926WXOXRMYH",
+      "created_at": "2026-10-13T14:37:00Z",
+      "agent": {
+        "id": "PBO9GPI",
+        "type": "user_reference",
+        "summary": "Alice Nguyen",
+        "self": "https://api.pagerduty.com/users/PBO9GPI",
+        "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+      },
+      "channel": {
+        "type": "website"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QM8T4R1C6YZB2J",
+        "type": "incident_reference",
+        "summary": "[#8813] [Synthetics] checkout flow",
+        "self": "https://api.pagerduty.com/incidents/QM8T4R1C6YZB2J",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QM8T4R1C6YZB2J"
+      },
+      "teams": [],
+      "contexts": []
+    },
+    {
+      "id": "W07VEZ771P2IVS",
+      "type": "resolve_log_entry",
+      "summary": "Resolved by Alice Nguyen.",
+      "self": "https://api.pagerduty.com/log_entries/W07VEZ771P2IVS",
+      "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M/log_entries/W07VEZ771P2IVS",
+      "created_at": "2026-10-13T14:46:30Z",
+      "agent": {
+        "id": "PBO9GPI",
+        "type": "user_reference",
+        "summary": "Alice Nguyen",
+        "self": "https://api.pagerduty.com/users/PBO9GPI",
+        "html_url": "https://larkspur.pagerduty.com/users/PBO9GPI"
+      },
+      "channel": {
+        "type": "website"
+      },
+      "service": {
+        "id": "PSV9C1L",
+        "type": "service_reference",
+        "summary": "Checkout - Prod",
+        "self": "https://api.pagerduty.com/services/PSV9C1L",
+        "html_url": "https://larkspur.pagerduty.com/services/PSV9C1L"
+      },
+      "incident": {
+        "id": "QK3D7N2W8PXV4M",
+        "type": "incident_reference",
+        "summary": "[#8812] checkout-api error rate > 5%",
+        "self": "https://api.pagerduty.com/incidents/QK3D7N2W8PXV4M",
+        "html_url": "https://larkspur.pagerduty.com/incidents/QK3D7N2W8PXV4M"
+      },
+      "teams": [],
+      "contexts": []
+    }
+  ],
+  "limit": 100,
+  "offset": 0,
+  "more": false,
+  "total": null
+}

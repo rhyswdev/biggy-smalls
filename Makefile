@@ -17,11 +17,15 @@ export SMALLS_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null)
 
 .PHONY: data lint lint-every-bundle ingest tag docker-test leak-test tools-smoke retrieval solve score demo run resume regress matrix heldout test schemas
 
+# The scenario `make data` and `make lint` build and check: the development scenario when empty. The session
+# that authors a held-out bundle names its file (SCENARIO=scenario/variants/h1/scenario.yaml); nothing else does.
+SCENARIO ?=
+
 data:
-	$(PY) -m smalls_data.build
+	$(PY) -m smalls_data.build $(SCENARIO)
 
 lint:
-	$(PY) -m smalls_data.lint
+	$(PY) -m smalls_data.lint $(SCENARIO)
 
 # Invariants 16 and 17 against the strings of every facts.yaml found, held-out bundles' included (PLAN 12's
 # controls). Run by the session that authors a held-out bundle; an agent session runs `make lint` only.

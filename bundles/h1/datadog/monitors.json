@@ -1,0 +1,418 @@
+[
+  {
+    "id": 7391240,
+    "name": "p90 latency high on payments-gw",
+    "type": "query alert",
+    "query": "max(last_5m):p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 6",
+    "message": "{{#is_alert}}p90 latency from checkout-api to payments-gw is {{value}}s (threshold {{threshold}}s). Checkout payments are slow for customers.{{/is_alert}}\n{{#is_warning}}p90 latency to payments-gw is {{value}}s and rising.{{/is_warning}}\n{{#is_recovery}}p90 latency to payments-gw back under threshold.{{/is_recovery}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n{{#is_alert}}@pagerduty-Payments-Prod{{/is_alert}} @slack-sre-oncall",
+    "tags": [
+      "team:commerce",
+      "service:checkout-api",
+      "peer.service:payments-gw",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "thresholds": {
+        "critical": 6.0,
+        "warning": 4.0
+      }
+    },
+    "overall_state": "OK",
+    "priority": 2,
+    "multi": false,
+    "created": "2025-11-04T15:22:10+00:00",
+    "modified": "2026-03-12T10:41:52+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7391241,
+    "name": "p99 latency on payments-gw",
+    "type": "query alert",
+    "query": "max(last_5m):p99:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod} > 15",
+    "message": "{{#is_warning}}p99 latency from checkout-api to payments-gw is {{value}}s. Non-paging; tail latency only.{{/is_warning}}\n{{#is_alert}}p99 latency to payments-gw is {{value}}s.{{/is_alert}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n@slack-sre-oncall",
+    "tags": [
+      "team:commerce",
+      "service:checkout-api",
+      "peer.service:payments-gw",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "thresholds": {
+        "critical": 15.0,
+        "warning": 8.0
+      }
+    },
+    "overall_state": "OK",
+    "priority": 4,
+    "multi": false,
+    "created": "2025-11-04T15:24:41+00:00",
+    "modified": "2025-11-04T15:24:41+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7391255,
+    "name": "checkout-api error rate > 5%",
+    "type": "query alert",
+    "query": "sum(last_1m):sum:trace.servlet.request.errors{service:checkout-api,env:prod}.as_count() / sum:trace.servlet.request.hits{service:checkout-api,env:prod}.as_count() * 100 > 5",
+    "message": "{{#is_alert}}checkout-api 5xx rate is {{value}}% over the last 5 minutes. Customers cannot complete checkout.{{/is_alert}}\n{{#is_warning}}checkout-api 5xx rate is {{value}}%.{{/is_warning}}\nCheck recent checkout-api deploys first.\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n{{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}",
+    "tags": [
+      "team:commerce",
+      "service:checkout-api",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "thresholds": {
+        "critical": 5.0,
+        "warning": 2.0
+      },
+      "evaluation_delay": 60
+    },
+    "overall_state": "OK",
+    "priority": 2,
+    "multi": false,
+    "created": "2024-02-20T09:13:30+00:00",
+    "modified": "2026-03-12T10:44:07+00:00",
+    "creator": {
+      "email": "alice.nguyen@larkspur.com",
+      "handle": "alice.nguyen@larkspur.com",
+      "name": "Alice Nguyen"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7301990,
+    "name": "Postgres can_connect on {{host.name}}",
+    "type": "service check",
+    "query": "\"postgres.can_connect\".over(\"host:pay-db-01\").by(\"host\",\"db\").last(2).count_by_status()",
+    "message": "{{#is_alert}}The Datadog agent cannot connect to Postgres on {{host.name}}: {{check_message}}{{/is_alert}}\n{{#is_recovery}}Postgres on {{host.name}} accepting connections again.{{/is_recovery}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n{{#is_alert}}@pagerduty-Database-Prod{{/is_alert}}",
+    "tags": [
+      "team:database",
+      "db:postgres",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": true,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "thresholds": {
+        "critical": 1,
+        "warning": 1,
+        "ok": 1
+      },
+      "no_data_timeframe": 2
+    },
+    "overall_state": "OK",
+    "priority": 1,
+    "multi": false,
+    "created": "2023-06-08T12:00:31+00:00",
+    "modified": "2025-08-19T08:30:14+00:00",
+    "creator": {
+      "email": "elena.rossi@larkspur.com",
+      "handle": "elena.rossi@larkspur.com",
+      "name": "Elena Rossi"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7391301,
+    "name": "checkout-api log volume anomaly",
+    "type": "log alert",
+    "query": "logs(\"service:checkout-api env:prod\").index(\"main\").rollup(\"count\").last(\"10m\") > 18000",
+    "message": "{{#is_alert}}checkout-api is logging {{value}} lines in 10 minutes, well above normal. Check for a DEBUG logger left on.{{/is_alert}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n@slack-sre-oncall",
+    "tags": [
+      "team:commerce",
+      "service:checkout-api",
+      "env:prod",
+      "logs"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false
+    },
+    "overall_state": "OK",
+    "priority": 4,
+    "multi": false,
+    "created": "2025-01-15T11:02:44+00:00",
+    "modified": "2025-01-15T11:02:44+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7390118,
+    "name": "[Synthetics] checkout flow",
+    "type": "synthetics alert",
+    "query": "\"synthetics.test_runs\".over(\"check_id:syn-checkout-flow\").last(2).count_by_status()",
+    "message": "{{#is_alert}}Synthetic checkout flow is failing from {{locations}}.{{/is_alert}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n{{#is_alert}}@pagerduty-Checkout-Prod{{/is_alert}}",
+    "tags": [
+      "team:commerce",
+      "synthetics",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "synthetics_check_id": "syn-checkout-flow"
+    },
+    "overall_state": "OK",
+    "priority": 2,
+    "multi": false,
+    "created": "2024-05-02T14:31:00+00:00",
+    "modified": "2025-10-30T16:12:09+00:00",
+    "creator": {
+      "email": "alice.nguyen@larkspur.com",
+      "handle": "alice.nguyen@larkspur.com",
+      "name": "Alice Nguyen"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7288104,
+    "name": "redis-sessions memory fragmentation high",
+    "type": "metric alert",
+    "query": "avg(last_15m):avg:redis.mem.fragmentation_ratio{cluster:redis-sessions} > 1.5",
+    "message": "{{#is_alert}}redis-sessions memory fragmentation ratio is {{value}}. Sessions may be evicted; checkout logins can fail.{{/is_alert}}\nRunbook: https://confluence.larkspur.internal/display/SRE/CHECKOUT-LATENCY\n@slack-sre-oncall",
+    "tags": [
+      "team:platform",
+      "cluster:redis-sessions",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "thresholds": {
+        "critical": 1.5,
+        "warning": 1.4
+      }
+    },
+    "overall_state": "OK",
+    "priority": 3,
+    "multi": false,
+    "created": "2024-03-11T13:20:55+00:00",
+    "modified": "2026-09-23T09:12:40+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7312877,
+    "name": "CPU saturation on {{host.name}}",
+    "type": "metric alert",
+    "query": "avg(last_10m):avg:system.cpu.user{kube_cluster_name:k8s-prod-east} by {host} > 90",
+    "message": "{{#is_alert}}CPU on {{host.name}} above 90% for 10 minutes.{{/is_alert}}\n@slack-sre-oncall",
+    "tags": [
+      "team:platform",
+      "kube_cluster_name:k8s-prod-east",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false
+    },
+    "overall_state": "OK",
+    "priority": 4,
+    "multi": true,
+    "created": "2025-06-23T09:48:12+00:00",
+    "modified": "2025-06-23T09:48:12+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7344120,
+    "name": "search-indexer cron job failed",
+    "type": "event-v2 alert",
+    "query": "events(\"source:kubernetes kube_cronjob:search-indexer reason:BackoffLimitExceeded\").rollup(\"count\").last(\"5m\") > 0",
+    "message": "{{#is_alert}}search-indexer cron job failed (BackoffLimitExceeded). Product search results stop updating until the next successful run.{{/is_alert}}\n{{#is_alert}}@pagerduty-Platform{{/is_alert}}",
+    "tags": [
+      "team:platform",
+      "kube_cronjob:search-indexer",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false
+    },
+    "overall_state": "OK",
+    "priority": 4,
+    "multi": false,
+    "created": "2025-02-11T10:05:44+00:00",
+    "modified": "2025-02-11T10:05:44+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7266031,
+    "name": "Disk space low on {{host.name}}",
+    "type": "metric alert",
+    "query": "max(last_5m):avg:system.disk.in_use{role:orders} by {host,device} > 0.9",
+    "message": "{{#is_alert}}Disk {{device.name}} on {{host.name}} is {{value}} full.{{/is_alert}}\n{{#is_recovery}}Disk on {{host.name}} back under threshold.{{/is_recovery}}\n{{#is_alert}}@pagerduty-Platform{{/is_alert}}",
+    "tags": [
+      "team:commerce",
+      "role:orders",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false
+    },
+    "overall_state": "OK",
+    "priority": 4,
+    "multi": false,
+    "created": "2024-08-30T13:20:02+00:00",
+    "modified": "2024-08-30T13:20:02+00:00",
+    "creator": {
+      "email": "sam.ortega@larkspur.com",
+      "handle": "sam.ortega@larkspur.com",
+      "name": "Sam Ortega"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7390233,
+    "name": "[Synthetics] marketing site homepage",
+    "type": "synthetics alert",
+    "query": "\"synthetics.test_runs\".over(\"check_id:syn-marketing-home\").last(2).count_by_status()",
+    "message": "{{#is_alert}}Marketing homepage check failing from {{locations}}.{{/is_alert}}\n{{#is_recovery}}Marketing homepage check passing again.{{/is_recovery}}\n@slack-web-platform",
+    "tags": [
+      "team:web",
+      "site:marketing",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "synthetics_check_id": "syn-marketing-home"
+    },
+    "overall_state": "OK",
+    "priority": 3,
+    "multi": false,
+    "created": "2024-02-02T11:40:19+00:00",
+    "modified": "2025-07-14T09:02:33+00:00",
+    "creator": {
+      "email": "kofi.mensah@larkspur.com",
+      "handle": "kofi.mensah@larkspur.com",
+      "name": "Kofi Mensah"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  },
+  {
+    "id": 7391260,
+    "name": "Payment authorization success rate low",
+    "type": "query alert",
+    "query": "avg(last_5m):avg:payments.authorize.success_rate{env:prod} < 95",
+    "message": "{{#is_alert}}Payment authorization success rate is {{value}}% over the last 5 minutes (threshold {{threshold}}%).{{/is_alert}}\n{{#is_warning}}Payment authorization success rate is {{value}}%.{{/is_warning}}\n{{#is_recovery}}Payment authorization success rate back above threshold.{{/is_recovery}}\n@slack-payments",
+    "tags": [
+      "team:payments",
+      "service:payments-gateway",
+      "env:prod"
+    ],
+    "options": {
+      "notify_no_data": false,
+      "renotify_interval": 0,
+      "include_tags": true,
+      "require_full_window": false,
+      "new_group_delay": 60,
+      "notify_audit": false,
+      "thresholds": {
+        "critical": 95.0,
+        "warning": 97.0
+      }
+    },
+    "overall_state": "OK",
+    "priority": 2,
+    "multi": false,
+    "created": "2025-03-03T16:12:40+00:00",
+    "modified": "2025-11-04T15:30:12+00:00",
+    "creator": {
+      "email": "marcus.okafor@larkspur.com",
+      "handle": "marcus.okafor@larkspur.com",
+      "name": "Marcus Okafor"
+    },
+    "restricted_roles": null,
+    "deleted": null
+  }
+]
