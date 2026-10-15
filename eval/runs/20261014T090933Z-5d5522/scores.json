@@ -111,9 +111,9 @@
   "tokens": 190387
  },
  "judge": {
-  "judge": "1",
+  "judge": "2",
   "model": "gpt-6.1-sol",
-  "cost_usd": 0.054806,
+  "cost_usd": 0.047586,
   "mechanism": {
    "yes": 4,
    "of": 4,
