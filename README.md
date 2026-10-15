@@ -356,7 +356,7 @@ Tag quality is measured separately: precision against a hand-labelled sample and
 
 | Layer | Result |
 |---|---|
-| Tool layer | 5,861 store rows built from the bundle in about 269 ms, 0 lines unparsed, each matched to its manifest row by `make test`; the leak test passes at both checkpoints |
+| Tool layer | 5,861 store rows built from the bundle in about 0.3 s, 0 lines unparsed, each matched to its manifest row by `make test`; the leak test passes at both checkpoints |
 | Retrieval | The right page first for 9 of 12 questions, in the top five for 11 of 12 |
 | Solve path | 16 of 16 scripted steps hold, ending at the cause |
 | Outcome | The agent reached the cause with system evidence in 60 of 60 runs, with 0 of 60 hard fails, and met PLAN 13's checklist for a good run in 60 of 60. It passed 279 of 288 trap checks, found 224 of 264 required facts, and put 1,170 of 1,194 alert streams rightly in or out of the incident |
@@ -376,7 +376,7 @@ Tag quality is measured separately: precision against a hand-labelled sample and
 
 **Gate B, a blind test of the evidence.** A fresh session with only the bundle's served files, the tool CLI with the clock at 14:52 and the commander's message, and no repository context, named the cause, its mechanism, the trigger and all three contributing factors at 0.85, cleared the nine traps, took the owner from on-call and proposed no harmful action, in 54 tool calls. So the evidence and the tools are enough for a careful investigator to get there. It also found a defect in the tool CLI, since fixed. [`docs/gate-b/FINDINGS.md`](docs/gate-b/FINDINGS.md) is its report.
 
-**Held-out incidents.** <!-- Session D: the generated held-out table from `make heldout` goes here. --> Everything above is on the incident the agent was developed against, so it shows the agent works on this incident at these checkpoints, not on incidents it hasn't seen. Five held-out incident cards were committed before any agent code. A separate session, which never reads agent code, prompts or run transcripts, builds a bundle from a card; the agent, the scorer and the judge are frozen under the tag `agent-v1` first. Controls make the result readable: the no-tools call, the commander asserting a wrong cause, a proximity baseline that ranks changes by time and shared CI the way change-correlation tools do, and a contrarian prompt with this incident's discriminators written in as rules, which must fail on a held-out variant or the variant tests nothing. _Results to come._
+**Held-out incidents.** <!-- Session D: the generated held-out table from `make heldout` goes here. --> Everything above is on the incident the agent was developed against, so it shows the agent works on this incident at these checkpoints, not on incidents it hasn't seen. Five held-out incident cards were committed before any agent code. A separate session, which never reads agent code, prompts or run transcripts, builds a bundle from a card; the agent, the scorer and the judge are frozen under the tag `agent-v1`, made before any held-out bundle exists on `main`. Controls make the result readable: the no-tools call, the commander asserting a wrong cause, a proximity baseline that ranks changes by time and shared CI the way change-correlation tools do, and a contrarian prompt with this incident's discriminators written in as rules, which must fail on a held-out variant or the variant tests nothing. _Results to come._
 
 #### Self-evaluation
 
