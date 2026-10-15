@@ -129,3 +129,7 @@ batches:
     pass: 7
     what: Section 13's R4, the tags ablation (row E5), tags on. Two runs at the second checkpoint on sol at medium, which with pass 7's three regression runs (p07) make five a side.
     moved: Both led with the gateway at 0.8 with the trigger on the board, and neither used a tag input.
+  - name: z5
+    phase: freeze
+    pass: 7
+    what: Section 15's Z5, the contrarian control (arm K). One run at the second checkpoint on sol at medium, the agent with the development incident's discriminators added to its prompt as rules. Not a run of the agent; a held-out variant must make it fail.

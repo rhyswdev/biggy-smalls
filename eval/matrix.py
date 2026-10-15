@@ -32,7 +32,8 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-ARMS = {"A": "the trigger, the chat and the alerts in one model call, no tools", "C": "the agent with tools"}
+ARMS = {"A": "the trigger, the chat and the alerts in one model call, no tools", "C": "the agent with tools",
+        "K": "the contrarian control: arm C with the development incident's discriminators as rules (eval/contrarian.py)"}
 REGRESSION = {"arms": "C", "checkpoints": "1452", "reps": 3}
 MEASURES = (("tool calls", lambda s: s.get("tool_calls")), ("model turns", lambda s: (s.get("process") or {}).get("model_turns")),
             ("tokens", lambda s: (s.get("process") or {}).get("tokens_total")), ("cost usd", lambda s: (s.get("tokens") or {}).get("cost_usd")),
@@ -56,7 +57,8 @@ def run_id(label: str, cell: dict[str, Any]) -> str:
 def command(cell: dict[str, Any], *, label: str, bundle: str, profile: str | None = None, script: str | None = None,
             trigger: str | None = None, set_name: str | None = None, roles: list[str] | None = None, effort: str | None = None) -> list[str]:
     """The one process a cell runs."""
-    module = ["-m", "smalls.agent", "run", "--arm", "C", "--eval-run", "--durability", "exit", "--no-thinking"] if cell["arm"] == "C" else ["-m", "eval.baseline"]
+    agent = ["--eval-run", "--durability", "exit", "--no-thinking"]
+    module = {"C": ["-m", "smalls.agent", "run", "--arm", "C", *agent], "K": ["-m", "eval.contrarian", "run", *agent]}.get(cell["arm"], ["-m", "eval.baseline"])
     given = ["--trigger", trigger] if trigger else ["--trigger-file", str(Path(bundle) / "triggers" / f"{cell['checkpoint']}.md")]
     out = [sys.executable, *module, "--bundle", bundle, "--now", clock(cell["checkpoint"]), *given, "--checkpoint", cell["checkpoint"],
            "--run-id", run_id(label, cell), "--tags", "on" if cell["tags"] else "off"]
