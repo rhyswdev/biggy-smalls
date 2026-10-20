@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ServiceNow ticket view, v4</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/smalls/tokens.css">
+<link rel="stylesheet" href="ds/smalls/components/bundle.css">
+<script src="ds/smalls/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.tk{min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;background:var(--surface-raised);color:var(--ink);font-family:var(--font-sans);font-size:14px;line-height:20px}
+.tk-head{position:sticky;top:0;display:flex;align-items:flex-start;gap:12px;padding:18px 20px 14px;background:var(--surface-raised);border-bottom:1px solid var(--line)}
+.tk-head.flat{position:static;padding-top:14px}
+.tk-body{display:flex;flex-direction:column;gap:18px;padding:18px 20px 28px}
+.src-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:999px;background:var(--action-soft);color:var(--action);font-size:12px;line-height:18px;font-weight:600;white-space:nowrap;align-self:flex-start}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;margin:0}
+.fields div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.fields dt{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.fields dd{margin:0;font-size:13px;line-height:18px}
+.label{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.note{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:6px}
+.note p{margin:0;font-size:14px;line-height:21px;white-space:pre-line}
+.note-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;font-size:12px;line-height:16px;color:var(--ink-muted)}
+.note-head b{color:var(--ink);font-weight:600}
+.small{font-size:12px;line-height:16px}
+.muted{color:var(--ink-muted)}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-10px -10px 0 auto;border:0;border-radius:4px;background:transparent;color:var(--ink-muted);cursor:pointer;flex:none}
+.iconbtn:hover{background:var(--surface-sunken);color:var(--ink)}
+.iconbtn:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+</style>
+</helmet>
+<div class="tk" data-theme="{{theme}}">
+<div class="tk-head {{headCls}}">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+<sc-if value="{{notEmbedded}}" hint-placeholder-val="{{ true }}"><span class="src-pill">ServiceNow ticket, as imported</span></sc-if>
+<h2 class="title" style="margin: 0;"><span class="time" style="font-size: 15px; color: var(--action);">INC0048811</span> Checkout payments failing / slow, 504s on submit</h2>
+<span class="small muted">Read-only copy. Times converted from US Eastern to UTC.</span>
+</div>
+<sc-if value="{{notEmbedded}}" hint-placeholder-val="{{ true }}"><button type="button" class="iconbtn" aria-label="Close ticket" onClick="{{close}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button></sc-if>
+</div>
+<div class="tk-body">
+<dl class="fields">
+<div><dt>State</dt><dd>In Progress</dd></div>
+<div><dt>Priority</dt><dd>1 - Critical</dd></div>
+<div><dt>Impact / Urgency</dt><dd>1 - High / 1 - High</dd></div>
+<div><dt>Business service</dt><dd>Online Checkout</dd></div>
+<div><dt>Configuration item</dt><dd>Checkout API</dd></div>
+<div><dt>Assignment group</dt><dd>Commerce Platform</dd></div>
+<div><dt>Assigned to</dt><dd>Alice Nguyen</dd></div>
+<div><dt>Opened</dt><dd><span class="time">14:34:12 UTC</span> <span class="small muted">(10:34:12 ET)</span></dd></div>
+</dl>
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<span class="label">Work notes · newest first</span>
+<div class="note">
+<div class="note-head"><b>Alice Nguyen</b><span class="time">14:52:00 UTC</span></div>
+<p>We rolled checkout-api back to 2.14.2 (done 14:42) and nothing changed. Still 504s on submit, error rate about 17%, and support has 40+ tickets about the payment spinner.
+
+Elena has been in the database and posted what she found in the incident channel. Sam thinks pay-03 is dying, it keeps dropping out of the F5 pool. Kofi thinks it’s the network because the marketing site is down too, and he says PayCore’s status page is green.
+
+I need: what is actually causing this, how sure you are, what we should do in the next 10 minutes, and who should own it.</p>
+</div>
+<div class="note">
+<div class="note-head"><b>Alice Nguyen</b><span class="time">14:40:00 UTC</span></div>
+<p>Checkout submit has been 504ing since about 14:30. Error rate is around 15% and climbing; browse and cart look fine.
+
+Ben thinks it’s his checkout-api 2.14.3 deploy at 14:28 and we’re about to roll it back. Elena says pay-db-01 is maxed out on connections, mostly from the payments gateway.
+
+What’s going on, and what should we do first?</p>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"onClose":{"editor":null},"embedded":{"editor":"boolean","default":false},"$preview":{"width":560,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    return {
+      theme: this.props.theme ?? 'light',
+      notEmbedded: !this.props.embedded, headCls: this.props.embedded ? 'flat' : '',
+      close: function () { if (typeof self.props.onClose === 'function') self.props.onClose(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

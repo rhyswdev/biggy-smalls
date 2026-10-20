@@ -1,0 +1,33 @@
+/* Smalls — generated from tokens.json */
+:root, [data-theme="light"] {
+  --surface: #f5f6f4; --surface-raised: #ffffff; --surface-sunken: #ebede9; --line: #dcdfda; --line-strong: #7d847d;
+  --ink: #15181b; --ink-muted: #545b61; --action: #1a5bbf; --action-soft: #e2ebf9; --on-action: #ffffff;
+  --attention: #875000; --attention-soft: #fbeed6; --attention-fill: #e5a23a; --on-attention: #1b1405;
+  --danger: #b0261c; --danger-soft: #fbe6e2; --ok: #0d6b62; --ok-soft: #ddf1ee; --mark: #ffe9a3; --link: var(--action);
+  --shadow-drawer: -1px 0 0 #dcdfda, -12px 0 32px -8px #15181b29;
+  --focus-ring: 0 0 0 2px #f5f6f4, 0 0 0 4px #1a5bbf;
+}
+[data-theme="dark"] {
+  --surface: #111315; --surface-raised: #1a1d20; --surface-sunken: #0b0c0e; --line: #2b2f33; --line-strong: #6e757c;
+  --ink: #e7e9e6; --ink-muted: #a2a9af; --action: #80b0fb; --action-soft: #162a47; --on-action: #0b1220;
+  --attention: #f0b65a; --attention-soft: #382a0f; --attention-fill: #e5a23a; --on-attention: #1b1405;
+  --danger: #ff8e7e; --danger-soft: #3c1814; --ok: #5ccfbf; --ok-soft: #0f2d2a; --mark: #5a4600; --link: var(--action);
+  --shadow-drawer: -1px 0 0 #2b2f33, -12px 0 32px -8px #000000b3;
+  --focus-ring: 0 0 0 2px #111315, 0 0 0 4px #80b0fb;
+}
+:root {
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+  --radius-xs: 2px; --radius-sm: 4px; --radius-md: 6px;
+  --control-md: 32px; --control-sm: 24px; --drawer-width: 560px; --report-measure: 880px;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+.title { font-family: var(--font-sans); font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.005em; }
+.heading { font-family: var(--font-sans); font-size: 15px; line-height: 22px; font-weight: 600; }
+.summary { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; }
+.body { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; }
+.body-dense { font-family: var(--font-sans); font-size: 13px; line-height: 18px; font-weight: 400; }
+.label { font-family: var(--font-sans); font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-muted); }
+.handle { font-family: var(--font-mono); font-size: 12px; line-height: 18px; font-weight: 500; }
+.time { font-family: var(--font-mono); font-size: 12px; line-height: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.raw { font-family: var(--font-mono); font-size: 12px; line-height: 18px; font-weight: 400; }

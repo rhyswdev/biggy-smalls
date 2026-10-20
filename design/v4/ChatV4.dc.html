@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Diagnosis, v4</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/smalls/tokens.css">
+<link rel="stylesheet" href="ds/smalls/components/bundle.css">
+<script src="ds/smalls/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:var(--action)}a:hover{color:var(--ink)}
+.shell{min-height:100vh;display:flex;flex-wrap:wrap;align-items:stretch}
+.side{flex:1 1 260px;max-width:296px;min-width:0;background:var(--surface-raised);border-right:1px solid var(--line)}
+.page{flex:999 1 560px;min-width:0;height:100vh;display:flex;flex-direction:column}
+@media (max-width:820px){.side{max-width:none;border-right:0;border-bottom:1px solid var(--line)}}
+.top{position:relative;z-index:10;flex:none;background:var(--surface-raised);border-bottom:1px solid var(--line)}
+.top-in{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding:12px 28px}
+.inc{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.inc-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.inc-title{font-size:17px;line-height:24px;font-weight:600}
+.prio{font-family:var(--font-mono);font-size:12px;line-height:18px;font-weight:600;padding:0 6px;border-radius:2px;background:var(--danger-soft);color:var(--danger);white-space:nowrap}
+.inc-meta{font-size:12px;line-height:16px;color:var(--ink-muted)}
+.lens-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.lens{display:inline-flex;flex-wrap:wrap;gap:2px;padding:2px;border-radius:6px;background:var(--surface-sunken)}
+.lens button{font:inherit;font-size:12px;line-height:16px;font-weight:500;min-height:32px;padding:0 11px;border:0;border-radius:4px;background:transparent;color:var(--ink-muted);cursor:pointer}
+.lens button:hover{color:var(--ink)}
+.lens button[aria-pressed="true"]{background:var(--surface-raised);color:var(--ink);box-shadow:0 0 0 1px var(--line-strong)}
+.lens-hint{flex:1 1 100%;font-size:12px;line-height:16px;color:var(--ink-muted);text-align:right}
+.now{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 28px;border-top:1px solid var(--line);font-size:14px;line-height:20px}
+.now-neutral{background:var(--surface)}
+.now-attention{background:var(--attention-soft)}
+.now-attention .now-g,.now-attention .now-t b{color:var(--attention)}
+.now-action{background:var(--action-soft)}
+.now-action .now-g,.now-action .now-t b{color:var(--action)}
+.now-g{font-family:var(--font-mono);font-size:12px;flex:none}
+.now-t{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:1px}
+.now-t b{font-weight:600}
+.now-sub{font-size:12px;line-height:16px;color:var(--ink-muted)}
+.now-link{font-size:13px;line-height:18px;font-weight:600;color:var(--attention);text-decoration:underline;text-underline-offset:2px}
+.now-link:hover{color:var(--ink)}
+.body{flex:1 1 auto;min-height:0;display:flex;align-items:stretch;width:100%;box-sizing:border-box}
+.mainc{flex:1 1 auto;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+.convo{flex:1 1 auto;display:flex;flex-direction:column;gap:18px;box-sizing:border-box;width:100%;max-width:820px;margin:0 auto;padding:24px 28px 32px}
+.intro{display:flex;flex-direction:column;gap:6px;padding-top:12px;max-width:68ch}
+.intro-h{margin:0;font-size:24px;line-height:30px;font-weight:600;letter-spacing:-0.01em}
+.msg-ic{align-self:flex-end;max-width:600px;display:flex;flex-direction:column;gap:6px;padding:10px 14px;background:var(--surface-raised);border:1px solid var(--line);border-radius:8px}
+.ic-text{margin:0;font-size:15px;line-height:22px;white-space:pre-line}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.msg-sm{display:flex;flex-direction:column;gap:12px}
+.who{font-size:12px;line-height:16px;color:var(--ink-muted)}
+.who b{color:var(--ink);font-weight:600}
+.narr{margin:0;font-size:14px;line-height:21px;max-width:68ch}
+.lead{margin:6px 0 0;font-size:18px;line-height:26px;font-weight:600;max-width:60ch;letter-spacing:-0.005em}
+.disc{font:inherit;font-size:13px;line-height:18px;display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0;border:0;background:none;color:var(--action);cursor:pointer;align-self:flex-start;text-align:left}
+.disc:hover{color:var(--ink)}
+.chev{font-family:var(--font-mono);font-size:12px;display:inline-block;transition:transform .12s;flex:none}
+[aria-expanded="true"]>.chev{transform:rotate(90deg)}
+.grp{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;background:var(--surface-raised);overflow:hidden}
+.grp-sum{font:inherit;display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;width:100%;min-height:40px;padding:8px 14px;border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font-size:13px;line-height:18px}
+.grp-sum:hover{background:var(--surface-sunken)}
+.grp-sum .chev{color:var(--ink-muted)}
+.grp-more{margin-left:auto;font-size:12px;color:var(--action)}
+.grp-wait{display:flex;align-items:center;gap:8px;min-height:40px;padding:8px 14px;background:var(--attention-soft);color:var(--attention);font-size:13px;line-height:18px;font-weight:600;text-decoration:none}
+.grp-wait:hover{color:var(--ink)}
+.steps-card{border-style:dashed}
+.mi{font-size:11px;line-height:18px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:0 6px;border-radius:2px;border:1px solid var(--danger);color:var(--danger);white-space:nowrap}
+.upd{display:flex;flex-direction:column;gap:8px;padding:12px 16px;border:1px solid var(--line);border-radius:8px;background:var(--surface-raised)}
+.upd-row{display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 16px;font-size:14px;line-height:20px}
+.upd-row dt{font-size:11px;line-height:20px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.upd-row dd{margin:0}
+.was{color:var(--ink-muted);text-decoration:line-through}
+.now-v{font-weight:600}
+.side.hid{display:none}
+.menu-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--line);border-radius:6px;background:var(--surface-raised);color:var(--ink-muted);cursor:pointer}
+.menu-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+.menu-btn[aria-expanded="true"]{color:var(--action);border-color:var(--action);background:var(--action-soft)}
+.menu-btn:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.mini-top{flex:none;display:flex;align-items:center;gap:12px;padding:14px 20px}
+.mini-brand{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.hero{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:14px;width:100%;max-width:660px;margin:0 auto;padding:24px 28px 16vh;box-sizing:border-box}
+.hero-t{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 10px;font-size:32px;line-height:40px;font-weight:500;letter-spacing:-0.02em;text-align:center}
+.hero-box{padding:12px 12px 10px 14px;border-radius:12px;box-shadow:0 8px 28px -14px rgba(11,12,14,.28)}
+.hero-ic{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--ink-muted);cursor:pointer}
+.hero-ic:hover{background:var(--surface-sunken);color:var(--ink)}
+.hero-under{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:-4px;padding:0 12px;font-size:13px;line-height:18px}
+.hero-sel{font:inherit;font-size:13px;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 6px;margin-left:-6px;border:0;border-radius:4px;background:transparent;color:var(--ink-muted);cursor:pointer}
+.hero-sel:hover{background:var(--surface-sunken);color:var(--ink)}
+.hero-caret{font-size:9px}
+.hero-ic:focus-visible,.hero-sel:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.convo.gone{display:none}
+.convo.with-tray{padding-bottom:400px}
+.tray-float{position:absolute;left:0;right:0;bottom:100%;padding:0 28px 14px;box-sizing:border-box;pointer-events:none}
+.tray-in{max-width:764px;margin:0 auto;pointer-events:auto}
+.tray-float .tray{box-shadow:0 14px 36px -12px rgba(11,12,14,.32)}
+.steps-sum{margin:0;padding:0 14px 12px 36px;font-size:14px;line-height:21px;max-width:68ch}
+.steps-note{display:block;padding-top:4px;font-size:12px;line-height:17px;color:var(--ink-muted)}
+.rcpt{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:8px 14px;border-top:1px solid var(--line);font-size:13px;line-height:18px}
+.g-ok,.g-no,.g-skip{font-family:var(--font-mono);font-size:12px;width:14px;flex:none}
+.g-ok{color:var(--ok)}.g-no{color:var(--danger)}.g-skip{color:var(--ink-muted)}
+.rtext{flex:1 1 260px;min-width:0}
+.tool{font-family:var(--font-mono);font-size:12px;line-height:18px;font-weight:600}
+.linkbtn{font:inherit;font-size:12px;background:none;border:0;padding:2px 0;color:var(--action);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.ans{margin:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;background:var(--surface-raised)}
+.ans-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:4px 16px;padding:11px 16px;border-top:1px solid var(--line)}
+.ans-row:first-child{border-top:0}
+.ans-row dt{font-size:11px;line-height:21px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.ans-row dd{margin:0;font-size:14px;line-height:21px;min-width:0}
+.ans-row.do dd{font-weight:600}
+.ans-row.do{background:var(--action-soft)}
+.ans-row.do dt{color:var(--action)}
+.ans-row.avoid dt{color:var(--danger)}
+.ans-conf{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.dock{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:5}
+.dock-in{box-sizing:border-box;width:100%;max-width:820px;margin:0 auto;padding:12px 28px 16px;display:flex;flex-direction:column;gap:10px}
+.tray{display:flex;flex-direction:column;border:1px solid var(--attention-fill);border-radius:8px;background:var(--surface-raised);overflow:hidden;scroll-margin-bottom:16px}
+.tray:focus{outline:none}
+.tray-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 14px;background:var(--attention-soft)}
+.tray-title{font-weight:600;font-size:14px;line-height:20px;color:var(--attention)}
+.tray-rows{max-height:44vh;overflow-y:auto}
+.trow{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 16px;padding:12px 14px;border-top:1px solid var(--line)}
+.trow:first-child{border-top:0}
+.trow:focus{outline:none}
+.trow:focus-within{background:var(--surface)}
+.row-main{flex:1 1 340px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.trow-what{font-size:14px;line-height:20px;font-weight:600}
+.trow-why{font-size:13px;line-height:19px;color:var(--ink-muted)}
+.trow-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding-top:2px}
+.row-acts{flex:none;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{font-family:var(--font-mono);font-size:11px;line-height:20px;padding:0 6px;border-radius:2px;background:var(--surface-sunken);color:var(--ink)}
+.chip i{font-style:normal;color:var(--ink-muted)}
+.chip-tool{font-weight:600}
+.tray-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--surface)}
+.acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.grow{flex:1 1 auto}
+.fchip{font:inherit;font-size:13px;min-height:32px;padding:0 12px;border-radius:4px;border:1px solid var(--line-strong);background:var(--surface-raised);color:var(--ink);cursor:pointer;text-align:left}
+.fchip:hover{border-color:var(--action);color:var(--action)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.sub-form{display:flex;flex-direction:column;gap:8px;padding:10px 12px;margin-top:4px;background:var(--surface-sunken);border-radius:4px}
+kbd{display:inline-block;min-width:16px;box-sizing:border-box;padding:0 4px;font-family:var(--font-mono);font-size:11px;line-height:15px;text-align:center;color:var(--ink);background:var(--surface-raised);border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:var(--radius-sm)}
+.keys{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin-left:auto;font-size:12px;line-height:18px;color:var(--ink-muted)}
+.keys>span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.sub-keys{flex:1 1 200px;text-align:right;font-size:12px;line-height:18px;color:var(--ink-muted)}
+@media (pointer:coarse){.keys,.sub-keys{display:none}}
+.composer{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--surface-raised);border:1px solid var(--line-strong);border-radius:8px}
+.composer:focus-within{border-color:var(--action);box-shadow:0 0 0 1px var(--action)}
+.composer .sm-input{border:0;padding:4px 2px;font-size:15px;line-height:22px;resize:none;background:transparent}
+.composer .sm-input:focus-visible{box-shadow:none}
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+.tool-btn{font:inherit;display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 10px;border-radius:6px;border:1px solid var(--line);background:var(--surface-raised);color:var(--ink-muted);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.tool-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+.tool-btn[aria-pressed="true"]{background:var(--action-soft);border-color:var(--action);color:var(--action)}
+.tool-n{font-family:var(--font-mono);font-size:11px;line-height:16px;padding:0 5px;border-radius:2px;background:var(--surface-sunken);color:var(--ink)}
+.tool-btn:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.sidepanel{flex:0 0 400px;min-width:0;overflow-y:auto;display:flex;flex-direction:column;background:var(--surface-raised);border-left:1px solid var(--line)}
+.sp-head{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;gap:12px;padding:16px 18px 12px;background:var(--surface-raised);border-bottom:1px solid var(--line)}
+.sp-x{margin:-8px -8px 0 0}
+.sp-body{display:flex;flex-direction:column;gap:12px;padding:14px 18px 24px}
+.sp-sec{display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:1px solid var(--line)}
+@media (max-width:1100px){.sidepanel{position:fixed;top:0;right:0;bottom:0;width:100%;max-width:420px;z-index:30;box-shadow:var(--shadow-drawer)}}
+.panel{display:flex;flex-direction:column;gap:10px;padding:14px 16px;background:var(--surface-raised);border:1px solid var(--line);border-radius:8px}
+.claims{display:flex;flex-direction:column}
+.claim{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.claim-text{font-size:13px;line-height:18px;font-weight:500}
+.claim.out .claim-text{font-weight:400;color:var(--ink-muted);text-decoration:line-through;text-decoration-thickness:1px}
+.claim-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.tally{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tally div{display:flex;flex-direction:column}
+.tally b{font-family:var(--font-mono);font-size:18px;line-height:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.tally span{font-size:12px;line-height:16px;color:var(--ink-muted)}
+.label{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.small{font-size:12px;line-height:16px}
+.muted{color:var(--ink-muted)}
+.tkt{display:flex;flex-direction:column;background:var(--surface-raised);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tkt-head{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 16px;border-bottom:1px solid var(--line)}
+.src-pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px 2px 8px;border-radius:999px;background:var(--action-soft);color:var(--action);font-size:12px;line-height:18px;font-weight:600;white-space:nowrap}
+.tkt-body{display:flex;flex-direction:column;gap:10px;padding:14px 16px}
+.tkt-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px;margin:0;padding-top:4px}
+.tkt-fields div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tkt-fields dt{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.tkt-fields dd{margin:0;font-size:13px;line-height:18px}
+.scrim{position:fixed;top:0;right:0;bottom:0;left:0;z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px;overflow-y:auto;box-sizing:border-box;background:rgba(11,12,14,.5)}
+.dialog{width:100%;max-width:620px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;padding:24px;background:var(--surface-raised);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:0 16px 48px -12px rgba(11,12,14,.45)}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line-strong);border-radius:6px;cursor:pointer;background:var(--surface-raised)}
+.opt:has(input:checked){border-color:var(--action);background:var(--action-soft)}
+.opt input{margin:2px 0 0;width:16px;height:16px;accent-color:var(--action);flex:none}
+.opt-text{display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:18px}
+.opt-text b{font-size:14px;line-height:20px;font-weight:600}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-10px -10px 0 auto;border:0;border-radius:4px;background:transparent;color:var(--ink-muted);cursor:pointer}
+.iconbtn:hover{background:var(--surface-sunken);color:var(--ink)}
+.kc{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:9px 0;border-top:1px solid var(--line)}
+.kc:first-child{border-top:0;padding-top:0}
+.kc-t{flex:1 1 160px;min-width:0;display:flex;flex-direction:column}
+.kc-t b{font-size:13px;line-height:18px;font-weight:600}
+.kc-a{font-size:12px;line-height:16px;font-weight:500;text-decoration:none;min-height:24px;display:inline-flex;align-items:center}
+.kc-a:hover{text-decoration:underline}
+.tlink{font:inherit;font-size:12px;line-height:16px;padding:0;border:0;background:none;color:var(--action);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.tlink:hover{color:var(--ink)}
+.tlink:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+.vt-btn{font:inherit;display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:6px;border:1px solid var(--line-strong);background:var(--surface-raised);color:var(--ink);font-size:13px;font-weight:500;cursor:pointer}
+.vt-btn:hover{background:var(--surface-sunken)}
+.vt-btn:focus-visible,.kc-a:focus-visible,.disc:focus-visible,.grp-sum:focus-visible,.fchip:focus-visible,.linkbtn:focus-visible,.iconbtn:focus-visible,.lens button:focus-visible,a:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+</style>
+</helmet>
+<div class="shell" data-theme="{{theme}}" style="background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 14px; line-height: 20px;">
+<div class="side {{sideCls}}"><dc-import name="SidebarV4" current="{{sideCurrent}}" stage="investigating" theme="{{theme}}" hint-size="100%,100%"></dc-import></div>
+
+<div class="page">
+<sc-if value="{{showHeader}}" hint-placeholder-val="{{ true }}">
+<header class="top">
+<div class="top-in">
+<sc-if value="{{canToggleSide}}" hint-placeholder-val="{{ false }}"><button type="button" class="menu-btn" aria-label="{{sideLabel}}" aria-expanded="{{sideStr}}" title="{{sideLabel}}" onClick="{{toggleSide}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1.5"></rect><path d="M6 2.75v10.5"></path></svg></button></sc-if>
+<div class="inc">
+<sc-if value="{{showIncident}}" hint-placeholder-val="{{ true }}">
+<div class="inc-line">
+<span class="prio" title="Priority 1 - Critical">P1</span>
+<span class="mi">Major incident</span>
+<span class="inc-title">Checkout payments failing</span>
+<x-import component-from-global-scope="Smalls.StatusTag" status="running">In Progress</x-import>
+</div>
+<span class="inc-meta">{{incMeta}}<sc-if value="{{hasTicket}}" hint-placeholder-val="{{ true }}"> · <button type="button" class="tlink" onClick="{{openTicket}}">View ticket</button></sc-if></span>
+</sc-if>
+<sc-if value="{{showNewTitle}}" hint-placeholder-val="{{ false }}">
+<span class="inc-title">New chat</span>
+<span class="inc-meta">Not linked to an incident yet</span>
+</sc-if>
+</div>
+<div class="tools" role="group" aria-label="Side panel">
+<button type="button" class="tool-btn" aria-pressed="{{picPressed}}" onClick="{{togglePicture}}" title="What Smalls believes right now"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.5"></circle></svg>Working picture<sc-if value="{{hasPicBadge}}" hint-placeholder-val="{{ true }}"><span class="tool-n">{{picBadge}}</span></sc-if></button>
+<sc-if value="{{hasTicket}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="tool-btn" aria-pressed="{{conPressed}}" onClick="{{toggleContacts}}" title="Who to talk to"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"></circle><path d="M1.5 13.5c.6-2.4 2.3-3.6 4.5-3.6s3.9 1.2 4.5 3.6"></path><path d="M10.5 3.2a2.4 2.4 0 0 1 0 4.6"></path><path d="M12 10.2c1.2.5 2 1.6 2.5 3.3"></path></svg>Contacts<span class="tool-n">4</span></button>
+<button type="button" class="tool-btn" aria-pressed="{{tktPressed}}" onClick="{{toggleTicket}}" title="The ServiceNow ticket, as imported"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L12.5 4.5v10h-8.5z"></path><path d="M9.5 1.5v3h3"></path><path d="M6 8h4.5M6 10.5h4.5"></path></svg>Ticket</button>
+</sc-if>
+</div>
+</div>
+<div class="now now-{{nowTone}}" aria-live="polite">
+<span class="now-g" aria-hidden="true">{{nowGlyph}}</span>
+<span class="now-t"><span><b>{{nowTitle}}</b> {{nowText}}</span><sc-if value="{{hasNowSub}}" hint-placeholder-val="{{ false }}"><span class="now-sub">{{nowSub}}</span></sc-if></span>
+<sc-if value="{{nowHasLink}}" hint-placeholder-val="{{ false }}"><a class="now-link" href="#pending">Go to approvals</a></sc-if>
+<sc-if value="{{nowHasResolve}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{openResolve}}">Resolve incident…</x-import></sc-if>
+<sc-if value="{{nowQuietResolve}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Smalls.Button" variant="quiet" size="sm" on-click="{{openResolve}}">Resolve incident…</x-import></sc-if>
+</div>
+</header>
+</sc-if>
+<sc-if value="{{showMini}}" hint-placeholder-val="{{ false }}">
+<div class="mini-top"><button type="button" class="menu-btn" aria-label="{{sideLabel}}" aria-expanded="{{sideStr}}" title="{{sideLabel}}" onClick="{{toggleSide}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1.5"></rect><path d="M6 2.75v10.5"></path></svg></button><span class="mini-brand">Smalls</span></div>
+</sc-if>
+
+<div class="body {{bodyCls}}">
+<main aria-label="Conversation" class="mainc">
+<sc-if value="{{centerStart}}" hint-placeholder-val="{{ false }}">
+<section class="hero" aria-label="Start a new chat">
+<h1 class="hero-t"><svg width="26" height="26" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" style="color: var(--action); flex: none;"><circle cx="8" cy="8" r="6"></circle><circle cx="8" cy="8" r="2.5"></circle></svg>What’s going on?</h1>
+<div class="composer hero-box">
+<textarea class="sm-input" rows="2" aria-label="Message Smalls" placeholder="Describe what you’re seeing, or paste a ticket number" value="{{draft}}" onChange="{{setDraft}}" autoFocus="{{ true }}"></textarea>
+<div class="acts">
+<button type="button" class="hero-ic" aria-label="Attach logs or a screenshot" title="Attach logs or a screenshot"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg></button>
+<span class="grow"></span>
+<x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{send}}" disabled="{{sendDisabled}}">Send</x-import>
+</div>
+</div>
+<div class="hero-under">
+<button type="button" class="hero-sel" title="Link this chat to an open incident">Not linked to an incident<span aria-hidden="true" class="hero-caret">▾</span></button>
+<span class="grow"></span>
+<x-import component-from-global-scope="Smalls.Toggle" checked="{{auto}}" on-change="{{setAuto}}" label="Auto-approve checks"></x-import>
+</div>
+</section>
+</sc-if>
+<div class="convo {{convoCls}}">
+
+<sc-if value="{{introPrompt}}" hint-placeholder-val="{{ true }}">
+<section aria-label="Start" class="intro">
+<span class="label">Take-home incident · 13 Oct</span>
+<h1 class="intro-h">Larkspur checkout payments</h1>
+<p class="narr muted">Alice’s message is loaded below, as it arrived at 14:52 UTC. Send it as it is, or edit it first.</p>
+</section>
+</sc-if>
+
+<sc-if value="{{introBlank}}" hint-placeholder-val="{{ false }}">
+<section aria-label="Start" class="intro">
+<h1 class="intro-h">What are you seeing?</h1>
+<p class="narr muted">Describe it, or paste a ticket number to start from.</p>
+</section>
+</sc-if>
+
+<sc-if value="{{inlineComposer}}" hint-placeholder-val="{{ true }}">
+<div class="composer">
+<textarea class="sm-input" rows="{{composerRows}}" aria-label="Message Smalls" placeholder="Describe what you’re seeing, or ask Smalls a question" value="{{draft}}" onChange="{{setDraft}}"></textarea>
+<div class="acts">
+<x-import component-from-global-scope="Smalls.Toggle" checked="{{auto}}" on-change="{{setAuto}}" label="Auto-approve checks"></x-import>
+<span class="grow"></span>
+<span class="small muted">{{composerHint}}</span>
+<x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{send}}" disabled="{{sendDisabled}}">{{sendLabel}}</x-import>
+</div>
+</div>
+</sc-if>
+
+<sc-for list="{{turns}}" as="t" hint-placeholder-count="2">
+<sc-if value="{{t.ticket}}" hint-placeholder-val="{{ false }}">
+<article class="tkt" aria-label="How this investigation started">
+<div class="tkt-head">
+<span class="src-pill">Started automatically</span>
+<span class="small muted" style="flex: 1 1 260px;">ServiceNow sent INC0048811 when Alice Nguyen added a work note at <span class="time">14:52 UTC</span>.</span>
+<button type="button" class="disc" onClick="{{t.openTicket}}">View ticket</button>
+</div>
+<div class="tkt-body">
+<span class="who"><b>Alice Nguyen</b> · incident lead · her note</span>
+<p class="ic-text {{t.icCls}}">{{t.text}}</p>
+<button type="button" class="disc" aria-expanded="{{t.icStr}}" onClick="{{t.toggleIc}}"><span class="chev" aria-hidden="true">›</span>{{t.icLabel}}</button>
+</div>
+</article>
+</sc-if>
+
+<sc-if value="{{t.ic}}" hint-placeholder-val="{{ true }}">
+<div class="msg-ic">
+<span class="who"><b>{{t.who}}</b> · Major Incident Manager · <span class="time">{{t.at}} UTC</span></span>
+<p class="ic-text {{t.cls}}">{{t.text}}</p>
+<sc-if value="{{t.long}}" hint-placeholder-val="{{ false }}"><button type="button" class="disc" aria-expanded="{{t.icStr}}" onClick="{{t.toggleIc}}"><span class="chev" aria-hidden="true">›</span>{{t.icLabel}}</button></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{t.sm}}" hint-placeholder-val="{{ false }}">
+<div class="msg-sm">
+<span class="who"><b>Smalls</b> · <span class="time">{{t.at}} UTC</span></span>
+<sc-for list="{{t.blocks}}" as="b" hint-placeholder-count="2">
+
+<sc-if value="{{b.isSteps}}" hint-placeholder-val="{{ false }}">
+<div class="grp steps-card">
+<button type="button" class="grp-sum" aria-expanded="{{b.openStr}}" onClick="{{b.toggle}}"><span class="chev" aria-hidden="true">›</span><span style="font-weight: 600;">How Smalls got here</span><span class="muted">{{b.line}}</span><span class="grp-more">{{b.moreLabel}}</span></button>
+<p class="steps-sum">{{b.summary}}<sc-if value="{{b.hasNote}}" hint-placeholder-val="{{ false }}"><span class="steps-note">{{b.note}}</span></sc-if></p>
+</div>
+</sc-if>
+
+<sc-if value="{{b.isLead}}" hint-placeholder-val="{{ false }}"><p class="lead">{{b.text}}</p></sc-if>
+<sc-if value="{{b.isNarr}}" hint-placeholder-val="{{ true }}"><p class="narr">{{b.text}}</p></sc-if>
+<sc-if value="{{b.isNote}}" hint-placeholder-val="{{ false }}"><span class="small muted">{{b.text}}</span></sc-if>
+<sc-if value="{{b.isHandles}}" hint-placeholder-val="{{ false }}">
+<div class="sm-handles">
+<sc-for list="{{b.handles}}" as="hd" hint-placeholder-count="2">
+<x-import component-from-global-scope="Smalls.Handle" id="{{hd.id}}" on-open="{{hd.open}}"></x-import>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{b.isAnswer}}" hint-placeholder-val="{{ false }}">
+<dl class="ans" aria-label="Answer">
+<sc-for list="{{b.rows}}" as="ar" hint-placeholder-count="5">
+<div class="ans-row {{ar.cls}}"><dt>{{ar.k}}</dt><dd>
+<sc-if value="{{ar.isText}}" hint-placeholder-val="{{ true }}"><span>{{ar.v}}</span></sc-if>
+<sc-if value="{{ar.isConf}}" hint-placeholder-val="{{ false }}"><span class="ans-conf"><x-import component-from-global-scope="Smalls.StatusTag" status="leading"></x-import><x-import component-from-global-scope="Smalls.Confidence" value="{{ar.conf}}" previous="{{ar.prev}}"></x-import><span class="small muted">up from 45% before these checks</span></span></sc-if>
+<sc-if value="{{ar.isHandles}}" hint-placeholder-val="{{ false }}">
+<div class="sm-handles">
+<sc-for list="{{ar.handles}}" as="hd" hint-placeholder-count="4">
+<x-import component-from-global-scope="Smalls.Handle" id="{{hd.id}}" on-open="{{hd.open}}"></x-import>
+</sc-for>
+</div>
+</sc-if>
+</dd></div>
+</sc-for>
+</dl>
+<sc-if value="{{b.hasMore}}" hint-placeholder-val="{{ true }}"><button type="button" class="disc" aria-expanded="{{b.moreStr}}" onClick="{{b.toggleMore}}"><span class="chev" aria-hidden="true">›</span>{{b.moreLabel}}</button></sc-if>
+</sc-if>
+
+<sc-if value="{{b.isMsg}}" hint-placeholder-val="{{ false }}">
+<div style="max-width: 640px;"><x-import component-from-global-scope="Smalls.StakeholderMessage" audience="{{b.audience}}" channel="{{b.channel}}" text="{{b.text}}"></x-import></div>
+</sc-if>
+
+<sc-if value="{{b.isGroup}}" hint-placeholder-val="{{ false }}">
+<div class="grp">
+<sc-if value="{{b.waitingNow}}" hint-placeholder-val="{{ false }}"><a class="grp-wait" href="#pending"><span aria-hidden="true">◆</span>{{b.waitLabel}}</a></sc-if>
+<sc-if value="{{b.settled}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="grp-sum" aria-expanded="{{b.openStr}}" onClick="{{b.toggle}}"><span class="chev" aria-hidden="true">›</span><span class="g-ok" aria-hidden="true">✓</span><span>{{b.sumLabel}}</span><span class="grp-more">{{b.moreLabel}}</span></button>
+</sc-if>
+<sc-if value="{{b.showRcpts}}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{b.doneRows}}" as="r" hint-placeholder-count="2">
+<div class="rcpt">
+<span class="{{r.glyphClass}}" aria-hidden="true">{{r.glyph}}</span>
+<sc-if value="{{r.techTool}}" hint-placeholder-val="{{ true }}"><span class="tool">{{r.tool}}</span></sc-if>
+<span class="rtext">{{r.rline}}</span>
+<sc-if value="{{r.hasHandle}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Smalls.Handle" id="{{r.handle}}" on-open="{{r.openHandle}}"></x-import></sc-if>
+<sc-if value="{{r.hasResult}}" hint-placeholder-val="{{ false }}"><button type="button" class="linkbtn" onClick="{{r.toggleOpen}}">{{r.openLabel}}</button></sc-if>
+</div>
+<sc-if value="{{r.showResult}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 0 14px 12px;"><x-import component-from-global-scope="Smalls.ToolResult" tool="{{r.tool}}" result="{{r.result}}" highlight="{{r.hl}}" on-open-handle="{{r.openHandle}}"></x-import></div>
+</sc-if>
+</sc-for>
+</sc-if>
+</div>
+</sc-if>
+
+</sc-for>
+</div>
+</sc-if>
+</sc-for>
+</div>
+
+<sc-if value="{{dockedComposer}}" hint-placeholder-val="{{ false }}">
+<div class="dock">
+<sc-if value="{{hasTray}}" hint-placeholder-val="{{ false }}">
+<div class="tray-float"><div class="tray-in">
+<section class="tray" id="pending" aria-label="Checks waiting for your approval" onKeyDown="{{trayKey}}" tabIndex="-1">
+<div class="tray-head">
+<span class="tray-title">◆ {{trayTitle}}</span>
+<span class="small">Read-only. Nothing runs until you choose.</span>
+<sc-if value="{{showKeys}}" hint-placeholder-val="{{ false }}">
+<span class="keys" aria-hidden="true">
+<span><kbd>A</kbd>approve</span>
+<sc-if value="{{trayEdit}}" hint-placeholder-val="{{ false }}"><span><kbd>E</kbd>edit</span></sc-if>
+<span><kbd>S</kbd>skip</span>
+<span><kbd>R</kbd>reject</span>
+<sc-if value="{{trayBatch}}" hint-placeholder-val="{{ false }}"><span><kbd>⇧A</kbd>{{allKeyLabel}}</span></sc-if>
+</span>
+</sc-if>
+</div>
+<div class="tray-rows">
+<sc-for list="{{trayRows}}" as="r" hint-placeholder-count="2">
+<div class="trow" onKeyDown="{{r.onKey}}" tabIndex="-1">
+<div class="row-main">
+<span class="trow-what">{{r.plain}}</span>
+<span class="trow-why">{{r.reason}}</span>
+<div class="trow-meta">
+<sc-if value="{{r.showDet}}" hint-placeholder-val="{{ true }}">
+<span class="chip chip-tool">{{r.tool}}</span>
+<sc-for list="{{r.chips}}" as="c" hint-placeholder-count="2"><span class="chip"><i>{{c.k}}</i> {{c.v}}</span></sc-for>
+<button type="button" class="linkbtn" onClick="{{r.toggleQuery}}">{{r.queryLabel}}</button>
+</sc-if>
+<button type="button" class="linkbtn" onClick="{{r.toggleDet}}">{{r.detLabel}}</button>
+</div>
+<sc-if value="{{r.showQuery}}" hint-placeholder-val="{{ false }}"><pre class="sm-pre">{{r.query}}</pre></sc-if>
+<sc-if value="{{r.isEditing}}" hint-placeholder-val="{{ false }}">
+<div class="sub-form">
+<span class="label">Change the parameters before it runs</span>
+<label style="display: flex; flex-direction: column; gap: 4px;"><span class="time muted">terms</span><input class="sm-input" style="max-width: 360px; font-family: var(--font-mono);" value="{{r.since}}" onChange="{{r.setSince}}" onKeyDown="{{r.onEditKey}}" autoFocus="{{ true }}"></label>
+<div class="acts">
+<x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{r.approveEdited}}">Approve with edit</x-import>
+<x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{r.cancel}}" title="Cancel (Esc)">Cancel</x-import>
+<span class="sub-keys" aria-hidden="true"><kbd>Enter</kbd> approve with edit · <kbd>Esc</kbd> cancel</span>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{r.isRejecting}}" hint-placeholder-val="{{ false }}">
+<div class="sub-form">
+<span class="label">Why not? Smalls reads your reason and takes another path</span>
+<div class="chips">
+<sc-for list="{{r.quick}}" as="qr" hint-placeholder-count="2"><button type="button" class="fchip" onClick="{{qr.pick}}">{{qr.text}}</button></sc-for>
+</div>
+<input class="sm-input" value="{{r.reasonText}}" onChange="{{r.setReason}}" onKeyDown="{{r.onRejectKey}}" autoFocus="{{ true }}" placeholder="Your reason, in a sentence" aria-label="Reason for rejecting">
+<div class="acts">
+<x-import component-from-global-scope="Smalls.Button" variant="danger" on-click="{{r.confirmReject}}" disabled="{{r.noReason}}">Reject this check</x-import>
+<x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{r.cancel}}" title="Cancel (Esc)">Cancel</x-import>
+<span class="sub-keys" aria-hidden="true"><kbd>Enter</kbd> reject · <kbd>Esc</kbd> cancel</span>
+</div>
+</div>
+</sc-if>
+</div>
+<sc-if value="{{r.plainActs}}" hint-placeholder-val="{{ true }}">
+<div class="row-acts" data-kf="{{r.kf}}">
+<sc-if value="{{r.solo}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{r.approve}}" title="Approve (A)" aria-keyshortcuts="A">Approve</x-import></sc-if>
+<sc-if value="{{r.inBatch}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Smalls.Button" on-click="{{r.approve}}" title="Approve (A)" aria-keyshortcuts="A">Approve</x-import></sc-if>
+<sc-if value="{{r.canEdit}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{r.edit}}" title="Edit (E)" aria-keyshortcuts="E">Edit</x-import></sc-if>
+<x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{r.skip}}" title="Skip (S)" aria-keyshortcuts="S">Skip</x-import>
+<x-import component-from-global-scope="Smalls.Button" variant="danger" on-click="{{r.reject}}" title="Reject (R)" aria-keyshortcuts="R">Reject…</x-import>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{trayBatch}}" hint-placeholder-val="{{ false }}">
+<div class="tray-foot">
+<x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{approveAll}}" title="{{approveAllLabel}} (Shift+A)" aria-keyshortcuts="Shift+A">{{approveAllLabel}}</x-import>
+<x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{skipAll}}" title="{{skipAllLabel}} (Shift+S)" aria-keyshortcuts="Shift+S">{{skipAllLabel}}</x-import>
+<span class="small muted">or decide each one above</span>
+</div>
+</sc-if>
+</section>
+</div></div>
+</sc-if>
+<div class="dock-in">
+
+<div class="composer">
+<textarea class="sm-input" rows="2" aria-label="Message Smalls" placeholder="Ask Smalls a follow-up" value="{{draft}}" onChange="{{setDraft}}"></textarea>
+<div class="acts">
+<x-import component-from-global-scope="Smalls.Toggle" checked="{{auto}}" on-change="{{setAuto}}" label="Auto-approve checks"></x-import>
+<span class="grow"></span>
+<span class="small muted">{{dockHint}}</span>
+<x-import component-from-global-scope="Smalls.Button" variant="primary" on-click="{{send}}" disabled="{{sendDisabled}}">Send</x-import>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+</main>
+
+<sc-if value="{{panelOpen}}" hint-placeholder-val="{{ false }}">
+<aside class="sidepanel" aria-label="{{panelTitle}}">
+<div class="sp-head">
+<div style="display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0;">
+<h2 class="heading" style="margin: 0;">{{panelTitle}}</h2>
+<span class="small muted">{{panelSub}}</span>
+</div>
+<button type="button" class="iconbtn sp-x" aria-label="Close panel" onClick="{{closePanel}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+</div>
+<sc-if value="{{isPicture}}" hint-placeholder-val="{{ true }}">
+<div class="sp-body">
+<sc-if value="{{noPicture}}" hint-placeholder-val="{{ false }}">
+<p class="small muted" style="margin: 0;">Builds here as Smalls reads. Each claim gets a status and a confidence that moves as evidence comes in.</p>
+</sc-if>
+<sc-if value="{{hasPicture}}" hint-placeholder-val="{{ true }}">
+<div class="claims">
+<sc-for list="{{livePicture}}" as="p" hint-placeholder-count="4">
+<div class="claim">
+<span class="claim-text">{{p.statement}}</span>
+<div class="claim-meta">
+<x-import component-from-global-scope="Smalls.StatusTag" status="{{p.status}}"></x-import>
+<span class="label">{{p.role}}</span>
+<span class="grow"></span>
+<x-import component-from-global-scope="Smalls.Confidence" value="{{p.conf}}" previous="{{p.prev}}"></x-import>
+</div>
+</div>
+</sc-for>
+</div>
+<button type="button" class="disc" aria-expanded="{{ruledStr}}" onClick="{{toggleRuled}}"><span class="chev" aria-hidden="true">›</span>{{ruledLabel}}</button>
+<sc-if value="{{ruledOpen}}" hint-placeholder-val="{{ false }}">
+<div class="claims">
+<sc-for list="{{deadPicture}}" as="p" hint-placeholder-count="2">
+<div class="claim out">
+<span class="claim-text">{{p.statement}}</span>
+<div class="claim-meta">
+<span class="label">{{p.role}}</span>
+<span class="grow"></span>
+<x-import component-from-global-scope="Smalls.Confidence" value="{{p.conf}}" previous="{{p.prev}}" muted="{{ true }}"></x-import>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<span class="small muted">The tick on each bar is where the claim started, before these checks.</span>
+</sc-if>
+<sc-if value="{{hasPicture}}" hint-placeholder-val="{{ true }}">
+<div class="sp-sec">
+<span class="label">Checks so far</span>
+<div class="tally">
+<sc-for list="{{tallyCells}}" as="tc" hint-placeholder-count="4">
+<div><b>{{tc.n}}</b><span>{{tc.label}}</span></div>
+</sc-for>
+</div>
+<span class="small muted">Rejections and their reasons go into the summary.</span>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{isContacts}}" hint-placeholder-val="{{ false }}">
+<div class="sp-body">
+<div style="display: flex; flex-direction: column;">
+<sc-for list="{{people}}" as="p" hint-placeholder-count="4">
+<div class="kc">
+<span class="kc-t"><b>{{p.name}}</b><span class="small muted">{{p.role}}</span></span>
+<a class="kc-a" href="{{p.slack}}" aria-label="Message {{p.name}} on Slack">Slack</a>
+<sc-if value="{{p.hasPhone}}" hint-placeholder-val="{{ false }}"><a class="kc-a" href="{{p.tel}}" aria-label="Call {{p.name}}">Call</a></sc-if>
+</div>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; line-height: 18px; padding-top: 4px;">
+<a href="slack://channel?team=TLARKSPUR&amp;id=CINCCHKLAT">#inc-checkout-latency</a>
+<a href="https://meet.example.com/larkspur-inc0048811">Join the incident bridge</a>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{isTicket}}" hint-placeholder-val="{{ false }}">
+<dc-import name="TicketV4" embedded="{{ true }}" theme="{{theme}}" hint-size="100%,1000px"></dc-import>
+</sc-if>
+</aside>
+</sc-if>
+</div>
+</div>
+
+<sc-if value="{{drawerOpen}}" hint-placeholder-val="{{ false }}">
+<div style="position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 560px; z-index: 30; overflow-y: auto; background: var(--surface-raised); box-shadow: var(--shadow-drawer);">
+<dc-import name="Evidence" handle="{{drawer}}" on-close="{{closeDrawer}}" theme="{{theme}}" hint-size="100%,100%"></dc-import>
+</div>
+</sc-if>
+
+<sc-if value="{{resolveOpen}}" hint-placeholder-val="{{ false }}">
+<div class="scrim">
+<section class="dialog" role="dialog" aria-modal="true" aria-labelledby="rs-title">
+<div style="display: flex; align-items: flex-start; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<span class="label">INC0048811 · Checkout payments failing</span>
+<h2 id="rs-title" class="title" style="margin: 0;">Resolve incident</h2>
+<span class="small muted">Your resolution notes become this incident’s knowledge article, so similar incidents are quicker to diagnose.</span>
+</div>
+<button type="button" class="iconbtn" aria-label="Close" onClick="{{closeResolve}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+</div>
+<fieldset style="border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0;">
+<legend class="heading" style="padding: 0; margin-bottom: 8px;">Who found the fix?</legend>
+<label class="opt">
+<input type="radio" name="rs-path" checked="{{isAgent}}" onChange="{{pickAgent}}">
+<span class="opt-text"><b>Smalls’ diagnosis was right</b><span>{{agentDesc}}</span></span>
+</label>
+<label class="opt">
+<input type="radio" name="rs-path" checked="{{isOwn}}" onChange="{{pickOwn}}">
+<span class="opt-text"><b>I resolved it another way</b><span>Maybe you fixed it outside Smalls. On the next screen, tick only the evidence that helped your decision.</span></span>
+</label>
+</fieldset>
+<sc-if value="{{isAgent}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 10px 14px; background: var(--surface-sunken); border-radius: 6px;">
+<span class="label">Smalls’ diagnosis</span>
+<span style="font-size: 13px; line-height: 19px;">{{conclusion}}</span>
+</div>
+</sc-if>
+<label style="display: flex; flex-direction: column; gap: 6px;"><span class="heading">Resolution code</span><select class="sm-input" style="max-width: 320px; min-height: 36px;"><option>Solved (Work Around)</option><option>Solved (Permanently)</option><option>Solved Remotely (Work Around)</option><option>Not Solved (Not Reproducible)</option></select><span class="small muted">Backing out a change restores service, so it’s usually a workaround. The permanent fix goes through a Problem record.</span></label>
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<label for="rs-note" class="heading">Resolution notes</label>
+<span class="small muted">Required, in your own words. Write it for whoever meets this next: what you did, and what told you it worked.</span>
+<textarea id="rs-note" class="sm-input" rows="4" style="font-size: 14px; line-height: 21px; padding: 8px 10px;" placeholder="e.g. Rolled payments-gateway back to 3.7.9 from 15:01. 5xx at baseline by 15:08." value="{{note}}" onChange="{{setNote}}"></textarea>
+</div>
+<div class="acts" style="gap: 12px;">
+<label style="display: flex; flex-direction: column; gap: 4px;"><span class="small muted">Resolved at (UTC)</span><input class="sm-input" style="width: 110px; font-family: var(--font-mono);" value="{{resolvedAt}}" onChange="{{setAt}}"></label>
+<label style="display: flex; flex-direction: column; gap: 4px;"><span class="small muted">Resolved by</span><input class="sm-input" style="width: 180px;" value="Alice Nguyen" disabled="{{ true }}"></label>
+</div>
+<div class="acts" style="gap: 8px; padding-top: 4px;">
+<sc-if value="{{hasNote}}" hint-placeholder-val="{{ false }}"><a class="sm-btn sm-btn-primary" style="text-decoration: none;" href="SummaryV4.dc.html">Continue to resolution review</a></sc-if>
+<sc-if value="{{noNote}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Smalls.Button" variant="primary" disabled="{{ true }}">Continue to resolution review</x-import></sc-if>
+<x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{closeResolve}}">Cancel</x-import>
+<span class="small muted" style="flex: 1 1 200px;">Nothing is saved or sent yet. You review the summary first.</span>
+</div>
+</section>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"start":{"editor":"enum","options":["prompt","investigating"],"default":"prompt"},"panel":{"editor":"enum","options":["none","picture","contacts","ticket"],"default":"none"},"origin":{"editor":null,"default":"headless"},"$preview":{"width":1440,"height":1900}}'>
+class Component extends DCLogic {
+  prompt() {
+    return 'We rolled checkout-api back to 2.14.2 (done 14:42) and nothing changed. Still 504s on submit, error rate about 17%, and support has 40+ tickets about the payment spinner.\n\nElena has been in the database and posted what she found in the incident channel. Sam thinks pay-03 is dying, it keeps dropping out of the F5 pool. Kofi thinks it’s the network because the marketing site is down too, and he says PayCore’s status page is green.\n\nI need: what is actually causing this, how sure you are, what we should do in the next 10 minutes, and who should own it.';
+  }
+
+  lenses() {
+    return [
+      { id: 'support', label: 'Support', hint: 'Customer impact, who owns it and how sure. Technical detail tucked away.' },
+      { id: 'oncall', label: 'On-call', hint: 'What to do next, what not to do, and the evidence behind it.' },
+      { id: 'lead', label: 'Incident lead', hint: 'Answers to your four questions, and anything waiting on you.' },
+      { id: 'mgmt', label: 'Management', hint: 'Impact, the fix and the owner, in plain words.' },
+      { id: 'all', label: 'Everything', hint: 'Every read, reason and record, expanded. The v2 view.' }
+    ];
+  }
+
+  st() {
+    var s = this.state || {};
+    var origin = this.props.origin || 'headless';
+    var headless = origin === 'headless';
+    var blank = origin === 'blank';
+    var sent = headless || this.props.start === 'investigating' || !!s.sent;
+    return {
+      dec: s.dec || {}, open: s.open || {}, query: s.query || {}, mode: s.mode || {}, reason: s.reason || {}, since: s.since || {},
+      auto: typeof s.auto === 'boolean' ? s.auto : false, fu: s.fu || [],
+      draft: typeof s.draft === 'string' ? s.draft : (sent || blank ? '' : this.prompt()),
+      drawer: s.drawer || null, headless: headless, blank: blank, sent: sent, first: s.first || this.prompt(),
+      resolveOpen: !!s.resolveOpen, path: s.path || 'agent', note: s.note || '', at: typeof s.at === 'string' ? s.at : '15:08',
+      lens: 'v4', ticketOpen: !!s.ticketOpen, gopen: s.gopen || {}, det: s.det || {},
+      icOpen: s.icOpen, stepsOpen: s.stepsOpen, ruledOpen: s.ruledOpen, ansMore: s.ansMore, tktOpen: !!s.tktOpen
+    };
+  }
+
+  tech(s) { return false; }
+  plainLens(s) { return true; }
+
+  rowDefs() {
+    var P = 'index=payments sourcetype=payments:app ';
+    return {
+      a1: { tool: 'read_chat', plain: 'Read Elena’s database findings in the incident channel', reason: 'Alice says Elena posted database findings in the incident channel. Reading them before I score the database hypothesis.',
+        chips: [['channel', '#inc-checkout-latency'], ['text', '"pg_stat_activity"']],
+        query: 'conversations.history channel=inc-checkout-latency | grep "pg_stat_activity"',
+        receipt: '1 match. Elena, 14:47:12: 133 gateway sessions idle in transaction, no slow queries.', handle: 'slack:inc-checkout-latency/825e5fd9',
+        result: { id: 'call_05', status: 'ok', text: '#inc-checkout-latency, "pg_stat_activity", 1 match\n14:47:12 Elena (DBA), thread reply with psql output:\n pgw_app    payments-gateway     idle in transaction  133  00:00:38\n recon_app  payments-reconciler  active                40  00:17:12\n orders_app order-service        idle                  20\n "no slow queries. the app is holding connections open, not the db."', handles: ['slack:inc-checkout-latency/825e5fd9'] },
+        hl: ['idle in transaction', 'no slow queries'],
+        quick: ['Elena already told me; skip it', 'Read the whole channel instead'] },
+      a2: { tool: 'search_logs', plain: 'Search every log for redis errors', reason: 'The CHECKOUT-LATENCY runbook says to check redis first for checkout latency.',
+        chips: [['terms', '"redis"'], ['sourcetype', 'all']],
+        query: 'index=* "redis"',
+        receipt: 'No matches in any sourcetype.', handle: null,
+        result: { id: 'call_06', status: 'ok', text: 'search_logs all sourcetypes, terms "redis"\nNo matches. Try fewer terms or another sourcetype.', handles: [] },
+        hl: ['redis'],
+        quick: ['That runbook is ancient, sessions moved to the cluster last year', 'Not redis; stay on the payments side'] },
+      b1: { tool: 'search_logs', plain: 'Count the gateway’s timed-out PayCore calls, minute by minute', reason: 'Dynatrace flags PayCore slowness at 14:29. Checking whether the gateway retries slow PayCore calls, and since when.', editable: true,
+        chips: [['sourcetype', 'payments:app'], ['terms', '{since}'], ['group_by', 'minute']],
+        query: P + '{since} | timechart span=1m count',
+        receipt: 'First at 14:26:12 on pay-01, rising to about 1,200 a minute by 14:38. Sampled 1 in 100.', handle: 'log:pay-01/9c2e41d0',
+        result: { id: 'call_07', status: 'ok', text: 'payments:app, "timed out after 8000ms", by minute (sampled 1 in 100 per request; estimated counts in brackets)\n14:26  3 (≈300)\n14:31  8 (≈800)\n14:38 12 (≈1,200)\n...\nFirst: 14:26:12.044 pay-01 log:pay-01/9c2e41d0\n14 rows. Narrow with host= or more terms.', handles: ['log:pay-01/9c2e41d0', 'q:7c1d02aa'], sampling: { keep_1_in: 100, per: 'request' } },
+        hl: ['timed out after 8000ms'], since: '"timed out after 8000ms"',
+        quick: ['We already know PayCore is slow; look at the gateway itself', 'Too narrow; search all sourcetypes'] },
+      c1: { tool: 'search_logs', plain: 'Check the timeout and retry settings each gateway server started with', reason: 'Retries this long need a config change behind them. Checking what timeout and retry count each gateway VM started with, and when.', editable: true,
+        chips: [['sourcetype', 'payments:app'], ['terms', '{since}']],
+        query: P + '{since} | table _time host _raw',
+        receipt: 'All four VMs restarted 10:20–10:24 with timeout-ms=8000 retries=3.', handle: 'log:pay-01/2b8f6a14',
+        result: { id: 'call_08', status: 'ok', text: 'payments:app, "PSP client configured", events (not sampled)\n10:20:30.693 pay-01 payments.psp.timeout-ms=8000 payments.psp.retries=3 payments.psp.backoff-ms=1000,2000,4000\n10:21:40.585 pay-02 payments.psp.timeout-ms=8000 payments.psp.retries=3\n10:22:50.820 pay-03 payments.psp.timeout-ms=8000 payments.psp.retries=3\n10:24:00.446 pay-04 payments.psp.timeout-ms=8000 payments.psp.retries=3\n4 rows.', handles: ['log:pay-01/2b8f6a14', 'log:pay-02/71c4e9d3', 'log:pay-03/c05a8e62', 'log:pay-04/e9b13f07'] },
+        hl: ['timeout-ms=8000', 'retries=3'], since: '"PSP client configured"',
+        quick: ['Ask Payments Engineering instead', 'Not needed; go to changes'] },
+      c2: { tool: 'list_changes', plain: 'List today’s changes from Jenkins and ServiceNow', reason: 'Tying the 10:20 restarts to a change, and checking whether anything else touched the gateway, the database or the network today.',
+        chips: [['sources', 'jenkins, servicenow']],
+        query: 'GET /api/now/table/change_request?sysparm_display_value=true  ·  jenkins: recent builds',
+        receipt: '8 rows. Only CHG0031877 touches the gateway: 3.8.0, shown 06:19 Eastern, so 10:19 UTC.', handle: 'snow:CHG0031877',
+        result: { id: 'call_09', status: 'ok', text: 'Changes today (ServiceNow display times are US Eastern, no zone marker; converted, original in brackets)\n10:19:00  snow:CHG0031877  Normal    payments-gateway 3.8.0 release (PAY-2198, PAY-2231, PAY-2240)  [06:19:00]\n10:19:48  jk:payments-gateway-deploy#412  SUCCESS  VERSION=3.8.0 CHANGE_TICKET=CHG0031877\n11:02:00  snow:CHG0031899  Standard  Windows patching, reporting servers  [07:02:00]\n13:34:00  snow:CHG0031850  Normal    Firewall rule for vendor SFTP  [09:34:00]\n14:27:30  snow:CHG0031902  Standard  checkout-api 2.14.3  [10:27:30]\n14:27:30  jk:checkout-api-deploy#897  SUCCESS  VERSION=2.14.3\n14:36:00  snow:CHG0031880  Normal    Lower DNS TTL for cdn.larkspur.com  [10:36:00]\n14:40:30  jk:checkout-api-deploy#898  SUCCESS  VERSION=2.14.2\n8 rows.', handles: ['snow:CHG0031877', 'jk:payments-gateway-deploy#412', 'jk:checkout-api-deploy#897', 'snow:CHG0031880'] },
+        hl: ['payments-gateway'],
+        quick: ['I know the change list; skip it'] },
+      d1: { tool: 'query_metrics', plain: 'Compare when gateway latency rose with when PayCore slowed', reason: 'Comparing when gateway latency rose with when PayCore slowed. If it rose first, the trigger is inside the gateway.',
+        chips: [['metric', 'payments-gw.p90']],
+        query: 'p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}',
+        receipt: 'p90 0.62 s until 14:22, 0.89 s at 14:24, 6.0 s by 14:30. It rises with PayCore, not before.', handle: 'metric:p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}',
+        result: { id: 'call_10', status: 'ok', text: 'query_metrics p90:trace.http.request.duration{service:checkout-api,peer.service:payments-gw,env:prod}\n  min 0.6, max 10.25, first 0.62, last 10, rolled 2:1\n    14:00 0.62 · 14:10 0.63 · 14:20 0.63 · 14:22 0.62 · 14:24 0.89 · 14:26 1.33 · 14:28 1.45 · 14:30 6.03', handles: [] },
+        hl: [], quick: ['Not now; act on what you have'] }
+    };
+  }
+
+  // The first five reads ran on their own when the ticket arrived. Follow-up reads ask, unless auto-approve is on.
+  statusOf(s, id) { var d = s.dec[id]; if (d) return d.status; if (s.headless && id !== 'd1') return 'auto'; return s.auto ? 'auto' : 'awaiting'; }
+  ran(s, id) { var x = this.statusOf(s, id); return x === 'approved' || x === 'edited' || x === 'auto'; }
+
+  decide(id, d) {
+    var s = this.st();
+    var dec = Object.assign({}, s.dec); dec[id] = d;
+    var mode = Object.assign({}, s.mode); delete mode[id];
+    this.setState({ dec: dec, mode: mode });
+    this.refocus();
+  }
+
+  // After any decision, put focus on the waiting tray's target Approve so the next key press lands there.
+  refocus() {
+    setTimeout(function () {
+      var g = document.getElementById('pending');
+      if (!g) return;
+      var a = document.activeElement;
+      if (a && g.contains(a)) return;
+      if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA')) return;
+      var b = g.querySelector('[data-kf] button') || g;
+      b.focus();
+    }, 30);
+  }
+  setMap(key, id, val) { var s = this.st(); var m = Object.assign({}, s[key]); m[id] = val; var o = {}; o[key] = m; this.setState(o); }
+
+  row(s, id) {
+    var self = this, def = this.rowDefs()[id];
+    var since = s.since[id] || def.since || '';
+    var fill = function (x) { return String(x).split('{since}').join(since); };
+    var status = this.statusOf(s, id);
+    var mode = s.mode[id] || null;
+    var reasonText = s.reason[id] || '';
+    var done = status !== 'awaiting';
+    var tech = this.tech(s);
+    var det = typeof s.det[id] === 'boolean' ? s.det[id] : tech;
+    var glyph = status === 'skipped' ? '–' : status === 'rejected' ? '✕' : '✓';
+    var receipt = status === 'skipped' ? 'Skipped. Smalls carried on without it.'
+      : status === 'rejected' ? 'Rejected by you: “' + (s.dec[id] && s.dec[id].reason) + '”'
+      : (status === 'auto' ? 'Ran automatically. ' : status === 'edited' ? 'Approved with your terms, ' + since + '. ' : '') + def.receipt;
+    var result = JSON.parse(fill(JSON.stringify(def.result)));
+    var ran = status === 'approved' || status === 'edited' || status === 'auto';
+    var cancel = function () { var st = self.st(); var m = Object.assign({}, st.mode); m[id] = null; self.setState({ mode: m, kfocus: id }); self.refocus(); };
+    var typing = function (e) { var t = e.target && e.target.tagName; return t === 'INPUT' || t === 'TEXTAREA'; };
+    var onKey = function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.repeat) return;
+      var k = (e.key || '').toLowerCase();
+      var m = self.st().mode[id] || null;
+      if (k === 'escape') { if (m) { e.preventDefault(); cancel(); } return; }
+      if (m || typing(e)) return;
+      if (k === 'a') { e.preventDefault(); self.decide(id, { status: 'approved' }); }
+      else if (k === 'e' && def.editable) { e.preventDefault(); self.setMap('mode', id, 'edit'); }
+      else if (k === 's') { e.preventDefault(); self.decide(id, { status: 'skipped' }); }
+      else if (k === 'r') { e.preventDefault(); self.setMap('mode', id, 'reject'); }
+    };
+    return {
+      id: id, tool: def.tool, reason: def.reason, plain: def.plain,
+      techTool: tech, rline: tech ? receipt : def.plain + '. ' + receipt,
+      showDet: det, detLabel: det ? 'Hide details' : 'Details',
+      toggleDet: function () { self.setMap('det', id, !det); },
+      chips: def.chips.map(function (c) { return { k: c[0], v: fill(c[1]) }; }),
+      query: fill(def.query), showQuery: det && !!s.query[id], queryLabel: s.query[id] ? 'Hide query' : 'Show query',
+      toggleQuery: function () { self.setMap('query', id, !self.st().query[id]); },
+      isAwaiting: !done, isDone: done,
+      isEditing: !done && mode === 'edit', isRejecting: !done && mode === 'reject', plainActs: !done && !mode,
+      canEdit: !!def.editable, since: since,
+      setSince: function (e) { self.setMap('since', id, e.target.value); },
+      approve: function () { self.decide(id, { status: 'approved' }); },
+      approveEdited: function () { self.decide(id, { status: 'edited' }); },
+      edit: function () { self.setMap('mode', id, 'edit'); },
+      skip: function () { self.decide(id, { status: 'skipped' }); },
+      reject: function () { self.setMap('mode', id, 'reject'); },
+      cancel: cancel, onKey: onKey,
+      onEditKey: function (e) { if (e.key === 'Enter') { e.preventDefault(); self.decide(id, { status: 'edited' }); } },
+      onRejectKey: function (e) { if (e.key !== 'Enter') return; e.preventDefault(); var r = (self.st().reason[id] || '').trim(); if (r) self.decide(id, { status: 'rejected', reason: r }); },
+      quick: def.quick.map(function (q) { return { text: q, pick: function () { self.setMap('reason', id, q); } }; }),
+      reasonText: reasonText, noReason: !reasonText.trim(),
+      setReason: function (e) { self.setMap('reason', id, e.target.value); },
+      confirmReject: function () { var r = (self.st().reason[id] || '').trim(); if (r) self.decide(id, { status: 'rejected', reason: r }); },
+      glyph: glyph, glyphClass: status === 'rejected' ? 'g-no' : status === 'skipped' ? 'g-skip' : 'g-ok', receipt: receipt,
+      hasHandle: ran && !!def.handle, handle: def.handle || '', openHandle: function (h) { self.setState({ drawer: h }); },
+      hasResult: ran, showResult: ran && !!s.open[id], openLabel: s.open[id] ? 'Hide result' : 'Show result',
+      toggleOpen: function () { self.setMap('open', id, !self.st().open[id]); },
+      result: result, hl: def.hl
+    };
+  }
+
+  group(s, ids) {
+    var self = this;
+    var gid = ids.join('-');
+    var rows = ids.map(function (id) { return self.row(s, id); });
+    var waiting = rows.filter(function (r) { return r.isAwaiting; });
+    var doneRows = rows.filter(function (r) { return r.isDone; });
+    var ran = rows.filter(function (r) { return r.hasResult; }).length;
+    var rej = rows.filter(function (r) { return r.isDone && r.glyph === '✕'; }).length;
+    var sk = rows.filter(function (r) { return r.isDone && r.glyph === '–'; }).length;
+    var n = ids.length, w = waiting.length;
+    var batch = w > 1;
+    var kf = (this.state || {}).kfocus;
+    var target = waiting.filter(function (r) { return r.id === kf; })[0] || waiting[0] || null;
+    rows.forEach(function (r) { r.solo = !batch; r.inBatch = batch; r.kf = !!target && r.id === target.id ? '1' : null; });
+    var approveAll = function () { var st = self.st(); var dec = Object.assign({}, st.dec); waiting.forEach(function (r) { dec[r.id] = { status: 'approved' }; }); self.setState({ dec: dec, mode: {} }); self.refocus(); };
+    var skipAll = function () { var st = self.st(); var dec = Object.assign({}, st.dec); waiting.forEach(function (r) { dec[r.id] = { status: 'skipped' }; }); self.setState({ dec: dec, mode: {} }); self.refocus(); };
+    var isOpen = typeof s.gopen[gid] === 'boolean' ? s.gopen[gid] : s.lens === 'all';
+    var tally = [ran ? ran + ' run' : '', rej ? rej + ' rejected' : '', sk ? sk + ' skipped' : ''].filter(Boolean).join(', ');
+    return {
+      isGroup: true, gid: gid, rows: rows, waiting: waiting, doneRows: doneRows,
+      settled: !w, waitingNow: w > 0,
+      waitLabel: (w === 1 ? '1 check is' : w + ' checks are') + ' waiting for your approval, at the bottom' + (doneRows.length ? ' · ' + doneRows.length + ' decided' : ''),
+      sumLabel: (n === 1 ? '1 check' : n + ' checks') + (tally ? ' · ' + tally : ''),
+      isOpen: isOpen, openStr: isOpen ? 'true' : 'false', moreLabel: isOpen ? 'Hide' : 'Show what it found',
+      showRcpts: (!w && isOpen) || (w > 0 && doneRows.length > 0),
+      toggle: function () { self.setMap('gopen', gid, !isOpen); },
+      batch: batch,
+      approveAllLabel: w === 2 ? 'Approve both' : 'Approve all ' + w,
+      skipAllLabel: w === 2 ? 'Skip both' : 'Skip all',
+      approveAll: approveAll, skipAll: skipAll,
+      keyEdit: waiting.some(function (r) { return r.canEdit; }),
+      allKeyLabel: w === 2 ? 'approve both' : 'approve all',
+      onKey: function (e) {
+        if (!w || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+        var t = e.target && e.target.tagName;
+        if (t === 'INPUT' || t === 'TEXTAREA') return;
+        var k = (e.key || '').toLowerCase();
+        if (e.shiftKey) {
+          if (k === 'a') { e.preventDefault(); approveAll(); }
+          else if (k === 's') { e.preventDefault(); skipAll(); }
+          return;
+        }
+        var inRow = e.target && e.target.closest && e.target.closest('.trow');
+        if (!inRow && target) target.onKey(e);
+      }
+    };
+  }
+
+  answer(key, s, openHandle) {
+    var hs = function (ids) { return { isHandles: true, handles: ids.map(function (id) { return { id: id, open: openHandle }; }) }; };
+    if (key === 'db') return [
+      { isLead: true, text: 'Because the database isn’t slow. It is full of gateway sessions waiting on PayCore.' },
+      { isNarr: true, text: 'Elena’s pg_stat_activity shows 133 payments-gateway sessions idle in transaction and no slow queries. The sessions are waiting, not working. Raising the database’s connection limit would only let the gateway hold more of them open.' },
+      hs(['slack:inc-checkout-latency/825e5fd9']),
+      { isNote: true, text: 'From checks already in this conversation. No new checks.' }];
+    if (key === 'owner') return [
+      { isLead: true, text: 'Payments Engineering. Priya Raman is on call.' },
+      { isNarr: true, text: 'PD 8812 escalated to Priya at 14:42 after Tom Beckett did not acknowledge. The CMDB still lists Marcus Okafor as owner, but his account has been inactive since August, so don’t page from the CMDB.' },
+      hs(['pd:ep/PEP4K9R', 'snow:ci/Payments-Gateway']),
+      { isNote: true, text: 'From the on-call schedule and the CMDB.' }];
+    if (key === 'exec') return [
+      { isNarr: true, text: 'Draft for #exec-incidents. Messages for every audience come with the summary, once you mark the incident resolved.' },
+      { isMsg: true, audience: 'Executives', channel: '#exec-incidents', text: 'Checkout payments are failing for about 1 in 6 customers. Cause identified in the payments gateway; rollback being prepared by Payments Engineering. Next update 15:05 UTC.' }];
+    var g = this.group(s, ['d1']);
+    var out = [
+      { isLead: true, text: 'Two things would move me.' },
+      { isNarr: true, text: 'If gateway latency had risen before PayCore slowed, the trigger would be inside the gateway, not PayCore. And if a VM on 3.7.9 showed the same idle-in-transaction pattern, the release would be cleared. The first is one check:' },
+      g];
+    if (g.settled) out.push({ isNarr: true, text: this.ran(s, 'd1') ? 'Latency rises with PayCore’s slowdown, not before it, so PayCore stays the trigger. Confidence unchanged at 0.78.' : 'Without that check, 0.78 rests on the logs and the config alone.' });
+    else out.push({ isWait: true });
+    return out;
+  }
+
+  answerCard(s, gw, handles) {
+    var self = this;
+    var L = s.lens;
+    var pct = Math.round(gw * 100);
+    var R = {
+      impact: { k: 'Business impact', v: 'About 1 in 6 payments failing or hanging since 14:26 UTC. 40+ Service Desk tickets about the payment spinner.' },
+      what: { k: 'Why it fails', v: 'The release holds database connections open while PayCore, the payment provider, is slow. pay-db-01 runs out of connections, so payments fail.' },
+      fix: { k: 'The fix', v: 'Roll the payments gateway back to the previous version, 3.7.9.' },
+      sureP: { k: 'Confidence', v: (gw >= 0.7 ? 'High' : gw >= 0.4 ? 'Medium' : 'Low') + ' (' + pct + '%). From the logs, the gateway’s settings and today’s changes.' },
+      cause: { k: 'Technical detail', v: 'Since 10:19 UTC it retries PayCore calls up to three times at 8 seconds each while holding a database transaction open. PayCore slowed at about 14:26, so gateway sessions sit idle in transaction, and pay-db-01 ran out of connections at 14:33. The database is a symptom, and backing out CHG0031902 could not help.' },
+      sure: { k: 'Confidence', conf: true },
+      act: { k: 'Recommended action', v: 'Back out CHG0031877 by rolling Payments-Gateway back to 3.7.9.', cls: 'do' },
+      owner: { k: 'Assignment group', v: 'Payments Engineering. Priya Raman is on call.' },
+      avoid: { k: 'Avoid', v: 'Clearing idle sessions, raising pool sizes or pulling pay-03. The slots refill in seconds, and all four servers show the same pattern.', cls: 'avoid' },
+      ev: { k: 'Evidence', handles: handles }
+    };
+    var M = {
+      support: [['impact', 'what', 'owner', 'sureP'], ['act', 'avoid', 'cause', 'sure', 'ev']],
+      mgmt: [['impact', 'what', 'fix', 'owner', 'sureP'], ['avoid', 'cause', 'sure', 'ev']],
+      oncall: [['act', 'avoid', 'cause', 'sure', 'owner'], ['ev', 'impact']],
+      lead: [['cause', 'sure', 'act', 'owner', 'avoid'], ['ev', 'impact']],
+      all: [['impact', 'cause', 'sure', 'act', 'owner', 'avoid', 'ev'], []],
+      v4: [['what', 'act', 'owner', 'sureP', 'avoid'], ['impact', 'cause', 'sure', 'ev']]
+    };
+    var m = M[L] || M.oncall;
+    var more = typeof s.ansMore === 'boolean' ? s.ansMore : false;
+    var keys = m[0].concat(more ? m[1] : []);
+    var plain = this.plainLens(s);
+    return {
+      isAnswer: true,
+      rows: keys.map(function (k) {
+        var r = R[k];
+        return { k: r.k, v: r.v || '', cls: r.cls || '', isText: !r.conf && !r.handles, isConf: !!r.conf, isHandles: !!r.handles, handles: r.handles || [], conf: gw, prev: 0.45 };
+      }),
+      hasMore: m[1].length > 0, moreStr: more ? 'true' : 'false',
+      moreLabel: more ? 'Show less' : 'Business impact, technical detail and evidence',
+      toggleMore: function () { self.setState({ ansMore: !more }); }
+    };
+  }
+
+  renderVals() {
+    var self = this, s = this.st();
+    var L = s.lens, tech = this.tech(s), plain = this.plainLens(s);
+    var openHandle = function (h) { self.setState({ drawer: h }); };
+    var openResolve = function () { self.setState({ resolveOpen: true }); };
+
+    // The working: narration and read groups. Folds away once there is an answer.
+    var proc = [];
+    var gA = this.group(s, ['a1', 'a2']);
+    proc.push({ isNarr: true, text: 'Four claims to test: the database, pay-03, the network and PayCore’s green status page. I’ll start with what Elena found in the database. The triage runbook also says to check redis.' });
+    proc.push(gA);
+    var gB = null, gC = null, done = false;
+    if (gA.settled) {
+      var a1 = this.ran(s, 'a1'), a2 = this.statusOf(s, 'a2');
+      proc.push({ isNarr: true, text: (a1 ? 'Elena’s paste shows 133 gateway sessions idle in transaction and no slow queries, so the database is a symptom, not the cause.' : 'Without Elena’s paste the database stays open.') +
+        (a2 === 'rejected' ? ' Skipping redis, as you said.' : a2 === 'skipped' ? '' : ' No redis errors anywhere.') + ' Next: is the gateway retrying slow PayCore calls, and since when?' });
+      gB = this.group(s, ['b1']);
+      proc.push(gB);
+    }
+    if (gB && gB.settled) {
+      proc.push({ isNarr: true, text: (this.ran(s, 'b1') ? 'Retries at 8000 ms start at 14:26 and climb every minute, three minutes before Dynatrace flags PayCore.' : 'Without the retry counts I’ll lean on config and changes.') + ' Two checks to find where an 8-second timeout came from.' });
+      gC = this.group(s, ['c1', 'c2']);
+      proc.push(gC);
+    }
+    var gw = 0.45 + (this.ran(s, 'a1') ? 0.1 : 0) + (this.ran(s, 'b1') ? 0.08 : 0) + (this.ran(s, 'c1') ? 0.08 : 0) + (this.ran(s, 'c2') ? 0.07 : 0);
+    gw = Math.round(gw * 100) / 100;
+    var pct = Math.round(gw * 100);
+    var keyHandles = ['jk:payments-gateway-deploy#412', 'log:pay-01/2b8f6a14', 'slack:inc-checkout-latency/825e5fd9', 'log:pay-01/9c2e41d0'].map(function (id) { return { id: id, open: openHandle }; });
+
+    // The answer.
+    var concl = [];
+    var concluded = !!(gC && gC.settled);
+    if (concluded) {
+      done = s.sent;
+      if (gw >= 0.7) {
+        concl.push({ isLead: true, text: 'Probable cause: change CHG0031877, this morning’s Payments-Gateway release.' });
+        concl.push(this.answerCard(s, gw, keyHandles));
+      } else {
+        concl.push({ isLead: true, text: 'The retry hypothesis is ahead but not settled (' + gw.toFixed(2) + ').' });
+        concl.push({ isNarr: true, text: 'Some checks were skipped or rejected, and the summary will list them under what was not checked. The quickest way to settle it: ask Payments Engineering whether 3.8.0 changed the PayCore timeout or retries.' });
+        concl.push({ isHandles: true, handles: keyHandles });
+      }
+    }
+
+    // Counts for the folded working and the tally.
+    var QS = { db: 'Why not the database?', mind: 'What would change your mind?', owner: 'Who should own it?', exec: 'Draft the exec update' };
+    var used = {}; s.fu.forEach(function (f) { used[f.key] = 1; });
+    var all = ['a1', 'a2', 'b1', 'c1', 'c2', 'd1'].filter(function (id) { return id !== 'd1' || used.mind; });
+    var shown = s.sent ? all.filter(function (id) { return id[0] === 'a' || (id[0] === 'b' && gA.settled) || (id[0] === 'c' && gB && gB.settled) || id === 'd1'; }) : [];
+    var count = function (f) { return shown.filter(f).length; };
+    var nRun = count(function (id) { return self.ran(s, id); });
+    var nRej = count(function (id) { return self.statusOf(s, id) === 'rejected'; });
+    var nSkip = count(function (id) { return self.statusOf(s, id) === 'skipped'; });
+    var nWait = count(function (id) { return self.statusOf(s, id) === 'awaiting'; });
+    var mainReads = shown.filter(function (id) { return id !== 'd1'; });
+
+    var blocks;
+    if (concluded) {
+      var stepsOpen = typeof s.stepsOpen === 'boolean' ? s.stepsOpen : L === 'all';
+      var mr = function (f) { return mainReads.filter(f).length; };
+      var line = mainReads.length + ' checks · ' + [mr(function (id) { return self.ran(s, id); }) + ' run', mr(function (id) { return self.statusOf(s, id) === 'rejected'; }) ? mr(function (id) { return self.statusOf(s, id) === 'rejected'; }) + ' rejected' : '', mr(function (id) { return self.statusOf(s, id) === 'skipped'; }) ? mr(function (id) { return self.statusOf(s, id) === 'skipped'; }) + ' skipped' : ''].filter(Boolean).join(', ');
+      var said = [];
+      if (this.ran(s, 'a1')) said.push('read Elena’s database findings (the database is full, not slow)');
+      if (this.ran(s, 'a2')) said.push('ruled out redis');
+      if (this.ran(s, 'b1')) said.push('found the gateway retrying slow card payments since 14:26');
+      if (this.ran(s, 'c1')) said.push('saw new timeout settings on all four gateway servers from this morning');
+      if (this.ran(s, 'c2')) said.push('tied them to this morning’s gateway update, the only change near it');
+      var summary = said.length ? 'Smalls ' + (said.length > 1 ? said.slice(0, -1).join(', ') + ' and ' + said[said.length - 1] : said[0]) + '.' : 'Smalls didn’t run any checks.';
+      var nRejM = mr(function (id) { return self.statusOf(s, id) === 'rejected'; }), nSkipM = mr(function (id) { return self.statusOf(s, id) === 'skipped'; });
+      var note = (nRejM || nSkipM) ? 'You ' + [nRejM ? 'rejected ' + nRejM : '', nSkipM ? 'skipped ' + nSkipM : ''].filter(Boolean).join(' and ') + (nRejM + nSkipM === 1 ? ' check' : ' checks') + '. The summary will list what wasn’t checked.' : '';
+      blocks = [{ isSteps: true, summary: summary, note: note, hasNote: !!note, line: line, openStr: stepsOpen ? 'true' : 'false', moreLabel: stepsOpen ? 'Hide' : 'Show the steps', toggle: function () { self.setState({ stepsOpen: !stepsOpen }); } }]
+        .concat(stepsOpen ? proc : []).concat(concl);
+    } else {
+      blocks = (plain ? proc.filter(function (b) { return !b.isNarr; }) : proc).concat([{ isWait: true }]);
+    }
+
+    var icLong = !s.blank;
+    var icOpen = typeof s.icOpen === 'boolean' ? s.icOpen : (L === 'lead' || L === 'all');
+    var turns = [];
+    if (s.sent) {
+      if (s.headless) turns.push({ ticket: true, ic: false, sm: false, text: s.first });
+      else turns.push({ ic: true, sm: false, who: s.blank ? 'You' : 'Alice Nguyen', at: '14:52', text: s.first, long: icLong, cls: icLong && !icOpen ? 'clamp' : '' });
+      turns.push({ ic: false, sm: true, at: '14:52:04', blocks: blocks });
+    }
+    s.fu.forEach(function (f, i) {
+      turns.push({ ic: true, sm: false, who: s.blank ? 'You' : 'Alice Nguyen', at: f.at, text: f.q, long: false, cls: '' });
+      turns.push({ ic: false, sm: true, at: f.at + ':0' + (i + 2), blocks: self.answer(f.key, s, openHandle) });
+    });
+
+    var tktOpen = s.tktOpen;
+    var icBits = {
+      icCls: !icOpen ? 'clamp' : '', icStr: icOpen ? 'true' : 'false', icLabel: icOpen ? 'Show less' : 'Show the full message',
+      toggleIc: function () { self.setState({ icOpen: !icOpen }); },
+      tktOpen: tktOpen, tktStr: tktOpen ? 'true' : 'false', tktLabel: tktOpen ? 'Hide ticket fields' : 'Ticket fields and earlier note',
+      toggleTkt: function () { self.setState({ tktOpen: !tktOpen }); },
+      openTicket: function () { self.setState({ panel: 'ticket' }); }
+    };
+    turns = turns.map(function (t) { return Object.assign({}, icBits, t); });
+
+    // The reads waiting on you, lifted out of the conversation into the tray.
+    var pending = null;
+    turns.forEach(function (t) { (t.blocks || []).forEach(function (b) { if (!pending && b.isGroup && !b.settled) pending = b; }); });
+
+    var fuBusy = s.fu.some(function (f) { return f.key === 'mind'; }) && self.statusOf(s, 'd1') === 'awaiting';
+    var ask = function (key, q) {
+      var st = self.st();
+      var at = '14:5' + Math.min(9, 3 + st.fu.length);
+      self.setState({ fu: st.fu.concat([{ key: key, q: q, at: at }]), draft: '' });
+      self.refocus();
+    };
+    var suggestions = done && !fuBusy ? Object.keys(QS).filter(function (k) { return !used[k]; }).map(function (k) { return { q: QS[k], pick: function () { ask(k, QS[k]); } }; }) : [];
+
+    var psp = this.ran(s, 'b1') ? 0.7 : 0.55;
+    var picture = !s.sent ? [] : [
+      { statement: "3.8.0's retries hold DB connections across slow PayCore calls", role: 'cause', conf: gw, prev: 0.45 },
+      { statement: 'PayCore EU latency is the trigger', role: 'trigger', conf: psp, prev: 0.4 },
+      { statement: 'pay-03 dropping out of the F5 pool', role: 'symptom', conf: 0.15 },
+      { statement: 'A network fault (marketing site down too)', role: 'unrelated', conf: 0.1 },
+      { statement: 'pay-db-01 is the problem', role: 'symptom', conf: this.ran(s, 'a1') ? 0.1 : 0.35, prev: 0.35, rejected: this.ran(s, 'a1') },
+      { statement: 'checkout-api 2.14.3 caused it', role: 'unrelated', conf: 0.05, prev: 0.3, rejected: true }
+    ].map(function (p) {
+      var status = p.rejected ? 'rejected' : (p.conf >= 0.7 ? 'leading' : 'open');
+      return Object.assign({}, p, { status: status, muted: !!p.rejected });
+    }).sort(function (a, b) { var r = { leading: 0, open: 1, rejected: 2 }; return r[a.status] - r[b.status] || b.conf - a.conf; });
+    var dead = picture.filter(function (p) { return p.muted; });
+    var ruledOpen = typeof s.ruledOpen === 'boolean' ? s.ruledOpen : L === 'all';
+
+    var evCount = s.sent ? (this.ran(s, 'a1') ? 1 : 0) + (this.ran(s, 'b1') ? 1 : 0) + (this.ran(s, 'c1') ? 4 : 0) + (this.ran(s, 'c2') ? 4 : 0) : 0;
+    var conclusion = done && gw >= 0.7
+      ? 'Probable cause: change CHG0031877, the Payments-Gateway 3.8.0 release (' + Math.round(gw * 100) + '% confidence). Its retries hold database connections across slow PayCore calls. Recommended action: back out the change.'
+      : s.sent ? 'No probable cause yet. The retry hypothesis is at ' + gw.toFixed(2) + '.' : 'Smalls hasn’t investigated yet.';
+
+    var send = function () {
+      var st = self.st();
+      if (!st.sent) { var t = (st.draft || '').trim(); if (st.blank && !t) return; self.setState({ sent: true, first: t || self.prompt(), draft: '' }); self.refocus(); return; }
+      var q = (st.draft || '').trim();
+      if (!q || !done || fuBusy) return;
+      var l = q.toLowerCase();
+      var key = /database|db\b|postgres/.test(l) ? 'db' : /own|who|page|on.?call/.test(l) ? 'owner' : /exec|update|status page|customers|tell/.test(l) ? 'exec' : 'mind';
+      ask(key, q);
+    };
+    var waitingNow = (s.sent && blocks.some(function (b) { return b.isWait; })) || fuBusy;
+    var draftEmpty = !(s.draft || '').trim();
+
+    // The one-line status under the header.
+    var now;
+    if (!s.sent) now = { tone: 'neutral', glyph: '›', title: s.blank ? 'New chat.' : 'Not started yet.', text: s.blank ? 'Describe what you’re seeing below. Smalls asks before every check.' : 'Alice’s message is loaded below. Start when you’re ready; Smalls asks before every check.' };
+    else if (waitingNow) now = { tone: 'attention', glyph: '◆', title: 'Waiting on you.', text: (nWait === 1 ? '1 check needs' : nWait + ' checks need') + ' your approval before diagnosis can continue.', link: true };
+    else if (done && gw >= 0.7) now = { tone: 'action', glyph: '●', title: 'Probable cause identified.', text: 'Change CHG0031877, this morning’s Payments-Gateway release (high confidence, ' + pct + '%). Recommended action: back it out. Next update due 15:05 UTC.', resolve: true };
+    else if (done) now = { tone: 'neutral', glyph: '○', title: 'No probable cause yet.', text: 'The retry hypothesis is ahead at ' + gw.toFixed(2) + '. Some checks were skipped or rejected.', resolve: true };
+    else now = { tone: 'neutral', glyph: '›', title: 'Diagnosis in progress.', text: 'Smalls is running checks.' };
+    var nowSub = s.headless ? 'Diagnosis started automatically when INC0048811 was imported · 41 s · 5 checks · follow-up checks need your approval' : '';
+
+    var lensInfo = this.lenses().filter(function (l) { return l.id === L; })[0] || this.lenses()[1];
+    var showRail = true;
+    var rawSide = (this.state || {}).sideOpen;
+    var sideOpen = typeof rawSide === 'boolean' ? rawSide : !s.blank;
+    var rawPanel = (this.state || {}).panel;
+    var panel = rawPanel !== undefined ? rawPanel : ((this.props.panel && this.props.panel !== 'none') ? this.props.panel : null);
+    if (s.blank && panel && panel !== 'picture') panel = 'picture';
+    var tray = pending;
+    var trayRows = tray ? tray.waiting : [];
+
+    return {
+      theme: this.props.theme ?? 'light',
+      sideCls: sideOpen ? '' : 'hid', sideStr: sideOpen ? 'true' : 'false', sideLabel: sideOpen ? 'Hide menu' : 'Show menu',
+      toggleSide: function () { self.setState({ sideOpen: !sideOpen }); },
+      canToggleSide: s.blank, showHeader: !(s.blank && !s.sent), showMini: s.blank && !s.sent,
+      centerStart: s.blank && !s.sent, convoCls: s.blank && !s.sent ? 'gone' : (pending ? 'with-tray' : ''),
+      starters: ['Checkout is returning 504s on submit', 'Payments have been slow since about 14:30', 'INC0048811'].map(function (q) { return { q: q, pick: function () { self.setState({ draft: q }); } }; }),
+      hasTicket: !s.blank,
+      ticketOpen: s.ticketOpen,
+      openTicket: function () { self.setState({ panel: 'ticket' }); },
+      closeTicket: function () { self.setState({ panel: null }); },
+      panelOpen: !!panel, isPicture: panel === 'picture', isContacts: panel === 'contacts', isTicket: panel === 'ticket',
+      panelTitle: panel === 'contacts' ? 'Contacts and resolver groups' : panel === 'ticket' ? 'Ticket' : 'Working picture',
+      panelSub: panel === 'contacts' ? 'Who to talk to on this incident' : panel === 'ticket' ? 'INC0048811, as imported from ServiceNow' : 'What Smalls believes right now, and how sure',
+      closePanel: function () { self.setState({ panel: null }); },
+      togglePicture: function () { self.setState({ panel: panel === 'picture' ? null : 'picture' }); },
+      toggleContacts: function () { self.setState({ panel: panel === 'contacts' ? null : 'contacts' }); },
+      toggleTicket: function () { self.setState({ panel: panel === 'ticket' ? null : 'ticket' }); },
+      picPressed: panel === 'picture' ? 'true' : 'false', conPressed: panel === 'contacts' ? 'true' : 'false', tktPressed: panel === 'ticket' ? 'true' : 'false',
+      hasPicBadge: s.sent, picBadge: picture.filter(function (p) { return !p.muted; }).length + ' in play',
+      people: [
+        { name: 'Alice Nguyen', role: 'Major Incident Manager', slack: 'slack://user?team=TLARKSPUR&id=UALICENG', tel: 'tel:+12125550142', hasPhone: true },
+        { name: 'Priya Raman', role: 'Payments Engineering, on call', slack: 'slack://user?team=TLARKSPUR&id=UPRIYARA', tel: 'tel:+12125550187', hasPhone: true },
+        { name: 'Elena', role: 'Database administrator, pay-db-01', slack: 'slack://user?team=TLARKSPUR&id=UELENADB', tel: '', hasPhone: false },
+        { name: 'Ben', role: 'Checkout API, raised CHG0031902', slack: 'slack://user?team=TLARKSPUR&id=UBENCHK', tel: '', hasPhone: false }
+      ],
+      sideCurrent: s.blank ? 'new' : 'chat',
+      lenses: this.lenses().map(function (l) {
+        return { label: l.label, hint: l.hint, pressed: l.id === L ? 'true' : 'false',
+          pick: function () { self.setState({ lens: l.id, gopen: {}, det: {}, icOpen: undefined, stepsOpen: undefined, ruledOpen: undefined, ansMore: undefined }); } };
+      }),
+      lensHint: lensInfo.hint,
+      incMeta: plain ? 'INC0048811 · Online Checkout · impact start 14:26 UTC · next update due 15:05 UTC' : 'INC0048811 · Online Checkout · IC Alice Nguyen · first errors 14:26 UTC',
+      nowTone: now.tone, nowGlyph: now.glyph, nowTitle: now.title, nowText: now.text,
+      hasNowSub: !!nowSub, nowSub: nowSub,
+      nowHasLink: !!now.link, nowHasResolve: !!now.resolve,
+      nowQuietResolve: s.sent && !now.resolve && !(s.blank && !s.sent),
+      bodyCls: showRail ? '' : 'solo',
+      introPrompt: !s.sent && !s.blank, introBlank: false,
+      inlineComposer: !s.sent && !s.blank, dockedComposer: s.sent,
+      showIncident: !(s.blank && !s.sent), showNewTitle: s.blank && !s.sent,
+      turns: turns,
+      icCls: !icOpen ? 'clamp' : '', icStr: icOpen ? 'true' : 'false', icLabel: icOpen ? 'Show less' : 'Show the full message',
+      toggleIc: function () { self.setState({ icOpen: !icOpen }); },
+      tktOpen: s.tktOpen, tktStr: s.tktOpen ? 'true' : 'false', tktLabel: s.tktOpen ? 'Hide ticket fields' : 'Ticket fields and earlier note',
+      toggleTkt: function () { self.setState({ tktOpen: !self.st().tktOpen }); },
+      hasTray: !!tray, trayKey: tray ? tray.onKey : null,
+      trayTitle: trayRows.length === 1 ? 'Smalls wants to run 1 check' : 'Smalls wants to run ' + trayRows.length + ' checks',
+      trayRows: trayRows, trayBatch: !!tray && tray.batch, trayEdit: !!tray && tray.keyEdit,
+      showKeys: true, allKeyLabel: tray ? tray.allKeyLabel : '',
+      approveAll: tray ? tray.approveAll : null, skipAll: tray ? tray.skipAll : null,
+      approveAllLabel: tray ? tray.approveAllLabel : '', skipAllLabel: tray ? tray.skipAllLabel : '',
+      showRail: showRail,
+      livePicture: picture.filter(function (p) { return !p.muted; }),
+      deadPicture: dead,
+      ruledOpen: ruledOpen, ruledStr: ruledOpen ? 'true' : 'false',
+      ruledLabel: ruledOpen ? 'Hide ruled out' : 'Ruled out · ' + dead.length,
+      toggleRuled: function () { self.setState({ ruledOpen: !ruledOpen }); },
+      hasPicture: s.sent, noPicture: !s.sent,
+      showTally: L === 'all',
+      tallyCells: [
+        { n: String(shown.length), label: 'proposed' },
+        { n: String(nRun), label: 'run' },
+        { n: String(nRej), label: 'rejected' },
+        { n: String(nSkip), label: 'skipped' }
+      ],
+      suggestions: suggestions, hasSuggestions: suggestions.length > 0,
+      auto: s.auto, setAuto: function (v) { self.setState({ auto: v }); },
+      draft: s.draft, setDraft: function (e) { self.setState({ draft: e.target.value }); },
+      composerRows: s.blank ? 4 : 8,
+      send: send, sendLabel: s.blank ? 'Send' : 'Start investigation',
+      sendDisabled: s.sent ? (!done || fuBusy || draftEmpty) : (s.blank && draftEmpty),
+      composerHint: s.auto ? 'Checks will run without asking' : 'Smalls asks before every check',
+      dockHint: waitingNow ? 'Decide the checks above first' : (s.auto ? 'Checks run without asking' : 'Smalls asks before every check'),
+      drawer: s.drawer, drawerOpen: !!s.drawer, closeDrawer: function () { self.setState({ drawer: null }); },
+      openResolve: openResolve, resolveOpen: s.resolveOpen,
+      closeResolve: function () { self.setState({ resolveOpen: false }); },
+      isAgent: s.path === 'agent', isOwn: s.path === 'own',
+      pickAgent: function () { self.setState({ path: 'agent' }); },
+      pickOwn: function () { self.setState({ path: 'own' }); },
+      agentDesc: evCount
+        ? 'All ' + evCount + ' pieces of evidence Smalls gathered go into the write-up. You can remove any of them on the next screen.'
+        : 'Smalls hasn’t gathered evidence yet, so you’ll pick what helped on the next screen.',
+      conclusion: conclusion,
+      note: s.note, setNote: function (e) { self.setState({ note: e.target.value }); },
+      hasNote: !!s.note.trim(), noNote: !s.note.trim(),
+      resolvedAt: s.at, setAt: function (e) { self.setState({ at: e.target.value }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

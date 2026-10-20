@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Smalls sidebar, v4</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/smalls/tokens.css">
+<link rel="stylesheet" href="ds/smalls/components/bundle.css">
+<script src="ds/smalls/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.sb{display:flex;flex-direction:column;gap:18px;min-height:100%;box-sizing:border-box;padding:16px 12px 20px;background:var(--surface-raised);color:var(--ink);font-family:var(--font-sans);font-size:14px;line-height:20px}
+.sb-brand{font-size:16px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);text-decoration:none;padding:0 10px}
+.sb-brand:hover{color:var(--ink)}
+.sb-sec{display:flex;flex-direction:column;gap:2px}
+.sb-lab{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);padding:0 10px 6px}
+.sb-inc{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:6px}
+.sb-inc-top{display:flex;align-items:baseline;gap:8px}
+.sb-inc-t{font-weight:600;font-size:14px;line-height:20px}
+.prio{font-family:var(--font-mono);font-size:11px;line-height:16px;font-weight:600;padding:0 5px;border-radius:2px;background:var(--danger-soft);color:var(--danger);flex:none}
+.sb-meta{font-size:12px;line-height:16px;color:var(--ink-muted)}
+.sb-items{list-style:none;margin:2px 0 0 18px;padding:0 0 0 10px;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:1px}
+.sb-it{display:flex;align-items:center;gap:8px;min-height:36px;padding:0 10px;border-radius:4px;font-size:13px;line-height:18px;color:var(--ink);text-decoration:none}
+a.sb-it:hover{background:var(--surface-sunken);color:var(--ink)}
+.sb-it[aria-current="page"]{background:var(--action-soft);color:var(--action);font-weight:500}
+.sb-it.off{color:var(--ink-muted);cursor:default}
+.sb-it-t{flex:1 1 auto;min-width:0}
+.sb-ok{font-family:var(--font-mono);font-size:12px;color:var(--ok)}
+.sb-lock{flex:none;margin-left:8px;font-size:11px;line-height:16px;color:var(--ink-muted);white-space:nowrap}
+.sb-past{display:flex;flex-direction:column;gap:2px;padding:8px 10px;color:var(--ink-muted)}
+.sb-past b{font-weight:500;color:var(--ink-muted);font-size:13px;line-height:18px}
+.sb-foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+a:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+</style>
+</helmet>
+<nav aria-label="Smalls" class="sb" data-theme="{{theme}}">
+<a class="sb-brand" href="IncidentV4.dc.html">Smalls</a>
+<dc-import name="NewIncidentV4" theme="{{theme}}" hint-size="100%,36px"></dc-import>
+
+<div class="sb-sec">
+<span class="sb-lab">{{incLabel}}</span>
+<div class="sb-inc">
+<span class="sb-inc-top"><span class="prio">P1</span><span class="sb-inc-t">Checkout payments failing</span></span>
+<span class="sb-meta">{{incMeta}}</span>
+</div>
+<ol class="sb-items">
+<li><a class="sb-it" href="IncidentV4.dc.html" aria-current="{{homeCur}}"><span class="sb-it-t">Overview</span></a></li>
+<li><a class="sb-it" href="ChatV4.dc.html" aria-current="{{chatCur}}"><span class="sb-it-t">Diagnosis</span></a></li>
+<sc-if value="{{investigating}}" hint-placeholder-val="{{ true }}">
+<li><span class="sb-it off"><span class="sb-it-t">Resolution</span><span class="sb-lock">after resolving</span></span></li>
+<li><span class="sb-it off"><span class="sb-it-t">Communications</span><span class="sb-lock">after resolving</span></span></li>
+</sc-if>
+<sc-if value="{{resolved}}" hint-placeholder-val="{{ false }}">
+<li><a class="sb-it" href="SummaryV4.dc.html" aria-current="{{sumCur}}"><span class="sb-it-t">Resolution</span></a></li>
+<li><a class="sb-it" href="MessagesV4.dc.html" aria-current="{{msgCur}}"><span class="sb-it-t">Communications</span></a></li>
+</sc-if>
+</ol>
+</div>
+
+<sc-if value="{{isNew}}" hint-placeholder-val="{{ false }}">
+<div class="sb-sec">
+<span class="sb-lab">Chats</span>
+<ol class="sb-items" style="margin-left: 0; border-left: 0; padding-left: 0;">
+<li><a class="sb-it" href="ChatNewV4.dc.html" aria-current="page"><span class="sb-it-t">New chat</span><span class="sb-lock">not linked yet</span></a></li>
+</ol>
+</div>
+</sc-if>
+
+<div class="sb-sec">
+<span class="sb-lab">Earlier</span>
+<div class="sb-past" title="Older incidents aren’t in this prototype">
+<b>redis-sessions memory fragmentation</b>
+<span class="sb-meta">Resolved 22 Sep · in the knowledge base</span>
+</div>
+</div>
+
+<div class="sb-foot">
+<span class="sb-meta">Larkspur · take-home dataset</span>
+<span class="sb-meta">Signed in as Alice Nguyen</span>
+</div>
+</nav>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"current":{"editor":"enum","options":["home","chat","new","summary","messages"],"default":"home"},"stage":{"editor":"enum","options":["investigating","resolved"],"default":"investigating"},"$preview":{"width":296,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var c = this.props.current || 'home';
+    var res = (this.props.stage || 'investigating') === 'resolved';
+    var cur = function (k) { return c === k ? 'page' : null; };
+    return {
+      theme: this.props.theme ?? 'light',
+      homeCur: cur('home'), chatCur: cur('chat'), sumCur: cur('summary'), msgCur: cur('messages'),
+      isNew: c === 'new',
+      investigating: !res, resolved: res,
+      incLabel: res ? 'Resolved today' : 'Open major incident',
+      incMeta: res ? 'INC0048811 · resolved 15:08 UTC' : 'INC0048811 · impact since 14:26 UTC'
+    };
+  }
+}
+</script>
+</body>
+</html>

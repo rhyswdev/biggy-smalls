@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New incident menu, v4</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/smalls/tokens.css">
+<link rel="stylesheet" href="ds/smalls/components/bundle.css">
+<script src="ds/smalls/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+.ni{position:relative;display:flex;width:100%;font-family:var(--font-sans);color:var(--ink)}
+.ni-btn{font:inherit;display:flex;align-items:center;gap:8px;width:100%;height:36px;padding:0 10px;border-radius:6px;border:1px solid var(--line-strong);background:var(--surface-raised);color:var(--ink);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;text-align:left}
+.ni-btn:hover{background:var(--surface-sunken)}
+.ni-btn[aria-expanded="true"]{border-color:var(--action);color:var(--action);background:var(--action-soft)}
+.ni-caret{font-size:9px;margin-left:auto;color:var(--ink-muted)}
+.ni-away{position:fixed;top:0;right:0;bottom:0;left:0;z-index:49;background:transparent;border:0;padding:0;cursor:default}
+.ni-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:50;width:320px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;padding:6px;background:var(--surface-raised);border:1px solid var(--line);border-radius:8px;box-shadow:0 12px 32px -8px rgba(11,12,14,.28)}
+.ni-item{font:inherit;display:flex;gap:12px;align-items:flex-start;width:100%;box-sizing:border-box;padding:10px 12px;border:0;border-radius:6px;background:transparent;color:var(--ink);text-align:left;text-decoration:none;cursor:pointer}
+.ni-item:hover{background:var(--surface-sunken);color:var(--ink)}
+.ni-ic{flex:none;width:28px;height:28px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:var(--action-soft);color:var(--action)}
+.ni-tx{display:flex;flex-direction:column;gap:2px}
+.ni-tx b{font-size:14px;line-height:20px;font-weight:600}
+.ni-tx span{font-size:12px;line-height:17px;color:var(--ink-muted)}
+.scrim{position:fixed;top:0;right:0;bottom:0;left:0;z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:64px 16px;box-sizing:border-box;background:rgba(11,12,14,.5)}
+.dialog{width:100%;max-width:520px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:24px;background:var(--surface-raised);color:var(--ink);border:1px solid var(--line);border-radius:8px;box-shadow:0 16px 48px -12px rgba(11,12,14,.45)}
+.src{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.src b{font-weight:600}
+.ok{font-size:12px;line-height:16px;font-weight:600;color:var(--ok);margin-left:auto}
+.recent{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--ink)}
+.recent:hover{border-color:var(--action);color:var(--ink)}
+.prio{font-family:var(--font-mono);font-size:11px;line-height:16px;font-weight:600;padding:0 5px;border-radius:2px;background:var(--danger-soft);color:var(--danger)}
+.label{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+.small{font-size:12px;line-height:16px}
+.muted{color:var(--ink-muted)}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:-10px -10px 0 auto;border:0;border-radius:4px;background:transparent;color:var(--ink-muted);cursor:pointer}
+.iconbtn:hover{background:var(--surface-sunken);color:var(--ink)}
+.lbtn{display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 14px;border-radius:4px;font-size:13px;font-weight:500;text-decoration:none;background:var(--action);border:1px solid var(--action);color:var(--on-action)}
+.lbtn:hover{color:var(--on-action);filter:brightness(1.08)}
+.ni-btn:focus-visible,.ni-item:focus-visible,.recent:focus-visible,.lbtn:focus-visible,.iconbtn:focus-visible,input:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
+</style>
+</helmet>
+<div class="ni" data-theme="{{theme}}">
+<button type="button" class="ni-btn" aria-haspopup="menu" aria-expanded="{{menuStr}}" onClick="{{toggleMenu}}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M8 3v10M3 8h10"></path></svg>New incident<span class="ni-caret" aria-hidden="true">▼</span></button>
+
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{ false }}">
+<button type="button" class="ni-away" aria-label="Close menu" onClick="{{closeMenu}}"></button>
+<div class="ni-menu" role="menu" aria-label="New incident">
+<a class="ni-item" role="menuitem" href="ChatNewV4.dc.html">
+<span class="ni-ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z"></path></svg></span>
+<span class="ni-tx"><b>Start a chat</b><span>Describe what you’re seeing. Smalls asks before each read.</span></span>
+</a>
+<button type="button" class="ni-item" role="menuitem" onClick="{{openImport}}">
+<span class="ni-ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8"></path><path d="M4.5 6.5L8 10l3.5-3.5"></path><path d="M2.5 11v2.5h11V11"></path></svg></span>
+<span class="ni-tx"><b>Import from service desk</b><span>Pull in a ServiceNow incident. Smalls starts diagnosis straight away.</span></span>
+</button>
+</div>
+</sc-if>
+
+<sc-if value="{{importOpen}}" hint-placeholder-val="{{ false }}">
+<div class="scrim">
+<section class="dialog" role="dialog" aria-modal="true" aria-labelledby="imp-h">
+<div style="display: flex; align-items: flex-start; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<h2 id="imp-h" class="title" style="margin: 0;">Import from service desk</h2>
+<span class="small muted">Smalls reads the ticket, its work notes and linked changes, writes an incident overview and starts diagnosis. You can stop it at any time.</span>
+</div>
+<button type="button" class="iconbtn" aria-label="Close" onClick="{{closeImport}}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"></path></svg></button>
+</div>
+<div class="src"><b>ServiceNow</b><span class="small muted">larkspur.service-now.com</span><span class="ok">✓ Connected</span></div>
+<label style="display: flex; flex-direction: column; gap: 6px;">
+<span class="heading">Ticket number or link</span>
+<input class="sm-input" style="font-family: var(--font-mono); font-size: 14px; min-height: 40px;" placeholder="INC0048811" value="{{num}}" onChange="{{setNum}}">
+</label>
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<span class="label">Open P1 and P2 tickets for your groups</span>
+<a class="recent" href="IncidentV4.dc.html">
+<span class="prio">P1</span>
+<span style="font-weight: 600; flex: 1 1 200px;">Checkout payments failing</span>
+<span class="small muted">INC0048811 · already imported</span>
+</a>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+<sc-if value="{{hasNum}}" hint-placeholder-val="{{ false }}"><a class="lbtn" href="IncidentV4.dc.html">Import and investigate</a></sc-if>
+<sc-if value="{{noNum}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="Smalls.Button" variant="primary" disabled="{{ true }}">Import and investigate</x-import></sc-if>
+<x-import component-from-global-scope="Smalls.Button" variant="quiet" on-click="{{closeImport}}">Cancel</x-import>
+</div>
+</section>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"show":{"editor":"enum","options":["closed","menu","import"],"default":"closed"},"$preview":{"width":296,"height":260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this;
+    var s = this.state || {};
+    var show = s.show || this.props.show || 'closed';
+    var num = typeof s.num === 'string' ? s.num : '';
+    return {
+      theme: this.props.theme ?? 'light',
+      menuOpen: show === 'menu', menuStr: show === 'menu' ? 'true' : 'false',
+      importOpen: show === 'import',
+      toggleMenu: function () { self.setState({ show: show === 'menu' ? 'closed' : 'menu' }); },
+      closeMenu: function () { self.setState({ show: 'closed' }); },
+      openImport: function () { self.setState({ show: 'import' }); },
+      closeImport: function () { self.setState({ show: 'closed' }); },
+      num: num, setNum: function (e) { self.setState({ num: e.target.value }); },
+      hasNum: !!num.trim(), noNum: !num.trim()
+    };
+  }
+}
+</script>
+</body>
+</html>
