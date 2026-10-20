@@ -274,10 +274,10 @@ class Service:
                                 incident=number)
         with self.db.write() as conn:
             conn.execute("INSERT OR IGNORE INTO incident (number, chat_id, imported_at) VALUES (?, ?, ?)", (number, chat["id"], stamp()))
-        self.write_overview(number)
+        self.write_overview(number, chat["id"])
         return {"number": number, "chat_id": chat["id"], "already": False}
 
-    def write_overview(self, number: str) -> Future | None:
+    def write_overview(self, number: str, chat_id: str | None = None) -> Future | None:
         """Code's overview at once, so the page never waits; then, with a writer, the model's on the pool, which
         replaces code's prose when it validates. The contacts are code's either way."""
         inputs = self.reader().overview_inputs(number)
@@ -291,6 +291,8 @@ class Service:
             got = self.writer.write(inputs)
             if got.get("written") is not None:
                 self._store_overview(number, overviews.view(inputs, got["written"], self.writer.profile), self.writer.profile, got.get("cost_usd"), None)
+                if chat_id:         # the overview page is told on its diagnosis chat's stream, and redraws in place
+                    self.emit(chat_id, "overview", {"number": number, "by": self.writer.profile})
             else:
                 with self.db.write() as conn:
                     conn.execute("UPDATE overview SET why_code = ? WHERE number = ?", (f"The {self.writer.profile} writer failed ({got.get('error')}), so code wrote this overview.", number))
@@ -298,6 +300,15 @@ class Service:
         future = self.pool.submit(job)
         self.futures[f"overview:{number}"] = future
         return future
+
+    def emit(self, chat_id: str, type_: str, data: dict[str, Any]) -> None:
+        """An event of the API's own on a chat's stream (not the agent's), under the chat's latest run."""
+        run = self.latest_run(chat_id)
+        with self.db.write() as conn:
+            seq = conn.execute("SELECT coalesce(max(seq), 0) + 1 FROM event WHERE chat_id = ?", (chat_id,)).fetchone()[0]
+            conn.execute("INSERT INTO event (chat_id, seq, run_id, agent_seq, type, data, t_wall) VALUES (?, ?, ?, 0, ?, ?, ?)",
+                         (chat_id, seq, run["run_id"] if run else "", type_, dumps(data), stamp()))
+        self.notify(chat_id)
 
     def _store_overview(self, number: str, body: dict[str, Any], by: str, cost_usd: float | None, why: str | None) -> None:
         with self.db.write() as conn:

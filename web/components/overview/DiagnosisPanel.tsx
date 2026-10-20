@@ -22,6 +22,8 @@ export function DiagnosisPanel({ chatId, initial }: { chatId: string; initial: C
   const done = ["completed", "incomplete", "failed"].includes(state.status);
   const wasDone = ["completed", "incomplete", "failed"].includes(initial.status);
   useEffect(() => { if (done && !wasDone) router.refresh(); }, [done, wasDone, router]);       // the banner is the server's
+  // The writer's overview landed after the page was drawn: redraw the sections in place.
+  useEffect(() => { if (state.overviewSeq && state.overviewSeq !== initial.overviewSeq) router.refresh(); }, [state.overviewSeq, initial.overviewSeq, router]);
 
   const list = steps(state);
   const label = (id: string) => (state.rows[id] ? plainLabel(state.rows[id]!).now : "");
@@ -40,7 +42,7 @@ export function DiagnosisPanel({ chatId, initial }: { chatId: string; initial: C
     body = <><p className="para" style={{ fontSize: 14, lineHeight: "21px" }}>{state.pending.cards.length === 1 ? "1 check needs" : `${state.pending.cards.length} checks need`} your approval before diagnosis can continue.</p>
       <div className="ag-acts" style={{ marginTop: 12 }}><Link className="lbtn primary" href={`/chats/${chatId}#pending`}>Go to approvals</Link></div></>;
   } else if (state.status === "running" || state.status === "idle") {
-    tag = <StatusTag status="running">In progress</StatusTag>;
+    tag = <StatusTag status="running"><span className="v-spin" aria-hidden="true" />In progress</StatusTag>;
     const ahead = Object.values(state.board).filter((h) => h.status !== "rejected").sort((x, y) => y.confidence - x.confidence)[0];
     body = (
       <>

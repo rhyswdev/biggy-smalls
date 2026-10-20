@@ -66,6 +66,8 @@ def test_a_writer_replaces_the_prose_and_keeps_code_s_contacts(make):
     client = make(overview="scripted")
     number, body = imported(client)
     assert body["written_by"] == "scripted" and "(scripted)" in body["whats_going_on"] and body["timeline"]
+    chat_id = client.get("/incidents").json()[0]["chat_id"]
+    assert [e["data"]["number"] for e in client.get(f"/chats/{chat_id}").json()["events"] if e["type"] == "overview"] == [number]
     code = ov.view(client.app.state.service.reader().overview_inputs(number), ov.Written(), "code")
     assert body["contacts"] == code["contacts"]
 

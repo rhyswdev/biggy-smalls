@@ -107,6 +107,7 @@ export interface ChatState {
   now: string | null;
   attended: boolean | null;
   outcomes: Record<string, string>;     // call id -> the summariser's clause for "How Smalls got here" (v4 plan 5.1)
+  overviewSeq: number | null;           // the latest "overview written" event: the overview page redraws on it
   outcomeSummary: string | null;        // the summariser's headline of what the checks established; the latest wins
 }
 
@@ -114,7 +115,7 @@ export function initial(): ChatState {
   return {
     lastSeq: 0, status: "idle", phase: null, runs: [], startedAt: null, lastAt: null, heartbeat: null, rows: {}, turns: [], board: {},
     pending: null, report: null, reportStatus: null, draftSeq: null, verifier: null, answers: [], followups: [], finished: null, modelCost: 0,
-    autoApprove: null, trigger: null, now: null, attended: null, outcomes: {}, outcomeSummary: null,
+    autoApprove: null, trigger: null, now: null, attended: null, outcomes: {}, overviewSeq: null, outcomeSummary: null,
   };
 }
 
@@ -337,6 +338,9 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
       if (!same) state.turns.push({ kind: "report", key: `${run}:report:${ev.seq}`, run_id: run, status, report, seq: ev.seq });
       break;
     }
+    case "overview":
+      state.overviewSeq = ev.seq;
+      break;
     case "outcomes":
       state.outcomes = { ...state.outcomes, ...((d.clauses as Record<string, string> | undefined) ?? {}) };
       if (typeof d.summary === "string" && d.summary.trim()) state.outcomeSummary = d.summary.trim();

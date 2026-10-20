@@ -84,7 +84,8 @@ function IncidentSteps({ incident, here }: { incident: ImportedIncident; here: H
       </div>
       <ol className="sb-items">
         <li><Link className="sb-it" href="/" aria-current={at("overview")}><span className="sb-it-t">Overview</span></Link></li>
-        <li><Link className="sb-it" href={`/chats/${incident.chat_id}`} aria-current={at("diagnosis")}><span className="sb-it-t">Diagnosis</span></Link></li>
+        <li><Link className="sb-it" href={`/chats/${incident.chat_id}`} aria-current={at("diagnosis")}><span className="sb-it-t">Diagnosis</span>
+          {incident.status === "running" ? <span className="sb-lock"><span className="v-spin" aria-hidden="true" />running</span> : incident.status === "waiting" ? <span className="sb-lock">waiting on you</span> : null}</Link></li>
         {resolved ? (
           <>
             <li><Link className="sb-it" href={`/chats/${incident.chat_id}/resolution`} aria-current={at("resolution")}><span className="sb-it-t">Resolution</span></Link></li>

@@ -887,3 +887,12 @@
 .v-res .sec-btn:focus-visible,.v-res .lens button:focus-visible,.v-res a:focus-visible,.v-res textarea:focus-visible,.v-res input:focus-visible{outline:2px solid transparent;box-shadow:var(--focus-ring)}
 .v-res .mi{font-size:11px;line-height:18px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:0 6px;border-radius:2px;border:1px solid var(--danger);color:var(--danger);white-space:nowrap}
 .v-shell .p-fake{display:inline-flex;align-items:center;gap:4px;min-height:24px;font-weight:500;color:var(--ink-muted);cursor:not-allowed}
+/* the switch: knob centred in its track, and the label's line as tall as the track so they share a middle */
+.sm-toggle{line-height:16px}
+.sm-toggle-track{box-sizing:border-box}
+.sm-toggle-track::after{top:50%;transform:translateY(-50%)}
+/* a small spinner beside anything that is still running */
+.v-spin{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:v-spin .8s linear infinite;box-sizing:border-box}
+@keyframes v-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.v-spin{animation-duration:2.4s}}
+.sm-tag .v-spin{margin-right:4px}
