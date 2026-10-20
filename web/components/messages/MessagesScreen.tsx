@@ -2,22 +2,26 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import { Button, Notice } from "@/components/ds";
+import { IncidentHeader } from "@/components/shell/IncidentHeader";
+import { StatusBanner } from "@/components/shell/StatusBanner";
 import { EvidenceDrawer } from "@/components/evidence/Drawer";
 import { draftMessages, editMessage, markCopied } from "@/lib/actions/messages";
-import type { KbHit, MessageRow, MessagesView } from "@/lib/types";
+import type { IncidentSummary, KbHit, MessageRow, MessagesView, TicketView } from "@/lib/types";
 import { AUDIENCE_KEYS, audiences, check, draftedBy, specs, wordCount, type AudienceKey } from "@/lib/writeup/messages";
 import { render, type WriteupData } from "@/lib/writeup/render";
-import { Checks, score } from "./Checks";
+import { Checks } from "./Checks";
 import { KbView } from "./KbView";
 
 type Pick = AudienceKey | "kb";
 const SAVE_AFTER_MS = 600;
 
-/** The stakeholder messages (section 4, Messages): four audiences, each draft checked as it is edited and copied
- * into its channel, and the knowledge-base entry beside them, which is not sent. "Copied" belongs to the exact
- * text copied, so any edit clears it. */
-export function MessagesScreen({ chatId, data, view, hits, incidentHandle, children }: {
-  chatId: string; data: WriteupData; view: MessagesView; hits: KbHit[]; incidentHandle: string | null; children?: React.ReactNode;
+export interface CommsHead { incident: IncidentSummary | null; ticket: TicketView | null; meta: string; title: string }
+
+/** The communications (MessagesV4): an audience per tab, each draft checked as it is edited, with only what fails
+ * shown, and copied into its channel from the bottom of its card; the knowledge article is the last tab and is
+ * not sent. "Copied" belongs to the exact text copied, so any edit clears it. */
+export function MessagesScreen({ chatId, data, view, hits, incidentHandle, head }: {
+  chatId: string; data: WriteupData; view: MessagesView; hits: KbHit[]; incidentHandle: string | null; head: CommsHead;
 }) {
   const auds = useMemo(() => audiences(data.report), [data.report]);
   const [rows, setRows] = useState<Partial<Record<AudienceKey, MessageRow>>>(() => Object.fromEntries(view.messages.map((m) => [m.audience, m])));
@@ -27,6 +31,7 @@ export function MessagesScreen({ chatId, data, view, hits, incidentHandle, child
   const [drafting, setDrafting] = useState<AudienceKey[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<string | null>(null);
+  const [allChecks, setAllChecks] = useState(false);
   const [, start] = useTransition();
   const timers = useRef<Partial<Record<AudienceKey, ReturnType<typeof setTimeout>>>>({});
   const w = useMemo(() => (data.writeup && data.resolution ? render(data, new Set(data.writeup.kept), data.resolution.note) : null), [data]);
@@ -77,22 +82,25 @@ export function MessagesScreen({ chatId, data, view, hits, incidentHandle, child
     if (!r.ok) setError(r.error ?? "Copied, but the mark was not kept.");
   }
 
+  const all = copiedN === AUDIENCE_KEYS.length;
+  const banner = (
+    <StatusBanner tone={all ? "ok" : "neutral"} glyph={all ? "✓" : "›"} title={`${all ? `All ${AUDIENCE_KEYS.length}` : `${copiedN} of ${AUDIENCE_KEYS.length}`} messages copied.`}
+      text={all ? `Each is in its channel. The knowledge article is ${view.entry ? "already saved" : "not saved yet"}.` : "Pick an audience, check the draft is right, then copy it into its channel."}>
+      <div className="prog-bar" aria-hidden="true">{AUDIENCE_KEYS.map((k) => <span key={k} className={isCopied(k) ? "on" : ""} />)}</div>
+    </StatusBanner>
+  );
+  const bad = results.filter((c) => c.state === "bad");
+  const shown = allChecks ? results : results.filter((c) => c.state !== "ok");
   return (
-    <div className="v-msg" style={{ minHeight: "100vh", background: "var(--surface)" }}>
-      {children}
-      <main style={{ maxWidth: 1160, margin: "0 auto", padding: "24px 24px 80px", display: "flex", flexDirection: "column", gap: 20, boxSizing: "border-box" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: "12px 24px" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: "1 1 320px" }}>
-            <span className="label">Messages</span>
-            <h1 className="title" style={{ margin: 0 }}>Stakeholder messages</h1>
-            <span style={{ fontSize: 13, lineHeight: "18px", color: "var(--ink-muted)" }}>
-              Drafted from the {data.writeup?.saved_at ? "saved write-up" : "report and your resolution"}. Edit, check against each audience’s rules, then copy into its channel.
-            </span>
-          </div>
-          <div className="prog" role="status" aria-label={`${copiedN} of ${AUDIENCE_KEYS.length} copied`}>
-            <span className="prog-n" aria-hidden="true">{copiedN} of {AUDIENCE_KEYS.length} copied</span>
-            <div className="prog-bar" aria-hidden="true">{AUDIENCE_KEYS.map((k) => <span key={k} className={isCopied(k) ? "on" : ""} />)}</div>
-          </div>
+    <div className="v-comms">
+      {head.incident ? <IncidentHeader incident={head.incident} ticket={head.ticket} resolved banner={banner} meta={head.meta} /> : (
+        <header className="top"><div className="top-in"><div className="inc"><span className="inc-title">{head.title}</span><span className="inc-meta">{head.meta}</span></div></div>{banner}</header>
+      )}
+      <main className="main">
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span className="label">Messages</span>
+          <h1 className="title" style={{ margin: 0 }}>Major incident communications</h1>
+          <span className="small muted">Resolution updates drafted from the resolution record, one per audience, checked against each audience’s rules.</span>
         </div>
         {error ? <Notice tone="error">{error}</Notice> : null}
         {missing.length ? (
@@ -106,62 +114,67 @@ export function MessagesScreen({ chatId, data, view, hits, incidentHandle, child
             </Button>
           </div>
         ) : null}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "flex-start" }}>
-          <nav aria-label="Audiences" className="card auds">
-            <div className="label" style={{ padding: "10px 14px" }}>Send to</div>
-            {auds.map((a) => {
-              const r = rows[a.key];
-              const t = texts[a.key] ?? "";
-              const s = r ? score(check(a, t)) : null;
-              const state = !r ? ["Not drafted", "st-none"] : isCopied(a.key) ? ["✓ Copied", "st-copied"] : t !== r.draft ? ["Edited", "st-edited"] : ["Draft", "st-draft"];
-              return (
-                <button key={a.key} type="button" className="aud" aria-pressed={pick === a.key} onClick={() => setPick(a.key)}>
-                  <span className="aud-top"><span className="aud-name">{a.name}</span><span className={`st ${state[1]}`}>{drafting.includes(a.key) ? "Drafting…" : state[0]}</span></span>
-                  <span className="aud-meta"><span className="time" style={{ fontWeight: 400 }}>{a.channel}</span>{s ? <span className={s.bad ? "ck-bad" : "ck-ok"}>{s.text}</span> : null}</span>
-                </button>
-              );
-            })}
-            <div className="label" style={{ padding: "14px 14px 8px", borderTop: "1px solid var(--line)" }}>Not sent</div>
-            <button type="button" className="aud" aria-pressed={pick === "kb"} onClick={() => setPick("kb")}>
-              <span className="aud-top"><span className="aud-name">Knowledge base entry</span><span className={`st ${view.entry ? "st-copied" : "st-none"}`}>{view.entry ? "Saved" : "Not saved"}</span></span>
-              <span className="aud-meta">Searchable with past incidents</span>
-            </button>
-          </nav>
+        <nav aria-label="Audiences" className="tabs">
+          {auds.map((a) => {
+            const r = rows[a.key];
+            const t = texts[a.key] ?? "";
+            const res = r ? check(a, t) : [];
+            const fails = res.filter((c) => c.state === "bad").length;
+            const state = drafting.includes(a.key) ? ["Drafting…", "st-draft"] : !r ? ["Not drafted", "st-draft"] : isCopied(a.key) ? ["✓ Copied", "st-copied"] : t !== r.draft ? ["Edited", "st-edited"] : ["Draft", "st-draft"];
+            return (
+              <button key={a.key} type="button" className="tab" aria-pressed={pick === a.key} onClick={() => setPick(a.key)}>
+                <span className="tab-name">{a.name}</span>
+                <span className="tab-meta"><span className={state[1]}>{state[0]}</span>{r ? <span className={fails ? "ck-bad" : "muted"}>{fails ? ` · ${fails} to fix` : " · checks pass"}</span> : null}</span>
+              </button>
+            );
+          })}
+          <button type="button" className="tab" aria-pressed={pick === "kb"} onClick={() => setPick("kb")}>
+            <span className="tab-name">Knowledge article</span>
+            <span className="tab-meta">{view.entry ? <span className="st-saved">✓ Saved</span> : <span className="st-draft">Not saved</span>}<span className="muted"> · not sent</span></span>
+          </button>
+        </nav>
 
-          {cur ? (
-            <section aria-label="Message editor" className="card msg">
-              <div className="msg-head">
-                <div className="msg-id">
-                  <div className="msg-line"><label htmlFor={`msg-${cur.key}`} className="heading">{cur.name}</label><span className="time muted" style={{ fontWeight: 400 }}>{cur.channel}</span></div>
-                  <span className="small muted">{cur.guide}</span>
-                  {row ? <span className="small muted">{draftedBy(row.drafted_by)}.</span> : null}
+        {cur ? (
+          <section aria-label="Message editor" className="card msg">
+            <div className="msg-head">
+              <label htmlFor={`msg-${cur.key}`} className="heading">{cur.name}</label>
+              <span className="time muted" style={{ fontWeight: 400 }}>{cur.channel}</span>
+              {row ? <span style={{ marginLeft: "auto" }}><Button variant="quiet" size="sm" disabled={drafting.length > 0} onClick={() => draft([cur.key])}>{drafting.includes(cur.key) ? "Drafting…" : "Redraft"}</Button></span> : null}
+              <span className="small muted" style={{ flex: "1 1 100%" }}>{cur.guide}{row ? ` ${draftedBy(row.drafted_by)}.` : ""}</span>
+            </div>
+            {row?.why_code ? <div style={{ padding: "12px 16px 0" }}><Notice tone="clamped">{row.why_code}</Notice></div> : null}
+            {row ? (
+              <>
+                <div className="msg-edit">
+                  <textarea id={`msg-${cur.key}`} className="sm-input" rows={6} style={{ fontSize: 15, lineHeight: "23px", padding: "10px 12px" }}
+                    value={text} onChange={(e) => edit(cur.key, e.target.value)} />
                 </div>
-                {row ? (
-                  <>
-                    <Button variant="quiet" size="sm" disabled={drafting.length > 0} onClick={() => draft([cur.key])}>{drafting.includes(cur.key) ? "Drafting…" : "Redraft"}</Button>
-                    <Button variant="quiet" size="sm" disabled={text === row.draft} onClick={() => edit(cur.key, row.draft)}>Restore draft</Button>
-                    <span aria-live="polite"><Button variant="primary" onClick={() => copy(cur.key)}>{isCopied(cur.key) ? "Copied" : "Copy message"}</Button></span>
-                  </>
-                ) : (
-                  <Button variant="primary" disabled={drafting.length > 0} onClick={() => draft([cur.key])}>{drafting.includes(cur.key) ? "Drafting…" : "Draft this message"}</Button>
-                )}
-              </div>
-              {row?.why_code ? <div style={{ padding: "12px 16px 0" }}><Notice tone="clamped">{row.why_code}</Notice></div> : null}
-              {row ? (
-                <div className="msg-body">
-                  <div className="msg-edit">
-                    <textarea id={`msg-${cur.key}`} className="sm-input" rows={8} style={{ fontSize: 15, lineHeight: "23px", padding: "10px 12px" }}
-                      value={text} onChange={(e) => edit(cur.key, e.target.value)} />
-                    <span className="time muted" style={{ fontWeight: 400 }}>{wordCount(text)} words · plain text, pastes exactly as written</span>
+                <div className="checks" aria-live="polite">
+                  <div className="checks-line">
+                    <span className={bad.length ? "ck-bad" : "muted"}>{bad.length ? `! ${bad.length} ${bad.length === 1 ? "check" : "checks"} to fix before copying` : `✓ All ${results.length} checks pass for this audience`}</span>
+                    <span className="grow" />
+                    <button type="button" className="disc" aria-expanded={allChecks} onClick={() => setAllChecks(!allChecks)}>
+                      <span className="chev" aria-hidden="true">›</span>{allChecks ? (bad.length ? "Show only what to fix" : "Hide checks") : `Show all ${results.length} checks`}
+                    </button>
                   </div>
-                  <Checks results={results} />
+                  <Checks results={shown} />
                 </div>
-              ) : <p className="small muted" style={{ margin: 0, padding: "14px 16px" }}>Not drafted yet.</p>}
-            </section>
-          ) : (
-            <KbView chatId={chatId} data={data} entry={view.entry} w={w} hits={hits} incidentHandle={incidentHandle} onOpen={setDrawer} />
-          )}
-        </div>
+                <div className="msg-foot">
+                  <span className="time muted" style={{ fontWeight: 400, flex: "1 1 200px" }}>{wordCount(text)} words · plain text, pastes exactly as written</span>
+                  <Button variant="quiet" disabled={text === row.draft} onClick={() => edit(cur.key, row.draft)}>Restore draft</Button>
+                  <span aria-live="polite"><Button variant="primary" onClick={() => copy(cur.key)}>{isCopied(cur.key) ? "Copied" : "Copy message"}</Button></span>
+                </div>
+              </>
+            ) : (
+              <div className="msg-foot">
+                <span className="small muted" style={{ flex: "1 1 200px" }}>Not drafted yet.</span>
+                <Button variant="primary" disabled={drafting.length > 0} onClick={() => draft([cur.key])}>{drafting.includes(cur.key) ? "Drafting…" : "Draft this message"}</Button>
+              </div>
+            )}
+          </section>
+        ) : (
+          <div className="v-msg"><KbView chatId={chatId} data={data} entry={view.entry} w={w} hits={hits} incidentHandle={incidentHandle} onOpen={setDrawer} /></div>
+        )}
       </main>
       {drawer ? <EvidenceDrawer key={drawer} chatId={chatId} handle={drawer} onClose={() => setDrawer(null)} /> : null}
     </div>

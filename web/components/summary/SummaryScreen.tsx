@@ -174,7 +174,7 @@ export function SummaryScreen({ chatId, data, head }: { chatId: string; data: Wr
               <Button variant="primary" disabled={drafting} onClick={() => { setDrafting(true); setError(null); start(async () => {
                 // Drafts only the audiences not drafted yet, so coming back here never replaces an edited message.
                 const r = await draftMessages(chatId, specs(data.report, data.resolution), true);
-                if (r.ok) router.push(`/chats/${chatId}/messages`); else { setError(r.error ?? "The communications were not drafted."); setDrafting(false); }
+                if (r.ok) router.push(`/chats/${chatId}/communications`); else { setError(r.error ?? "The communications were not drafted."); setDrafting(false); }
               }); }}>{drafting ? "Drafting the communications…" : "Draft communications →"}</Button>
             </>
           ) : (

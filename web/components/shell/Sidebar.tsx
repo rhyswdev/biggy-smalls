@@ -89,7 +89,7 @@ function IncidentSteps({ incident, here }: { incident: ImportedIncident; here: H
         {resolved ? (
           <>
             <li><Link className="sb-it" href={`/chats/${incident.chat_id}/resolution`} aria-current={at("resolution")}><span className="sb-it-t">Resolution</span></Link></li>
-            <li><Link className="sb-it" href={`/chats/${incident.chat_id}/messages`} aria-current={at("communications")}><span className="sb-it-t">Communications</span></Link></li>
+            <li><Link className="sb-it" href={`/chats/${incident.chat_id}/communications`} aria-current={at("communications")}><span className="sb-it-t">Communications</span></Link></li>
           </>
         ) : (
           <>

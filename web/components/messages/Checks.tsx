@@ -3,23 +3,17 @@ import type { CheckResult } from "@/lib/writeup/messages";
 const GLYPH = { ok: "✓", bad: "!", open: "?" } as const;
 const SPOKEN = { ok: "passes", bad: "fails", open: "check by hand" } as const;
 
-/** A draft's checks, failing first (section 4, Messages). Announced as they change, since they follow each keystroke. */
+/** A draft's checks, as given (failing first); the card around them announces changes, since they follow each keystroke. */
 export function Checks({ results }: { results: CheckResult[] }) {
-  const ok = results.filter((c) => c.state === "ok").length;
-  const bad = results.some((c) => c.state === "bad");
   return (
-    <div className="checks" aria-live="polite">
-      <div className="checks-head">
-        <span className="label">Checks</span><span className="grow" />
-        <span className={`time ${bad ? "ck-bad" : "muted"}`}>{ok} of {results.length} pass</span>
-      </div>
+    <>
       {results.map((c) => (
         <div key={c.id} className={`chk ${c.state}`}>
           <span className="chk-g" aria-hidden="true">{GLYPH[c.state]}</span>
           <span className="chk-t">{c.label}<span className="sm-visually-hidden">: {SPOKEN[c.state]}</span></span>
         </div>
       ))}
-    </div>
+    </>
   );
 }
 

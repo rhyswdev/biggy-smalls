@@ -50,16 +50,16 @@ test("from the dashboard to copied messages, with the keyboard alone", async ({ 
   await expect(page.locator(".actbar strong", { hasText: "Saved as a knowledge article" })).toBeVisible();
   await tabTo(page, page.getByRole("button", { name: "Draft communications →" }));
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/messages$/);
+  await expect(page).toHaveURL(/\/communications$/);
 
   await tabTo(page, page.getByRole("button", { name: "Copy message", exact: true }));
   await page.keyboard.press("Enter");
-  await expect(page.getByText("1 of 4 copied")).toBeVisible();
+  await expect(page.getByText("1 of 4 messages copied")).toBeVisible();
   await tabTo(page, page.getByRole("button", { name: /^Status page/ }));
   await page.keyboard.press("Space");
   await expect(page.getByRole("textbox", { name: "Status page" })).toBeVisible();
   await tabTo(page, page.getByRole("button", { name: "Copy message", exact: true }));
   await page.keyboard.press("Enter");
-  await expect(page.getByText("2 of 4 copied")).toBeVisible();
+  await expect(page.getByText("2 of 4 messages copied")).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await page.getByRole("textbox", { name: "Status page" }).inputValue());
 });

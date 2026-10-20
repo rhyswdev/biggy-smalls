@@ -61,10 +61,10 @@ for (const theme of ["light", "dark"] as const) {
     await visit(`/chats/${resolved}/resolution`, "summary", async (p) => { await expect(p.getByRole("button", { name: "Save as knowledge article" })).toBeVisible(); });
     await page.getByRole("button", { name: "Save as knowledge article" }).click();
     await page.getByRole("button", { name: "Draft communications →" }).click();
-    await expect(page).toHaveURL(/\/messages$/);
-    await expect(page.getByRole("textbox", { name: "Executives" })).toBeVisible();
+    await expect(page).toHaveURL(/\/communications$/);
+    await expect(page.getByRole("textbox", { name: "Senior stakeholders" })).toBeVisible();
     await scan("messages");
-    await page.getByRole("button", { name: /Knowledge base entry/ }).click();
+    await page.getByRole("button", { name: /Knowledge article/ }).click();
     await expect(page.getByRole("article", { name: "The knowledge base entry" })).toBeVisible();
     await scan("knowledge base entry");
     await visit("/chats/no-such-chat", "not found", async (p) => { await expect(p.locator("main")).toBeVisible(); });

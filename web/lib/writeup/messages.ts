@@ -90,7 +90,7 @@ function rules(report: Report | null) {
     next: { id: "next", label: "Says when the next update is (“next update HH:MM UTC”)", test: (t: string) => /next update\b[^.!?\n]{0,40}?\b\d{1,2}:\d{2}/i.test(t) },
     owner: f.owners.length
       ? { id: "owner", label: `Names who is on it: ${f.owners.join(" or ")}`, test: (t: string) => f.owners.some((o) => mentions(t, o)) }
-      : { id: "owner", label: "Names who is on it (the report names no owner)", test: () => null },
+      : { id: "owner", label: "Names who is on it (the report names no assignment group)", test: () => null },
     plain: { id: "plain", label: "Plain text: no markdown", test: (t: string) => !MARKDOWN.test(t) },
     handles: { id: "handles", label: "No evidence handles", test: (t: string) => !(t.match(HANDLE)?.length) && !f.handles.some((h) => t.includes(h)) },
     internal: f.internal.length
@@ -108,13 +108,13 @@ export function audiences(report: Report | null): Audience[] {
   const r = rules(report);
   const avoid = r.avoid ? [r.avoid] : [];
   return [
-    { key: "exec", name: "Executives", channel: "Leadership channel", guide: "Impact, the cause in one clause, the owner, the next update.", words: 60,
+    { key: "exec", name: "Senior stakeholders", channel: "Leadership channel", guide: "Impact, the cause in one clause, the assignment group, the next update.", words: 60,
       rules: [r.impact, r.owner, r.utc, r.next, r.words(60), r.plain, r.handles] },
-    { key: "support", name: "Support team", channel: "Support macro", guide: "What customers see, the window, where to route them.", words: 80,
+    { key: "support", name: "Service Desk", channel: "Service Desk macro", guide: "What customers see, the window, where to route them.", words: 80,
       rules: [r.impact, r.utc, r.route, r.internal, r.words(80), r.plain, r.handles] },
     { key: "status", name: "Status page", channel: "Public status page", guide: "No cause, no vendor, no system names; a time and the next update.", words: 60,
       rules: [r.impact, r.utc, r.next, r.internal, r.words(60), r.plain, r.handles] },
-    { key: "eng", name: "Engineering", channel: "Incident channel", guide: "Mechanism, versions, owner, what not to touch.", words: 150,
+    { key: "eng", name: "Resolver groups", channel: "Incident channel", guide: "Mechanism, versions, assignment group, what not to touch.", words: 150,
       rules: [r.utc, r.owner, ...avoid, r.words(150), r.handles] },
   ];
 }
@@ -154,7 +154,7 @@ export function codeDraft(audience: Audience, report: Report | null, resolution:
   switch (audience.key) {
     case "exec":
       return fit([{ text: impact }, { text: where }, { text: cause ? `Cause: ${cause}` : "", optional: true },
-        { text: owner ? `${owner} owns the follow-up.` : "" }, { text: next }], audience.words);
+        { text: owner ? `${owner} is handling the follow-up.` : "" }, { text: next }], audience.words);
     case "support": {
       const window = f.started ? (resolution ? `between ${f.started} and ${resolution.resolved_at} UTC` : `since ${f.started} UTC`) : "";
       return fit([{ text: impact && window ? `${impact.replace(/\.$/, "")}, ${window}.` : impact }, { text: resolution ? "It is resolved." : where },
@@ -163,7 +163,7 @@ export function codeDraft(audience: Audience, report: Report | null, resolution:
     case "status":
       return fit([{ text: impact }, { text: where }, { text: next }], audience.words);      // public: no cause, no next steps
     case "eng":
-      return fit([{ text: own ? `Resolved another way: ${cause}` : cause }, { text: where }, { text: owner ? `Owner: ${owner}.` : "" },
+      return fit([{ text: own ? `Resolved another way: ${cause}` : cause }, { text: where }, { text: owner ? `Assignment group: ${owner}.` : "" },
         { text: first ? `Next: ${plain(first.action)}` : "", optional: true },
         { text: f.doNot ? `Do not: ${plain(f.doNot.action).replace(/^do not\s+/i, "")} ${plain(f.doNot.why)}` : "" },
         { text: report?.open_questions.length ? `Open: ${report.open_questions.map(plain).join(" ")}` : "", optional: true }, { text: next }], audience.words);
