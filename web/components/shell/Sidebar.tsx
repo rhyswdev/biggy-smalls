@@ -73,7 +73,7 @@ export function Sidebar({ incidents, chats, kb, open, here, theme }: {
 function IncidentSteps({ incident, here }: { incident: ImportedIncident; here: Here }) {
   const resolved = incident.status === "resolved";
   const at = (s: Step) => (here.step === s && (s === "overview" || here.chatId === incident.chat_id) ? "page" : undefined);
-  const label = resolved ? "Resolved today" : incident.major ? "Open major incident" : "Open incident";
+  const label = resolved ? "Today" : incident.major ? "Open major incident" : "Open incident";
   const meta = resolved && incident.resolution ? `${incident.number} · resolved ${incident.resolution.resolved_at} UTC` : `${incident.number} · impact since ${clock(incident.opened)} UTC`;
   return (
     <div className="sb-sec">
