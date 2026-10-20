@@ -160,6 +160,14 @@ describe("v4: outcomes and the agent's words on screen", () => {
     expect(s.outcomes).toEqual({ a: "found x", b: "found y" });
   });
 
+  it("folds the summariser's headline, the latest winning and an event without one keeping it", () => {
+    const base = fold(fixture("headless"));
+    expect(base.outcomeSummary).toBeNull();
+    const ev = (seq: number, data: Record<string, unknown>) => ({ seq, run_id: "r", agent_seq: 0, type: "outcomes", data: { clauses: {}, by: "p", ...data }, t_wall: "" });
+    const s = fold([ev(base.lastSeq + 1, { summary: "Smalls found x." }), ev(base.lastSeq + 2, { summary: "Smalls found y and ruled out z." }), ev(base.lastSeq + 3, {})], base);
+    expect(s.outcomeSummary).toBe("Smalls found y and ruled out z.");
+  });
+
   it("maps the agent's own words where they reach the screen", () => {
     expect(plainWords("the incident commander stopped the run after 3 reads; Read-only")).toBe("the Major Incident Manager stopped the run after 3 checks; Read-only");
   });

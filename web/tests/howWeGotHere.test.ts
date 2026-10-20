@@ -24,6 +24,23 @@ describe("How Smalls got here", () => {
     expect(line(checks)).toBe("5 checks · 3 run, 1 rejected, 1 skipped");
   });
 
+  it("more than three checks: keeps three, ruled-out first, then summarised, in run order, and counts the rest", () => {
+    const checks = [c("1", "ran", "listed a"), c("2", "ran", "opened b", { outcome: "found y" }), c("3", "ran", "searched c"),
+      c("4", "ran", "charted d", { ruledOut: "the disk" }), c("5", "skipped", "looked in e"), c("6", "ran", "opened f", { outcome: "saw z" }),
+      c("7", "ran", "listed g")];
+    expect(sentence(checks)).toBe("Smalls found y, ruled out the disk, saw z and ran 3 other checks.");
+    const two = [c("1", "ran", "listed a", { ruledOut: "x" }), c("2", "ran", "opened b"), c("3", "ran", "searched c"), c("4", "ran", "charted d")];
+    expect(sentence(two)).toBe("Smalls ruled out x, opened b, searched c and ran 1 other check.");
+    const many = Array.from({ length: 29 }, (_, i) => c(String(i), "ran", `did ${i}`));
+    expect(sentence(many)).toBe("Smalls did 0, did 1, did 2 and ran 26 other checks.");
+    expect(line(many)).toBe("29 checks · 29 run");
+  });
+
+  it("three checks or fewer are unchanged", () => {
+    expect(sentence([c("1", "ran", "listed a"), c("2", "ran", "opened b", { ruledOut: "x" }), c("3", "ran", "searched c")]))
+      .toBe("Smalls listed a, ruled out x and searched c.");
+  });
+
   it("singular and plural notes", () => {
     expect(note([c("1", "skipped", "a")])).toBe("You skipped 1 check. The summary will list what wasn’t checked.");
     expect(note([c("1", "skipped", "a"), c("2", "skipped", "b")])).toBe("You skipped 2 checks. The summary will list what wasn’t checked.");

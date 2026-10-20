@@ -477,7 +477,7 @@ class Service:
 
     def outcomes(self, chat_id: str, run_id: str) -> dict[str, str]:
         """One clause per check that has none yet, from the summariser (5.1), stored and sent to the browser as one
-        `outcomes` event. Without a summariser, or when it fails, nothing is sent and the web app writes each
+        `outcomes` event, with the summariser's headline of what those checks established when it gave a valid one. Without a summariser, or when it fails, nothing is sent and the web app writes each
         clause from code. Called on the run's worker after the run settles, so it never holds up the run."""
         if self.summariser is None:
             return {}
@@ -495,7 +495,8 @@ class Service:
                              [(chat_id, run_id, cid, text, self.summariser.profile, at) for cid, text in clauses.items()])
             seq = conn.execute("SELECT coalesce(max(seq), 0) + 1 FROM event WHERE chat_id = ?", (chat_id,)).fetchone()[0]
             conn.execute("INSERT INTO event (chat_id, seq, run_id, agent_seq, type, data, t_wall) VALUES (?, ?, ?, 0, 'outcomes', ?, ?)",
-                         (chat_id, seq, run_id, dumps({"clauses": clauses, "by": self.summariser.profile, "cost_usd": got.get("cost_usd")}), at))
+                         (chat_id, seq, run_id, dumps({"clauses": clauses, **({"summary": got["summary"]} if got.get("summary") else {}),
+                                                       "by": self.summariser.profile, "cost_usd": got.get("cost_usd")}), at))
         self.notify(chat_id)
         return clauses
 

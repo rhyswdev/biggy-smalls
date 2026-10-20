@@ -34,6 +34,34 @@ def test_a_clause_is_one_short_plain_clause(clause, ok):
     assert outcomes.valid(clause) is ok
 
 
+@pytest.mark.parametrize("summary, ok", [
+    ("Smalls found the job failing on every retry and ruled out the disk filling up.", True),
+    ("Smalls found the error in the job logs. It ruled out a network fault.", True),
+    (" ".join(["word"] * 40), True),
+    (" ".join(["word"] * 41), False),
+    ("Smalls found a. Then b. Then c.", False),
+    ("Smalls found **three** errors.", False),
+    ("Smalls found it in log:host-1/0123abcd.", False),
+    ("Smalls found it\nand more", False),
+    ("", False),
+    (None, False),
+    (["Smalls found x"], False),
+])
+def test_a_summary_is_at_most_two_short_plain_sentences(summary, ok):
+    assert outcomes.valid_summary(summary) is ok
+
+
+def scripted(answer):
+    """A scripted summariser that answers `answer(ids)` for the ids it is given."""
+    def script(messages, tools):
+        from langchain_core.messages import HumanMessage
+        import re
+        text = str(next(m.content for m in reversed(messages) if isinstance(m, HumanMessage)))
+        ids = [c["id"] for c in json.loads(re.search(r"```json\n(.*?)\n```", text, re.S).group(1))]
+        return "", [], {"text": json.dumps(answer(ids))}
+    return script
+
+
 def start(client, **body) -> str:
     chat_id = client.post("/chats", json={"origin": "headless", "trigger": fx.TRIGGER, **body}).json()["id"]
     client.app.state.service.wait(chat_id)
@@ -60,6 +88,7 @@ def test_the_summariser_writes_one_clause_per_agent_check_once(summarised):
     [sent] = [e for e in events if e["type"] == "outcomes"]
     assert sent["data"]["by"] == "scripted" and sorted(sent["data"]["clauses"]) == sorted(reads)
     assert all(outcomes.valid(c) for c in sent["data"]["clauses"].values())
+    assert outcomes.valid_summary(sent["data"]["summary"]) and sent["data"]["summary"].startswith("Smalls")
     stored = service.db.rows("SELECT call_id FROM check_outcome WHERE chat_id = ?", (chat_id,))
     assert sorted(r["call_id"] for r in stored) == sorted(reads)
     summarised.post(f"/chats/{chat_id}/notes", json={"text": "Anything else?"})          # a follow-up that runs no new check
@@ -86,6 +115,23 @@ def test_a_clause_that_fails_is_dropped_and_none_valid_sends_nothing(settings):
     with TestClient(create_app(replace(settings, outcomes="scripted", outcomes_script=bad))) as c:
         chat_id = start(c)
         assert [e for e in c.get(f"/chats/{chat_id}").json()["events"] if e["type"] == "outcomes"] == []
+
+
+def test_the_old_flat_answer_is_still_accepted_with_no_summary(settings):
+    script = scripted(lambda ids: {i: "found the job's exit code" for i in ids})
+    with TestClient(create_app(replace(settings, outcomes="scripted", outcomes_script=script))) as c:
+        chat_id = start(c)
+        [sent] = [e for e in c.get(f"/chats/{chat_id}").json()["events"] if e["type"] == "outcomes"]
+        assert sent["data"]["clauses"] and set(sent["data"]["clauses"].values()) == {"found the job's exit code"}
+        assert "summary" not in sent["data"]
+
+
+def test_an_invalid_summary_is_dropped_and_the_clauses_still_sent(settings):
+    script = scripted(lambda ids: {"summary": "Smalls found **it** in log:host-1/0123abcd.", "checks": {i: "found nothing new" for i in ids}})
+    with TestClient(create_app(replace(settings, outcomes="scripted", outcomes_script=script))) as c:
+        chat_id = start(c)
+        [sent] = [e for e in c.get(f"/chats/{chat_id}").json()["events"] if e["type"] == "outcomes"]
+        assert sent["data"]["clauses"] and "summary" not in sent["data"]
 
 
 def test_the_concluded_dev_script_reaches_a_probable_cause(settings, monkeypatch):

@@ -9,7 +9,8 @@ one hypothesis is leading at 0.75 and its report recommends one generic action, 
 probable-cause banner and the resolve flow can be developed and tested without a key. It still knows nothing
 about the data.
 
-`outcomes` is the scripted summariser's script (5.1): one generic clause per check, marked as scripted.
+`outcomes` is the scripted summariser's script (5.1): a generic summary and one generic clause per check, marked
+as scripted.
 
 `draft` is the scripted drafter's script (U8): it writes a message from the packet's suggested stakeholder
 update and the resolution, the same for every audience but for its name.
@@ -112,7 +113,8 @@ def outcomes(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[
     found = re.search(r"```json\n(.*?)\n```", text, re.S)
     items = json.loads(found.group(1)) if found else []
     clauses = {c["id"]: f"looked at what {str(c.get('tool', 'the tool')).replace('_', ' ')} returned (scripted)" for c in items}
-    return "One clause per check.", [], {"text": json.dumps(clauses)}
+    summary = f"Smalls ran {len(items)} {'check' if len(items) == 1 else 'checks'} and compared what each returned (scripted)."
+    return "A summary and one clause per check.", [], {"text": json.dumps({"summary": summary, "checks": clauses})}
 
 
 def overview(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:

@@ -107,13 +107,14 @@ export interface ChatState {
   now: string | null;
   attended: boolean | null;
   outcomes: Record<string, string>;     // call id -> the summariser's clause for "How Smalls got here" (v4 plan 5.1)
+  outcomeSummary: string | null;        // the summariser's headline of what the checks established; the latest wins
 }
 
 export function initial(): ChatState {
   return {
     lastSeq: 0, status: "idle", phase: null, runs: [], startedAt: null, lastAt: null, heartbeat: null, rows: {}, turns: [], board: {},
     pending: null, report: null, reportStatus: null, draftSeq: null, verifier: null, answers: [], followups: [], finished: null, modelCost: 0,
-    autoApprove: null, trigger: null, now: null, attended: null, outcomes: {},
+    autoApprove: null, trigger: null, now: null, attended: null, outcomes: {}, outcomeSummary: null,
   };
 }
 
@@ -338,6 +339,7 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
     }
     case "outcomes":
       state.outcomes = { ...state.outcomes, ...((d.clauses as Record<string, string> | undefined) ?? {}) };
+      if (typeof d.summary === "string" && d.summary.trim()) state.outcomeSummary = d.summary.trim();
       break;
     case "stuck":
       state.turns.push({ kind: "notice", key: `${run}:stuck:${ev.seq}`, run_id: run, tone: "empty",
