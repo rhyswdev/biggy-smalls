@@ -5,6 +5,7 @@ import "@/styles/tokens.css";
 import "@/styles/bundle.css";
 import "@/styles/theme.css";
 import "@/styles/screens.css";
+import "@/styles/shell.css";
 
 const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-plex-sans", display: "swap" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-plex-mono", display: "swap" });
