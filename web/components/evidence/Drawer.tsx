@@ -27,7 +27,7 @@ export function EvidenceDrawer({ chatId, handle, onClose }: { chatId: string; ha
     let live = true;
     readEvidence(chatId, current).then((r) => {
       if (!live) return;
-      const error = r.evidence ? null : r.status === 404 ? `${current} is not in this chat or in the data at its now.` : r.error ?? "The record could not be read.";
+      const error = r.evidence ? null : r.status === 404 ? `${current} is not in this chat or in the data at its now.` : r.error ?? "The record could not be loaded.";
       setLoaded({ handle: current, view: r.evidence ?? null, error });
     });
     return () => { live = false; };
@@ -63,7 +63,7 @@ export function EvidenceDrawer({ chatId, handle, onClose }: { chatId: string; ha
           </>
         ) : !view ? <p className="small muted" aria-live="polite">Loading {current}…</p> : (
           <>
-            {view.query?.ends_at_now ? <Notice tone="clamped">The call that showed this read up to now, {clock(view.query.window?.[1], false)} UTC. Nothing after it is visible.</Notice> : null}
+            {view.query?.ends_at_now ? <Notice tone="clamped">The call that showed this looked up to now, {clock(view.query.window?.[1], false)} UTC. Nothing after it is visible.</Notice> : null}
             {rec?.withheld.length ? <Notice>Withheld at now, because their served value was not yet true: {rec.withheld.join(", ")}.</Notice> : null}
             {rec ? (
               <EvidenceRecord record={{
@@ -76,7 +76,7 @@ export function EvidenceDrawer({ chatId, handle, onClose }: { chatId: string; ha
               <EvidenceRecord record={{ handle: current, source: view.class === "aggregate" ? "computed by the tool" : view.class, t_utc: shown.t_known,
                 summary: "As the run was shown it: this handle is minted by a call, not stored.", raw: shown.text, raw_format: `shown by ${shown.call_id}` }} />
             ) : view.note ? (
-              <EvidenceRecord record={{ handle: current, source: "incident commander", t_utc: view.note.submitted_at, raw: view.note.text, raw_format: "a note" }} />
+              <EvidenceRecord record={{ handle: current, source: "Major Incident Manager", t_utc: view.note.submitted_at, raw: view.note.text, raw_format: "a note" }} />
             ) : null}
             <section style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <h2 className="heading" style={{ margin: 0 }}>Cited by</h2>

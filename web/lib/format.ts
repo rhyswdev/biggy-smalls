@@ -37,11 +37,11 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-/** What a waiting gate holds, as the composer's hint names it: reads, actions or both, with the verb to match. */
+/** What a waiting gate holds, as the composer's hint names it: checks, actions or both, with the verb to match. */
 export function waitingText(cards: { kind: string }[]): string {
   const actions = cards.filter((c) => c.kind === "action").length;
-  const reads = cards.length - actions;
-  const what = [reads ? plural(reads, "read") : "", actions ? plural(actions, "action") : ""].filter(Boolean).join(" and ");
+  const checks = cards.length - actions;
+  const what = [checks ? plural(checks, "check") : "", actions ? plural(actions, "action") : ""].filter(Boolean).join(" and ");
   return `${what} ${cards.length === 1 ? "is" : "are"}`;
 }
 

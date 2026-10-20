@@ -4,6 +4,13 @@ alerting, what changed and what people are saying, reads the recent logs and cou
 hypothesis citing rows it was shown, proposes one action, and submits an inconclusive report with a verdict for
 every alert stream its listing showed. A follow-up is answered in text. It proves the plumbing, never the agent.
 
+`concluded` is the same script reaching a probable cause (docs/v4-plan.md 6.8, `SMALLS_API_SCRIPT=concluded`): its
+one hypothesis is leading at 0.75 and its report recommends one generic action, so the answer card, the
+probable-cause banner and the resolve flow can be developed and tested without a key. It still knows nothing
+about the data.
+
+`outcomes` is the scripted summariser's script (5.1): one generic clause per check, marked as scripted.
+
 `draft` is the scripted drafter's script (U8): it writes a message from the packet's suggested stakeholder
 update and the resolution, the same for every audience but for its name.
 
@@ -54,7 +61,7 @@ def first_kind(tools: list[dict[str, Any]]) -> str | None:
     return None
 
 
-def turn(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:
+def turn(messages: list[BaseMessage], tools: list[dict[str, Any]], concluded: bool = False) -> tuple[Any, ...]:
     last_human = next((m for m in reversed(messages) if isinstance(m, HumanMessage)), None)
     if last_human is not None and "follow-up from the incident commander" in str(last_human.content):
         return ("A scripted answer.", [], {"text": "This is the scripted development profile: it answers every follow-up the same way. "
@@ -74,21 +81,38 @@ def turn(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any,
     cited = rows[:2] or shown(messages)[:1]
     if k == 1:
         return "Record a first, open hypothesis on what the reads showed.", [call("update_board", 3, hypotheses=[
-            {"id": "h-dev", "statement": "Something changed in the last half hour (scripted).", "role": "cause", "status": "open",
-             "subject": UNKNOWN, "confidence": 0.3, "source": "derived", "support": cited, "because": cited[:1]}])]
+            {"id": "h-dev", "statement": "Something changed in the last half hour (scripted).", "role": "cause",
+             "status": "leading" if concluded else "open", "subject": UNKNOWN, "confidence": 0.75 if concluded else 0.3, "source": "derived",
+             "support": cited, "because": cited[:1]}])]
     kind = first_kind(tools)
     proposed = any(isinstance(m, ToolMessage) and m.name == "propose_action" for m in messages)
     if k == 2 and kind and not proposed:
         return "Propose one action for the commander to decide.", [call(
             "propose_action", 4, ("h-dev", "the commander decides"), kind=kind, target=UNKNOWN, params=[], evidence=cited[:1])]
-    return "Nothing conclusive: say so.", [call(
-        "submit_report", 5 + k, summary=f"Inconclusive (scripted development run). The recent logs were read ({', '.join(cited[:1]) or 'none'}).",
+    summary = (f"Something changed in the last half hour (scripted development run). The recent logs were read ({', '.join(cited[:1]) or 'none'})."
+               if concluded else f"Inconclusive (scripted development run). The recent logs were read ({', '.join(cited[:1]) or 'none'}).")
+    actions = [{"rank": 1, "action": "Undo the most recent change (scripted).", "owner": UNKNOWN, "evidence": cited[:1]}] if concluded else []
+    do_not = [{"action": "Do not restart everything at once (scripted).", "why": "It would hide what changed.", "evidence": cited[:1]}] if concluded else []
+    return ("Enough to say what changed: submit it." if concluded else "Nothing conclusive: say so."), [call(
+        "submit_report", 5 + k, summary=summary,
         impact={"business_service": UNKNOWN, "cis": [], "priority": {"suggested": UNKNOWN, "impact": UNKNOWN, "urgency": UNKNOWN},
                 "assignment_group": UNKNOWN, "oncall": UNKNOWN, "customer": UNKNOWN},
-        hypotheses=[{"id": "h-dev"}], timeline=[], actions=[], do_not=[],
+        hypotheses=[{"id": "h-dev"}], timeline=[], actions=actions, do_not=do_not,
         alerts=[{"handle": h, "verdict": "noise"} for h in swept_alerts(messages)], open_questions=["What changed? (scripted)"],
         stakeholder_update={"status": "Investigating (scripted).", "customer_impact": UNKNOWN, "scope": UNKNOWN,
                             "changed_since_last": "First update.", "next_steps": "Run the API in live mode.", "next_update_at": UNKNOWN})]
+
+
+def concluded(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:
+    return turn(messages, tools, concluded=True)
+
+
+def outcomes(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:
+    text = str(next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""))
+    found = re.search(r"```json\n(.*?)\n```", text, re.S)
+    items = json.loads(found.group(1)) if found else []
+    clauses = {c["id"]: f"looked at what {str(c.get('tool', 'the tool')).replace('_', ' ')} returned (scripted)" for c in items}
+    return "One clause per check.", [], {"text": json.dumps(clauses)}
 
 
 def draft(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:

@@ -35,9 +35,9 @@ describe("the write-up's title", () => {
 
 describe("the composer's hint for a waiting gate", () => {
   it("names reads, actions or both, with the right verb", () => {
-    expect(waitingText([{ kind: "read" }])).toBe("1 read is");
-    expect(waitingText([{ kind: "read" }, { kind: "read" }, { kind: "read" }])).toBe("3 reads are");
+    expect(waitingText([{ kind: "read" }])).toBe("1 check is");
+    expect(waitingText([{ kind: "read" }, { kind: "read" }, { kind: "read" }])).toBe("3 checks are");
     expect(waitingText([{ kind: "action" }])).toBe("1 action is");
-    expect(waitingText([{ kind: "read" }, { kind: "action" }])).toBe("1 read and 1 action are");
+    expect(waitingText([{ kind: "read" }, { kind: "action" }])).toBe("1 check and 1 action are");
   });
 });

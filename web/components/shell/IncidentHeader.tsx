@@ -6,9 +6,9 @@ import { TicketButton } from "./TicketButton";
 /** The incident's header on every screen of an imported incident: priority, the Major incident badge, the
  * title and the ticket's own state ("Resolved" once it is resolved here), then number · business service ·
  * impact start · View ticket, and whatever the screen adds (the diagnosis adds when the next update is due). */
-export function IncidentHeader({ incident, ticket, resolved, impactStart, extra, banner, children }: {
+export function IncidentHeader({ incident, ticket, resolved, impactStart, extra, banner, ticketLink, children }: {
   incident: IncidentSummary; ticket: TicketView | null; resolved?: boolean; impactStart?: string | null; extra?: React.ReactNode;
-  banner?: React.ReactNode; children?: React.ReactNode;
+  banner?: React.ReactNode; ticketLink?: React.ReactNode; children?: React.ReactNode;
 }) {
   const start = impactStart ?? incident.opened;
   return (
@@ -24,7 +24,7 @@ export function IncidentHeader({ incident, ticket, resolved, impactStart, extra,
           <span className="inc-meta">
             {[incident.number, incident.service, `impact start ${clock(start)} UTC`].filter(Boolean).join(" · ")}
             {extra ? <> · {extra}</> : null}
-            {ticket ? <> · <TicketButton ticket={ticket} /></> : null}
+            {ticketLink ? <> · {ticketLink}</> : ticket ? <> · <TicketButton ticket={ticket} /></> : null}
           </span>
         </div>
         {children}

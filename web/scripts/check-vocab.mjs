@@ -22,15 +22,15 @@ const SKIP_FILES = [/lib\/api-types\.ts$/, /lib\/openapi\.json$/];
 
 // Files whose screens are not yet on v4, relative to web/. Emptied by the sweep (v4 plan row 7).
 export const PENDING = new Set([
-  "app/chats/[id]/page.tsx", "app/chats/[id]/summary/page.tsx", "app/chats/[id]/messages/page.tsx", "app/chats/new/page.tsx", "app/design/page.tsx",
-  "components/chat/AnswerCard.tsx", "components/chat/ChatScreen.tsx", "components/chat/Gate.tsx", "components/chat/IncidentBar.tsx",
-  "components/chat/Linked.tsx", "components/chat/NewChat.tsx", "components/chat/Prose.tsx", "components/chat/ResolveDialog.tsx",
-  "components/chat/WorkingPicture.tsx", "components/dashboard/AgentPanel.tsx", "components/dashboard/ChatsList.tsx",
-  "components/dashboard/IncidentCard.tsx", "components/dashboard/KnowledgeBand.tsx", "components/ds/StatusTag.tsx", "components/ds/Confidence.tsx",
-  "components/ds/ToolResult.tsx", "components/ds/StakeholderMessage.tsx", "components/ds/EvidenceRecord.tsx", "components/ds/ConflictPair.tsx",
-  "components/evidence/Drawer.tsx", "components/messages/Checks.tsx", "components/messages/KbView.tsx", "components/messages/MessagesScreen.tsx",
-  "components/shell/AppBar.tsx", "components/summary/SummaryScreen.tsx", "lib/chat/reduce.ts", "lib/chat/prose.ts", "lib/format.ts",
-  "lib/writeup/messages.ts", "lib/writeup/render.ts", "lib/actions/chats.ts", "lib/actions/reads.ts", "lib/events.ts", "lib/keys.ts",
+  "app/chats/[id]/summary/page.tsx", "app/chats/[id]/messages/page.tsx", "app/chats/new/page.tsx", "app/design/page.tsx",
+  "components/chat/IncidentBar.tsx",
+  "components/chat/NewChat.tsx", "components/chat/ResolveDialog.tsx",
+  "components/dashboard/AgentPanel.tsx", "components/dashboard/ChatsList.tsx",
+  "components/dashboard/IncidentCard.tsx", "components/dashboard/KnowledgeBand.tsx",
+  "components/ds/StakeholderMessage.tsx",
+  "components/messages/Checks.tsx", "components/messages/KbView.tsx", "components/messages/MessagesScreen.tsx",
+  "components/shell/AppBar.tsx", "components/summary/SummaryScreen.tsx",
+  "lib/writeup/messages.ts", "lib/writeup/render.ts",
 ]);
 
 function files(dir) {

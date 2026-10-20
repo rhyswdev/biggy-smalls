@@ -24,7 +24,7 @@ test("from the dashboard to copied messages, with the keyboard alone", async ({ 
   await expect(page).toHaveURL(/\/chats\/(?!new)[^/?]+$/);
 
   // Every gate takes focus on its target Approve; Shift+A answers all of it. The run asks until it reports.
-  const finished = page.getByRole("button", { name: "Mark resolved…" });
+  const finished = page.getByRole("link", { name: "Resolve incident…" });
   for (let round = 0; round < 12 && !(await finished.isVisible()); round++) {
     const gate = page.locator("#pending");
     await expect(gate.or(finished).first()).toBeVisible({ timeout: 30_000 });

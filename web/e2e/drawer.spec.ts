@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { API, newChat, until } from "./helpers";
+import { API, newChat, unfold, until } from "./helpers";
 
 // Row R11: every handle in a scripted chat opens its record in the drawer; Esc closes it and focus returns to the
 // handle; nothing shown is at or after `now`; a handle that does not resolve shows the error notice.
@@ -11,6 +11,7 @@ test("every handle in a finished chat opens its record, and none shows a time af
   const id = await newChat(request, { origin: "headless" });
   await until(request, id, ["finished"]);
   await page.goto(`/chats/${id}`);
+  await unfold(page);          // the evidence and the receipts are one click away
   const handles = [...new Set(await page.locator("button.sm-handle[data-handle]").evaluateAll((els) => els.map((e) => e.getAttribute("data-handle")!)))];
   expect(handles.length).toBeGreaterThan(2);
   for (const handle of handles) {
@@ -46,6 +47,7 @@ test("a related record opens in the drawer with a way back", async ({ page, requ
   const id = await newChat(request, { origin: "headless" });
   await until(request, id, ["finished"]);
   await page.goto(`/chats/${id}`);
+  await unfold(page);          // the evidence and the receipts are one click away
   const handles = await page.locator("button.sm-handle[data-handle]").evaluateAll((els) => els.map((e) => e.getAttribute("data-handle")!));
   for (const handle of handles) {
     await page.locator(`button.sm-handle[data-handle="${handle}"]`).first().click();

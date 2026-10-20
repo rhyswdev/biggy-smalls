@@ -106,13 +106,14 @@ export interface ChatState {
   trigger: string | null;
   now: string | null;
   attended: boolean | null;
+  outcomes: Record<string, string>;     // call id -> the summariser's clause for "How Smalls got here" (v4 plan 5.1)
 }
 
 export function initial(): ChatState {
   return {
     lastSeq: 0, status: "idle", phase: null, runs: [], startedAt: null, lastAt: null, heartbeat: null, rows: {}, turns: [], board: {},
     pending: null, report: null, reportStatus: null, draftSeq: null, verifier: null, answers: [], followups: [], finished: null, modelCost: 0,
-    autoApprove: null, trigger: null, now: null, attended: null,
+    autoApprove: null, trigger: null, now: null, attended: null, outcomes: {},
   };
 }
 
@@ -335,18 +336,21 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
       if (!same) state.turns.push({ kind: "report", key: `${run}:report:${ev.seq}`, run_id: run, status, report, seq: ev.seq });
       break;
     }
+    case "outcomes":
+      state.outcomes = { ...state.outcomes, ...((d.clauses as Record<string, string> | undefined) ?? {}) };
+      break;
     case "stuck":
       state.turns.push({ kind: "notice", key: `${run}:stuck:${ev.seq}`, run_id: run, tone: "empty",
-        text: `The last ${num(d.empty_reads)} reads found nothing. A note can steer the agent.` });
+        text: `The last ${plural(num(d.empty_reads), "check")} found nothing. A note can steer Smalls.` });
       break;
     case "error":
       state.turns.push({ kind: "notice", key: `${run}:error:${ev.seq}`, run_id: run, tone: "error",
-        text: `${str(d.where) === "interrupt" ? "The run was interrupted" : `The ${str(d.where) || "run"} failed`}${d.message ? `: ${str(d.message)}` : ""}. Next: ${str(d.next) || "nothing"}.` });
+        text: plainWords(`${str(d.where) === "interrupt" ? "The run was interrupted" : `The ${str(d.where) || "run"} failed`}${d.message ? `: ${str(d.message)}` : ""}. Next: ${str(d.next) || "nothing"}.`) });
       break;
     case "run_paused": {
       if (d.stopped) {
         state.status = "stopped";
-        state.turns.push({ kind: "notice", key: `${run}:stopped:${ev.seq}`, run_id: run, tone: "info", text: "Stopped. The board as it stood is kept; the run can go on from here." });
+        state.turns.push({ kind: "notice", key: `${run}:stopped:${ev.seq}`, run_id: run, tone: "info", text: "Stopped. The working picture as it stood is kept; the run can go on from here." });
       } else {
         state.status = d.interrupt_id ? "waiting" : "paused";
       }
@@ -362,7 +366,7 @@ export function apply(prev: ChatState, ev: ChatEvent): ChatState {
         cost_usd: tokens.cost_usd ?? null };
       if (status === "incomplete" || status === "failed") {
         state.turns.push({ kind: "notice", key: `${run}:finished:${ev.seq}`, run_id: run, tone: status === "failed" ? "error" : "info",
-          text: status === "failed" ? "The run failed and has nothing to resume." : `The run stopped before a full report${d.stop_reason ? `: ${str(d.stop_reason)}` : ""}. The board as it stood is below.` });
+          text: status === "failed" ? "The run failed and has nothing to resume." : plainWords(`The run stopped before a full report${d.stop_reason ? `: ${str(d.stop_reason)}` : ""}. The working picture as it stood is below.`) });
       }
       break;
     }
@@ -376,9 +380,19 @@ export function fold(events: readonly ChatEvent[], from: ChatState = initial()):
   return events.reduce(apply, from);
 }
 
+/** The agent's own words where they reach the screen, in the v4 vocabulary (docs/v4-plan.md 6.2): the agent's
+ * prompts and mechanical strings keep theirs, because changing them changes what the agent reads. */
+export function plainWords(text: string): string {
+  return text
+    .replace(/\bthe incident commander\b/gi, "the Major Incident Manager").replace(/\bincident commander\b/gi, "Major Incident Manager")
+    .replace(/\breads\b/g, "checks").replace(/\bReads\b/g, "Checks").replace(/\bread\b(?!-only)/g, "check").replace(/\bRead\b(?!-only)/g, "Check");
+}
+
+const plural = (n: number, one: string) => `${n} ${n === 1 ? one : `${one}s`}`;
+
 // -- what the screens read from the state --------------------------------------------------------------------
 
-/** Reads the agent proposed, ran, the commander rejected and skipped (7.5). */
+/** Checks the agent proposed, ran, the person rejected and skipped (7.5). */
 export function tally(state: ChatState): { proposed: number; run: number; rejected: number; skipped: number } {
   const rows = Object.values(state.rows).filter((r) => r.kind === "read" && r.by === "agent");
   return {
@@ -389,7 +403,7 @@ export function tally(state: ChatState): { proposed: number; run: number; reject
   };
 }
 
-/** The dashboard's step list: the agent's reads, ✓ done, › running, ○ waiting. */
+/** The overview panel's step list: the agent's checks, ✓ done, › running, ○ waiting. */
 export function steps(state: ChatState): Step[] {
   return Object.values(state.rows)
     .filter((r) => r.by === "agent" && r.kind === "read")

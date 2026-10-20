@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button, Handle, ToolResult } from "@/components/ds";
 import { answerGate } from "@/lib/actions/chats";
 import { readCall } from "@/lib/actions/reads";
+import { plainLabel } from "@/lib/chat/labels";
 import type { BoardChange, Group, Pending, Row } from "@/lib/chat/reduce";
 import type { CallView } from "@/lib/types";
 
@@ -24,11 +25,11 @@ interface ParamSchema {
 
 type Local = { state: "approved" | "edited" | "skipped" | "rejected"; reason?: string; args?: Record<string, unknown> };
 
-// Generic reasons a commander gives for not running a read; a reason is still required, and these only fill it.
+// Generic reasons a person gives for not running a check; a reason is still required, and these only fill it.
 const QUICK = ["Already known; not needed", "Too broad; narrow it first", "Not relevant to this incident"];
 
-// The auto-approve switch, turned on while a gate waits, approves the reads nobody has decided yet. Decisions the
-// commander already made on that gate stand: the gate sends them first, with the undecided reads approved, and only
+// The auto-approve switch, turned on while a gate waits, approves the checks nobody has decided yet. Decisions the
+// person already made on that gate stand: the gate sends them first, with the undecided checks approved, and only
 // then does the switch reach the API, whose standing answer would otherwise approve every card on the gate.
 const standing = new Map<string, () => Promise<void>>();
 
@@ -65,15 +66,15 @@ function query(row: Row): string {
   return row.native_query ?? JSON.stringify(row.args, null, 2);
 }
 
-/** After any decision, focus goes to the waiting gate's target Approve, unless the person is typing somewhere or
- * focus is already in the gate (section 4, Keys). */
-export function refocus(): void {
+/** After any decision, focus goes to the waiting tray's target Approve, unless the person is typing somewhere or
+ * focus is already in the tray (section 4, Keys). `force` takes it there anyway, for "go to approvals". */
+export function refocus(force = false): void {
   setTimeout(() => {
     const g = document.getElementById("pending");
     if (!g) return;
     const a = document.activeElement as HTMLElement | null;
-    if (a && g.contains(a) && a !== g) return;
-    if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT")) return;
+    if (!force && a && g.contains(a) && a !== g) return;
+    if (!force && a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT")) return;
     (g.querySelector<HTMLElement>("[data-kf] button") ?? g).focus();
   }, 30);
 }
@@ -108,44 +109,63 @@ function parsed(values: Record<string, string>, schema: ToolSchema | undefined):
   return out;
 }
 
-// -- one round of reads: a waiting gate, or its receipts ---------------------------------------------------------
+// -- one round of checks in the conversation: a pointer to the tray while it waits, or its receipts -------------
 
-export function GroupView({ chatId, group, rows, pending, schemas, onOpen, onDecided, onRefused }: {
-  chatId: string; group: Group; rows: Record<string, Row>; pending: Pending | null; schemas: ToolSchema[];
-  onOpen: (handle: string) => void; onDecided?: () => void; onRefused?: (message: string) => void;
+/** A round in the conversation. While its checks wait, it is one amber line pointing at the tray above the
+ * composer, where they are decided; once settled, a folded line with the count, opening to each check's receipt. */
+export function GroupView({ chatId, group, rows, pending, onOpen }: {
+  chatId: string; group: Group; rows: Record<string, Row>; pending: Pending | null; onOpen: (handle: string) => void;
 }) {
   const calls = group.calls.map((id) => rows[id]).filter((r): r is Row => Boolean(r));
-  const waitingHere = pending && calls.some((r) => pending.cards.some((c) => c.call_id === r.call_id));
-  if (!calls.length && !group.board.length) return null;
-  return waitingHere
-    ? <WaitingGate key={pending!.interrupt_id} chatId={chatId} rows={calls} pending={pending!} schemas={schemas} onOpen={onOpen} onDecided={onDecided}
-        onRefused={onRefused} board={group.board} />
-    : <Settled chatId={chatId} rows={calls} board={group.board} onOpen={onOpen} />;
+  const waiting = pending ? calls.filter((r) => pending.cards.some((c) => c.call_id === r.call_id)) : [];
+  if (!calls.length) return group.board.length ? <BoardLines board={group.board} /> : null;
+  if (waiting.length) {
+    const n = waiting.length;
+    return (
+      <div className="grp">
+        <a className="grp-wait" href="#pending" onClick={(e) => { e.preventDefault(); refocus(true); }}>
+          <span aria-hidden="true">◆</span>{n === 1 ? "1 check is" : `${n} checks are`} waiting for your approval, at the bottom
+        </a>
+      </div>
+    );
+  }
+  return <Settled chatId={chatId} rows={calls} board={group.board} onOpen={onOpen} />;
 }
 
 /** A read that was let through and came back as an error: its arguments did not run, or the tool failed. */
 const failedRow = (r: Row) => r.result?.status === "error";
 
-function title(rows: Row[], local: Record<string, Local> = {}): string {
-  const reads = rows.length;
+/** "3 checks · 2 run, 1 rejected" */
+export function title(rows: Row[], local: Record<string, Local> = {}): string {
+  const n = rows.length;
   const state = (r: Row) => local[r.call_id]?.state ?? r.state;
   const approved = rows.filter((r) => ["approved", "auto", "edited"].includes(state(r)));
   const failed = approved.filter((r) => failedRow(r)).length;     // approved, then answered with an error
   const ran = approved.length - failed;
   const rej = rows.filter((r) => ["rejected", "refused"].includes(state(r))).length;
   const sk = rows.filter((r) => state(r) === "skipped").length;
-  const noun = rows.every((r) => r.kind === "action") ? (reads === 1 ? "action" : "actions") : reads === 1 ? "read" : "reads";
-  return `${reads} ${noun} · ${[ran ? `${ran} run` : "", failed ? `${failed} failed` : "", rej ? `${rej} rejected` : "", sk ? `${sk} skipped` : ""]
+  const noun = rows.every((r) => r.kind === "action") ? (n === 1 ? "action" : "actions") : n === 1 ? "check" : "checks";
+  return `${n} ${noun} · ${[ran ? `${ran} run` : "", failed ? `${failed} failed` : "", rej ? `${rej} rejected` : "", sk ? `${sk} skipped` : ""]
     .filter(Boolean).join(", ") || "decided"}`;
 }
 
 function Settled({ chatId, rows, board, onOpen }: { chatId: string; rows: Row[]; board: BoardChange[]; onOpen: (h: string) => void }) {
-  if (!rows.length) return <BoardLines board={board} />;
+  const [open, setOpen] = useState(false);
+  const bad = rows.some((r) => ["rejected", "refused"].includes(r.state) || failedRow(r));
   return (
-    <section className="gg" role="group" aria-label={title(rows)}>
-      <div className="gg-head"><span className="gg-title">{title(rows)}</span></div>
-      {rows.map((r) => <Receipt key={r.call_id} chatId={chatId} row={r} onOpen={onOpen} />)}
-      <BoardLines board={board} />
+    <section className="grp" role="group" aria-label={title(rows)}>
+      <button type="button" className="grp-sum" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="chev" aria-hidden="true">›</span>
+        <span className={bad ? "g-skip" : "g-ok"} aria-hidden="true">{bad ? "·" : "✓"}</span>
+        <span className="grp-title">{title(rows)}</span>
+        <span className="grp-more">{open ? "Hide" : "Show what it found"}</span>
+      </button>
+      {open ? (
+        <>
+          {rows.map((r) => <Receipt key={r.call_id} chatId={chatId} row={r} onOpen={onOpen} />)}
+          <BoardLines board={board} />
+        </>
+      ) : null}
     </section>
   );
 }
@@ -154,13 +174,11 @@ function BoardLines({ board }: { board: BoardChange[] }) {
   if (!board.length) return null;
   return (
     <div className="rcpt" style={{ flexDirection: "column", alignItems: "stretch", gap: 2 }}>
+      <span className="label">Working picture after this</span>
       {board.map((c) => (
         <span key={c.id} className="small">
-          <span className="label" style={{ marginRight: 6 }}>Board</span>
-          <span className="tool">{c.id}</span>{" "}
-          {c.from ? <span className="time">{c.from.status} {c.from.confidence.toFixed(2)} → </span> : <span className="small muted">new, </span>}
-          <span className="time">{c.to.status} {c.to.confidence.toFixed(2)}</span>
-          <span className="muted"> · {c.statement}</span>
+          {c.statement}{" "}
+          <span className="time muted">{c.from ? `${c.from.status} ${c.from.confidence.toFixed(2)} → ` : "new, "}{c.to.status} {c.to.confidence.toFixed(2)}</span>
         </span>
       ))}
     </div>
@@ -172,8 +190,8 @@ export function receiptText(r: Row, local?: Local): string {
   if (s === "skipped") return r.who === "policy" ? `Deferred by policy${r.reason ? `: ${r.reason}` : ""}.` : "Skipped. Smalls carried on without it.";
   if (s === "rejected") return `Rejected by you: “${local?.reason ?? r.reason ?? ""}”`;
   if (s === "refused") return `Refused by policy: ${r.reason ?? "not run"}.`;
-  if (local && !r.result) return "Decided. Waiting for the other reads on this gate.";
-  const prefix = s === "auto" ? (r.who === "policy" ? "Approved by policy. " : "Auto-approved. ") : s === "edited" ? "Approved with your edits. " : "";
+  if (local && !r.result) return "Decided. Waiting for the other checks on this gate.";
+  const prefix = s === "auto" ? (r.who === "policy" ? "Approved by policy. " : "Ran automatically. ") : s === "edited" ? "Approved with your edits. " : "";
   if (r.result) return `${prefix}${r.result.status === "ok" ? r.result.first_line : `Error: ${r.result.first_line}`}`;
   return `${prefix}${r.running ? "Running…" : "Queued."}`;
 }
@@ -191,7 +209,7 @@ function Receipt({ chatId, row, local, onOpen }: { chatId: string; row: Row; loc
   async function toggle() {
     if (!open && !call) {
       const r = await readCall(chatId, row.call_id, row.run_id);
-      if (r.call) setCall(r.call); else setError(r.error ?? "The result could not be read.");
+      if (r.call) setCall(r.call); else setError(r.error ?? "The result could not be loaded.");
     }
     setOpen(!open);
   }
@@ -199,8 +217,7 @@ function Receipt({ chatId, row, local, onOpen }: { chatId: string; row: Row; loc
     <>
       <div className="rcpt" data-call={row.call_id}>
         <span className={cls} aria-hidden="true">{glyph}</span>
-        <span className="tool">{row.tool}</span>
-        <span className="rtext">{receiptText(row, local)}</span>
+        <span className="rtext"><b style={{ fontWeight: 600 }}>{plainLabel(row).now}.</b> {receiptText(row, local)}</span>
         {ran && handle ? <Handle id={handle} onOpen={onOpen} /> : null}
         {ran ? <button type="button" className="linkbtn" onClick={toggle} aria-expanded={open}>{open ? "Hide result" : "Show result"}</button> : null}
       </div>
@@ -219,17 +236,21 @@ function Receipt({ chatId, row, local, onOpen }: { chatId: string; row: Row; loc
   );
 }
 
-// -- the gate waiting on the commander -----------------------------------------------------------------------
+// -- the approval tray: the gate waiting on the person, floating above the composer -----------------------------
 
-function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefused, board }: {
+/** The checks waiting for the person, lifted out of the conversation into a tray above the composer
+ * (ChatV4). The keys, the one answer per gate and the focus model are the gate's as before: A, E, S, R on the
+ * check in focus, Shift+A and Shift+S on all, Esc out of a form. */
+export function ApprovalTray({ chatId, rows, pending, schemas, onOpen, onDecided, onRefused }: {
   chatId: string; rows: Row[]; pending: Pending; schemas: ToolSchema[]; onOpen: (h: string) => void; onDecided?: () => void;
-  onRefused?: (message: string) => void; board: BoardChange[];
+  onRefused?: (message: string) => void;
 }) {
   const [local, setLocal] = useState<Record<string, Local>>({});
   const [mode, setMode] = useState<Record<string, "edit" | "reject" | null>>({});
   const [reason, setReason] = useState<Record<string, string>>({});
   const [values, setValues] = useState<Record<string, Record<string, string>>>({});
   const [shown, setShown] = useState<Record<string, boolean>>({});
+  const [details, setDetails] = useState<Record<string, boolean>>({});
   const [kfocus, setKfocus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, start] = useTransition();
@@ -247,10 +268,10 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
   const send = useCallback(async (answers: Answers) => {
     const result = await answerGate(chatId, pending.interrupt_id, answers);
     if (!result.ok) {
-      const message = result.status === 409 ? "This gate was already answered, in another tab or by the switch. The run went on with that answer."
+      const message = result.status === 409 ? "These checks were already answered, in another tab or by the switch. The run went on with that answer."
         : result.error ?? "The answer was not taken.";
       setError(message);
-      onRefused?.(message);           // shown by the chat too: the gate settles as the first answer lands
+      onRefused?.(message);           // shown by the chat too: the tray goes as the first answer lands
       if (result.status !== 409) { sent.current = false; setLocal({}); }
     }
     onDecided?.();
@@ -264,7 +285,7 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
     start(async () => { await send(answers); });
   }, [local, asked, send]);
 
-  // The switch turned on: approve the reads still undecided and send them with the decisions already made. With
+  // The switch turned on: approve the checks still undecided and send them with the decisions already made. With
   // nothing decided yet, the switch's own answer covers the gate; with an action undecided, the gate keeps waiting.
   useEffect(() => {
     const flush = async () => {
@@ -311,7 +332,7 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
     else if (k === "s") { e.preventDefault(); decide(r.call_id, { state: "skipped" }); }
     else if (k === "r") { e.preventDefault(); setMode((x) => ({ ...x, [r.call_id]: "reject" })); }
   }
-  function gateKey(e: React.KeyboardEvent) {
+  function trayKey(e: React.KeyboardEvent) {
     if (!waiting.length || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat || typing(e)) return;
     const k = e.key.toLowerCase();
     if (e.shiftKey) {
@@ -319,19 +340,20 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
       else if (k === "s") { e.preventDefault(); all("skipped"); }
       return;
     }
-    const inRow = (e.target as HTMLElement)?.closest?.(".row");
+    const inRow = (e.target as HTMLElement)?.closest?.(".trow");
     if (!inRow && target) rowKey(target, e);
   }
 
   const w = waiting.length;
   const isAction = (r: Row) => r.kind === "action";
-  const [one, many] = asked.every(isAction) ? ["action", "actions"] : ["read", "reads"];
-  const head = w ? `◆ ${w === 1 ? `1 ${one} needs` : `${w} ${many} need`} your approval` : title(asked, local);
+  const checks = waiting.filter((r) => !isAction(r)).length, actions = w - checks;
+  const head = !w ? title(asked, local)
+    : [checks ? `Smalls wants to run ${checks === 1 ? "1 check" : `${checks} checks`}` : "", actions ? `${checks ? "and proposes" : "Smalls proposes"} ${actions === 1 ? "1 action" : `${actions} actions`}` : ""].filter(Boolean).join(" ");
   return (
-    <section className={w ? "gg wait" : "gg"} role="group" id={w ? "pending" : undefined} aria-label={head} onKeyDown={gateKey} tabIndex={-1}>
-      <div className="gg-head">
-        <span className="gg-title">{head}</span>
-        {w ? <span className="gg-sub">{asked.every(isAction) ? "Nothing is executed until you choose; an action here is a proposal for you to act on." : "Read-only. Nothing runs until you choose."}</span> : null}
+    <section className="tray" id={w ? "pending" : undefined} role="group" aria-label={w ? `◆ ${head}` : head} onKeyDown={trayKey} tabIndex={-1}>
+      <div className="tray-head">
+        <span className="tray-title">{w ? `◆ ${head}` : head}</span>
+        <span className="small">{w && asked.every(isAction) ? "Nothing is executed until you choose; an action here is a proposal for you to act on." : "Read-only. Nothing runs until you choose."}</span>
         {w ? (
           <span className="keys" aria-hidden="true">
             <span><kbd>A</kbd>approve</span>
@@ -343,85 +365,94 @@ function WaitingGate({ chatId, rows, pending, schemas, onOpen, onDecided, onRefu
         ) : null}
       </div>
       {error ? <div className="rcpt" role="alert" style={{ color: "var(--danger)" }}>{error}</div> : null}
-      {asked.map((r) => {
-        if (local[r.call_id] || submitting) return <Receipt key={r.call_id} chatId={chatId} row={r} local={local[r.call_id]} onOpen={onOpen} />;
-        const m = mode[r.call_id] ?? null;
-        const schema = schemaOf(r.tool);
-        return (
-          <div className="row" key={r.call_id} onKeyDown={(e) => rowKey(r, e)} tabIndex={-1} data-call={r.call_id}>
-            <div className="row-main">
-              <div className="row-top"><span className="tool">{r.tool}</span><span className="reason">{r.by === "harness" ? "Part of the opening sweep, run before Smalls’ first turn." : <>{r.rationale?.tests}{r.rationale?.expect ? <span className="muted"> · expects {r.rationale.expect}</span> : null}</>}</span></div>
-              <div className="chips">
-                {chips(r.args).map((c) => <span className="chip" key={c.k}><i>{c.k}</i> {c.v}</span>)}
-                <button type="button" className="linkbtn" onClick={() => setShown((s) => ({ ...s, [r.call_id]: !s[r.call_id] }))} aria-expanded={Boolean(shown[r.call_id])}>
-                  {shown[r.call_id] ? "Hide query" : "Show query"}
-                </button>
-              </div>
-              {shown[r.call_id] ? <pre className="sm-pre">{query(r)}{r.window ? `\nwindow ${r.window[0]} to ${r.window[1]}` : ""}</pre> : null}
-              {m === "edit" ? (
-                <div className="sub-form">
-                  <span className="label">Change the parameters before it runs</span>
-                  {Object.entries(schema?.parameters.properties ?? {}).map(([name, p], i) => (
-                    <label key={name} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span className="time muted">{name}{p.type === "array" && p.items?.type === "string" ? " (comma-separated)" : ""}</span>
-                      {p.enum ? (
-                        <select className="sm-input" style={{ maxWidth: 360 }} value={values[r.call_id]?.[name] ?? ""} autoFocus={i === 0}
-                          onChange={(e) => setValues((v) => ({ ...v, [r.call_id]: { ...v[r.call_id], [name]: e.target.value } }))}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); approveEdited(r); } else if (e.key === "Escape") { e.preventDefault(); cancel(r.call_id); } }}>
-                          <option value="">(left out)</option>
-                          {p.enum.map((o) => <option key={o} value={o}>{o}</option>)}
-                        </select>
-                      ) : (
-                        <input className="sm-input" style={{ maxWidth: 360, fontFamily: "var(--font-mono)" }} value={values[r.call_id]?.[name] ?? ""} autoFocus={i === 0}
-                          inputMode={p.type === "integer" || p.type === "number" ? "numeric" : undefined}
-                          onChange={(e) => setValues((v) => ({ ...v, [r.call_id]: { ...v[r.call_id], [name]: e.target.value } }))}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); approveEdited(r); } else if (e.key === "Escape") { e.preventDefault(); cancel(r.call_id); } }} />
-                      )}
-                    </label>
-                  ))}
-                  <div className="acts">
-                    <Button variant="primary" onClick={() => approveEdited(r)}>Approve with edit</Button>
-                    <Button variant="quiet" onClick={() => cancel(r.call_id)} title="Cancel (Esc)">Cancel</Button>
-                    <span className="sub-keys" aria-hidden="true"><kbd>Enter</kbd> approve with edit · <kbd>Esc</kbd> cancel</span>
-                  </div>
+      <div className="tray-rows">
+        {asked.map((r) => {
+          if (local[r.call_id] || submitting) return <Receipt key={r.call_id} chatId={chatId} row={r} local={local[r.call_id]} onOpen={onOpen} />;
+          const m = mode[r.call_id] ?? null;
+          const schema = schemaOf(r.tool);
+          const det = Boolean(details[r.call_id]);
+          return (
+            <div className="trow" key={r.call_id} onKeyDown={(e) => rowKey(r, e)} tabIndex={-1} data-call={r.call_id}>
+              <div className="row-main">
+                <span className="trow-what">{plainLabel(r).now}</span>
+                <span className="trow-why">{r.by === "harness" ? "Part of the opening sweep, run before Smalls’ first turn." : <>{r.rationale?.tests}{r.rationale?.expect ? <> · expects {r.rationale.expect}</> : null}</>}</span>
+                <div className="trow-meta">
+                  {det ? (
+                    <>
+                      <span className="chip chip-tool">{r.tool}</span>
+                      {chips(r.args).map((c) => <span className="chip" key={c.k}><i>{c.k}</i> {c.v}</span>)}
+                      <button type="button" className="linkbtn" onClick={() => setShown((x) => ({ ...x, [r.call_id]: !x[r.call_id] }))} aria-expanded={Boolean(shown[r.call_id])}>
+                        {shown[r.call_id] ? "Hide query" : "Show query"}
+                      </button>
+                    </>
+                  ) : null}
+                  <button type="button" className="linkbtn" onClick={() => setDetails((x) => ({ ...x, [r.call_id]: !det }))} aria-expanded={det}>{det ? "Hide details" : "Details"}</button>
                 </div>
-              ) : null}
-              {m === "reject" ? (
-                <div className="sub-form">
-                  <span className="label">Why not? Smalls reads your reason and takes another path</span>
-                  <div className="chips">
-                    {QUICK.map((q) => <button key={q} type="button" className="fchip" onClick={() => setReason((x) => ({ ...x, [r.call_id]: q }))}>{q}</button>)}
+                {det && shown[r.call_id] ? <pre className="sm-pre">{query(r)}{r.window ? `\nwindow ${r.window[0]} to ${r.window[1]}` : ""}</pre> : null}
+                {m === "edit" ? (
+                  <div className="sub-form">
+                    <span className="label">Change the parameters before it runs</span>
+                    {Object.entries(schema?.parameters.properties ?? {}).map(([name, p], i) => (
+                      <label key={name} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span className="time muted">{name}{p.type === "array" && p.items?.type === "string" ? " (comma-separated)" : ""}</span>
+                        {p.enum ? (
+                          <select className="sm-input" style={{ maxWidth: 360 }} value={values[r.call_id]?.[name] ?? ""} autoFocus={i === 0}
+                            onChange={(e) => setValues((v) => ({ ...v, [r.call_id]: { ...v[r.call_id], [name]: e.target.value } }))}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); approveEdited(r); } else if (e.key === "Escape") { e.preventDefault(); cancel(r.call_id); } }}>
+                            <option value="">(left out)</option>
+                            {p.enum.map((o) => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ) : (
+                          <input className="sm-input" style={{ maxWidth: 360, fontFamily: "var(--font-mono)" }} value={values[r.call_id]?.[name] ?? ""} autoFocus={i === 0}
+                            inputMode={p.type === "integer" || p.type === "number" ? "numeric" : undefined}
+                            onChange={(e) => setValues((v) => ({ ...v, [r.call_id]: { ...v[r.call_id], [name]: e.target.value } }))}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); approveEdited(r); } else if (e.key === "Escape") { e.preventDefault(); cancel(r.call_id); } }} />
+                        )}
+                      </label>
+                    ))}
+                    <div className="acts">
+                      <Button variant="primary" onClick={() => approveEdited(r)}>Approve with edit</Button>
+                      <Button variant="quiet" onClick={() => cancel(r.call_id)} title="Cancel (Esc)">Cancel</Button>
+                      <span className="sub-keys" aria-hidden="true"><kbd>Enter</kbd> approve with edit · <kbd>Esc</kbd> cancel</span>
+                    </div>
                   </div>
-                  <input className="sm-input" value={reason[r.call_id] ?? ""} autoFocus placeholder="Your reason, in a sentence" aria-label="Reason for rejecting"
-                    onChange={(e) => setReason((x) => ({ ...x, [r.call_id]: e.target.value }))}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirmReject(r); } else if (e.key === "Escape") { e.preventDefault(); cancel(r.call_id); } }} />
-                  <div className="acts">
-                    <Button variant="danger" onClick={() => confirmReject(r)} disabled={!(reason[r.call_id] ?? "").trim()}>Reject this {r.kind === "action" ? "action" : "read"}</Button>
-                    <Button variant="quiet" onClick={() => cancel(r.call_id)} title="Cancel (Esc)">Cancel</Button>
-                    <span className="sub-keys" aria-hidden="true"><kbd>Enter</kbd> reject · <kbd>Esc</kbd> cancel</span>
+                ) : null}
+                {m === "reject" ? (
+                  <div className="sub-form">
+                    <span className="label">Why not? Smalls takes your reason into account and takes another path</span>
+                    <div className="chips">
+                      {QUICK.map((q) => <button key={q} type="button" className="fchip" onClick={() => setReason((x) => ({ ...x, [r.call_id]: q }))}>{q}</button>)}
+                    </div>
+                    <input className="sm-input" value={reason[r.call_id] ?? ""} autoFocus placeholder="Your reason, in a sentence" aria-label="Reason for rejecting"
+                      onChange={(e) => setReason((x) => ({ ...x, [r.call_id]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirmReject(r); } else if (e.key === "Escape") { e.preventDefault(); cancel(r.call_id); } }} />
+                    <div className="acts">
+                      <Button variant="danger" onClick={() => confirmReject(r)} disabled={!(reason[r.call_id] ?? "").trim()}>Reject this {r.kind === "action" ? "action" : "check"}</Button>
+                      <Button variant="quiet" onClick={() => cancel(r.call_id)} title="Cancel (Esc)">Cancel</Button>
+                      <span className="sub-keys" aria-hidden="true"><kbd>Enter</kbd> reject · <kbd>Esc</kbd> cancel</span>
+                    </div>
                   </div>
+                ) : null}
+              </div>
+              {!m ? (
+                <div className="row-acts" data-kf={target?.call_id === r.call_id ? "1" : undefined}>
+                  <Button variant={batch ? "secondary" : "primary"} onClick={() => decide(r.call_id, { state: "approved" })} title="Approve (A)" aria-keyshortcuts="A">Approve</Button>
+                  {editable(r) ? <Button variant="quiet" onClick={() => edit(r)} title="Edit (E)" aria-keyshortcuts="E">Edit</Button> : null}
+                  <Button variant="quiet" onClick={() => decide(r.call_id, { state: "skipped" })} title="Skip (S)" aria-keyshortcuts="S">Skip</Button>
+                  <Button variant="danger" onClick={() => setMode((x) => ({ ...x, [r.call_id]: "reject" }))} title="Reject (R)" aria-keyshortcuts="R">Reject…</Button>
                 </div>
               ) : null}
             </div>
-            {!m ? (
-              <div className="row-acts" data-kf={target?.call_id === r.call_id ? "1" : undefined}>
-                <Button variant={batch ? "secondary" : "primary"} onClick={() => decide(r.call_id, { state: "approved" })} title="Approve (A)" aria-keyshortcuts="A">Approve</Button>
-                {editable(r) ? <Button variant="quiet" onClick={() => edit(r)} title="Edit (E)" aria-keyshortcuts="E">Edit</Button> : null}
-                <Button variant="quiet" onClick={() => decide(r.call_id, { state: "skipped" })} title="Skip (S)" aria-keyshortcuts="S">Skip</Button>
-                <Button variant="danger" onClick={() => setMode((x) => ({ ...x, [r.call_id]: "reject" }))} title="Reject (R)" aria-keyshortcuts="R">Reject…</Button>
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
       {batch && !submitting ? (
-        <div className="gg-foot">
+        <div className="tray-foot">
           <Button variant="primary" onClick={() => all("approved")} title={`${w === 2 ? "Approve both" : `Approve all ${w}`} (Shift+A)`} aria-keyshortcuts="Shift+A">{w === 2 ? "Approve both" : `Approve all ${w}`}</Button>
           <Button variant="quiet" onClick={() => all("skipped")} title={`${w === 2 ? "Skip both" : "Skip all"} (Shift+S)`} aria-keyshortcuts="Shift+S">{w === 2 ? "Skip both" : "Skip all"}</Button>
           <span className="small muted">or decide each one above</span>
         </div>
       ) : null}
-      <BoardLines board={board} />
     </section>
   );
 }

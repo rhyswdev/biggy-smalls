@@ -5,11 +5,11 @@ import { Button } from "@/components/ds";
 import { resolveChat } from "@/lib/actions/chats";
 import { leading } from "@/lib/chat/reduce";
 import { clock } from "@/lib/format";
-import type { ChatSummary, IncidentCard, Report } from "@/lib/types";
+import type { ChatSummary, IncidentSummary, Report } from "@/lib/types";
 
 /** "Mark it resolved": who found the fix, how it was resolved (required), when and by whom. Continue stays
  * disabled until there is a note (section 4, Resolve dialog). */
-export function ResolveDialog({ chat, card, report, onClose }: { chat: ChatSummary; card: IncidentCard | null; report: Report | null; onClose: () => void }) {
+export function ResolveDialog({ chat, incident, report, onClose }: { chat: ChatSummary; incident: IncidentSummary | null; report: Report | null; onClose: () => void }) {
   const lead = leading(report);
   const first = report ? [...report.actions].sort((a, b) => a.rank - b.rank)[0] : undefined;
   const [path, setPath] = useState<"agent" | "own">(lead ? "agent" : "own");
@@ -18,7 +18,7 @@ export function ResolveDialog({ chat, card, report, onClose }: { chat: ChatSumma
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const box = useRef<HTMLElement>(null);
-  const by = card?.note.author ?? "Incident commander";
+  const by = incident?.assignee ?? "Major Incident Manager";
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
     box.current?.querySelector<HTMLElement>("input:checked")?.focus();
@@ -37,7 +37,7 @@ export function ResolveDialog({ chat, card, report, onClose }: { chat: ChatSumma
       <section ref={box} className="dialog" role="dialog" aria-modal="true" aria-labelledby="rs-title">
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span className="label">{[card?.incident?.number, chat.title].filter(Boolean).join(" · ")}</span>
+            <span className="label">{[incident?.number, chat.title].filter(Boolean).join(" · ")}</span>
             <h2 id="rs-title" className="title" style={{ margin: 0 }}>Mark it resolved</h2>
             <span className="small muted">Your answer becomes this incident’s knowledge base write-up, so similar issues are easier to identify.</span>
           </div>

@@ -1,8 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { API, newChat, until } from "./helpers";
 
-// Row R10: the approval gate's keyboard model. Each test starts a chat that asks before every read, so it stops at
-// the gate of the dev script's own first three reads.
+// Row R10: the approval gate's keyboard model, now in the v4 tray above the composer. Each test starts a chat that
+// asks before every check, so it stops at the dev script's own first three checks.
 
 async function waitingChat(page: Page, request: Parameters<typeof newChat>[0]): Promise<string> {
   const id = await newChat(request, { origin: "chat", auto_approve: false });
@@ -17,7 +17,7 @@ async function waitingChat(page: Page, request: Parameters<typeof newChat>[0]): 
 const FIRST = ["call_101_list_alerts", "call_102_list_changes", "call_103_read_chat"];
 const gate = (page: Page) => page.locator("#pending");
 const target = (page: Page) => page.locator("#pending [data-kf] button").first();
-const rows = (page: Page) => page.locator("#pending .row");
+const rows = (page: Page) => page.locator("#pending .trow");
 const receipts = (page: Page) => page.locator("#pending .rcpt[data-call]");
 
 test("A approves the read in focus, and focus moves to the next waiting read's Approve", async ({ page, request }) => {
@@ -30,7 +30,7 @@ test("A approves the read in focus, and focus moves to the next waiting read's A
   await expect(page.locator(`.rcpt[data-call="${first}"]`)).toContainText("Decided");
   await expect(rows(page)).toHaveCount(2);
   await expect(target(page)).toBeFocused();
-  await expect(gate(page).locator(".gg-title")).toHaveText("◆ 2 reads need your approval");
+  await expect(gate(page).locator(".tray-title")).toHaveText("◆ Smalls wants to run 2 checks");
 });
 
 test("S skips; R opens the reason, Enter needs one, Esc cancels back to that read's Approve", async ({ page, request }) => {
@@ -46,7 +46,7 @@ test("S skips; R opens the reason, Enter needs one, Esc cancels back to that rea
   await expect(reason).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(reason).toBeHidden();
-  await expect(page.locator(`.row[data-call="${second}"] [data-kf] button`).first()).toBeFocused();
+  await expect(page.locator(`.trow[data-call="${second}"] [data-kf] button`).first()).toBeFocused();
   await page.keyboard.press("r");
   await page.getByLabel("Reason for rejecting").fill("Already known from the ticket");
   await page.keyboard.press("Enter");
@@ -94,7 +94,7 @@ test("Shift+A approves all the waiting reads, and the run goes on to the next ga
   await expect(all).toHaveAttribute("aria-keyshortcuts", "Shift+A");
   await gate(page).focus();
   await page.keyboard.press("Shift+A");
-  await expect(page.locator(".gg").first().locator(".gg-title")).toHaveText(/^3 reads · 3 run/, { timeout: 20_000 });
+  await expect(page.locator(".grp-title").first()).toHaveText(/^3 checks · 3 run/, { timeout: 20_000 });
   await until(request, id, ["waiting"]);
   await expect(gate(page)).toBeVisible({ timeout: 20_000 });
   await expect(target(page)).toBeFocused();
@@ -107,7 +107,7 @@ test("turning auto-approve on keeps the decisions already made on the waiting ga
   await page.getByLabel("Reason for rejecting").fill("Already known from the ticket");
   await page.keyboard.press("Enter");
   await expect(page.locator(`.rcpt[data-call="${first}"]`)).toContainText("Rejected by you");
-  await page.getByRole("switch", { name: "Auto-approve reads" }).click();
+  await page.getByRole("switch", { name: "Auto-approve checks" }).click();
   // The rejection stands; the reads nobody had decided are approved, and the run goes on.
   await expect.poll(async () => {
     const view = await (await request.get(`${API}/chats/${id}`)).json();
@@ -122,14 +122,14 @@ test("an action left waiting is named as one in the composer's hint", async ({ p
   const id = await newChat(request, { origin: "chat", auto_approve: true });
   await until(request, id, ["waiting"]);
   await page.goto(`/chats/${id}`);
-  await expect(page.locator("#pending .gg-title")).toHaveText("◆ 1 action needs your approval");
+  await expect(page.locator("#pending .tray-title")).toHaveText("◆ Smalls proposes 1 action");
   await expect(page.locator(".wait-link")).toHaveText(/1 action is waiting for you above/);
 });
 
 test("Shift+S skips all the waiting reads", async ({ page, request }) => {
   await waitingChat(page, request);
   await page.keyboard.press("Shift+S");
-  await expect(page.locator(".gg").first().locator(".gg-title")).toHaveText(/^3 reads · 3 skipped/, { timeout: 20_000 });
+  await expect(page.locator(".grp-title").first()).toHaveText(/^3 checks · 3 skipped/, { timeout: 20_000 });
 });
 
 test("while reads wait, Send is disabled and the hint is an amber link to them", async ({ page, request }) => {
@@ -137,7 +137,7 @@ test("while reads wait, Send is disabled and the hint is an amber link to them",
   await page.getByLabel("Message Smalls").fill("a note");
   await expect(page.getByRole("button", { name: "Send" })).toBeDisabled();
   const link = page.locator(".wait-link");
-  await expect(link).toHaveText(/3 reads are waiting for you above/);
+  await expect(link).toHaveText(/3 checks are waiting for you above/);
   await expect(link).toHaveAttribute("href", "#pending");
 });
 

@@ -13,7 +13,7 @@
     "start": "next start --port ${SMALLS_WEB_PORT:-7317}",
     "lint": "node scripts/check-boundary.mjs && node scripts/check-types.mjs && node scripts/check-vocab.mjs && eslint . && tsc --noEmit",
     "test": "vitest run",
-    "e2e": "playwright test",
+    "e2e": "playwright test && E2E_SCRIPT=concluded playwright test",
     "types": "openapi-typescript lib/openapi.json -o lib/api-types.ts"
   },
   "dependencies": {

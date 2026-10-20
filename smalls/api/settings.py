@@ -7,12 +7,16 @@
 | SMALLS_CHECKPOINT     | the trigger file the runs start from, which is also the clock: `1452` is 14:52   |
 | SMALLS_API_RUNS       | the committed run records loaded at start (default `eval/runs`)                  |
 | SMALLS_API_REGISTRY   | a module with `registry()` and `inventory()`, in place of the bundle's tools     |
-| SMALLS_API_SCRIPT     | the script the scripted profile plays (default the generic dev script)           |
+| SMALLS_API_SCRIPT     | the script the scripted profile plays (default the generic dev script); the     |
+|                       | name `concluded` picks the dev script that reaches a probable cause             |
 | SMALLS_INCIDENT       | the incident number the card shows, when served data cannot say which it is      |
 | SMALLS_API_SCRIPT_DELAY | scripted mode only: seconds per streamed word, so a run can be watched          |
 | SMALLS_API_DRAFTER    | the profile that drafts the stakeholder messages (U8), or `code`; by default the |
 |                       | mid-tier profile in live mode and code in scripted mode                          |
 | SMALLS_API_DRAFT_SCRIPT | the script a `scripted` drafter plays (default the generic dev drafter)        |
+| SMALLS_API_OUTCOMES_PROFILE | the profile that writes one clause per check after a run (v4 plan 5.1), or    |
+|                       | `code`; by default the fast profile in live mode and code in scripted mode       |
+| SMALLS_API_OUTCOMES_SCRIPT | the script a `scripted` summariser plays (default the generic dev one)      |
 | SMALLS_COMMS_CADENCE  | minutes between stakeholder updates by priority, `1=30,2=60` by default: "next    |
 |                       | update due" is the ticket's last update plus this (v4 plan 5.2)                  |
 
@@ -32,6 +36,9 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 MODES = ("live", "scripted")
 DEV_SCRIPT = "smalls.api.devscript:turn"
 DEV_DRAFTER = "smalls.api.devscript:draft"
+DEV_OUTCOMES = "smalls.api.devscript:outcomes"
+SCRIPTS = {"concluded": "smalls.api.devscript:concluded", "dev": DEV_SCRIPT}     # short names for SMALLS_API_SCRIPT
+OUTCOMES = "anthropic-small"            # v4 plan 5.1: summarising, not reasoning, so the provider's fast tier
 DRAFTER = "anthropic-mid"               # U8: the mid-tier profile in the agent's config
 CODE = "code"
 
@@ -60,6 +67,8 @@ class Settings:
     script_delay: float = 0.0           # scripted mode: seconds per streamed word, to watch a run unfold
     drafter: str | None = None          # a profile name, or `code`; None picks by mode (`drafter_profile`)
     draft_script: Any = DEV_DRAFTER     # "module:function"; a test may pass the callable itself
+    outcomes: str | None = None         # a profile name, or `code`; None picks by mode (`outcomes_profile`)
+    outcomes_script: Any = DEV_OUTCOMES
     cadence: tuple[tuple[str, int], ...] = (("1", 30), ("2", 60))     # [comms]: priority code -> minutes between updates
     db_name: str = field(default_factory=lambda: f"smalls-{uuid.uuid4().hex[:12]}")
 
@@ -73,7 +82,10 @@ class Settings:
             raise SystemExit("the API needs SMALLS_BUNDLE and SMALLS_CHECKPOINT; `make api` passes both")
         return cls(bundle=Path(bundle), checkpoint=checkpoint, mode=mode,  # type: ignore[arg-type]
                    runs_dir=Path(os.environ.get("SMALLS_API_RUNS") or ROOT / "eval" / "runs"),
-                   registry=os.environ.get("SMALLS_API_REGISTRY") or None, script=os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT,
+                   registry=os.environ.get("SMALLS_API_REGISTRY") or None,
+                   script=SCRIPTS.get(os.environ.get("SMALLS_API_SCRIPT") or "", os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT),
+                   outcomes=os.environ.get("SMALLS_API_OUTCOMES_PROFILE") or None,
+                   outcomes_script=os.environ.get("SMALLS_API_OUTCOMES_SCRIPT") or DEV_OUTCOMES,
                    incident=os.environ.get("SMALLS_INCIDENT") or None,
                    script_delay=float(os.environ.get("SMALLS_API_SCRIPT_DELAY") or 0),
                    drafter=os.environ.get("SMALLS_API_DRAFTER") or None, draft_script=os.environ.get("SMALLS_API_DRAFT_SCRIPT") or DEV_DRAFTER,
@@ -88,6 +100,11 @@ class Settings:
             return None
         at = datetime.fromisoformat(last_update.replace("Z", "+00:00")) + timedelta(minutes=minutes)
         return at.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @property
+    def outcomes_profile(self) -> str:
+        """Who writes the per-check clauses: the named profile, else the fast one in live mode and code without a key."""
+        return self.outcomes or (OUTCOMES if self.mode == "live" else CODE)
 
     @property
     def drafter_profile(self) -> str:

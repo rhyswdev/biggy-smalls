@@ -27,9 +27,9 @@ test("an agent run's chat opens with its banner and the ticket that started it",
   const id = await newChat(request, { origin: "headless" });
   await until(request, id, ["finished"]);
   await page.goto(`/chats/${id}`);
-  await expect(page.locator(".origin")).toContainText(/Agent run · finished in .* · \d+ reads?, none needed approval/);
-  await expect(page.locator(".tkt")).toContainText("Triggered this run");
-  await expect(page.getByRole("link", { name: "Back to dashboard" })).toBeVisible();
+  await expect(page.locator(".now-sub")).toContainText(/Diagnosis started automatically · .* · \d+ checks? · follow-up checks need your approval/);
+  await expect(page.locator(".tkt")).toContainText("Started automatically");
+  await expect(page.getByRole("navigation", { name: "Smalls" })).toBeVisible();
 });
 
 test("a new chat is not linked to an incident until it is sent", async ({ page }) => {
@@ -57,8 +57,13 @@ test("Enter sends, Shift+Enter starts a new line, and the end of the conversatio
   await until(request, id, ["finished"]);
   await page.setViewportSize({ width: 1440, height: 600 });
   await page.goto(`/chats/${id}`);
-  const gap = () => page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight - window.scrollY);
-  await expect(page.locator(".rep")).toBeVisible();
+  const gap = () => page.evaluate(() => { const m = document.querySelector(".mainc")!; return m.scrollHeight - m.clientHeight - m.scrollTop; });
+  await expect(page.locator(".lead")).toBeVisible();
+  await page.getByRole("button", { name: "Business impact, technical detail and evidence" }).click();
+  await page.getByRole("button", { name: /How Smalls got here/ }).click();                     // the steps, unfolded
+  const closed = page.locator(".steps-card .grp > .grp-sum[aria-expanded=false]");
+  for (let n = await closed.count(); n > 0; n--) await closed.first().click();
+  await page.evaluate(() => document.querySelector(".mainc")!.scrollTo({ top: 0 }));
   expect(await gap()).toBeGreaterThan(200);                       // longer than the window, and still at the top
   const box = page.getByLabel("Message Smalls");
   await box.fill("Why do you think that?");

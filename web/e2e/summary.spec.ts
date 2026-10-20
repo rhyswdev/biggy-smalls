@@ -14,7 +14,7 @@ async function finishedChat(page: import("@playwright/test").Page, request: impo
 
 test("Continue stays disabled until there is a note, then opens the summary", async ({ page, request }) => {
   const id = await finishedChat(page, request);
-  await page.getByRole("link", { name: "Mark resolved…" }).click();
+  await page.getByRole("link", { name: "Resolve incident…" }).click();
   const dialog = page.getByRole("dialog", { name: "Mark it resolved" });
   const go = dialog.getByRole("button", { name: "Continue to summary" });
   await expect(go).toBeDisabled();
@@ -34,11 +34,11 @@ test("Mark resolved waits for a report, then appears without a reload", async ({
   await until(request, id, ["waiting"]);
   await page.goto(`/chats/${id}`);
   await expect(page.locator("#pending")).toBeVisible();
-  await expect(page.getByText("Mark resolved…")).toHaveCount(0);
+  await expect(page.getByText("Resolve incident…")).toHaveCount(0);
   await page.goto(`/chats/${id}?resolve`);                                    // the dialog's address opens nothing either
   await expect(page.locator("#pending")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Mark it resolved" })).toHaveCount(0);
-  const header = page.getByRole("link", { name: "Mark resolved…" });
+  const header = page.getByRole("link", { name: "Resolve incident…" });
   for (let round = 0; round < 12 && !(await header.isVisible()); round++) {
     const gate = page.locator("#pending");
     await expect(gate.or(header).first()).toBeVisible({ timeout: 30_000 });

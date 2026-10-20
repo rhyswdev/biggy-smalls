@@ -39,6 +39,7 @@ from smalls.agent.record import FILES, RunRecord, new_run_id
 from smalls.agent.runner import Runner, Toolbox, bundle_toolbox, module_toolbox
 from smalls.api.db import Database, dumps, loads
 from smalls.api.drafter import Drafter, packet
+from smalls.api.outcomes import Summariser, checks as outcome_checks
 from smalls.api.models import AUDIENCES
 from smalls.api.problems import Problem
 from smalls.api.reader import Reader, note_of
@@ -90,6 +91,8 @@ class Service:
         self.readers: dict[str, Reader] = {}            # one toolbox per `now`, for the API's own reads
         drafter = settings.drafter_profile
         self.drafter: Drafter | None = None if drafter == CODE else Drafter(self.cfg, drafter, settings.draft_script)
+        outcomes = settings.outcomes_profile
+        self.summariser: Summariser | None = None if outcomes == CODE else Summariser(self.cfg, outcomes, settings.outcomes_script)
         self.closing = False
         self.recorded = self.load_recorded()
 
@@ -98,7 +101,7 @@ class Service:
     def capabilities(self) -> dict[str, Any]:
         latest = next((self.recorded_summary(f"run-{run_id}"[:64]) for run_id in reversed(self.recorded)), None)
         return {"mode": self.settings.mode, "checkpoint": self.settings.checkpoint, "now": iso(self.now),
-                "profile": self.cfg.investigator.profile, "drafter": self.settings.drafter_profile,
+                "profile": self.cfg.investigator.profile, "drafter": self.settings.drafter_profile, "outcomes": self.settings.outcomes_profile,
                 "seams": {k: True for k in SEAMS}, "seam_names": SEAMS,
                 "last_recorded": latest}
 
@@ -427,10 +430,36 @@ class Service:
                          (status, stamp() if status in FINISHED else None, run_id))
             conn.execute("UPDATE chat SET status = ? WHERE id = ?", (status, chat_id))
         self.notify(chat_id)
+        if status in ("completed", "incomplete"):
+            self.outcomes(chat_id, run_id)
         runner = self.runners.get(run_id)
         if runner is not None and status in ("completed", "incomplete") and runner.pending_notes() and not self.closing:
             self.attend(self.chat(chat_id), runner)
             self._submit(run_id, chat_id, lambda: runner.reopen())
+
+    def outcomes(self, chat_id: str, run_id: str) -> dict[str, str]:
+        """One clause per check that has none yet, from the summariser (5.1), stored and sent to the browser as one
+        `outcomes` event. Without a summariser, or when it fails, nothing is sent and the web app writes each
+        clause from code. Called on the run's worker after the run settles, so it never holds up the run."""
+        if self.summariser is None:
+            return {}
+        done = {r["call_id"] for r in self.db.rows("SELECT call_id FROM check_outcome WHERE chat_id = ?", (chat_id,))}
+        items = outcome_checks(self.events(chat_id), done)
+        if not items:
+            return {}
+        got = self.summariser.summarise(items)
+        clauses = got.get("clauses") or {}
+        if not clauses:
+            return {}
+        at = stamp()
+        with self.db.write() as conn:
+            conn.executemany("INSERT OR REPLACE INTO check_outcome (chat_id, run_id, call_id, clause, written_by, written_at) VALUES (?, ?, ?, ?, ?, ?)",
+                             [(chat_id, run_id, cid, text, self.summariser.profile, at) for cid, text in clauses.items()])
+            seq = conn.execute("SELECT coalesce(max(seq), 0) + 1 FROM event WHERE chat_id = ?", (chat_id,)).fetchone()[0]
+            conn.execute("INSERT INTO event (chat_id, seq, run_id, agent_seq, type, data, t_wall) VALUES (?, ?, ?, 0, 'outcomes', ?, ?)",
+                         (chat_id, seq, run_id, dumps({"clauses": clauses, "by": self.summariser.profile, "cost_usd": got.get("cost_usd")}), at))
+        self.notify(chat_id)
+        return clauses
 
     def wait(self, chat_id: str, timeout: float = 30) -> None:
         """Until no work on the chat's runs is queued or running: for tests and for shutdown."""

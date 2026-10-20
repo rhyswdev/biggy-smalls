@@ -2,7 +2,7 @@
 // first paint is fold(events); the browser starts from it and folds each streamed event, so any split of the log,
 // and any overlap a reconnect brings, must fold to the same state.
 import { describe, expect, it } from "vitest";
-import { apply, fold, initial, steps, tally } from "@/lib/chat/reduce";
+import { apply, fold, initial, steps, tally, plainWords } from "@/lib/chat/reduce";
 import { fixture, frozen } from "./load";
 
 const NAMES = ["chat-approved", "chat-asking", "headless", "followup", "followup-answered"];
@@ -151,3 +151,16 @@ describe("what a person is not shown, and reasoning as it streams", () => {
   });
 });
 
+
+describe("v4: outcomes and the agent's words on screen", () => {
+  it("folds the summariser's clauses, a later event adding to the earlier", () => {
+    const base = fold(fixture("headless"));
+    const ev = (seq: number, clauses: Record<string, string>) => ({ seq, run_id: "r", agent_seq: 0, type: "outcomes", data: { clauses, by: "p" }, t_wall: "" });
+    const s = fold([ev(base.lastSeq + 1, { a: "found x" }), ev(base.lastSeq + 2, { b: "found y" })], base);
+    expect(s.outcomes).toEqual({ a: "found x", b: "found y" });
+  });
+
+  it("maps the agent's own words where they reach the screen", () => {
+    expect(plainWords("the incident commander stopped the run after 3 reads; Read-only")).toBe("the Major Incident Manager stopped the run after 3 checks; Read-only");
+  });
+});

@@ -14,7 +14,7 @@ export async function readCall(chatId: string, callId: string, runId?: string): 
     const q = runId ? `?run_id=${encodeURIComponent(id.parse(runId))}` : "";
     return { call: await api<CallView>(`/chats/${id.parse(chatId)}/calls/${encodeURIComponent(z.string().max(200).parse(callId))}${q}`) };
   } catch (error) {
-    return { error: error instanceof ApiError ? error.message : "The result could not be read." };
+    return { error: error instanceof ApiError ? error.message : "The result could not be loaded." };
   }
 }
 
@@ -24,6 +24,6 @@ export async function readEvidence(chatId: string, handle: string): Promise<{ ev
     return { evidence: await api<EvidenceView>(`/chats/${id.parse(chatId)}/evidence/${encodeURIComponent(h)}`) };
   } catch (error) {
     if (error instanceof ApiError) return { error: error.message, status: error.status };
-    return { error: "The record could not be read." };
+    return { error: "The record could not be loaded." };
   }
 }

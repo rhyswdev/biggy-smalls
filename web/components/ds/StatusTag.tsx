@@ -2,7 +2,7 @@ import { cx } from "./util";
 
 /** Every status carries a glyph and a word, never colour alone. */
 export const STATUS: Record<string, [tone: string, glyph: string, word: string]> = {
-  leading: ["action", "●", "Leading"],
+  leading: ["action", "●", "Probable cause"],
   open: ["neutral", "○", "Open"],
   rejected: ["muted", "✕", "Rejected"],
   awaiting_approval: ["attention", "◆", "Awaiting approval"],
@@ -10,7 +10,7 @@ export const STATUS: Record<string, [tone: string, glyph: string, word: string]>
   edited: ["ok", "✓", "Approved with edits"],
   auto_approved: ["muted", "✓", "Auto-approved"],
   skipped: ["muted", "–", "Skipped"],
-  rejected_by_user: ["danger", "✕", "Rejected by IC"],
+  rejected_by_user: ["danger", "✕", "Rejected by you"],
   running: ["neutral", "…", "Running"],
   ok: ["ok", "✓", "Returned"],
   error: ["danger", "!", "Error"],

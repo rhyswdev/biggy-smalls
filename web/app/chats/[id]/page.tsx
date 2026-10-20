@@ -1,31 +1,29 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChatScreen } from "@/components/chat/ChatScreen";
 import type { ToolSchema } from "@/components/chat/Gate";
-import { IncidentBar } from "@/components/chat/IncidentBar";
-import { AppBar } from "@/components/shell/AppBar";
+import { Shell } from "@/components/shell/Shell";
 import { api, maybe } from "@/lib/api";
 import { fold } from "@/lib/chat/reduce";
-import type { ChatView, IncidentCard } from "@/lib/types";
+import type { ChatView, ImportedIncident, TicketView } from "@/lib/types";
 
+/** The diagnosis of one chat, in the shell. */
 export default async function Chat({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const view = await maybe<ChatView>(`/chats/${encodeURIComponent(id)}`);
   if (!view) notFound();
-  const [card, schemas] = await Promise.all([api<IncidentCard>("/incident"), api<ToolSchema[]>("/tools/schemas")]);
   const chat = view.chat;
-  const blank = chat.origin === "blank";
-  const resolved = chat.status === "resolved";
+  const [incidents, schemas, ticket] = await Promise.all([
+    api<ImportedIncident[]>("/incidents"), api<ToolSchema[]>("/tools/schemas"),
+    chat.incident ? maybe<TicketView>(`/incident/ticket?number=${encodeURIComponent(chat.incident)}`) : Promise.resolve(null),
+  ]);
+  const mine = incidents.find((i) => i.chat_id === chat.id) ?? null;
   const state = fold(view.events);        // the first paint: the same fold the browser carries on live
-  // Resolving needs a report: the summary is written from it and the messages are drafted from it.
-  const resolvable = !blank && chat.origin !== "past" && !resolved && state.report !== null;
+  // Resolving needs a report and an incident: the summary is written from the one and is about the other.
+  const resolvable = chat.origin !== "blank" && chat.origin !== "past";
   return (
-    <ChatScreen chat={chat} initial={state} schemas={schemas} card={blank ? null : card} resolved={resolved}>
-      <AppBar>
-        <IncidentBar card={blank ? null : card} chatId={chat.id} current="investigate" resolved={resolved} blank={blank}>
-          {resolvable ? <Link className="lbtn" href={`/chats/${chat.id}?resolve`} scroll={false}>Mark resolved…</Link> : null}
-        </IncidentBar>
-      </AppBar>
-    </ChatScreen>
+    <Shell here={{ step: "diagnosis", chatId: chat.id }} incidents={incidents}>
+      <ChatScreen chat={chat} initial={state} schemas={schemas} incident={mine ?? ticket?.incident ?? null} ticket={ticket} imported={Boolean(mine)}
+        nextUpdate={mine?.next_update_due ?? null} resolvable={resolvable} />
+    </Shell>
   );
 }

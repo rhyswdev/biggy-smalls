@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { API, newChat, until } from "./helpers";
+import { API, newChat, unfold, until } from "./helpers";
 
 // Row R15: axe finds nothing on any page, in either theme. Each theme's test walks every screen and state the app
 // has (dashboard, design system, new chat, a chat waiting on reads, a finished chat, the drawer, the resolve dialog,
@@ -49,11 +49,15 @@ for (const theme of ["light", "dark"] as const) {
     await page.keyboard.press("r");
     await expect(page.getByLabel("Reason for rejecting")).toBeFocused();
     await scan("gate, reject reason");
-    await visit(`/chats/${done}`, "finished chat", async (p) => { await expect(p.locator(".rep")).toBeVisible(); });
+    await visit(`/chats/${done}`, "finished chat", async (p) => { await expect(p.locator(".lead")).toBeVisible(); });
+    await unfold(page);
+    await scan("finished chat, unfolded");
+    await page.getByRole("button", { name: /Working picture/ }).click();
+    await scan("working picture panel");
     const handle = await page.locator("button.sm-handle").first().getAttribute("data-handle");
     await visit(`/chats/${done}?evidence=${encodeURIComponent(handle!)}`, "evidence drawer", async (p) => { await expect(p.getByRole("dialog", { name: `Evidence ${handle}` })).toBeVisible(); });
     await visit(`/chats/${done}?resolve`, "resolve dialog", async (p) => { await expect(p.getByRole("dialog", { name: "Mark it resolved" })).toBeVisible(); });
-    if (past) await visit(`/chats/${past.id}`, "recorded run", async (p) => { await expect(p.locator(".rep")).toBeVisible(); });
+    if (past) await visit(`/chats/${past.id}`, "recorded run", async (p) => { await expect(p.locator(".lead")).toBeVisible(); });
     await visit(`/chats/${resolved}/summary`, "summary", async (p) => { await expect(p.getByRole("button", { name: "Save to knowledge base" })).toBeVisible(); });
     await page.getByRole("button", { name: "Save to knowledge base" }).click();
     await page.getByRole("button", { name: "Draft stakeholder messages" }).click();
