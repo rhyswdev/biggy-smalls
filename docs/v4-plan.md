@@ -2,7 +2,7 @@
 
 The approved design is `design/v4/` (one `*.dc.html` per screen, `EmptyV4.dc.html` added after the first review, intent in `design/v4/NOTES.md`, tokens in `design/v4/ds/tokens.css`). This plan maps what we have to what v4 needs, says what we reuse and what we build, and records the judgment calls the brief leaves open. It is a presentation pass: agent reasoning, check choice, confidence scoring, approval semantics and the gate's keys stay as they are.
 
-Status: reviewed 2026-10-20; the three questions in section 9 are answered and folded in. Nothing is built yet.
+Status: reviewed 2026-10-20; the three questions in section 9 are answered and folded in. Built 2026-10-20 to 21, row by row; what changed and why is in `docs/decisions/ui-build.md` section 13.
 
 ## 1. Rules that still bind
 

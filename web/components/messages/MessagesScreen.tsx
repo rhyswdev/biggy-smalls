@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Button, Notice } from "@/components/ds";
 import { IncidentHeader } from "@/components/shell/IncidentHeader";
 import { StatusBanner } from "@/components/shell/StatusBanner";
@@ -82,6 +82,13 @@ export function MessagesScreen({ chatId, data, view, hits, incidentHandle, head 
     if (!r.ok) setError(r.error ?? "Copied, but the mark was not kept.");
   }
 
+  // Opening the tab drafts whatever is not drafted yet, once, so the messages are there without asking.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || !missing.length) return;
+    started.current = true;
+    draft(missing);
+  });
   const all = copiedN === AUDIENCE_KEYS.length;
   const banner = (
     <StatusBanner tone={all ? "ok" : "neutral"} glyph={all ? "✓" : "›"} title={`${all ? `All ${AUDIENCE_KEYS.length}` : `${copiedN} of ${AUDIENCE_KEYS.length}`} messages copied.`}
@@ -110,7 +117,7 @@ export function MessagesScreen({ chatId, data, view, hits, incidentHandle, head 
               <span className="small muted">{view.drafter === "code" ? "Code drafts them from the report’s suggested update; no model is called." : `The ${view.drafter} profile drafts each one: a model call per audience.`}</span>
             </span>
             <Button variant="primary" disabled={drafting.length > 0} onClick={() => draft(missing)}>
-              {drafting.length ? "Drafting…" : missing.length === AUDIENCE_KEYS.length ? "Draft the four messages" : `Draft the other ${missing.length}`}
+              {drafting.length ? <><span className="v-spin" aria-hidden="true" />Drafting…</> : missing.length === AUDIENCE_KEYS.length ? "Draft the four messages" : `Draft the other ${missing.length}`}
             </Button>
           </div>
         ) : null}

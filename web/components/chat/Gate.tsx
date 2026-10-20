@@ -74,7 +74,8 @@ export function refocus(force = false): void {
     if (!g) return;
     const a = document.activeElement as HTMLElement | null;
     if (!force && a && g.contains(a) && a !== g) return;
-    if (!force && a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT")) return;
+    // Typing keeps its focus; an empty box (a message just sent) gives it up to the tray.
+    if (!force && a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT") && (a as HTMLInputElement).value !== "") return;
     (g.querySelector<HTMLElement>("[data-kf] button") ?? g).focus();
   }, 30);
 }

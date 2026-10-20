@@ -5,8 +5,8 @@
 // that is one lower-case token is an identifier or an enum value (the report's `leading` status, a call's
 // `read` kind) and is skipped; "Read-only" is a different sense and is allowed.
 //
-// Screens not yet moved to v4 are listed in PENDING; each screen's commit takes its files off the list, and the
-// last commit empties it.
+// Screens not yet moved to v4 were listed in PENDING while the redesign was built; the sweep emptied it, so the
+// check covers every file.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import ts from "typescript";
@@ -20,10 +20,8 @@ const HIDDEN_ATTRS = new Set(["className", "href", "key", "id", "htmlFor", "type
   "aria-describedby", "aria-current", "aria-haspopup"]);
 const SKIP_FILES = [/lib\/api-types\.ts$/, /lib\/openapi\.json$/];
 
-// Files whose screens are not yet on v4, relative to web/. Emptied by the sweep (v4 plan row 7).
-export const PENDING = new Set([
-  "app/design/page.tsx", "components/chat/IncidentBar.tsx", "components/shell/AppBar.tsx",
-]);
+// Files whose screens are not yet on v4, relative to web/: none since the sweep (v4 plan row 7).
+export const PENDING = new Set([]);
 
 function files(dir) {
   const out = [];

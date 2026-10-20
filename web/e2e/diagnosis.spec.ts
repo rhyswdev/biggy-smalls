@@ -43,6 +43,7 @@ test("@concluded the panel toggles open and close one panel, pushing the convers
   const panel = page.getByRole("complementary", { name: "Working picture" });
   await expect(panel).toContainText("Checks so far");
   expect(await panel.evaluate((el) => getComputedStyle(el).position)).not.toBe("fixed");
+  expect(Math.round((await panel.boundingBox())!.width)).toBe(400);                     // the design's column, whatever it holds
   await page.getByRole("button", { name: "Ticket", exact: true }).click();
   await expect(page.getByRole("complementary", { name: "Ticket" })).toContainText("Work notes · newest first");
   await expect(page.locator(".sidepanel")).toHaveCount(1);

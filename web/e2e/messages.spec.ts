@@ -95,3 +95,13 @@ test("the knowledge-base entry shows what was saved and is found by its own term
   await expect(page.locator(".term").first()).toBeVisible();
   await expect(page.getByText(/^(First of \d+ match(es)?|Match \d+ of \d+) for these terms/)).toBeVisible();
 });
+
+test("opening the communications drafts every message not drafted yet, without asking", async ({ page, request }) => {
+  const id = await finished(request);
+  await request.put(`${API}/chats/${id}/resolution`, { data: { path: "own", note: "Restarted the job by hand; it finished.", resolved_at: "02:40", resolved_by: "Commander" } });
+  await page.goto(`/chats/${id}/communications`);
+  await expect(page.locator(".tab", { hasText: "Not drafted" })).toHaveCount(0, { timeout: 20_000 });
+  await expect(page.getByRole("textbox", { name: "Senior stakeholders" })).toHaveValue(/Scripted draft for Senior stakeholders/);
+  const view = await (await request.get(`${API}/chats/${id}/messages`)).json();
+  expect(view.messages).toHaveLength(4);
+});

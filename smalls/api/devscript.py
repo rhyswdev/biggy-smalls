@@ -6,7 +6,8 @@ every alert stream its listing showed. A follow-up is answered in text. It prove
 
 `concluded` is the same script reaching a probable cause (docs/v4-plan.md 6.8, `SMALLS_API_SCRIPT=concluded`): its
 one hypothesis is leading at 0.75 and its report recommends one generic action, so the answer card, the
-probable-cause banner and the resolve flow can be developed and tested without a key. It still knows nothing
+probable-cause banner and the resolve flow can be developed and tested without a key. A follow-up runs one
+generic check before its answer, so the approval tray can be tested on a follow-up too. It still knows nothing
 about the data.
 
 `outcomes` is the scripted summariser's script (5.1): a generic summary and one generic clause per check, marked
@@ -65,6 +66,9 @@ def first_kind(tools: list[dict[str, Any]]) -> str | None:
 def turn(messages: list[BaseMessage], tools: list[dict[str, Any]], concluded: bool = False) -> tuple[Any, ...]:
     last_human = next((m for m in reversed(messages) if isinstance(m, HumanMessage)), None)
     if last_human is not None and "follow-up from the incident commander" in str(last_human.content):
+        after = messages[max(i for i, m in enumerate(messages) if m is last_human) + 1:]
+        if concluded and not any(isinstance(m, ToolMessage) for m in after):        # one check for the follow-up, then the answer
+            return "Check the last few minutes of logs before answering.", [call("search_logs", 200 + sum(isinstance(m, AIMessage) for m in messages), ("h-dev", "anything new"), since="-10m", limit=5)]
         return ("A scripted answer.", [], {"text": "This is the scripted development profile: it answers every follow-up the same way. "
                                                    "Run the API in live mode for a real answer."})
     k = sum(isinstance(m, AIMessage) for m in messages)

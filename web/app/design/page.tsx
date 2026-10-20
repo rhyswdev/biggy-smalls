@@ -1,3 +1,5 @@
+import { StatusBanner } from "@/components/shell/StatusBanner";
+import { confidenceLabel } from "@/lib/format";
 import { Button, Confidence, ConflictPair, EvidenceRecord, Handles, Label, Notice, StakeholderMessage, StatusTag, Toggle, ToolResult } from "@/components/ds";
 import { STATUS } from "@/components/ds/StatusTag";
 
@@ -20,19 +22,25 @@ function Pane({ theme }: { theme: "light" | "dark" }) {
         <Button variant="primary">Approve</Button><Button>Edit</Button><Button variant="quiet">Skip</Button><Button variant="danger">Reject…</Button>
         <Button size="sm">Small</Button><Button variant="primary" disabled>Disabled</Button>
       </div>
-      <div data-component="Toggle"><Toggle checked label="Auto-approve reads" /> <Toggle checked={false} label="Auto-approve reads" hint="Smalls asks before every read" /></div>
+      <div data-component="Toggle"><Toggle checked label="Auto-approve checks" /> <Toggle checked={false} label="Auto-approve checks" hint="Smalls asks before every check" /></div>
       <div data-component="Handle"><Handles ids={HANDLES} active={HANDLES[1]} /></div>
       <div data-component="StatusTag" style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>{Object.keys(STATUS).map((s) => <StatusTag key={s} status={s} />)}</div>
       <div data-component="Confidence" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <Confidence value={0.62} previous={0.4} since="09:30" /><Confidence value={0.1} previous={0.3} muted />
       </div>
       <div data-component="Notice" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <Notice>A note.</Notice><Notice tone="clamped">Window clamped to now.</Notice><Notice tone="empty">Nothing matched.</Notice><Notice tone="error">The record could not be read.</Notice>
+        <Notice>A note.</Notice><Notice tone="clamped">Window clamped to now.</Notice><Notice tone="empty">Nothing matched.</Notice><Notice tone="error">The record could not be loaded.</Notice>
+      </div>
+      <div data-component="StatusBanner" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <StatusBanner tone="action" glyph="●" title="Probable cause identified." text={`A claim. Confidence: ${confidenceLabel(0.78)}.`} />
+        <StatusBanner tone="attention" title="Waiting on you." text="2 checks need your approval before diagnosis can continue." />
+        <StatusBanner tone="neutral" title="Diagnosis in progress." text="Smalls is running checks." sub="A second line." />
+        <StatusBanner tone="ok" title="Resolved." text="The resolution review and the communications are open." />
       </div>
       <div data-component="ToolResult"><ToolResult tool="search_logs" result={RESULT} highlight={["timeout"]} /></div>
       <div data-component="EvidenceRecord"><EvidenceRecord record={{ handle: HANDLES[0]!, level: "error", source: "app logs", t_utc: "2026-01-01T09:12:40Z", host: "web-01", sampling: "1 in 10 per host", summary: "A job failed on a timeout.", raw: "2026-01-01T09:12:40.120Z ERROR [worker] job failed: timeout after 30s", raw_format: "text, one line" }} highlight={["timeout"]} /></div>
       <div data-component="ConflictPair"><ConflictPair conflict={{ question: "When did the errors start?", answers: [{ source: "Logs", value: "09:12 UTC", handle: HANDLES[0] }, { source: "Ticket", value: "09:20 UTC", note: "When the ticket was opened" }] }} /></div>
-      <div data-component="StakeholderMessage"><StakeholderMessage audience="Executives" channel="#incidents" text="We are investigating failed jobs since 09:12 UTC. Next update at 10:00 UTC." asOf="09:30" nextUpdate="10:00" /></div>
+      <div data-component="StakeholderMessage"><StakeholderMessage audience="Senior stakeholders" channel="#incidents" text="We are investigating failed jobs since 09:12 UTC. Next update at 10:00 UTC." asOf="09:30" nextUpdate="10:00" /></div>
       <Label>Label text</Label>
     </section>
   );
