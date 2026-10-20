@@ -139,6 +139,30 @@ def incident(request: Request) -> dict[str, Any]:
     return service(request).incident()
 
 
+@router.get("/incidents")
+def imported(request: Request) -> list[dict[str, Any]]:
+    """The incidents imported into Smalls, the latest first, each with its diagnosis chat."""
+    return service(request).imported()
+
+
+@router.get("/incidents/open")
+def open_incidents(request: Request) -> dict[str, Any]:
+    """The open P1 and P2 ServiceNow incidents at `now`, each marked imported or not (v4 plan 5.2)."""
+    return service(request).open_incidents()
+
+
+@router.post("/incidents/import", status_code=201)
+def import_incident(body: models.ImportIn, request: Request) -> dict[str, Any]:
+    """Import a ServiceNow incident and start its diagnosis; a second import returns the first one's chat."""
+    return service(request).import_incident(body.number)
+
+
+@router.get("/incident/ticket")
+def ticket(request: Request, number: str) -> dict[str, Any]:
+    """The ticket as ServiceNow holds it at `now`, its work notes newest first, and the source's zone (5.5)."""
+    return service(request).ticket(number[:300])
+
+
 @router.get("/chats/{chat_id}/calls/{call_id}")
 def call(chat_id: str, call_id: str, request: Request, run_id: str | None = None) -> dict[str, Any]:
     s = service(request)

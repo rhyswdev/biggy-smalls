@@ -370,6 +370,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/incident/ticket": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ticket
+         * @description The ticket as ServiceNow holds it at `now`, its work notes newest first, and the source's zone (5.5).
+         */
+        get: operations["ticket_incident_ticket_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/incidents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Imported
+         * @description The incidents imported into Smalls, the latest first, each with its diagnosis chat.
+         */
+        get: operations["imported_incidents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/incidents/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Incident
+         * @description Import a ServiceNow incident and start its diagnosis; a second import returns the first one's chat.
+         */
+        post: operations["import_incident_incidents_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/incidents/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open Incidents
+         * @description The open P1 and P2 ServiceNow incidents at `now`, each marked imported or not (v4 plan 5.2).
+         */
+        get: operations["open_incidents_incidents_open_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kb": {
         parameters: {
             query?: never;
@@ -490,6 +570,14 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /**
+         * ImportIn
+         * @description An incident number to import, or a link that carries one.
+         */
+        ImportIn: {
+            /** Number */
+            number: string;
         };
         /** MessageText */
         MessageText: {
@@ -1334,6 +1422,118 @@ export interface operations {
         };
     };
     incident_incident_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    ticket_incident_ticket_get: {
+        parameters: {
+            query: {
+                number: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    imported_incidents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    import_incident_incidents_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_incidents_incidents_open_get: {
         parameters: {
             query?: never;
             header?: never;

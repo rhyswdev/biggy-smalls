@@ -1,41 +1,58 @@
+import { cookies } from "next/headers";
+import Link from "next/link";
 import { AgentPanel } from "@/components/dashboard/AgentPanel";
-import { ChatsList } from "@/components/dashboard/ChatsList";
-import { IncidentCard } from "@/components/dashboard/IncidentCard";
-import { KnowledgeBand } from "@/components/dashboard/KnowledgeBand";
-import { AppBar } from "@/components/shell/AppBar";
-import { api } from "@/lib/api";
-import { fold } from "@/lib/chat/reduce";
-import type { Capabilities, ChatSummary, ChatView, IncidentCard as Card } from "@/lib/types";
+import { FirstRun } from "@/components/firstrun/FirstRun";
+import { IncidentHeader } from "@/components/shell/IncidentHeader";
+import { Shell } from "@/components/shell/Shell";
+import { StatusBanner } from "@/components/shell/StatusBanner";
+import { api, maybe } from "@/lib/api";
+import { fold, leading } from "@/lib/chat/reduce";
+import { clock } from "@/lib/format";
+import type { Capabilities, ChatView, ImportedIncident, OpenIncidents, TicketView } from "@/lib/types";
 
-export default async function Dashboard() {
-  const [caps, card, chats] = await Promise.all([api<Capabilities>("/capabilities"), api<Card>("/incident"), api<ChatSummary[]>("/chats")]);
-  const agent = chats.find((c) => c.origin === "headless") ?? null;      // the latest "Run agent" chat drives the panel
-  const view = agent ? await api<ChatView>(`/chats/${agent.id}`) : null;
-  const resolved = chats.some((c) => c.status === "resolved" && c.origin !== "past");
+/** `/`: the first-run screen until an incident is imported, then the overview of the latest one. */
+export default async function Home() {
+  const incidents = await api<ImportedIncident[]>("/incidents");
+  if (!incidents.length) {
+    const [open, theme] = await Promise.all([api<OpenIncidents>("/incidents/open"), cookies().then((c) => c.get("smalls-theme")?.value ?? "system")]);
+    return <FirstRun open={open} theme={theme} />;
+  }
+  const incident = incidents[0]!;
+  const [caps, view, ticket] = await Promise.all([
+    api<Capabilities>("/capabilities"), api<ChatView>(`/chats/${incident.chat_id}`),
+    maybe<TicketView>(`/incident/ticket?number=${encodeURIComponent(incident.number)}`),
+  ]);
+  const state = fold(view.events);
+  const cause = leading(state.report);
+  const due = incident.next_update_due ? `Next update due ${clock(incident.next_update_due)} UTC.` : "";
+  const running = view.chat.status === "running";
+  const banner = running ? (
+    <StatusBanner tone="action" title="Diagnosis in progress." text={`Smalls started automatically when the ticket was imported. ${due}`.trim()} />
+  ) : view.chat.status === "stopped" ? (
+    <StatusBanner tone="action" title="Diagnosis stopped." text={`Start it again from the Smalls panel. ${due}`.trim()} />
+  ) : cause ? (
+    <StatusBanner tone="action" glyph="●" title="Probable cause identified." text={`${cause.statement} ${due}`.trim()}>
+      <Link className="lbtn primary" href={`/chats/${incident.chat_id}`}>Open diagnosis</Link>
+    </StatusBanner>
+  ) : (
+    <StatusBanner tone="neutral" title="No probable cause yet." text={due}>
+      <Link className="lbtn" href={`/chats/${incident.chat_id}`}>Open diagnosis</Link>
+    </StatusBanner>
+  );
   return (
-    <div className="v-dash" style={{ minHeight: "100vh" }}>
-      <AppBar current="dashboard" />
-      <main style={{ maxWidth: 1160, margin: "0 auto", padding: "28px 24px 64px", display: "flex", flexDirection: "column", gap: 32, boxSizing: "border-box" }}>
-        <h1 className="sm-visually-hidden">Smalls dashboard</h1>
-        <section aria-labelledby="inc-h" className="sec">
-          <div className="sec-head">
-            <h2 id="inc-h" className="title" style={{ margin: 0 }}>Incidents</h2>
-            <span className="small muted">Pushed from ServiceNow when a work note is added</span>
-          </div>
-          <IncidentCard card={card} resolved={resolved}>
-            <AgentPanel chatId={agent?.id ?? null} initial={view ? fold(view.events) : null} author={card.note.author} noteTime={card.note.time}
-              recorded={caps.last_recorded} profile={caps.profile} mode={caps.mode} />
-          </IncidentCard>
-        </section>
-        <section aria-labelledby="chats-h" className="sec">
-          <div className="sec-head">
-            <h2 id="chats-h" className="title" style={{ margin: 0 }}>Chats</h2>
-            <span className="small muted">Each chat keeps every read, decision and reason</span>
-          </div>
-          <ChatsList chats={chats} />
-        </section>
-        <KnowledgeBand />
+    <Shell here={{ step: "overview" }} incidents={incidents}>
+      <IncidentHeader incident={incident} ticket={ticket} resolved={incident.status === "resolved"} banner={banner} />
+      <main className="cols">
+        <div className="maincol" />
+        <aside className="rail" aria-label="Smalls diagnosis">
+          <section className="card pad v-dash" aria-labelledby="ag-h">
+            <h2 id="ag-h" className="c-h" style={{ marginBottom: 10 }}>Smalls diagnosis</h2>
+            <div className="inc-side-in">
+              <AgentPanel chatId={incident.chat_id} initial={state} author={null} noteTime={null} recorded={caps.last_recorded} profile={caps.profile} mode={caps.mode} />
+            </div>
+          </section>
+        </aside>
       </main>
-    </div>
+    </Shell>
   );
 }

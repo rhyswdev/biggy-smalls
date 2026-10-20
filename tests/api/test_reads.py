@@ -23,8 +23,8 @@ import test_leak_tools
 from smalls.api.app import create_app
 from smalls.api.settings import DEV_SCRIPT
 
-PLANNED_KEYS = {"planned_utc"}      # a scheduled time, labelled as a plan
-WALL = {"created", "started", "finished", "t_wall", "asked_at", "decided_at", "submitted_at", "delivered_at", "recorded", "started_at",
+PLANNED_KEYS = {"planned_utc", "next_update_due"}      # a scheduled time, labelled as a plan
+WALL = {"created", "started", "finished", "t_wall", "asked_at", "decided_at", "submitted_at", "delivered_at", "recorded", "started_at", "imported_at",
         "run_id"}       # a run id is minted from the wall clock
 NOW_BY_DEFINITION = {"now", "time", "as_of"}     # the checkpoint itself, the trigger's own time, a report's as-of
 
@@ -83,7 +83,13 @@ def test_every_read_endpoint_at_a_checkpoint(settings, checkpoint, monkeypatch):
         chat_id = client.post("/chats", json={"origin": "headless"}).json()["id"]
         service.wait(chat_id)
         answers = {"/health": client.get("/health"), "/capabilities": client.get("/capabilities"), "/incident": client.get("/incident"),
-                   "/chats": client.get("/chats"), "/tools/schemas": client.get("/tools/schemas")}
+                   "/chats": client.get("/chats"), "/tools/schemas": client.get("/tools/schemas"),
+                   "/incidents/open": client.get("/incidents/open")}
+        number = answers["/incident"].json()["incident"]["number"]
+        answers["/incident/ticket"] = client.get("/incident/ticket", params={"number": number})
+        imported = client.post("/incidents/import", json={"number": number})
+        service.wait(imported.json()["chat_id"])
+        answers["/incidents"] = client.get("/incidents")
         view = client.get(f"/chats/{chat_id}")
         answers["/chats/{id}"] = view
         events = view.json()["events"]

@@ -149,6 +149,23 @@
     "title": "HTTPValidationError",
     "type": "object"
    },
+   "ImportIn": {
+    "additionalProperties": false,
+    "description": "An incident number to import, or a link that carries one.",
+    "properties": {
+     "number": {
+      "maxLength": 300,
+      "minLength": 1,
+      "title": "Number",
+      "type": "string"
+     }
+    },
+    "required": [
+     "number"
+    ],
+    "title": "ImportIn",
+    "type": "object"
+   },
    "MessageText": {
     "additionalProperties": false,
     "properties": {
@@ -1466,6 +1483,134 @@
      }
     },
     "summary": "Incident"
+   }
+  },
+  "/incident/ticket": {
+   "get": {
+    "description": "The ticket as ServiceNow holds it at `now`, its work notes newest first, and the source's zone (5.5).",
+    "operationId": "ticket_incident_ticket_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "number",
+      "required": true,
+      "schema": {
+       "title": "Number",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Ticket Incident Ticket Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ticket"
+   }
+  },
+  "/incidents": {
+   "get": {
+    "description": "The incidents imported into Smalls, the latest first, each with its diagnosis chat.",
+    "operationId": "imported_incidents_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "additionalProperties": true,
+          "type": "object"
+         },
+         "title": "Response Imported Incidents Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Imported"
+   }
+  },
+  "/incidents/import": {
+   "post": {
+    "description": "Import a ServiceNow incident and start its diagnosis; a second import returns the first one's chat.",
+    "operationId": "import_incident_incidents_import_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ImportIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Import Incident Incidents Import Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Import Incident"
+   }
+  },
+  "/incidents/open": {
+   "get": {
+    "description": "The open P1 and P2 ServiceNow incidents at `now`, each marked imported or not (v4 plan 5.2).",
+    "operationId": "open_incidents_incidents_open_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Open Incidents Incidents Open Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Open Incidents"
    }
   },
   "/kb": {

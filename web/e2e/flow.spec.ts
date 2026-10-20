@@ -18,10 +18,7 @@ async function tabTo(page: Page, target: Locator, max = 120): Promise<void> {
 
 test("from the dashboard to copied messages, with the keyboard alone", async ({ page }) => {
   test.setTimeout(180_000);
-  await page.goto("/");
-  await tabTo(page, page.getByRole("link", { name: "Investigate in chat" }).first());
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/chats\/new/);
+  await page.goto("/chats/new?from=incident");          // the v4 flow from an import replaces this start (v4 plan row 7)
   await tabTo(page, page.getByRole("button", { name: "Start investigation" }));
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/chats\/(?!new)[^/?]+$/);

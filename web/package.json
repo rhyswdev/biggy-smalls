@@ -11,7 +11,7 @@
     "dev": "next dev --port ${SMALLS_WEB_PORT:-7317}",
     "build": "next build && node scripts/check-client-assets.mjs",
     "start": "next start --port ${SMALLS_WEB_PORT:-7317}",
-    "lint": "node scripts/check-boundary.mjs && node scripts/check-types.mjs && eslint . && tsc --noEmit",
+    "lint": "node scripts/check-boundary.mjs && node scripts/check-types.mjs && node scripts/check-vocab.mjs && eslint . && tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
     "types": "openapi-typescript lib/openapi.json -o lib/api-types.ts"

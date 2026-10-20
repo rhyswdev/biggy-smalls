@@ -126,6 +126,92 @@ class Reader:
                 return f.get("user_name")
         return None
 
+    # -- the service desk: open incidents, import and the ticket view (v4 plan 5.2, 5.5) -------------------
+
+    @property
+    def connected(self) -> bool:
+        """Whether the ServiceNow source is loaded, so the screens can say it is connected."""
+        return self.store is not None and "servicenow" in self.store.integration.sources
+
+    def _incident_rows(self) -> list[dict[str, Any]]:
+        from smalls.tools.store import render_native
+
+        if not self.connected:
+            return []
+        rows = self.rows("SELECT handle, native, flags, t_event, t_known FROM visible WHERE kind = 'incident' AND source = 'servicenow'")
+        for row in rows:
+            row["fields"] = _result(render_native(row["native"], row["flags"]))
+        return rows
+
+    @staticmethod
+    def card(row: dict[str, Any]) -> dict[str, Any]:
+        """An incident as the header and the lists show it: its own fields at `now`, and the two facts read off
+        them. A major incident is what `major_incident_state` says when the ticket carries it, else priority 1."""
+        f = row["fields"]
+        card = {key: f.get(field) for key, field in FIELDS.items()}
+        code = str(f.get("priority", "")).split(" ", 1)[0] or None
+        state = str(f.get("major_incident_state") or "").strip().lower()
+        card.update(handle=row["handle"], opened=iso_ms(row["t_event"]), updated=iso_ms(row["t_known"]), priority_code=code,
+                    major=state == "accepted" if state else code == "1",
+                    active=str(f.get("state", "")).lower() not in INACTIVE)
+        return card
+
+    def find_incident(self, number: str) -> dict[str, Any] | None:
+        """The ServiceNow incident with this number visible at `now`, as a card, or None."""
+        wanted = number.strip().upper()
+        row = next((r for r in self._incident_rows() if str(r["fields"].get("number", "")).upper() == wanted), None)
+        return self.card(row) if row else None
+
+    def open_incidents(self) -> list[dict[str, Any]]:
+        """The open P1 and P2 incidents visible at `now`, highest priority first, then the latest opened."""
+        cards = [self.card(r) for r in self._incident_rows()]
+        cards = [c for c in cards if c["active"] and c["priority_code"] in ("1", "2")]
+        return sorted(cards, key=lambda c: (c["priority_code"], -(datetime.fromisoformat(c["opened"].replace("Z", "+00:00")).timestamp())))
+
+    def work_notes(self, handle: str) -> list[dict[str, Any]]:
+        """An incident's work notes at `now`, newest first: who wrote each (by name, from the served user records),
+        when in UTC and in the ticket source's own zone, and the text."""
+        from zoneinfo import ZoneInfo
+
+        from smalls.tools.store import render_native
+
+        zone = ZoneInfo(self.store.integration.zone("servicenow").key)
+        names = {}
+        for row in self.rows("SELECT native, flags FROM visible WHERE kind = 'user' AND source = 'servicenow'"):
+            f = _result(render_native(row["native"], row["flags"]))
+            if f.get("user_name"):
+                names[f["user_name"]] = f.get("name") or f["user_name"]
+        out = []
+        for row in self.rows("SELECT handle, native, flags, t_event, t_known FROM visible WHERE kind = 'note' AND source = 'servicenow' "
+                             "AND parent = ? ORDER BY t_known DESC", (handle,)):
+            f = _result(render_native(row["native"], row["flags"]))
+            if f.get("element") not in (None, "work_notes"):
+                continue
+            ms = row["t_event"] or row["t_known"]
+            by = f.get("sys_created_by")
+            out.append({"handle": row["handle"], "author": names.get(by, by), "user_name": by, "utc": iso_ms(ms),
+                        "local": datetime.fromtimestamp(ms / 1000, zone).strftime("%H:%M:%S"), "text": str(f.get("value") or "").strip()})
+        return out
+
+    def ticket(self, number: str) -> dict[str, Any] | None:
+        """The ticket view: the incident's fields as ServiceNow names them, its work notes newest first, and the
+        source's zone, which is the only place a screen shows a local time."""
+        from zoneinfo import ZoneInfo
+
+        card = self.find_incident(number)
+        if card is None:
+            return None
+        row = next(r for r in self._incident_rows() if r["handle"] == card["handle"])
+        f = row["fields"]
+        zone = self.store.integration.zone("servicenow").key
+        opened_ms = row["t_event"]
+        return {"incident": card, "zone": zone,
+                "fields": {"state": f.get("state"), "priority": f.get("priority"), "impact": f.get("impact"), "urgency": f.get("urgency"),
+                           "business_service": f.get("business_service"), "cmdb_ci": f.get("cmdb_ci"),
+                           "assignment_group": f.get("assignment_group"), "assigned_to": f.get("assigned_to")},
+                "opened": {"utc": iso_ms(opened_ms), "local": datetime.fromtimestamp(opened_ms / 1000, ZoneInfo(zone)).strftime("%H:%M:%S")},
+                "notes": self.work_notes(card["handle"])}
+
     # -- the evidence drawer ---------------------------------------------------------------------------------
 
     def record(self, handle: str) -> dict[str, Any] | None:

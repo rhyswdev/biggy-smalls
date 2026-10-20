@@ -34,7 +34,7 @@ for (const theme of ["light", "dark"] as const) {
     await request.put(`${API}/chats/${resolved}/resolution`, { data: { path: "own", note: "Restarted the job by hand.", resolved_at: "02:40", resolved_by: "Commander" } });
     const past = ((await (await request.get(`${API}/chats`)).json()) as { id: string; origin: string }[]).find((c) => c.origin === "past");
 
-    await visit("/", "dashboard", async (p) => { await expect(p.locator("main")).toBeVisible(); });
+    await visit("/", "first run or overview", async (p) => { await expect(p.locator("main")).toBeVisible(); });
     await visit("/design", "design system", async (p) => { await expect(p.locator("main")).toBeVisible(); });
     await visit("/chats/new", "new chat", async (p) => { await expect(p.getByRole("textbox").first()).toBeVisible(); });
     await visit(`/chats/${waiting}`, "chat waiting on reads", async (p) => { await expect(p.locator("#pending")).toBeVisible(); });

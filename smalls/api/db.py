@@ -53,6 +53,9 @@ CREATE TABLE message (
   chat_id TEXT NOT NULL, audience TEXT NOT NULL, draft TEXT NOT NULL, text TEXT NOT NULL, copied_hash TEXT, drafted_by TEXT NOT NULL,
   why_code TEXT, usage TEXT, cost_usd REAL, drafted_at TEXT NOT NULL, PRIMARY KEY (chat_id, audience)
 );
+CREATE TABLE incident (
+  number TEXT PRIMARY KEY, chat_id TEXT NOT NULL REFERENCES chat(id), imported_at TEXT NOT NULL   -- a ServiceNow incident imported (v4 plan 5.2)
+);
 CREATE TABLE kb_entry (
   id INTEGER PRIMARY KEY, chat_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, terms TEXT NOT NULL, saved_at TEXT NOT NULL
 );
@@ -64,7 +67,7 @@ CREATE TRIGGER kb_entry_ad AFTER DELETE ON kb_entry BEGIN
   INSERT INTO kb_fts (kb_fts, rowid, title, body, terms) VALUES ('delete', old.id, old.title, old.body, old.terms);
 END;
 """
-APP_TABLES = ("chat", "run", "event", "gate", "note", "resolution", "writeup", "message", "kb_entry")
+APP_TABLES = ("chat", "run", "event", "gate", "note", "resolution", "writeup", "message", "incident", "kb_entry")
 
 
 def connect(uri: str) -> sqlite3.Connection:

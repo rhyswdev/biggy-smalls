@@ -44,9 +44,7 @@ test("a new chat is not linked to an incident until it is sent", async ({ page }
 });
 
 test("Investigate in chat loads the commander's note to send as it is", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("link", { name: "Investigate in chat" }).click();
-  await expect(page).toHaveURL(/\/chats\/new\?from=incident$/);
+  await page.goto("/chats/new?from=incident");
   const box = page.getByLabel("Message Smalls");
   await expect(box).not.toHaveValue("");
   await page.getByRole("button", { name: "Start investigation" }).click();

@@ -203,3 +203,52 @@ export interface MessagesView {
 }
 
 export interface KbHit { id: number; chat_id: string; title: string; terms: string; saved_at: string; snippet?: string; score?: number }
+
+// -- the service desk (v4 plan 5.2, 5.5) ---------------------------------------------------------------------
+
+/** An incident as the header, the sidebar and the lists show it: its own fields at `now`. */
+export interface IncidentSummary {
+  number: string;
+  short_description: string | null;
+  priority: string | null;
+  priority_code: string | null;
+  state: string | null;
+  impact: string | null;
+  urgency: string | null;
+  service: string | null;
+  group: string | null;
+  ci: string | null;
+  assignee: string | null;
+  handle: string;
+  opened: string;
+  updated: string;
+  major: boolean;
+  active: boolean;
+}
+
+/** An imported incident, with its diagnosis chat. */
+export interface ImportedIncident extends IncidentSummary {
+  chat_id: string;
+  imported_at: string;
+  status: ChatStatus;
+  next_update_due: string | null;
+  resolution: { resolved_at: string; resolved_by: string } | null;
+}
+
+export interface OpenIncidents {
+  connected: boolean;
+  incidents: (IncidentSummary & { imported: boolean; chat_id: string | null })[];
+}
+
+export interface TicketView {
+  incident: IncidentSummary;
+  zone: string;
+  fields: {
+    state: string | null; priority: string | null; impact: string | null; urgency: string | null; business_service: string | null;
+    cmdb_ci: string | null; assignment_group: string | null; assigned_to: string | null;
+  };
+  opened: { utc: string; local: string };
+  notes: { handle: string; author: string | null; user_name: string | null; utc: string; local: string; text: string }[];
+}
+
+export interface KbRow { id: number; chat_id: string; title: string; terms: string; saved_at: string }

@@ -81,6 +81,7 @@ class Service:
         self.now: datetime = settings.now()
         self.pool = ThreadPoolExecutor(max_workers=settings.workers, thread_name_prefix="smalls-run")
         self.runners: dict[str, Runner] = {}            # run id -> the runner of a run kept in memory
+        self.sinks: dict[str, AppDbSink] = {}           # run id -> the sink its events go to the app database through
         self.locks: dict[str, threading.Lock] = {}      # run id -> the lock every start, resume and follow-up of it takes
         self.futures: dict[str, Future] = {}            # run id -> its latest piece of work on the pool
         self.guard = threading.Lock()
@@ -221,6 +222,72 @@ class Service:
             return None, None
         return card.get("short_description"), card.get("number")
 
+    # -- the service desk (v4 plan 5.2, 5.3, 5.5) -------------------------------------------------------------
+
+    def imported(self) -> list[dict[str, Any]]:
+        """The incidents imported into Smalls, the latest first, each with its card at `now` and its diagnosis chat."""
+        out = []
+        for row in self.db.rows("SELECT number, chat_id, imported_at FROM incident ORDER BY imported_at DESC, rowid DESC"):
+            card = self.reader().find_incident(row["number"])
+            if card is None:
+                continue
+            resolution = self.db.row("SELECT resolved_at, resolved_by FROM resolution WHERE chat_id = ?", (row["chat_id"],))
+            out.append({**card, "chat_id": row["chat_id"], "imported_at": row["imported_at"], "status": self.status(row["chat_id"]),
+                        "next_update_due": self.settings.next_update(card["priority_code"], card["updated"]), "resolution": resolution})
+        return out
+
+    def open_incidents(self) -> dict[str, Any]:
+        """The open P1 and P2 ServiceNow incidents at `now`, each marked imported or not, read afresh every time,
+        so a new one appears without anyone importing it."""
+        reader = self.reader()
+        chats = {r["number"]: r["chat_id"] for r in self.db.rows("SELECT number, chat_id FROM incident")}
+        return {"connected": reader.connected,
+                "incidents": [{**c, "imported": c["number"] in chats, "chat_id": chats.get(c["number"])} for c in reader.open_incidents()]}
+
+    @staticmethod
+    def incident_number(text: str) -> str:
+        """The incident number in what was typed: the number itself, or a link that carries it."""
+        import re
+
+        found = re.search(r"\bINC\d{3,}\b", text, re.IGNORECASE)
+        return (found[0] if found else text.strip()).upper()
+
+    def import_incident(self, text: str) -> dict[str, Any]:
+        """Import a ServiceNow incident: find it at `now`, create its diagnosis chat and start it (5.3). A
+        second import of the same number returns the chat the first one made."""
+        number = self.incident_number(text)
+        existing = self.db.row("SELECT chat_id FROM incident WHERE number = ?", (number,))
+        if existing:
+            return {"number": number, "chat_id": existing["chat_id"], "already": True}
+        reader = self.reader()
+        card = reader.find_incident(number)
+        if card is None:
+            raise Problem(404, "Not found", f"ServiceNow has no incident {number} that Smalls can see. Check the number and try again.")
+        chat = self.create_chat("headless", trigger=self.trigger_for(card), auto_approve=False, title=card.get("short_description") or number,
+                                incident=number)
+        with self.db.write() as conn:
+            conn.execute("INSERT OR IGNORE INTO incident (number, chat_id, imported_at) VALUES (?, ?, ?)", (number, chat["id"], stamp()))
+        return {"number": number, "chat_id": chat["id"], "already": False}
+
+    def trigger_for(self, card: dict[str, Any]) -> str:
+        """What an imported incident's first run starts from: the checkpoint's own note when it belongs to this
+        incident, else the ticket's latest work note under its author's name, after the short description."""
+        trigger = self.settings.trigger()
+        mine = (self.reader().incident(trigger, named=self.settings.incident).get("incident") or {}).get("number")
+        if mine == card["number"]:
+            return trigger
+        notes = self.reader().work_notes(card["handle"])
+        latest = notes[0] if notes else None
+        head = f"From: {latest['author']}\nTime: {latest['utc'][11:16]}\n\n" if latest else ""
+        body = "\n\n".join(t for t in (card.get("short_description"), latest["text"] if latest else None) if t)
+        return f"{head}{card['number']}: {body}"
+
+    def ticket(self, number: str) -> dict[str, Any]:
+        found = self.reader().ticket(self.incident_number(number))
+        if found is None:
+            raise Problem(404, "Not found", f"ServiceNow has no incident {number} that Smalls can see.")
+        return found
+
     def records(self, chat_id: str) -> list[RunRecord]:
         return [RunRecord(None, run["run_id"], backend=self.db.records) for run in self.runs(chat_id)]
 
@@ -243,14 +310,13 @@ class Service:
         text = (trigger if trigger is not None else self.settings.trigger()).strip()
         if not text:
             raise Problem(422, "Invalid request", "A chat starts from a question or a note; this one is empty.")
-        headless = origin == "headless"
         if origin != "blank" and (title is None or incident is None):     # a chat about the incident is named after it
             found = self._incident_of(text, self.now)
             title, incident = title or found[0], incident or found[1]
         title = title or (note_of(text)["text"] or text).strip().splitlines()[0][:120]
         with self.db.write() as conn:
             conn.execute("INSERT INTO chat (id, origin, title, incident, now, created, auto_approve, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                         (chat_id, origin, title, incident, iso(self.now), stamp(), int(auto_approve or headless), "running"))
+                         (chat_id, origin, title, incident, iso(self.now), stamp(), int(auto_approve), "running"))
         self.start_run(chat_id, text)
         return self.chat(chat_id)
 
@@ -306,7 +372,20 @@ class Service:
                         via="headless" if headless else "web", script=self.settings.script, backend=self.db.records)
         with self.guard:
             self.runners[run_id] = runner
+            self.sinks[run_id] = sink
             self.locks.setdefault(run_id, threading.Lock())
+        return runner
+
+    def attend(self, chat: dict[str, Any], runner: Runner) -> Runner:
+        """Before a follow-up: a headless chat's first run went unattended, with its reads on (5.3), but what
+        follows is the person's, so the run now stops at its gates for them and the chat's own switch, off by
+        default, decides its reads. Only the API's policy changes; the agent is the same."""
+        if chat["origin"] != "headless" or runner.attended:
+            return runner
+        runner.attended, runner.stop_at_gate, runner.via = True, True, "web"
+        if runner.run_id in self.sinks:
+            self.sinks[runner.run_id].attended = True
+        runner.set_auto_approve(bool(chat["auto_approve"]))
         return runner
 
     def start_run(self, chat_id: str, trigger: str) -> str:
@@ -350,6 +429,7 @@ class Service:
         self.notify(chat_id)
         runner = self.runners.get(run_id)
         if runner is not None and status in ("completed", "incomplete") and runner.pending_notes() and not self.closing:
+            self.attend(self.chat(chat_id), runner)
             self._submit(run_id, chat_id, lambda: runner.reopen())
 
     def wait(self, chat_id: str, timeout: float = 30) -> None:
@@ -420,6 +500,7 @@ class Service:
         note = runner.add_note(text)
         self._record_note(chat_id, run["run_id"], note)
         if run["status"] in ("completed", "incomplete"):        # finished: the note continues the same run (S3)
+            self.attend(chat, runner)
             self._submit(run["run_id"], chat_id, lambda: runner.reopen())
             return {**note, "delivery": "follow-up"}
         if run["status"] in ("paused", "stopped") and not self.pending_gate(chat_id):

@@ -27,6 +27,12 @@ class NewChat(Closed):
     title: str | None = Field(None, max_length=200)
 
 
+class ImportIn(Closed):
+    """An incident number to import, or a link that carries one."""
+
+    number: str = Field(min_length=1, max_length=300)
+
+
 class Answer(Closed):
     """One call's answer: approve (optionally with edited arguments), skip (defer) or reject with a reason."""
 

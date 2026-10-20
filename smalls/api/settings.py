@@ -13,6 +13,8 @@
 | SMALLS_API_DRAFTER    | the profile that drafts the stakeholder messages (U8), or `code`; by default the |
 |                       | mid-tier profile in live mode and code in scripted mode                          |
 | SMALLS_API_DRAFT_SCRIPT | the script a `scripted` drafter plays (default the generic dev drafter)        |
+| SMALLS_COMMS_CADENCE  | minutes between stakeholder updates by priority, `1=30,2=60` by default: "next    |
+|                       | update due" is the ticket's last update plus this (v4 plan 5.2)                  |
 
 Nothing here names a bundle, an incident or a model: the Makefile passes the bundle and the checkpoint.
 """
@@ -34,6 +36,14 @@ DRAFTER = "anthropic-mid"               # U8: the mid-tier profile in the agent'
 CODE = "code"
 
 
+def cadence(text: str) -> tuple[tuple[str, int], ...]:
+    """`1=30,2=60` as pairs; a malformed entry stops the start with a message."""
+    try:
+        return tuple((k.strip(), int(v)) for k, v in (pair.split("=", 1) for pair in text.split(",") if pair.strip()))
+    except ValueError:
+        raise SystemExit(f"SMALLS_COMMS_CADENCE must look like 1=30,2=60, not {text!r}") from None
+
+
 @dataclass(frozen=True)
 class Settings:
     bundle: Path
@@ -50,6 +60,7 @@ class Settings:
     script_delay: float = 0.0           # scripted mode: seconds per streamed word, to watch a run unfold
     drafter: str | None = None          # a profile name, or `code`; None picks by mode (`drafter_profile`)
     draft_script: Any = DEV_DRAFTER     # "module:function"; a test may pass the callable itself
+    cadence: tuple[tuple[str, int], ...] = (("1", 30), ("2", 60))     # [comms]: priority code -> minutes between updates
     db_name: str = field(default_factory=lambda: f"smalls-{uuid.uuid4().hex[:12]}")
 
     @classmethod
@@ -65,7 +76,18 @@ class Settings:
                    registry=os.environ.get("SMALLS_API_REGISTRY") or None, script=os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT,
                    incident=os.environ.get("SMALLS_INCIDENT") or None,
                    script_delay=float(os.environ.get("SMALLS_API_SCRIPT_DELAY") or 0),
-                   drafter=os.environ.get("SMALLS_API_DRAFTER") or None, draft_script=os.environ.get("SMALLS_API_DRAFT_SCRIPT") or DEV_DRAFTER)
+                   drafter=os.environ.get("SMALLS_API_DRAFTER") or None, draft_script=os.environ.get("SMALLS_API_DRAFT_SCRIPT") or DEV_DRAFTER,
+                   **({"cadence": cadence(os.environ["SMALLS_COMMS_CADENCE"])} if os.environ.get("SMALLS_COMMS_CADENCE") else {}))
+
+    def next_update(self, priority_code: str | None, last_update: str) -> str | None:
+        """When the next stakeholder update is due: the last update plus the cadence for the priority, or None."""
+        from datetime import timedelta
+
+        minutes = dict(self.cadence).get(priority_code or "")
+        if minutes is None:
+            return None
+        at = datetime.fromisoformat(last_update.replace("Z", "+00:00")) + timedelta(minutes=minutes)
+        return at.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @property
     def drafter_profile(self) -> str:
