@@ -22,9 +22,9 @@ const SKIP_FILES = [/lib\/api-types\.ts$/, /lib\/openapi\.json$/];
 
 // Files whose screens are not yet on v4, relative to web/. Emptied by the sweep (v4 plan row 7).
 export const PENDING = new Set([
-  "app/chats/[id]/summary/page.tsx", "app/chats/[id]/messages/page.tsx", "app/chats/new/page.tsx", "app/design/page.tsx",
+  "app/chats/[id]/summary/page.tsx", "app/chats/[id]/messages/page.tsx", "app/design/page.tsx",
   "components/chat/IncidentBar.tsx",
-  "components/chat/NewChat.tsx", "components/chat/ResolveDialog.tsx",
+  "components/chat/ResolveDialog.tsx",
   
  
   "components/ds/StakeholderMessage.tsx",

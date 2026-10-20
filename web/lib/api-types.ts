@@ -624,6 +624,8 @@ export interface components {
              * @default false
              */
             auto_approve: boolean;
+            /** Incident */
+            incident?: string | null;
             /**
              * Origin
              * @enum {string}

@@ -34,20 +34,21 @@ test("an agent run's chat opens with its banner and the ticket that started it",
 
 test("a new chat is not linked to an incident until it is sent", async ({ page }) => {
   await page.goto("/chats/new");
-  await expect(page.locator(".inc")).toContainText("Not linked to an incident yet");
-  await expect(page.getByRole("heading", { name: "New chat" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "What’s going on?" })).toBeVisible();
+  await expect(page.getByLabel("Link this chat to an incident")).toHaveValue("");
   await expect(page.getByRole("button", { name: "Send" })).toBeDisabled();
   await page.getByLabel("Message Smalls").fill("Jobs on the batch hosts keep failing since this morning.");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(page).toHaveURL(/\/chats\/[0-9a-f]+$/);
   await expect(page.locator(".msg-ic").first()).toContainText("Jobs on the batch hosts keep failing");
+  await expect(page.locator(".inc-meta")).toContainText("Not linked to an incident yet");             // it is the diagnosis now
 });
 
 test("Investigate in chat loads the commander's note to send as it is", async ({ page }) => {
   await page.goto("/chats/new?from=incident");
   const box = page.getByLabel("Message Smalls");
   await expect(box).not.toHaveValue("");
-  await page.getByRole("button", { name: "Start investigation" }).click();
+  await page.getByRole("button", { name: "Send" }).click();
   await expect(page).toHaveURL(/\/chats\/[0-9a-f]+$/);
   await expect(page.locator("#pending")).toBeVisible({ timeout: 20_000 });          // reads ask by default
 });

@@ -20,12 +20,13 @@ function failed(error: unknown): ActionResult {
 }
 
 /** Start an investigation in a chat ("Investigate in chat", or a new chat): open the chat it made. */
-export async function startChat(input: { origin: "chat" | "blank"; trigger: string; autoApprove: boolean }): Promise<ActionResult> {
-  const body = z.object({ origin: z.enum(["chat", "blank"]), trigger: text(8000), autoApprove: z.boolean() }).safeParse(input);
+export async function startChat(input: { origin: "chat" | "blank"; trigger: string; autoApprove: boolean; incident?: string | null }): Promise<ActionResult> {
+  const body = z.object({ origin: z.enum(["chat", "blank"]), trigger: text(8000), autoApprove: z.boolean(), incident: z.string().regex(/^INC\d{3,}$/).nullish() }).safeParse(input);
   if (!body.success) return { ok: false, error: "Write a question or a note first." };
   let chat: ChatSummary;
   try {
-    chat = await api<ChatSummary>("/chats", { json: { origin: body.data.origin, trigger: body.data.trigger, auto_approve: body.data.autoApprove } });
+    const incident = body.data.incident ?? null;
+    chat = await api<ChatSummary>("/chats", { json: { origin: incident ? "chat" : body.data.origin, trigger: body.data.trigger, auto_approve: body.data.autoApprove, ...(incident ? { incident } : {}) } });
   } catch (error) {
     return failed(error);
   }

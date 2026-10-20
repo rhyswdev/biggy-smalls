@@ -220,6 +220,18 @@
       "title": "Auto Approve",
       "type": "boolean"
      },
+     "incident": {
+      "anyOf": [
+       {
+        "maxLength": 40,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Incident"
+     },
      "origin": {
       "enum": [
        "chat",

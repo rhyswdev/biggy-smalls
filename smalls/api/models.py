@@ -25,6 +25,7 @@ class NewChat(Closed):
     trigger: str | None = Field(None, max_length=TEXT)
     auto_approve: bool = False
     title: str | None = Field(None, max_length=200)
+    incident: str | None = Field(None, max_length=40)       # a ServiceNow incident the chat is linked to (v4 plan 6.7)
 
 
 class ImportIn(Closed):

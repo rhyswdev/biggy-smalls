@@ -51,7 +51,13 @@ def list_chats(request: Request) -> list[dict[str, Any]]:
 @router.post("/chats", status_code=201)
 def create_chat(body: models.NewChat, request: Request) -> dict[str, Any]:
     s = service(request)
-    chat = s.create_chat(body.origin, trigger=body.trigger, auto_approve=body.auto_approve, title=body.title)
+    incident = None
+    if body.incident:
+        card = s.reader().find_incident(s.incident_number(body.incident))
+        if card is None:
+            raise Problem(422, "Invalid request", f"ServiceNow has no incident {body.incident} that Smalls can see.")
+        incident = card["number"]
+    chat = s.create_chat(body.origin, trigger=body.trigger, auto_approve=body.auto_approve, title=body.title, incident=incident)
     return summary(s, chat)
 
 

@@ -351,9 +351,9 @@ class Service:
         text = (trigger if trigger is not None else self.settings.trigger()).strip()
         if not text:
             raise Problem(422, "Invalid request", "A chat starts from a question or a note; this one is empty.")
-        if origin != "blank" and (title is None or incident is None):     # a chat about the incident is named after it
+        if origin != "blank" and incident is None:                         # a chat about the incident is named after it
             found = self._incident_of(text, self.now)
-            title, incident = title or found[0], incident or found[1]
+            title, incident = title or found[0], found[1]
         title = title or (note_of(text)["text"] or text).strip().splitlines()[0][:120]
         with self.db.write() as conn:
             conn.execute("INSERT INTO chat (id, origin, title, incident, now, created, auto_approve, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",

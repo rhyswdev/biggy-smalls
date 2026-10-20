@@ -96,3 +96,11 @@ def test_a_headless_chats_follow_up_is_the_persons_with_the_chats_own_switch(cli
     assert (runner.attended, runner.stop_at_gate, runner.via) == (True, True, "web") and service.sinks[run_id].attended
     switched = [e["data"] for e in client.get(f"/chats/{chat_id}").json()["events"] if e["type"] == "auto_approve"]
     assert switched[-1]["on"] is False
+
+
+def test_a_new_chat_can_be_linked_to_an_incident_and_an_unknown_one_is_refused(real):
+    number = real.get("/incidents/open").json()["incidents"][0]["number"]
+    linked = real.post("/chats", json={"origin": "chat", "trigger": "What changed?", "incident": number})
+    assert linked.status_code == 201 and linked.json()["incident"] == number
+    assert real.post("/chats", json={"origin": "chat", "trigger": "What changed?", "incident": "INC0000001"}).status_code == 422
+    real.app.state.service.wait(linked.json()["id"])
