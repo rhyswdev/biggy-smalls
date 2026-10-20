@@ -1,0 +1,6 @@
+/* The sidebar stays put while the page scrolls (V37): above 820 px the side column is sticky at the top with the
+ * window's height and scrolls its own content when that is taller. At 820 px and below it stacks above the page
+ * and scrolls away with it, as before. */
+@media (min-width:821px){
+  .v-shell .side{position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box}
+}
