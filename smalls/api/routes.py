@@ -157,6 +157,12 @@ def import_incident(body: models.ImportIn, request: Request) -> dict[str, Any]:
     return service(request).import_incident(body.number)
 
 
+@router.get("/incident/overview")
+def overview(request: Request, number: str) -> dict[str, Any]:
+    """An imported incident's overview: what code or the model wrote at import, with the contacts code built."""
+    return service(request).overview(number[:300])
+
+
 @router.get("/incident/ticket")
 def ticket(request: Request, number: str) -> dict[str, Any]:
     """The ticket as ServiceNow holds it at `now`, its work notes newest first, and the source's zone (5.5)."""

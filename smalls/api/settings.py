@@ -17,6 +17,9 @@
 | SMALLS_API_OUTCOMES_PROFILE | the profile that writes one clause per check after a run (v4 plan 5.1), or    |
 |                       | `code`; by default the fast profile in live mode and code in scripted mode       |
 | SMALLS_API_OUTCOMES_SCRIPT | the script a `scripted` summariser plays (default the generic dev one)      |
+| SMALLS_API_OVERVIEW_PROFILE | the profile that writes an imported incident's overview (5.2), or `code`; by  |
+|                       | default the mid-tier profile in live mode and code in scripted mode              |
+| SMALLS_API_OVERVIEW_SCRIPT | the script a `scripted` overview writer plays (default the generic dev one) |
 | SMALLS_COMMS_CADENCE  | minutes between stakeholder updates by priority, `1=30,2=60` by default: "next    |
 |                       | update due" is the ticket's last update plus this (v4 plan 5.2)                  |
 
@@ -37,6 +40,7 @@ MODES = ("live", "scripted")
 DEV_SCRIPT = "smalls.api.devscript:turn"
 DEV_DRAFTER = "smalls.api.devscript:draft"
 DEV_OUTCOMES = "smalls.api.devscript:outcomes"
+DEV_OVERVIEW = "smalls.api.devscript:overview"
 SCRIPTS = {"concluded": "smalls.api.devscript:concluded", "dev": DEV_SCRIPT}     # short names for SMALLS_API_SCRIPT
 OUTCOMES = "anthropic-small"            # v4 plan 5.1: summarising, not reasoning, so the provider's fast tier
 DRAFTER = "anthropic-mid"               # U8: the mid-tier profile in the agent's config
@@ -69,6 +73,8 @@ class Settings:
     draft_script: Any = DEV_DRAFTER     # "module:function"; a test may pass the callable itself
     outcomes: str | None = None         # a profile name, or `code`; None picks by mode (`outcomes_profile`)
     outcomes_script: Any = DEV_OUTCOMES
+    overview: str | None = None         # a profile name, or `code`; None picks by mode (`overview_profile`)
+    overview_script: Any = DEV_OVERVIEW
     cadence: tuple[tuple[str, int], ...] = (("1", 30), ("2", 60))     # [comms]: priority code -> minutes between updates
     db_name: str = field(default_factory=lambda: f"smalls-{uuid.uuid4().hex[:12]}")
 
@@ -86,6 +92,8 @@ class Settings:
                    script=SCRIPTS.get(os.environ.get("SMALLS_API_SCRIPT") or "", os.environ.get("SMALLS_API_SCRIPT") or DEV_SCRIPT),
                    outcomes=os.environ.get("SMALLS_API_OUTCOMES_PROFILE") or None,
                    outcomes_script=os.environ.get("SMALLS_API_OUTCOMES_SCRIPT") or DEV_OUTCOMES,
+                   overview=os.environ.get("SMALLS_API_OVERVIEW_PROFILE") or None,
+                   overview_script=os.environ.get("SMALLS_API_OVERVIEW_SCRIPT") or DEV_OVERVIEW,
                    incident=os.environ.get("SMALLS_INCIDENT") or None,
                    script_delay=float(os.environ.get("SMALLS_API_SCRIPT_DELAY") or 0),
                    drafter=os.environ.get("SMALLS_API_DRAFTER") or None, draft_script=os.environ.get("SMALLS_API_DRAFT_SCRIPT") or DEV_DRAFTER,
@@ -100,6 +108,11 @@ class Settings:
             return None
         at = datetime.fromisoformat(last_update.replace("Z", "+00:00")) + timedelta(minutes=minutes)
         return at.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @property
+    def overview_profile(self) -> str:
+        """Who writes the overview's prose: the named profile, else the mid-tier one in live mode and code without a key."""
+        return self.overview or (DRAFTER if self.mode == "live" else CODE)
 
     @property
     def outcomes_profile(self) -> str:

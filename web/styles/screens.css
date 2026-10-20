@@ -810,3 +810,10 @@
 .v-diag .tkt-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
 @media (max-width:820px){.v-diag{height:auto}.v-diag .body{display:block}.v-diag .mainc{overflow:visible}.v-diag .convo,.v-diag .dock-in{padding-left:16px;padding-right:16px}.v-diag .tray-float{padding:0 16px 14px}}
 @media (max-width:600px){.v-diag .ans-row{grid-template-columns:minmax(0,1fr)}}
+/* v4 overview: the CI path wraps instead of a fixed grid, so it fits any number of items and phone width */
+.v-shell .cimap{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 0;align-items:stretch}
+.v-shell .cimap-step{display:flex;align-items:stretch;flex:1 1 170px;min-width:0}
+.v-shell .cimap-step .node{flex:1 1 auto;min-width:0}
+.v-shell .cimap-step .arr{flex:none;width:22px}
+.v-shell .th li{grid-template-columns:minmax(110px,150px) minmax(0,1fr)}
+@media (max-width:600px){.v-shell .cols{padding:16px 16px 48px}.v-shell .th li{grid-template-columns:minmax(0,1fr)}}

@@ -90,6 +90,7 @@ def test_every_read_endpoint_at_a_checkpoint(settings, checkpoint, monkeypatch):
         imported = client.post("/incidents/import", json={"number": number})
         service.wait(imported.json()["chat_id"])
         answers["/incidents"] = client.get("/incidents")
+        answers["/incident/overview"] = client.get("/incident/overview", params={"number": number})
         view = client.get(f"/chats/{chat_id}")
         answers["/chats/{id}"] = view
         events = view.json()["events"]

@@ -40,6 +40,7 @@ from smalls.agent.runner import Runner, Toolbox, bundle_toolbox, module_toolbox
 from smalls.api.db import Database, dumps, loads
 from smalls.api.drafter import Drafter, packet
 from smalls.api.outcomes import Summariser, checks as outcome_checks
+from smalls.api import overview as overviews
 from smalls.api.models import AUDIENCES
 from smalls.api.problems import Problem
 from smalls.api.reader import Reader, note_of
@@ -93,6 +94,8 @@ class Service:
         self.drafter: Drafter | None = None if drafter == CODE else Drafter(self.cfg, drafter, settings.draft_script)
         outcomes = settings.outcomes_profile
         self.summariser: Summariser | None = None if outcomes == CODE else Summariser(self.cfg, outcomes, settings.outcomes_script)
+        writer = settings.overview_profile
+        self.writer: overviews.Writer | None = None if writer == CODE else overviews.Writer(self.cfg, writer, settings.overview_script)
         self.closing = False
         self.recorded = self.load_recorded()
 
@@ -102,6 +105,7 @@ class Service:
         latest = next((self.recorded_summary(f"run-{run_id}"[:64]) for run_id in reversed(self.recorded)), None)
         return {"mode": self.settings.mode, "checkpoint": self.settings.checkpoint, "now": iso(self.now),
                 "profile": self.cfg.investigator.profile, "drafter": self.settings.drafter_profile, "outcomes": self.settings.outcomes_profile,
+                "overview": self.settings.overview_profile,
                 "seams": {k: True for k in SEAMS}, "seam_names": SEAMS,
                 "last_recorded": latest}
 
@@ -270,7 +274,41 @@ class Service:
                                 incident=number)
         with self.db.write() as conn:
             conn.execute("INSERT OR IGNORE INTO incident (number, chat_id, imported_at) VALUES (?, ?, ?)", (number, chat["id"], stamp()))
+        self.write_overview(number)
         return {"number": number, "chat_id": chat["id"], "already": False}
+
+    def write_overview(self, number: str) -> Future | None:
+        """Code's overview at once, so the page never waits; then, with a writer, the model's on the pool, which
+        replaces code's prose when it validates. The contacts are code's either way."""
+        inputs = self.reader().overview_inputs(number)
+        if inputs is None:
+            return None
+        self._store_overview(number, overviews.view(inputs, overviews.from_code(inputs), CODE), CODE, None, None)
+        if self.writer is None or self.closing:
+            return None
+
+        def job() -> None:
+            got = self.writer.write(inputs)
+            if got.get("written") is not None:
+                self._store_overview(number, overviews.view(inputs, got["written"], self.writer.profile), self.writer.profile, got.get("cost_usd"), None)
+            else:
+                with self.db.write() as conn:
+                    conn.execute("UPDATE overview SET why_code = ? WHERE number = ?", (f"The {self.writer.profile} writer failed ({got.get('error')}), so code wrote this overview.", number))
+
+        future = self.pool.submit(job)
+        self.futures[f"overview:{number}"] = future
+        return future
+
+    def _store_overview(self, number: str, body: dict[str, Any], by: str, cost_usd: float | None, why: str | None) -> None:
+        with self.db.write() as conn:
+            conn.execute("INSERT OR REPLACE INTO overview (number, body, written_by, written_at, cost_usd, why_code) VALUES (?, ?, ?, ?, ?, ?)",
+                         (number, dumps(body), by, stamp(), cost_usd, why))
+
+    def overview(self, number: str) -> dict[str, Any]:
+        row = self.db.row("SELECT body, written_by, written_at, why_code FROM overview WHERE number = ?", (self.incident_number(number),))
+        if row is None:
+            raise Problem(404, "Not found", f"No overview for {number}: it is written when the incident is imported.")
+        return {**loads(row["body"]), "written_by": row["written_by"], "why_code": row["why_code"]}
 
     def trigger_for(self, card: dict[str, Any]) -> str:
         """What an imported incident's first run starts from: the checkpoint's own note when it belongs to this
@@ -471,6 +509,9 @@ class Service:
                 future.result(timeout=timeout)
                 if self.futures.get(run["run_id"]) is future:
                     break
+        row = self.db.row("SELECT number FROM incident WHERE chat_id = ?", (chat_id,))
+        if row and self.futures.get(f"overview:{row['number']}") is not None:
+            self.futures[f"overview:{row['number']}"].result(timeout=timeout)
 
     # -- gates -----------------------------------------------------------------------------------------------
 

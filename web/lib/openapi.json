@@ -1485,6 +1485,48 @@
     "summary": "Incident"
    }
   },
+  "/incident/overview": {
+   "get": {
+    "description": "An imported incident's overview: what code or the model wrote at import, with the contacts code built.",
+    "operationId": "overview_incident_overview_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "number",
+      "required": true,
+      "schema": {
+       "title": "Number",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Overview Incident Overview Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Overview"
+   }
+  },
   "/incident/ticket": {
    "get": {
     "description": "The ticket as ServiceNow holds it at `now`, its work notes newest first, and the source's zone (5.5).",

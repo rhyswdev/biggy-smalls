@@ -25,8 +25,8 @@ export const PENDING = new Set([
   "app/chats/[id]/summary/page.tsx", "app/chats/[id]/messages/page.tsx", "app/chats/new/page.tsx", "app/design/page.tsx",
   "components/chat/IncidentBar.tsx",
   "components/chat/NewChat.tsx", "components/chat/ResolveDialog.tsx",
-  "components/dashboard/AgentPanel.tsx", "components/dashboard/ChatsList.tsx",
-  "components/dashboard/IncidentCard.tsx", "components/dashboard/KnowledgeBand.tsx",
+  
+ 
   "components/ds/StakeholderMessage.tsx",
   "components/messages/Checks.tsx", "components/messages/KbView.tsx", "components/messages/MessagesScreen.tsx",
   "components/shell/AppBar.tsx", "components/summary/SummaryScreen.tsx",

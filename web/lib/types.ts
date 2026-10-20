@@ -252,3 +252,18 @@ export interface TicketView {
 }
 
 export interface KbRow { id: number; chat_id: string; title: string; terms: string; saved_at: string }
+
+/** An imported incident's overview (v4 plan 5.2): prose by the writer or by code, contacts by code. */
+export interface Overview {
+  whats_going_on: string;
+  business_impact: string;
+  affected_cis: { name: string; label: string; description: string; status: string; severity: "bad" | "warn" | "ok" | "unknown" }[];
+  not_affected: string[];
+  working_theories: { person: string; area: string; claim: string; tried: string }[];
+  timeline: { time: string; event: string; impact_start: boolean }[];
+  glossary: { term: string; meaning: string }[];
+  contacts: { name: string; role: string; kind: "person" | "group"; phone: string | null }[];
+  channels: string[];
+  written_by: string;
+  why_code: string | null;
+}

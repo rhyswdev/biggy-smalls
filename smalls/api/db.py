@@ -56,6 +56,9 @@ CREATE TABLE message (
 CREATE TABLE incident (
   number TEXT PRIMARY KEY, chat_id TEXT NOT NULL REFERENCES chat(id), imported_at TEXT NOT NULL   -- a ServiceNow incident imported (v4 plan 5.2)
 );
+CREATE TABLE overview (
+  number TEXT PRIMARY KEY, body TEXT NOT NULL, written_by TEXT NOT NULL, written_at TEXT NOT NULL, cost_usd REAL, why_code TEXT
+);                                                -- an imported incident's overview (v4 plan 5.2); never served to the agent
 CREATE TABLE check_outcome (
   chat_id TEXT NOT NULL, run_id TEXT NOT NULL, call_id TEXT NOT NULL, clause TEXT NOT NULL, written_by TEXT NOT NULL, written_at TEXT NOT NULL,
   PRIMARY KEY (run_id, call_id)                   -- one clause per check for "How Smalls got here" (v4 plan 5.1)
@@ -71,7 +74,7 @@ CREATE TRIGGER kb_entry_ad AFTER DELETE ON kb_entry BEGIN
   INSERT INTO kb_fts (kb_fts, rowid, title, body, terms) VALUES ('delete', old.id, old.title, old.body, old.terms);
 END;
 """
-APP_TABLES = ("chat", "run", "event", "gate", "note", "resolution", "writeup", "message", "incident", "check_outcome", "kb_entry")
+APP_TABLES = ("chat", "run", "event", "gate", "note", "resolution", "writeup", "message", "incident", "overview", "check_outcome", "kb_entry")
 
 
 def connect(uri: str) -> sqlite3.Connection:

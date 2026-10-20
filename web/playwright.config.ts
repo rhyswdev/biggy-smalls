@@ -8,7 +8,7 @@ import { defineConfig, devices } from "@playwright/test";
 const CONCLUDED = process.env.E2E_SCRIPT === "concluded";
 const API_PORT = process.env.E2E_API_PORT ?? (CONCLUDED ? "7348" : "7338");
 const WEB_PORT = process.env.E2E_WEB_PORT ?? (CONCLUDED ? "7347" : "7337");
-const SCRIPT = CONCLUDED ? " SMALLS_API_SCRIPT=concluded SMALLS_API_OUTCOMES_PROFILE=scripted" : "";
+const SCRIPT = CONCLUDED ? " SMALLS_API_SCRIPT=concluded SMALLS_API_OUTCOMES_PROFILE=scripted SMALLS_API_OVERVIEW_PROFILE=scripted" : "";
 // E2E_BASE_URL points the suites at an app that is already running, such as `docker compose up`; nothing is started.
 const EXTERNAL = process.env.E2E_BASE_URL;
 

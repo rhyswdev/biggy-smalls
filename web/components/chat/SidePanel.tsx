@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Contacts } from "@/components/overview/Sections";
 import { TicketView } from "@/components/shell/TicketView";
 import type { ChatState } from "@/lib/chat/reduce";
-import type { TicketView as Ticket } from "@/lib/types";
+import type { Overview, TicketView as Ticket } from "@/lib/types";
 import { WorkingPicture } from "./WorkingPicture";
 
-export type Panel = "picture" | "ticket";
+export type Panel = "picture" | "contacts" | "ticket";
 
 const TITLES: Record<Panel, [string, (t: Ticket | null) => string]> = {
   picture: ["Working picture", () => "What Smalls believes right now, and how sure"],
+  contacts: ["Contacts and resolver groups", () => "Who to talk to on this incident"],
   ticket: ["Ticket", (t) => (t ? `${t.incident.number}, as imported from ServiceNow` : "")],
 };
 
 /** The side panel (ChatV4): one of the working picture or the ticket. It pushes the conversation over at 1100 px
  * and wider, and slides over it below. × or Escape closes it. */
-export function SidePanel({ panel, state, ticket, onClose }: { panel: Panel; state: ChatState; ticket: Ticket | null; onClose: () => void }) {
+export function SidePanel({ panel, state, ticket, overview, onClose }: { panel: Panel; state: ChatState; ticket: Ticket | null; overview: Overview | null; onClose: () => void }) {
   const box = useRef<HTMLElement>(null);
   useEffect(() => { box.current?.focus(); }, [panel]);
   const [title, sub] = TITLES[panel];
@@ -32,6 +34,7 @@ export function SidePanel({ panel, state, ticket, onClose }: { panel: Panel; sta
         </button>
       </div>
       {panel === "picture" ? <div className="sp-body" aria-live="polite"><WorkingPicture state={state} /></div> : null}
+      {panel === "contacts" && overview ? <div className="sp-body v-shell"><Contacts overview={overview} compact /></div> : null}
       {panel === "ticket" && ticket ? <TicketView ticket={ticket} embedded /> : null}
     </aside>
   );

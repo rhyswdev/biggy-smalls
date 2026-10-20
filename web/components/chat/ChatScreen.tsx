@@ -14,7 +14,7 @@ import { leading, startedAt, tally, type ChatState, type Group, type Turn } from
 import { useChatEvents } from "@/lib/events";
 import { clock, confidenceLabel, day, seconds, waitingText } from "@/lib/format";
 import { sendKey } from "@/lib/keys";
-import type { ChatSummary, IncidentSummary, TicketView } from "@/lib/types";
+import type { ChatSummary, IncidentSummary, Overview, TicketView } from "@/lib/types";
 import { AnswerCard, SURE } from "./AnswerCard";
 import { answerRestFirst, ApprovalTray, GroupView, refocus, type ToolSchema } from "./Gate";
 import { HowSmallsGotHere } from "./HowSmallsGotHere";
@@ -31,6 +31,7 @@ interface Props {
   imported: boolean;                      // the chat is an imported incident's diagnosis
   nextUpdate: string | null;
   resolvable: boolean;
+  overview: Overview | null;
 }
 
 type Local = { key: string; q: string; pending: { handle: string | null; text: string; delivery: string } };
@@ -43,11 +44,12 @@ const DELIVERY: Record<string, string> = {
 };
 
 const PICTURE = <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5" /><circle cx="8" cy="8" r="2.5" /></svg>;
+const CONTACTS = <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5" /><path d="M1.5 13.5c.6-2.4 2.3-3.6 4.5-3.6s3.9 1.2 4.5 3.6" /><path d="M10.5 3.2a2.4 2.4 0 0 1 0 4.6" /><path d="M12 10.2c1.2.5 2 1.6 2.5 3.3" /></svg>;
 const TICKET = <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 1.5h5.5L12.5 4.5v10h-8.5z" /><path d="M9.5 1.5v3h3" /><path d="M6 8h4.5M6 10.5h4.5" /></svg>;
 
 /** The diagnosis (ChatV4): the incident's header with the panel toggles and a one-line status, the conversation,
  * the approval tray floating above the composer, and a side panel that is closed by default. */
-export function ChatScreen({ chat, initial, schemas, incident, ticket, imported, nextUpdate, resolvable }: Props) {
+export function ChatScreen({ chat, initial, schemas, incident, ticket, imported, nextUpdate, resolvable, overview }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const past = chat.origin === "past";
@@ -144,6 +146,11 @@ export function ChatScreen({ chat, initial, schemas, incident, ticket, imported,
       <button type="button" className="tool-btn" aria-pressed={panel === "picture"} onClick={() => toggle("picture")} title="What Smalls believes right now">
         {PICTURE}Working picture{inPlay ? <span className="tool-n">{inPlay} in play</span> : null}
       </button>
+      {overview?.contacts.length ? (
+        <button type="button" className="tool-btn" aria-pressed={panel === "contacts"} onClick={() => toggle("contacts")} title="Who to talk to">
+          {CONTACTS}Contacts<span className="tool-n">{overview.contacts.length}</span>
+        </button>
+      ) : null}
       {ticket ? <button type="button" className="tool-btn" aria-pressed={panel === "ticket"} onClick={() => toggle("ticket")} title="The ServiceNow ticket, as imported">{TICKET}Ticket</button> : null}
     </div>
   );
@@ -232,7 +239,7 @@ export function ChatScreen({ chat, initial, schemas, incident, ticket, imported,
             </div>
           </div>
         </main>
-        {panel ? <SidePanel panel={panel} state={state} ticket={ticket} onClose={() => setPanel(null)} /> : null}
+        {panel ? <SidePanel panel={panel} state={state} ticket={ticket} overview={overview} onClose={() => setPanel(null)} /> : null}
       </div>
       {drawer ? <EvidenceDrawer key={drawer} chatId={chat.id} handle={drawer} onClose={() => setDrawer(null)} /> : null}
       {resolving && canResolve ? <ResolveDialog chat={chat} incident={incident} report={state.report} onClose={() => router.replace(`/chats/${chat.id}`, { scroll: false })} /> : null}

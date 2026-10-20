@@ -212,6 +212,79 @@ class Reader:
                 "opened": {"utc": iso_ms(opened_ms), "local": datetime.fromtimestamp(opened_ms / 1000, ZoneInfo(zone)).strftime("%H:%M:%S")},
                 "notes": self.work_notes(card["handle"])}
 
+    # -- the incident overview's inputs (v4 plan 5.2) --------------------------------------------------------
+
+    def _fields(self, where: str, params: tuple = ()) -> list[dict[str, Any]]:
+        from smalls.tools.store import render_native
+
+        out = []
+        for row in self.rows(f"SELECT handle, native, flags, t_event, t_known FROM visible WHERE {where}", params):
+            body = render_native(row["native"], row["flags"])
+            f = _result(body)
+            if not f:
+                try:
+                    f = json.loads(body)
+                except ValueError:
+                    f = {}
+            out.append({"handle": row["handle"], "t_event": row["t_event"], "t_known": row["t_known"], "fields": f if isinstance(f, dict) else {}})
+        return out
+
+    def overview_inputs(self, number: str) -> dict[str, Any] | None:
+        """What the overview is written from, all served data at `now`: the ticket, its work notes, the changes the
+        notes name or the ticket links, the CMDB around its CI and business service, who is on call for its
+        groups, the people it names, and the chat channels the notes name."""
+        ticket = self.ticket(number)
+        if ticket is None:
+            return None
+        f, notes = ticket["fields"], ticket["notes"]
+        text = " ".join(n["text"] for n in notes)
+        raw = next(r for r in self._incident_rows() if r["handle"] == ticket["incident"]["handle"])["fields"]
+        named = set(re.findall(r"\bCHG\d{4,}\b", text)) | ({raw.get("rfc")} if raw.get("rfc") else set())
+        changes = [{k: c["fields"].get(k) for k in ("number", "short_description", "state", "start_date", "end_date", "cmdb_ci", "assignment_group", "assigned_to")}
+                   for c in self._fields("kind = 'change' AND source = 'servicenow'") if c["fields"].get("number") in named]
+        rels = [r["fields"] for r in self._fields("source = 'servicenow' AND dataset = 'cmdb_rel_ci'")]
+        cis = {c["fields"].get("name"): c["fields"] for c in self._fields("source = 'servicenow' AND dataset = 'cmdb_ci'")}
+        near = {x for x in (f.get("cmdb_ci"), f.get("business_service")) if x}
+        for _ in range(2):          # two steps out from the ticket's CI and business service, both directions
+            near |= {r.get("child") for r in rels if r.get("parent") in near} | {r.get("parent") for r in rels if r.get("child") in near}
+        near.discard(None)
+        cmdb = {"relationships": [{k: r.get(k) for k in ("parent", "type", "child")} for r in rels if r.get("parent") in near and r.get("child") in near],
+                "items": [{k: cis[n].get(k) for k in ("name", "sys_class_name", "short_description", "operational_status", "support_group")} for n in sorted(near) if n in cis]}
+        users = {u["fields"].get("name"): u["fields"] for u in self._fields("kind = 'user' AND source = 'servicenow'") if u["fields"].get("name")}
+        channels = sorted({c for c in re.findall(r"#([a-z0-9][a-z0-9_-]{1,79})", text)
+                           if self.rows("SELECT 1 AS x FROM visible WHERE source = 'slack' AND dataset = ? LIMIT 1", (c,))})
+        groups = {f.get("assignment_group"), cis.get(f.get("cmdb_ci") or "", {}).get("support_group")} - {None, ""}
+        return {"ticket": ticket, "changes": changes, "cmdb": cmdb, "oncall": self.oncall(groups), "people": self._named(text, users, notes),
+                "channels": channels, "support_group": cis.get(f.get("cmdb_ci") or "", {}).get("support_group")}
+
+    def oncall(self, groups: set[str]) -> list[dict[str, Any]]:
+        """Who is on call now for these groups' escalation policies (a policy named as the group), by level."""
+        out = []
+        for row in self._fields("source = 'pagerduty' AND dataset = 'oncalls'"):
+            f = row["fields"]
+            policy = (f.get("escalation_policy") or {}).get("summary")
+            if policy in groups:
+                out.append({"policy": policy, "level": f.get("escalation_level"), "name": (f.get("user") or {}).get("summary"),
+                            "schedule": (f.get("schedule") or {}).get("summary")})
+        return sorted(out, key=lambda o: (o["policy"] or "", o["level"] or 0))
+
+    @staticmethod
+    def _named(text: str, users: dict[str, dict[str, Any]], notes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """The people the work notes name or are written by, as the served user records know them: a full name, or
+        a first name only one person has."""
+        firsts: dict[str, list[str]] = {}
+        for name, u in users.items():
+            firsts.setdefault(str(u.get("first_name") or name.split(" ")[0]), []).append(name)
+        found = {n["author"] for n in notes if n.get("author") in users}
+        for name in users:
+            if re.search(rf"\b{re.escape(name)}\b", text):
+                found.add(name)
+        for first, names in firsts.items():
+            if len(names) == 1 and re.search(rf"\b{re.escape(first)}\b", text):
+                found.add(names[0])
+        return [{"name": n, "title": users[n].get("title"), "department": users[n].get("department"), "user_name": users[n].get("user_name"),
+                 "phone": users[n].get("phone") or users[n].get("mobile_phone") or None} for n in sorted(found)]
+
     # -- the evidence drawer ---------------------------------------------------------------------------------
 
     def record(self, handle: str) -> dict[str, Any] | None:

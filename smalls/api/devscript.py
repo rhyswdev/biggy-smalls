@@ -115,6 +115,26 @@ def outcomes(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[
     return "One clause per check.", [], {"text": json.dumps(clauses)}
 
 
+def overview(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:
+    """A generic overview from the inputs' own fields, marked as scripted: no model and no knowledge of the data."""
+    text = str(next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""))
+    found = re.search(r"```json\n(.*?)\n```", text, re.S)
+    given = json.loads(found.group(1)) if found else {}
+    ticket = given.get("ticket") or {}
+    notes = ticket.get("notes") or []
+    items = (given.get("cmdb") or {}).get("items") or []
+    body = {
+        "whats_going_on": f"{(ticket.get('incident') or {}).get('short_description') or 'An incident'} (scripted). {len(notes)} work notes so far.",
+        "business_impact": "",
+        "affected_cis": [{"name": i["name"], "label": i.get("sys_class_name") or "", "description": "", "status": "", "severity": "unknown"} for i in items[:4]],
+        "not_affected": [],
+        "working_theories": [{"person": n["author"], "area": "", "claim": "Wrote a work note (scripted).", "tried": ""} for n in notes[:2] if n.get("author")],
+        "timeline": [{"time": n["utc"][11:16], "event": "Work note added (scripted).", "impact_start": False} for n in reversed(notes)],
+        "glossary": [],
+    }
+    return "Write it from the inputs.", [], {"text": json.dumps(body)}
+
+
 def draft(messages: list[BaseMessage], tools: list[dict[str, Any]]) -> tuple[Any, ...]:
     turn = str(next((m.content for m in reversed(messages) if isinstance(m, HumanMessage)), ""))
     found = re.search(r"```json\n(.*?)\n```", turn, re.S)
