@@ -1,9 +1,11 @@
 """The per-check outcomes behind "How Smalls got here" (docs/v4-plan.md 5.1): one summarising call after a run
 (and after a follow-up that ran checks), on a fast profile the settings name, through the agent's model
-adapter. Its input is each check as the run's events recorded it; its output is one clause per check, checked
-by code here: one clause, at most 14 words, no handle, no markdown. A clause that fails is left out, and the
-web app writes that check's clause from code instead, as it does for every check without a key (`code`, which
-is scripted mode's default) or when the call fails. Nothing here steers the investigation: it runs after.
+adapter. Its input is each check as the run's events recorded it; its output is a headline summary of what the
+checks established overall and one clause per check, each checked by code here. A clause is one clause of at
+most 14 words, no handle, no markdown; the summary is at most two sentences and 40 words under the same rules.
+A clause or summary that fails is left out, and the web app writes it from code instead, as it does for every
+check without a key (`code`, which is scripted mode's default) or when the call fails. The old flat
+`{id: clause}` answer is still accepted. Nothing here steers the investigation: it runs after.
 """
 
 from __future__ import annotations
@@ -22,6 +24,8 @@ from smalls.contracts.handles import is_handle
 PROMPT = Path(__file__).parent / "prompts" / "outcomes.md"
 TIMEOUT_S = 60
 MAX_WORDS = 14
+MAX_SUMMARY_WORDS = 40
+MAX_SUMMARY_SENTENCES = 2
 MAX_CHECKS = 40
 MARKDOWN = re.compile(r"[*_`#\[\]<>|]")
 
@@ -73,6 +77,26 @@ def valid(clause: Any) -> bool:
     return not any(is_handle(w.strip(",;:()\"'“”‘’")) for w in words)
 
 
+def valid_summary(summary: Any) -> bool:
+    """A headline of plain words: at most 40 of them in at most two sentences, no handle, no markdown."""
+    if not isinstance(summary, str):
+        return False
+    text = summary.strip()
+    words = text.split()
+    if not words or len(words) > MAX_SUMMARY_WORDS or "\n" in text or MARKDOWN.search(text):
+        return False
+    if len(re.findall(r"[.!?]+(?:\s+|$)", text)) > MAX_SUMMARY_SENTENCES:
+        return False
+    return not any(is_handle(w.strip(",;:.!?()\"'“”‘’")) for w in words)
+
+
+def split(body: dict[str, Any]) -> tuple[Any, dict[str, Any]]:
+    """The summary and the per-check map from an answer: the `{"summary", "checks"}` shape, or the old flat map."""
+    if isinstance(body.get("checks"), dict):
+        return body.get("summary"), body["checks"]
+    return None, body
+
+
 def parse(text: str) -> dict[str, Any]:
     found = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.S) or re.search(r"(\{.*\})", text, re.S)
     if not found:
@@ -103,19 +127,20 @@ class Summariser:
         from langchain_core.messages import HumanMessage, SystemMessage
 
         if not items:
-            return {"clauses": {}, "error": None}
+            return {"clauses": {}, "summary": None, "error": None}
         started = time.monotonic()
         turn = f"CHECKS:\n```json\n{json.dumps(items, ensure_ascii=False, indent=1)}\n```\n"
         try:
             model, bind = make_model(self.spec, timeout_s=min(self.cfg.timeout_s, TIMEOUT_S))
             message = (model.bind(**bind) if bind else model).invoke([SystemMessage(self.prompt), HumanMessage(turn)])
         except Exception as error:      # described by kind, never with a key value it may quote
-            return {"clauses": {}, "error": str(as_model_call_error(error))}
+            return {"clauses": {}, "summary": None, "error": str(as_model_call_error(error))}
         name = message.response_metadata.get("model_name") or self.spec.model
         usage = dict(message.usage_metadata or {})
-        body = parse(reasoning_text(message)[1])
+        summary, body = split(parse(reasoning_text(message)[1]))
         ids = {c["id"] for c in items}
         clauses = {k: v.strip().rstrip(".") for k, v in body.items() if k in ids and valid(v)}
-        return {"clauses": clauses, "dropped": sorted(set(body) & ids - set(clauses)), "error": None if body else "no clauses came back",
+        return {"clauses": clauses, "summary": summary.strip() if valid_summary(summary) else None,
+                "dropped": sorted(set(body) & ids - set(clauses)), "error": None if body else "no clauses came back",
                 "usage": usage, "model": name, "cost_usd": cost({"usage": usage}, self.cfg.price(name)),
                 "latency_ms": round((time.monotonic() - started) * 1000, 1)}

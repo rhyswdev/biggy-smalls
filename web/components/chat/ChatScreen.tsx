@@ -192,7 +192,7 @@ export function ChatScreen({ chat, initial, schemas, incident, ticket, imported,
                 return (
                   <div key={t.key} className="msg-sm">
                     <span className="who"><b>Smalls</b> · <span className="time">{clock(t.report.as_of)} UTC</span></span>
-                    <HowSmallsGotHere checks={checks}>{folded.map((g) => <GroupTurn key={g.key} group={g} chatId={chat.id} state={state} onOpen={open} />)}</HowSmallsGotHere>
+                    <HowSmallsGotHere checks={checks} summary={state.outcomeSummary}>{folded.map((g) => <GroupTurn key={g.key} group={g} chatId={chat.id} state={state} onOpen={open} />)}</HowSmallsGotHere>
                     <AnswerCard report={t.report} status={t.status} first={lead ? startedAt(state, lead) : undefined} checks={checks.filter((c) => c.status === "ran").length} onOpen={open} />
                   </div>
                 );

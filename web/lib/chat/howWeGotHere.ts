@@ -2,6 +2,8 @@
 // note when the person skipped or rejected some. Each check that ran gives a clause: the outcome the API's
 // summariser wrote for it, else one from code ("ruled out …" when the board rejected a claim after it, "found
 // nothing" for an empty result, otherwise what it did, in the past). Skipped and rejected checks give no clause.
+// The sentence stays high level: the card shows the summariser's headline when there is one, and otherwise code
+// keeps at most three clauses and counts the rest.
 
 import { plainLabel } from "./labels";
 import type { Group, Row } from "./reduce";
@@ -26,10 +28,20 @@ function joined(parts: string[]): string {
   return parts.length === 1 ? parts[0]! : `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
 
-/** "Smalls a, b and c." over the checks that ran, in their order. */
+export const MAX_CLAUSES = 3;
+
+/** "Smalls a, b and c." over the checks that ran. With more than three, it keeps three, preferring checks that
+ * ruled something out, then checks with a summariser clause, then the rest, each kept in run order, and counts
+ * the others: "Smalls ruled out x, found y and ran 12 other checks." */
 export function sentence(checks: CheckLine[]): string {
-  const parts = checks.filter((c) => c.status === "ran").map(clause);
-  return parts.length ? `Smalls ${joined(parts)}.` : "Smalls didn’t run any checks.";
+  const ran = checks.filter((c) => c.status === "ran");
+  if (!ran.length) return "Smalls didn’t run any checks.";
+  if (ran.length <= MAX_CLAUSES) return `Smalls ${joined(ran.map(clause))}.`;
+  const rank = (c: CheckLine) => (c.ruledOut ? 0 : c.outcome && c.outcome.trim() ? 1 : 2);
+  const kept = new Set([...ran].sort((a, b) => rank(a) - rank(b)).slice(0, MAX_CLAUSES));
+  const rest = ran.length - kept.size;
+  const parts = [...ran.filter((c) => kept.has(c)).map(clause), `ran ${rest} other ${rest === 1 ? "check" : "checks"}`];
+  return `Smalls ${joined(parts)}.`;
 }
 
 /** "You skipped 1 check." / "You rejected 2 checks and skipped 1." with what follows, or null. */
