@@ -201,7 +201,7 @@ def evidence(chat_id: str, handle: str, request: Request) -> dict[str, Any]:
 
 @router.put("/chats/{chat_id}/resolution")
 def resolve(chat_id: str, body: models.Resolution, request: Request) -> dict[str, Any]:
-    return service(request).resolve(chat_id, body.path, body.note, body.resolved_at, body.resolved_by)
+    return service(request).resolve(chat_id, body.path, body.note, body.resolved_at, body.resolved_by, body.code)
 
 
 @router.get("/chats/{chat_id}/writeup")

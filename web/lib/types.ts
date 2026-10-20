@@ -262,7 +262,7 @@ export interface Overview {
   working_theories: { person: string; area: string; claim: string; tried: string }[];
   timeline: { time: string; event: string; impact_start: boolean }[];
   glossary: { term: string; meaning: string }[];
-  contacts: { name: string; role: string; kind: "person" | "group"; phone: string | null }[];
+  contacts: { name: string; role: string; kind: "person" | "group"; phone: string | null; email: string | null }[];
   channels: string[];
   written_by: string;
   why_code: string | null;

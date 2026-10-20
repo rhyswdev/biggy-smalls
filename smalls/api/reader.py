@@ -255,6 +255,7 @@ class Reader:
                            if self.rows("SELECT 1 AS x FROM visible WHERE source = 'slack' AND dataset = ? LIMIT 1", (c,))})
         groups = {f.get("assignment_group"), cis.get(f.get("cmdb_ci") or "", {}).get("support_group")} - {None, ""}
         return {"ticket": ticket, "changes": changes, "cmdb": cmdb, "oncall": self.oncall(groups), "people": self._named(text, users, notes),
+                "emails": {n: u.get("email") for n, u in users.items() if u.get("email")},
                 "channels": channels, "support_group": cis.get(f.get("cmdb_ci") or "", {}).get("support_group")}
 
     def oncall(self, groups: set[str]) -> list[dict[str, Any]]:

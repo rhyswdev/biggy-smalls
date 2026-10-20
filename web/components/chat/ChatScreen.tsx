@@ -120,7 +120,7 @@ export function ChatScreen({ chat, initial, schemas, incident, ticket, imported,
     ? <Link className={quiet ? "lbtn" : "lbtn primary"} href={`/chats/${chat.id}?resolve`} scroll={false}>Resolve incident…</Link> : null;
   const banner = resolved ? (
     <StatusBanner tone="ok" title="Resolved." text="The resolution review and the communications are open.">
-      <Link className="lbtn" href={`/chats/${chat.id}/summary`}>Open resolution</Link>
+      <Link className="lbtn" href={`/chats/${chat.id}/resolution`}>Open resolution</Link>
     </StatusBanner>
   ) : past ? (
     <StatusBanner tone="neutral" title={`Recorded run${chat.recorded ? ` · made ${day(chat.recorded)}` : ""}.`} text="A live run, kept as it was recorded. Nothing here calls a model, and it is read-only." />

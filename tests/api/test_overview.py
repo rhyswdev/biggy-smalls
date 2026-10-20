@@ -83,3 +83,9 @@ def test_a_writer_that_fails_leaves_code_s_overview_and_says_why(make):
     client = make(overview="scripted", overview_script=broken)
     _, body = imported(client)
     assert body["written_by"] == "code" and "failed" in body["why_code"]
+
+
+def test_code_s_lines_skip_a_pasted_query_result():
+    assert ov.prose("Rolled the service back at 14:42 and nothing changed.")
+    for pasted in ["pg_stat_activity on db-1, grouped: x=# select a, b from t;", "usename | state | count", "$ kubectl get pods", "{\"a\": 1}"]:
+        assert not ov.prose(pasted)

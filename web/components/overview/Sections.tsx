@@ -27,7 +27,7 @@ export function WhatsGoingOn({ incident, overview }: { incident: ImportedInciden
     <section className="card pad" aria-labelledby="go-h">
       <div className="c-head">
         <h2 id="go-h" className="label" style={{ margin: 0 }}>What’s going on</h2>
-        <span className="c-sub">{overview.written_by === "code" ? "From the ticket and its latest work note" : "Written by Smalls from the ticket and its work notes"}</span>
+        <span className="c-sub">{overview.written_by === "code" ? "Summarised by code from the ticket and its work notes" : "Written by Smalls from the ticket and its work notes"}</span>
       </div>
       {first ? <p className="big">{first}</p> : null}
       {rest.length ? <p className="para" style={{ marginTop: 8 }}>{rest.join(" ")}</p> : null}
@@ -108,6 +108,11 @@ export function Glossary({ overview }: { overview: Overview }) {
   );
 }
 
+const icon = (d: React.ReactNode) => <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>;
+const SLACK = icon(<path d="M2.5 3.5h11v7h-6l-3 2.5v-2.5h-2z" />);
+const MAIL = icon(<><rect x="2" y="3.5" width="12" height="9" rx="1.5" /><path d="M2.5 4.5L8 9l5.5-4.5" /></>);
+const PHONE = icon(<path d="M4 2.5h2.5l1 3-1.5 1a7 7 0 0 0 3.5 3.5l1-1.5 3 1V12a1.5 1.5 0 0 1-1.5 1.5A10 10 0 0 1 2.5 4 1.5 1.5 0 0 1 4 2.5z" />);
+
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
 
 /** Contacts and resolver groups: built by code from the ticket, the on-call schedule, the CMDB and the user
@@ -123,7 +128,14 @@ export function Contacts({ overview, compact }: { overview: Overview; compact?: 
             <div className="p-main">
               <span className="p-name">{p.name}</span>
               <span className="p-role">{p.role}</span>
-              {p.phone ? <div className="p-acts"><a href={`tel:${p.phone.replace(/[^\d+]/g, "")}`} aria-label={`Call ${p.name}`}>{p.phone}</a></div> : null}
+              {p.kind === "person" ? (
+                <div className="p-acts">
+                  <span className="p-fake" title="Slack is not connected in this demo" aria-label={`Message ${p.name} on Slack, not connected in this demo`} role="img">{SLACK}Slack</span>
+                  {p.email ? <a href={`mailto:${p.email}`} aria-label={`Email ${p.name}`}>{MAIL}Email</a> : <span className="p-fake" title="No email address on record" role="img" aria-label={`Email ${p.name}, no address on record`}>{MAIL}Email</span>}
+                  {p.phone ? <a href={`tel:${p.phone.replace(/[^\d+]/g, "")}`} aria-label={`Call ${p.name}`}>{PHONE}{p.phone}</a>
+                    : <span className="p-fake" title="No phone number on record; calling is not connected in this demo" role="img" aria-label={`Call ${p.name}, no number on record`}>{PHONE}Call</span>}
+                </div>
+              ) : null}
             </div>
           </li>
         ))}

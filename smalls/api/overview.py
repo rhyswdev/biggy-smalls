@@ -86,12 +86,24 @@ def first_sentence(text: str) -> str:
     return (m.group(1) if m else text)[:LINE]
 
 
+def prose(text: str) -> bool:
+    """Whether a line reads as sentences rather than pasted output: no table bars, prompts or code punctuation, and
+    almost all letters, digits and spaces."""
+    line = text.strip()
+    if not line or re.search(r"[|{};]|=#|^\s*(select|from|where)\b|^[$>#]", line, re.IGNORECASE):
+        return False
+    plain = sum(ch.isalnum() or ch.isspace() for ch in line)
+    return plain / len(line) >= 0.85
+
+
 def from_code(inputs: dict[str, Any]) -> Written:
-    """The overview without a model: the short description and the latest work note's first sentence, and the
-    configuration items from the ticket's business service down to its CI, with no status."""
+    """The overview without a model: the short description, then the first sentence of the newest work note that
+    reads as sentences (a pasted query result is skipped), and the configuration items from the ticket's business
+    service down to its CI, with no status."""
     ticket = inputs["ticket"]
     f, notes = ticket["fields"], ticket["notes"]
-    said = [x for x in (ticket["incident"].get("short_description"), first_sentence(notes[0]["text"]) if notes else None) if x]
+    latest = next((first_sentence(n["text"]) for n in notes if prose(first_sentence(n["text"]))), None)
+    said = [x for x in (ticket["incident"].get("short_description"), latest) if x]
     lines = " ".join(s if s.endswith((".", "!", "?")) else f"{s}." for s in said)
     rels, items = inputs["cmdb"]["relationships"], {i["name"]: i for i in inputs["cmdb"]["items"]}
     path: list[str] = []
@@ -126,7 +138,7 @@ def _path(rels: list[dict[str, Any]], start: str, end: str) -> list[str]:
 def contacts(inputs: dict[str, Any]) -> list[dict[str, Any]]:
     """Who to talk to, built by code only from the ticket, the on-call schedule, the CMDB and the user records:
     the Major Incident Manager (the ticket's assignee), who is on call for its groups, the CI's support group, and
-    the people the work notes name. A phone link only when the user record has a number."""
+    the people the work notes name. A phone number and an email address only when the user record has one."""
     f = inputs["ticket"]["fields"]
     people = {p["name"]: p for p in inputs["people"]}
     out: list[dict[str, Any]] = []
@@ -135,7 +147,7 @@ def contacts(inputs: dict[str, Any]) -> list[dict[str, Any]]:
         if not name or any(c["name"] == name for c in out):
             return
         p = people.get(name, {})
-        out.append({"name": name, "role": role, "kind": kind, "phone": p.get("phone")})
+        out.append({"name": name, "role": role, "kind": kind, "phone": p.get("phone"), "email": (inputs.get("emails") or {}).get(name) if kind == "person" else None})
 
     group = f.get("assignment_group")
     add(f.get("assigned_to"), f"Major Incident Manager{f' · {group}' if group else ''}")

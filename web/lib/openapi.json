@@ -291,6 +291,17 @@
    "Resolution": {
     "additionalProperties": false,
     "properties": {
+     "code": {
+      "default": "Solved (Work Around)",
+      "enum": [
+       "Solved (Work Around)",
+       "Solved (Permanently)",
+       "Solved Remotely (Work Around)",
+       "Not Solved (Not Reproducible)"
+      ],
+      "title": "Code",
+      "type": "string"
+     },
      "note": {
       "maxLength": 4000,
       "minLength": 1,

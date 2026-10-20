@@ -15,18 +15,18 @@ async function finishedChat(page: import("@playwright/test").Page, request: impo
 test("Continue stays disabled until there is a note, then opens the summary", async ({ page, request }) => {
   const id = await finishedChat(page, request);
   await page.getByRole("link", { name: "Resolve incident…" }).click();
-  const dialog = page.getByRole("dialog", { name: "Mark it resolved" });
-  const go = dialog.getByRole("button", { name: "Continue to summary" });
+  const dialog = page.getByRole("dialog", { name: "Resolve incident" });
+  const go = dialog.getByRole("button", { name: "Continue to resolution review" });
   await expect(go).toBeDisabled();
-  await dialog.getByLabel("How was it resolved?").fill("Cleaned up and ran the job again; it finished.");
+  await dialog.getByLabel("Resolution notes").fill("Cleaned up and ran the job again; it finished.");
   await expect(go).toBeEnabled();
   // The scripted report is inconclusive, so "Smalls' conclusion was right" cannot be chosen and the dialog starts on the
   // commander's own path.
-  await expect(dialog.getByRole("radio", { name: /Smalls’ conclusion was right/ })).toBeDisabled();
+  await expect(dialog.getByRole("radio", { name: /Smalls’ diagnosis was right/ })).toBeDisabled();
   await go.click();
-  await expect(page).toHaveURL(new RegExp(`/chats/${id}/summary$`));
-  await expect(page.locator('nav[aria-label="Incident steps"] [aria-current="step"]')).toContainText("Summary");
-  await expect(page.locator('nav[aria-label="Incident steps"] a').first()).toContainText("✓");
+  await expect(page).toHaveURL(new RegExp(`/chats/${id}/resolution$`));
+  await expect(page.getByRole("heading", { name: "In short" })).toBeVisible();
+  await expect(page.locator(".short-row", { hasText: "Resolution code" })).toContainText("Solved (Work Around)");
 });
 
 test("Mark resolved waits for a report, then appears without a reload", async ({ page, request }) => {
@@ -37,7 +37,7 @@ test("Mark resolved waits for a report, then appears without a reload", async ({
   await expect(page.getByText("Resolve incident…")).toHaveCount(0);
   await page.goto(`/chats/${id}?resolve`);                                    // the dialog's address opens nothing either
   await expect(page.locator("#pending")).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "Mark it resolved" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Resolve incident" })).toHaveCount(0);
   const header = page.getByRole("link", { name: "Resolve incident…" });
   for (let round = 0; round < 12 && !(await header.isVisible()); round++) {
     const gate = page.locator("#pending");
@@ -55,7 +55,8 @@ test("Mark resolved waits for a report, then appears without a reload", async ({
 test("the agent's path keeps every record the report cites", async ({ page, request }) => {
   const id = await finishedChat(page, request);
   await request.put(`${API}/chats/${id}/resolution`, { data: { path: "agent", note: "Rolled back and re-ran.", resolved_at: "02:40", resolved_by: "Commander" } });
-  await page.goto(`/chats/${id}/summary`);
+  await page.goto(`/chats/${id}/resolution`);
+  await page.getByRole("button", { name: /^Evidence/ }).click();
   const boxes = page.locator(".rail input[type=checkbox]");
   expect(await boxes.count()).toBeGreaterThan(0);
   for (const b of await boxes.all()) await expect(b).toBeChecked();
@@ -65,8 +66,10 @@ test("the commander's own path starts with nothing kept, and a signal with no re
   const id = await finishedChat(page, request);
   const r = await request.put(`${API}/chats/${id}/resolution`, { data: { path: "own", note: "Fixed it by hand.", resolved_at: "02:40", resolved_by: "Commander" } });
   expect(r.ok()).toBe(true);
-  await page.goto(`/chats/${id}/summary`);
+  await page.goto(`/chats/${id}/resolution`);
+  await expect(page.locator(".rail")).toBeVisible();                                     // Evidence starts open on this path
   for (const b of await page.locator(".rail input[type=checkbox]").all()) await expect(b).not.toBeChecked();
+  await page.getByRole("button", { name: /^How to recognise it next time/ }).click();
   const signals = page.locator("[data-signal]");
   if (await signals.count()) await expect(signals.first()).toContainText("Left out");
   await page.getByRole("button", { name: "Keep all" }).click();
@@ -81,13 +84,14 @@ test("the commander's own path starts with nothing kept, and a signal with no re
 test("saving puts it in the knowledge base, any edit unsaves it, and Regenerate bumps the version", async ({ page, request }) => {
   const id = await finishedChat(page, request);
   await request.put(`${API}/chats/${id}/resolution`, { data: { path: "agent", note: "Rolled back and re-ran.", resolved_at: "02:40", resolved_by: "Commander" } });
-  await page.goto(`/chats/${id}/summary`);
+  await page.goto(`/chats/${id}/resolution`);
   await expect(page.locator(".label", { hasText: "draft 1" })).toBeVisible();
-  await page.getByRole("button", { name: "Save to knowledge base" }).click();
-  await expect(page.getByText("✓ Saved to the knowledge base")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Draft stakeholder messages" })).toBeVisible();
+  await page.getByRole("button", { name: "Save as knowledge article" }).click();
+  await expect(page.locator(".actbar strong", { hasText: "Saved as a knowledge article" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Draft communications →" })).toBeVisible();
+  await page.getByRole("button", { name: /^Evidence/ }).click();
   await page.locator(".rail input[type=checkbox]").first().uncheck();
-  await expect(page.getByRole("button", { name: "Save to knowledge base" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save as knowledge article" })).toBeVisible();
   await page.getByRole("button", { name: "Regenerate" }).click();
   await expect(page.locator(".label", { hasText: "draft 2" })).toBeVisible();
   await expect(page.getByText(/Draft 2, regenerated/)).toBeVisible();
@@ -98,8 +102,8 @@ test("the summary never scrolls sideways, however long a record's text", async (
   await request.put(`${API}/chats/${id}/resolution`, { data: { path: "own", note: "Ran the job again; it finished.", resolved_at: "02:40", resolved_by: "Commander" } });
   for (const width of [1440, 900, 420]) {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto(`/chats/${id}/summary`);
-    await expect(page.getByRole("button", { name: "Save to knowledge base" })).toBeVisible();
+    await page.goto(`/chats/${id}/resolution`);
+    await expect(page.getByRole("button", { name: "Save as knowledge article" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), `at ${width}px`).toBeLessThanOrEqual(0);
   }
 });

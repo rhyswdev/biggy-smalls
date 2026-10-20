@@ -17,9 +17,9 @@ async function finished(request: APIRequestContext): Promise<string> {
 async function toMessages(page: Page, request: APIRequestContext): Promise<string> {
   const id = await finished(request);
   await request.put(`${API}/chats/${id}/resolution`, { data: { path: "own", note: "Restarted the job by hand; it finished.", resolved_at: "02:40", resolved_by: "Commander" } });
-  await page.goto(`/chats/${id}/summary`);
-  await page.getByRole("button", { name: "Save to knowledge base" }).click();
-  await page.getByRole("button", { name: "Draft stakeholder messages" }).click();
+  await page.goto(`/chats/${id}/resolution`);
+  await page.getByRole("button", { name: "Save as knowledge article" }).click();
+  await page.getByRole("button", { name: "Draft communications →" }).click();
   await expect(page).toHaveURL(new RegExp(`/chats/${id}/messages$`));
   return id;
 }

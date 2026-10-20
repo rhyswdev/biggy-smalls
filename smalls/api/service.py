@@ -238,7 +238,7 @@ class Service:
             card = self.reader().find_incident(row["number"])
             if card is None:
                 continue
-            resolution = self.db.row("SELECT resolved_at, resolved_by FROM resolution WHERE chat_id = ?", (row["chat_id"],))
+            resolution = self.db.row("SELECT resolved_at, resolved_by, code FROM resolution WHERE chat_id = ?", (row["chat_id"],))
             out.append({**card, "chat_id": row["chat_id"], "imported_at": row["imported_at"], "status": self.status(row["chat_id"]),
                         "next_update_due": self.settings.next_update(card["priority_code"], card["updated"]), "resolution": resolution})
         return out
@@ -616,7 +616,7 @@ class Service:
 
     # -- after the investigation: resolution, write-up, knowledge base -------------------------------------
 
-    def resolve(self, chat_id: str, path: str, note: str, resolved_at: str, resolved_by: str) -> dict[str, Any]:
+    def resolve(self, chat_id: str, path: str, note: str, resolved_at: str, resolved_by: str, code: str = "Solved (Work Around)") -> dict[str, Any]:
         """Mark the incident resolved in this chat. The write-up starts as version 1: under the agent's path it
         keeps every handle the report cites, under the commander's own path none (section 4, Summary)."""
         chat = self.chat(chat_id)
@@ -626,8 +626,8 @@ class Service:
         if report is None and path == "agent":
             raise Problem(409, "No conclusion", "This chat has no report, so Smalls' conclusion cannot be the fix.")
         with self.db.write() as conn:
-            conn.execute("INSERT OR REPLACE INTO resolution (chat_id, path, note, resolved_at, resolved_by) VALUES (?, ?, ?, ?, ?)",
-                         (chat_id, path, note.strip(), resolved_at, resolved_by.strip()))
+            conn.execute("INSERT OR REPLACE INTO resolution (chat_id, path, note, resolved_at, resolved_by, code) VALUES (?, ?, ?, ?, ?, ?)",
+                         (chat_id, path, note.strip(), resolved_at, resolved_by.strip(), code))
             if not conn.execute("SELECT 1 FROM writeup WHERE chat_id = ?", (chat_id,)).fetchone():
                 kept = sorted(cited(report)) if path == "agent" and report else []
                 conn.execute("INSERT INTO writeup (chat_id, version, kept, body) VALUES (?, 1, ?, '{}')", (chat_id, dumps(kept)))
@@ -636,7 +636,7 @@ class Service:
 
     def writeup(self, chat_id: str) -> dict[str, Any]:
         self.chat(chat_id)
-        resolution = self.db.row("SELECT path, note, resolved_at, resolved_by FROM resolution WHERE chat_id = ?", (chat_id,))
+        resolution = self.db.row("SELECT path, note, resolved_at, resolved_by, code FROM resolution WHERE chat_id = ?", (chat_id,))
         row = self.db.row("SELECT version, kept, saved_at FROM writeup WHERE chat_id = ? ORDER BY version DESC LIMIT 1", (chat_id,))
         report = self.report(chat_id)
         rows: dict[str, str] = {}

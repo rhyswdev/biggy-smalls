@@ -643,6 +643,12 @@ export interface components {
         };
         /** Resolution */
         Resolution: {
+            /**
+             * Code
+             * @default Solved (Work Around)
+             * @enum {string}
+             */
+            code: "Solved (Work Around)" | "Solved (Permanently)" | "Solved Remotely (Work Around)" | "Not Solved (Not Reproducible)";
             /** Note */
             note: string;
             /**

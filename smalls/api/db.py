@@ -43,7 +43,7 @@ CREATE TABLE note (
 );
 CREATE TABLE resolution (
   chat_id TEXT PRIMARY KEY, path TEXT NOT NULL CHECK (path IN ('agent', 'own')), note TEXT NOT NULL, resolved_at TEXT NOT NULL,
-  resolved_by TEXT NOT NULL
+  resolved_by TEXT NOT NULL, code TEXT NOT NULL DEFAULT 'Solved (Work Around)'
 );
 CREATE TABLE writeup (
   chat_id TEXT NOT NULL, version INTEGER NOT NULL, kept TEXT NOT NULL, body TEXT NOT NULL, saved_at TEXT,

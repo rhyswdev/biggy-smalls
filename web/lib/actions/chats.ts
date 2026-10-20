@@ -104,21 +104,22 @@ export async function setAutoApprove(chatId: string, on: boolean): Promise<Actio
 }
 
 const Resolution = z.object({
-  path: z.enum(["agent", "own"]), note: text(4000), resolvedAt: z.string().trim().regex(/^\d{1,2}:\d{2}$/, "Give the time as HH:MM, in UTC."),
+  path: z.enum(["agent", "own"]), code: z.enum(["Solved (Work Around)", "Solved (Permanently)", "Solved Remotely (Work Around)", "Not Solved (Not Reproducible)"]), note: text(4000), resolvedAt: z.string().trim().regex(/^\d{1,2}:\d{2}$/, "Give the time as HH:MM, in UTC."),
   resolvedBy: z.string().trim().min(1).max(200),
 });
 
-/** Mark the incident resolved in this chat: who found the fix and how, then on to the summary. */
+/** Resolve the incident in this chat: who found the fix, the resolution code and notes, then on to the review. */
 export async function resolveChat(chatId: string, input: z.infer<typeof Resolution>): Promise<ActionResult> {
   const parsed = Resolution.safeParse(input);
-  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Fill in how it was resolved." };
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Write the resolution notes first." };
   try {
-    await api(`/chats/${id.parse(chatId)}/resolution`, { method: "PUT", json: { path: parsed.data.path, note: parsed.data.note, resolved_at: parsed.data.resolvedAt, resolved_by: parsed.data.resolvedBy } });
+    await api(`/chats/${id.parse(chatId)}/resolution`, { method: "PUT", json: { path: parsed.data.path, code: parsed.data.code, note: parsed.data.note, resolved_at: parsed.data.resolvedAt, resolved_by: parsed.data.resolvedBy } });
   } catch (error) {
     return failed(error);
   }
   revalidatePath(`/chats/${chatId}`);
-  redirect(`/chats/${chatId}/summary`);
+  revalidatePath("/", "layout");
+  redirect(`/chats/${chatId}/resolution`);
 }
 
 export interface WriteupResult extends ActionResult { writeup?: { version: number; kept: string[]; saved_at: string | null } | null }
@@ -149,7 +150,7 @@ export async function saveWriteup(chatId: string, entry: { version: number; titl
   if (!parsed.success) return { ok: false, error: "The write-up is incomplete." };
   try {
     const r = await api<{ writeup: WriteupResult["writeup"] }>(`/chats/${id.parse(chatId)}/writeup/save`, { json: parsed.data });
-    revalidatePath(`/chats/${chatId}/summary`);
+    revalidatePath(`/chats/${chatId}/resolution`);
     return { ok: true, writeup: r.writeup };
   } catch (error) {
     return failed(error);

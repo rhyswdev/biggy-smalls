@@ -4,7 +4,9 @@
 import { leading } from "@/lib/chat/reduce";
 import type { Report } from "@/lib/types";
 
-export interface Resolution { path: "agent" | "own"; note: string; resolved_at: string; resolved_by: string }
+export const CODES = ["Solved (Work Around)", "Solved (Permanently)", "Solved Remotely (Work Around)", "Not Solved (Not Reproducible)"] as const;
+export type ResolutionCode = (typeof CODES)[number];
+export interface Resolution { path: "agent" | "own"; note: string; resolved_at: string; resolved_by: string; code?: ResolutionCode }
 export interface WriteupData {
   resolution: Resolution | null;
   report: Report | null;
@@ -18,6 +20,7 @@ export interface Signal { n: number; text: string; where: string; handles: strin
 export interface ChainStep { step: "Cause" | "Trigger" | "Contributing" | "Impact"; text: string; handles: string[] }
 export interface Writeup {
   title: string;
+  short: { k: string; v: string }[];      // "In short": what went wrong in plain words, then the fix and what is left
   pathLine: string;
   note: string;
   narrative: string;
@@ -87,18 +90,30 @@ export function render(data: WriteupData, kept: ReadonlySet<string>, note: strin
   const evidence = listed.map((h) => ({ handle: h, text: data.rows[h] ?? h, source: source(h), kept: kept.has(h) }));
   const title = own ? (note.trim().split("\n")[0] ?? "").slice(0, 120) || "Resolved another way"
     : clip(cause?.statement ?? report?.summary.split(/(?<=[.!?])\s/)[0] ?? "Write-up", TITLE_MAX);
-  const pathLine = res ? `${own ? "Resolved another way" : "Smalls’ conclusion was right"} · resolved ${res.resolved_at} UTC by ${res.resolved_by}` : "";
+  const pathLine = res ? (own ? "Resolved another way, outside Smalls’ diagnosis" : `${res.resolved_by} confirmed Smalls’ diagnosis`) : "";
   const chainTitle = own ? "Smalls’ last picture, not what fixed it" : "Cause → Trigger → Contributing → Impact";
   const terms = [...new Set([lead?.subject, ...(lead?.entities ?? []), report?.impact?.business_service,
     ...signals.filter((s) => s.where === "an alert of this incident" && !s.dropped).map((s) => s.text.slice(0, 80)), data.incident]
     .filter((x): x is string => Boolean(x && x !== "unknown")))];
   const keptRows = evidence.filter((e) => e.kept);
+  const code = res?.code ?? "Solved (Work Around)";
+  const workaround = /Work Around/.test(code);
+  const known = (v: string | null | undefined): v is string => Boolean(v && v.trim() && v.trim().toLowerCase() !== "unknown");
+  const firstSentence = (t: string) => t.trim().split(/(?<=[.!?])\s+/)[0] ?? "";
+  const open = (report?.open_questions ?? []).filter(known);
+  const short = [
+    known(report?.impact?.customer) ? { k: "Business impact", v: report!.impact!.customer } : null,
+    cause ? { k: own ? "Smalls’ last picture" : "Probable cause", v: cause.statement } : null,
+    note.trim() ? { k: workaround ? "Workaround" : "Fix", v: firstSentence(note) } : null,
+    res ? { k: "Resolution code", v: code } : null,
+    { k: "Follow-up", v: [workaround ? "Raise a Problem record for the permanent fix." : "", open.length ? `Still open: ${open.join(" ")}` : ""].filter(Boolean).join(" ") || "Nothing left open." },
+  ].filter((r): r is { k: string; v: string } => r !== null);
   const body = [
-    title, "", `How it was resolved (${res?.resolved_by ?? "the commander"}, ${res?.resolved_at ?? ""} UTC): ${note.trim()}`, "",
+    title, "", `Resolution code: ${code}`, `Resolution notes (${res?.resolved_by ?? "the Major Incident Manager"}, ${res?.resolved_at ?? ""} UTC): ${note.trim()}`, "",
     `What happened: ${report?.summary ?? ""}`, ...chain.map((c) => `${c.step}: ${c.text}`), "",
-    "Signals that mark this issue:", ...signals.filter((s) => !s.dropped).map((s) => `- ${s.text}`), "",
+    "How to recognise it next time:", ...signals.filter((s) => !s.dropped).map((s) => `- ${s.text}`), "",
     "Ruled out:", ...ruledOut.map((r) => `- ${r.what}`), "",
     "Evidence kept:", ...keptRows.map((e) => `- ${e.handle} ${e.text}`),
   ].join("\n");
-  return { title, pathLine, note, narrative: report?.summary ?? "", chainTitle, chain, signals, ruledOut, evidence, kept: keptRows.length, terms, body };
+  return { title, short, pathLine, note, narrative: report?.summary ?? "", chainTitle, chain, signals, ruledOut, evidence, kept: keptRows.length, terms, body };
 }

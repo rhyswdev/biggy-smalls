@@ -104,3 +104,19 @@ def test_a_new_chat_can_be_linked_to_an_incident_and_an_unknown_one_is_refused(r
     assert linked.status_code == 201 and linked.json()["incident"] == number
     assert real.post("/chats", json={"origin": "chat", "trigger": "What changed?", "incident": "INC0000001"}).status_code == 422
     real.app.state.service.wait(linked.json()["id"])
+
+
+def test_a_resolution_code_round_trips_and_defaults_to_a_workaround(client):
+    import fixture_registry as fx
+
+    service = client.app.state.service
+    chat_id = client.post("/chats", json={"origin": "headless", "trigger": fx.TRIGGER, "auto_approve": True}).json()["id"]
+    service.wait(chat_id)
+    r = client.put(f"/chats/{chat_id}/resolution", json={"path": "agent", "note": "Rolled back.", "resolved_at": "02:40", "resolved_by": "A person",
+                                                         "code": "Solved (Permanently)"})
+    assert r.status_code == 200 and r.json()["resolution"]["code"] == "Solved (Permanently)"
+    assert client.get(f"/chats/{chat_id}/writeup").json()["resolution"]["code"] == "Solved (Permanently)"
+    bad = client.put(f"/chats/{chat_id}/resolution", json={"path": "agent", "note": "x", "resolved_at": "02:40", "resolved_by": "A", "code": "Fixed it"})
+    assert bad.status_code == 422
+    client.put(f"/chats/{chat_id}/resolution", json={"path": "agent", "note": "Rolled back.", "resolved_at": "02:40", "resolved_by": "A person"})
+    assert client.get(f"/chats/{chat_id}/writeup").json()["resolution"]["code"] == "Solved (Work Around)"

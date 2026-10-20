@@ -17,7 +17,7 @@ export function KbView({ chatId, data, entry, w, hits, incidentHandle, onOpen }:
       <p className="narr muted" style={{ margin: 0 }}>Not sent to anyone. It sits alongside past incidents and runbooks, so a later incident with similar signals is easier to identify.</p>
       {!entry || !w ? (
         <Notice tone="clamped">
-          The write-up is not in the knowledge base: it was never saved, or it changed after saving. <Link href={`/chats/${chatId}/summary`}>Save it from the summary</Link>.
+          The write-up is not in the knowledge base: it was never saved, or it changed after saving. <Link href={`/chats/${chatId}/resolution`}>Save it from the resolution review</Link>.
         </Notice>
       ) : (
         <>

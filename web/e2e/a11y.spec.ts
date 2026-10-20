@@ -56,11 +56,11 @@ for (const theme of ["light", "dark"] as const) {
     await scan("working picture panel");
     const handle = await page.locator("button.sm-handle").first().getAttribute("data-handle");
     await visit(`/chats/${done}?evidence=${encodeURIComponent(handle!)}`, "evidence drawer", async (p) => { await expect(p.getByRole("dialog", { name: `Evidence ${handle}` })).toBeVisible(); });
-    await visit(`/chats/${done}?resolve`, "resolve dialog", async (p) => { await expect(p.getByRole("dialog", { name: "Mark it resolved" })).toBeVisible(); });
+    await visit(`/chats/${done}?resolve`, "resolve dialog", async (p) => { await expect(p.getByRole("dialog", { name: "Resolve incident" })).toBeVisible(); });
     if (past) await visit(`/chats/${past.id}`, "recorded run", async (p) => { await expect(p.locator(".lead")).toBeVisible(); });
-    await visit(`/chats/${resolved}/summary`, "summary", async (p) => { await expect(p.getByRole("button", { name: "Save to knowledge base" })).toBeVisible(); });
-    await page.getByRole("button", { name: "Save to knowledge base" }).click();
-    await page.getByRole("button", { name: "Draft stakeholder messages" }).click();
+    await visit(`/chats/${resolved}/resolution`, "summary", async (p) => { await expect(p.getByRole("button", { name: "Save as knowledge article" })).toBeVisible(); });
+    await page.getByRole("button", { name: "Save as knowledge article" }).click();
+    await page.getByRole("button", { name: "Draft communications →" }).click();
     await expect(page).toHaveURL(/\/messages$/);
     await expect(page.getByRole("textbox", { name: "Executives" })).toBeVisible();
     await scan("messages");

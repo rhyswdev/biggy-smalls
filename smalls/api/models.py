@@ -78,8 +78,13 @@ class MoreRun(Closed):
     resume: bool = False
 
 
+RESOLUTION_CODES = ("Solved (Work Around)", "Solved (Permanently)", "Solved Remotely (Work Around)", "Not Solved (Not Reproducible)")
+ResolutionCode = Literal["Solved (Work Around)", "Solved (Permanently)", "Solved Remotely (Work Around)", "Not Solved (Not Reproducible)"]
+
+
 class Resolution(Closed):
     path: Literal["agent", "own"]
+    code: ResolutionCode = "Solved (Work Around)"       # ServiceNow's close codes (v4 plan 5.4)
     note: str = Field(min_length=1, max_length=NOTE)
     resolved_at: str = Field(pattern=r"^\d{1,2}:\d{2}$")
     resolved_by: str = Field(min_length=1, max_length=200)

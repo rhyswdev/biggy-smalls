@@ -16,7 +16,7 @@ test("the overview from code: what's going on, the CI path and contacts, with th
   test.skip(body.written_by !== "code", "the second pass writes it with the scripted writer");
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "What’s going on" })).toBeVisible();
-  await expect(page.getByText("From the ticket and its latest work note")).toBeVisible();
+  await expect(page.getByText("Summarised by code from the ticket and its work notes")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Affected service and CIs" })).toBeVisible();
   await expect(page.locator(".cimap .node")).toHaveCount(body.affected_cis.length);
   for (const gone of ["Working theories from the bridge", "Timeline", "Terms you’ll hear"]) await expect(page.getByRole("heading", { name: gone })).toHaveCount(0);

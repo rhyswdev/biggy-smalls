@@ -37,18 +37,18 @@ test("from the dashboard to copied messages, with the keyboard alone", async ({ 
 
   await tabTo(page, finished);
   await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "Mark it resolved" });
+  const dialog = page.getByRole("dialog", { name: "Resolve incident" });
   await expect(dialog).toBeVisible();
-  await tabTo(page, dialog.getByLabel("How was it resolved?"));
+  await tabTo(page, dialog.getByLabel("Resolution notes"));
   await page.keyboard.type("Restarted the job by hand; it finished.");
-  await tabTo(page, dialog.getByRole("button", { name: "Continue to summary" }));
+  await tabTo(page, dialog.getByRole("button", { name: "Continue to resolution review" }));
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/summary$/);
+  await expect(page).toHaveURL(/\/resolution$/);
 
-  await tabTo(page, page.getByRole("button", { name: "Save to knowledge base" }));
+  await tabTo(page, page.getByRole("button", { name: "Save as knowledge article" }));
   await page.keyboard.press("Enter");
-  await expect(page.getByText("✓ Saved to the knowledge base")).toBeVisible();
-  await tabTo(page, page.getByRole("button", { name: "Draft stakeholder messages" }));
+  await expect(page.locator(".actbar strong", { hasText: "Saved as a knowledge article" })).toBeVisible();
+  await tabTo(page, page.getByRole("button", { name: "Draft communications →" }));
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/messages$/);
 
